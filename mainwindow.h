@@ -3,9 +3,9 @@
 
 #include <QMainWindow>
 
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
+//QT_BEGIN_NAMESPACE
+//namespace Ui { class MainWindow; }
+//QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
@@ -16,6 +16,10 @@ public:
     ~MainWindow();
 
 private:
-    Ui::MainWindow *ui;
+    void createMenus();
+    void openFileImportShapefile();
+    void openFileImportJson();
+    void openFileImportCsv();
+//    Ui::MainWindow *ui;
 };
 #endif // MAINWINDOW_H
