@@ -2,23 +2,11 @@
 #define MAINLAYOUT_H
 
 #include <QWidget>
+#include <gwmodeltoolbar.h>
 
 //namespace Ui {
 //class MainLayout;
 //}
-
-QT_BEGIN_NAMESPACE
-class QAction;
-class QDialogButtonBox;
-class QGroupBox;
-class QLabel;
-class QLineEdit;
-class QMenu;
-class QMenuBar;
-class QPushButton;
-class QTextEdit;
-class QHBoxLayout;
-QT_END_NAMESPACE
 
 class MainWidget : public QWidget
 {
@@ -29,7 +17,7 @@ public:
     ~MainWidget();
 
 private:
-    QWidget* toolBar;
+    GWmodelToolbar* toolBar;
     QWidget* map;
 
     void createToolBar();

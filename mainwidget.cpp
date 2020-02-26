@@ -3,6 +3,7 @@
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
+    , toolBar(new GWmodelToolbar)
 {
     createToolBar();
     createMap();
@@ -21,23 +22,7 @@ MainWidget::~MainWidget()
 
 void MainWidget::createToolBar()
 {
-    toolBar = new QWidget(this);
-    QHBoxLayout* layout = new QHBoxLayout(toolBar);
-    layout->setSpacing(1);
-    layout->addWidget(new QPushButton(tr("Open")));
-    layout->addWidget(new QPushButton(tr("Save")));
-    layout->addWidget(new QPushButton(tr("Export")));
-    layout->addWidget(new QPushButton(tr("Edit")));
-    layout->addWidget(new QPushButton(tr("Move")));
-    layout->addWidget(new QPushButton(tr("Full")));
-    layout->addWidget(new QPushButton(tr("Position")));
-    layout->addWidget(new QPushButton(tr("GWSS")));
-    layout->addWidget(new QPushButton(tr("GWR")));
-    layout->addWidget(new QPushButton(tr("GWPCA")));
-    layout->addWidget(new QPushButton(tr("Map")));
-    layout->addWidget(new QPushButton(tr("Atlas")));
-    layout->addStretch();
-    layout->setMargin(0);
+
 }
 
 void MainWidget::createMap()
