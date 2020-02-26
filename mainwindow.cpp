@@ -7,11 +7,13 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
+    , mainWidget(new MainWidget())
 //    , ui(new Ui::MainWindow)
 {
     setMinimumWidth(1280);
     setMinimumHeight(720);
     createMenus();
+    setCentralWidget(mainWidget);
 }
 
 MainWindow::~MainWindow()

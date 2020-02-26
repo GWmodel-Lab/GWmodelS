@@ -17,12 +17,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     main.cpp \
+    mainwidget.cpp \
     mainwindow.cpp
 
 HEADERS += \
+    mainwidget.h \
     mainwindow.h
 
 FORMS += \
+    mainwidget.ui \
     mainwindow.ui
 
 ## QGIS

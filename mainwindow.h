@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "mainwidget.h"
 
 //QT_BEGIN_NAMESPACE
 //namespace Ui { class MainWindow; }
@@ -21,5 +22,7 @@ private:
     void openFileImportJson();
     void openFileImportCsv();
 //    Ui::MainWindow *ui;
+
+    MainWidget* mainWidget;
 };
 #endif // MAINWINDOW_H
