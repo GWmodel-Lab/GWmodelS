@@ -31,12 +31,13 @@ void MainWidget::createMainZone()
     mainZone = new QWidget(this);
     QHBoxLayout* layout = new QHBoxLayout(mainZone);
 
+    createFeaturePanel();
+    layout->addWidget(featurePanel);
+
     createMapPanel();
     layout->addWidget(mapPanel);
 
-
-
-    // FeatureZone
+    layout->setStretchFactor(mapPanel, 1);
 }
 
 void MainWidget::createMapPanel()
@@ -56,4 +57,23 @@ void MainWidget::createMapPanel()
     mapPanel->setLayers(layers);
     mapPanel->refresh();
     // [End] Demo Layer
+}
+
+void MainWidget::createFeaturePanel()
+{
+    featurePanel = new QTreeView(mainZone);
+    featurePanel->setColumnWidth(0, 320);
+
+    // Demo Model
+    QStandardItemModel* model = new QStandardItemModel(featurePanel);
+    model->setHorizontalHeaderLabels(QStringList() << tr("Features"));
+    QStandardItem* itemFeature = new QStandardItem(tr("road"));
+    itemFeature->setCheckable(true);
+    itemFeature->setAutoTristate(true);
+    model->appendRow(itemFeature);
+    QStandardItem* itemChild = new QStandardItem(tr("Origin"));
+    itemChild->setCheckable(true);
+    itemFeature->appendRow(itemChild);
+    // [End] Demo Model
+    featurePanel->setModel(model);
 }

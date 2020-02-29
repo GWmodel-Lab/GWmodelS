@@ -27,6 +27,7 @@ private:
     void createToolBar();
     void createMainZone();
     void createMapPanel();
+    void createFeaturePanel();
 };
 
 #endif // MAINLAYOUT_H
