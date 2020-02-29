@@ -22,12 +22,13 @@ private:
     QWidget* mainZone;
     QgsMapCanvas* mapPanel;
     QTreeView* featurePanel;
-
+    QTabWidget* propertyPanel;
 
     void createToolBar();
     void createMainZone();
     void createMapPanel();
     void createFeaturePanel();
+    void createPropertyPanel();
 };
 
 #endif // MAINLAYOUT_H

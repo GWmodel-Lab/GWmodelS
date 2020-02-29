@@ -37,6 +37,9 @@ void MainWidget::createMainZone()
     createMapPanel();
     layout->addWidget(mapPanel);
 
+    createPropertyPanel();
+    layout->addWidget(propertyPanel);
+
     layout->setStretchFactor(mapPanel, 1);
 }
 
@@ -76,4 +79,14 @@ void MainWidget::createFeaturePanel()
     itemFeature->appendRow(itemChild);
     // [End] Demo Model
     featurePanel->setModel(model);
+}
+
+void MainWidget::createPropertyPanel()
+{
+    propertyPanel = new QTabWidget(mainZone);
+    propertyPanel->setFixedWidth(420);
+    // Demo Tab
+    QLabel* demoTab = new QLabel(tr("Select a feature to show its property."), propertyPanel);
+    propertyPanel->addTab(demoTab, tr("Property"));
+    // [End] Demo Tab
 }
