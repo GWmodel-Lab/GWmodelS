@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <gwmodeltoolbar.h>
+#include <qgsmapcanvas.h>
 
 //namespace Ui {
 //class MainLayout;
@@ -18,10 +19,14 @@ public:
 
 private:
     GWmodelToolbar* toolBar;
-    QWidget* map;
+    QWidget* mainZone;
+    QgsMapCanvas* mapPanel;
+    QTreeView* featurePanel;
+
 
     void createToolBar();
-    void createMap();
+    void createMainZone();
+    void createMapPanel();
 };
 
 #endif // MAINLAYOUT_H
