@@ -16,11 +16,27 @@ GWmodelToolbar::GWmodelToolbar(QWidget *parent) :
     widgetLayout->addWidget(gwmodelGWSSBtn);
     widgetLayout->addWidget(gwmodelGWPCABtn);
     this->setLayout(widgetLayout);
+
+    connect(openLayerBtn,&QPushButton::clicked,this,&GWmodelToolbar::openFileImportShapefile);
+    connect(saveLayerBtn,&QPushButton::clicked,this,&GWmodelToolbar::openFileImportJson);
+    connect(exportLayerBtn,&QPushButton::clicked,this,&GWmodelToolbar::openFileImportCsv);
 }
 
 GWmodelToolbar::~GWmodelToolbar()
 {
 
+}
+
+void GWmodelToolbar::openFileImportShapefile(){
+    emit openFileImportShapefileSignal();
+}
+
+void GWmodelToolbar::openFileImportJson(){
+    emit openFileImportJsonSignal();
+}
+
+void GWmodelToolbar::openFileImportCsv(){
+    emit openFileImportCsvSignal();
 }
 
 void GWmodelToolbar::createButtons()

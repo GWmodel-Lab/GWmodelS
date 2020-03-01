@@ -14,6 +14,10 @@ MainWidget::MainWidget(QWidget *parent)
     setLayout(mainLayout);
 //    mainLayout->setStretchFactor(toolBar, 1);
     mainLayout->setStretchFactor(mainZone, 1);
+
+    connect(toolBar,&GWmodelToolbar::openFileImportShapefileSignal,this,&MainWidget::openFileImportShapefile);
+    connect(toolBar,&GWmodelToolbar::openFileImportJsonSignal,this,&MainWidget::openFileImportJson);
+    connect(toolBar,&GWmodelToolbar::openFileImportCsvSignal,this,&MainWidget::openFileImportCsv);
 }
 
 MainWidget::~MainWidget()
@@ -24,6 +28,18 @@ MainWidget::~MainWidget()
 void MainWidget::createToolBar()
 {
 
+}
+
+void MainWidget::openFileImportShapefile(){
+    emit openFileImportShapefileSignal();
+}
+
+void MainWidget::openFileImportJson(){
+    emit openFileImportJsonSignal();
+}
+
+void MainWidget::openFileImportCsv(){
+    emit openFileImportCsvSignal();
 }
 
 void MainWidget::createMainZone()

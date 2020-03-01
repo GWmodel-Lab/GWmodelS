@@ -36,8 +36,16 @@ private:
     QPushButton* gwmodelGWSSBtn;
     QPushButton* gwmodelGWPCABtn;
 
+signals:
+    void openFileImportShapefileSignal();
+    void openFileImportJsonSignal();
+    void openFileImportCsvSignal();
+
 private:
     void createButtons();
+    void openFileImportShapefile();
+    void openFileImportJson();
+    void openFileImportCsv();
 };
 
 #endif // GWMODELTOOLBAR_H

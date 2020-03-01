@@ -17,6 +17,13 @@ public:
     explicit MainWidget(QWidget *parent = nullptr);
     ~MainWidget();
 
+
+signals:
+    void openFileImportShapefileSignal();
+    void openFileImportJsonSignal();
+    void openFileImportCsvSignal();
+
+
 private:
     GWmodelToolbar* toolBar;
     QWidget* mainZone;
@@ -24,6 +31,10 @@ private:
     QTreeView* featurePanel;
     QTabWidget* propertyPanel;
 
+
+    void openFileImportShapefile();
+    void openFileImportJson();
+    void openFileImportCsv();
     void createToolBar();
     void createMainZone();
     void createMapPanel();

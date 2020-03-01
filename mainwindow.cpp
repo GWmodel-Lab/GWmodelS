@@ -51,6 +51,10 @@ void MainWindow::createMenus()
     menuFile->addSeparator();
     menuFile->addAction(menuFileExit);
 
+    connect(mainWidget,&MainWidget::openFileImportShapefileSignal,this, &MainWindow::openFileImportShapefile);
+    connect(mainWidget,&MainWidget::openFileImportJsonSignal,this, &MainWindow::openFileImportJson);
+    connect(mainWidget,&MainWidget::openFileImportCsvSignal,this, &MainWindow::openFileImportCsv);
+
     // Show Menu Bar
     menuBar()->show();
 }
