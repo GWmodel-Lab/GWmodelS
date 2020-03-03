@@ -63,18 +63,6 @@ void MainWidget::createMapPanel()
 {
     mapPanel = new QgsMapCanvas(mainZone);
     // Demo Layer
-    QString demoLayerPath = tr("C:/Users/HuYG0/Documents/Build/GWmodel Desktop/Data/road/路网.shp");
-    QgsVectorLayer* demoLayer = new QgsVectorLayer(demoLayerPath);
-    if (!demoLayer->isValid()) {
-        QMessageBox::information(this, tr("Error"), tr("Layer is not valid!"));
-    }
-    QList<QgsMapLayer*> layers;
-    layers.append(demoLayer);
-    mapPanel->setExtent(demoLayer->extent());
-    mapPanel->enableAntiAliasing(true);
-    mapPanel->setVisible(true);
-    mapPanel->setLayers(layers);
-    mapPanel->refresh();
     // [End] Demo Layer
 }
 
