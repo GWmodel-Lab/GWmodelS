@@ -16,9 +16,9 @@ MainWidget::MainWidget(QWidget *parent)
     setLayout(mainLayout);
     mainLayout->setStretchFactor(mainZone, 1);
 
-    connect(toolBar,&GWmodelToolbar::openFileImportShapefileSignal,this,&MainWidget::openFileImportShapefile);
-    connect(toolBar,&GWmodelToolbar::openFileImportJsonSignal,this,&MainWidget::openFileImportJson);
-    connect(toolBar,&GWmodelToolbar::openFileImportCsvSignal,this,&MainWidget::openFileImportCsv);
+    connect(toolBar, &GWmodelToolbar::openFileImportShapefileSignal, this, &MainWidget::openFileImportShapefile);
+    connect(toolBar, &GWmodelToolbar::openFileImportJsonSignal, this, &MainWidget::openFileImportJson);
+    connect(toolBar, &GWmodelToolbar::openFileImportCsvSignal, this, &MainWidget::openFileImportCsv);
 }
 
 MainWidget::~MainWidget()
@@ -54,12 +54,11 @@ void MainWidget::createMainZone()
     QHBoxLayout* layout = new QHBoxLayout(mainZone);
 
     createFeaturePanel();
-    layout->addWidget(featurePanel);
-
-    mapPanel = new GWmodelMapPanel(mainZone, mapModel);
-    layout->addWidget(mapPanel);
-
     createPropertyPanel();
+    mapPanel = new GWmodelMapPanel(mainZone, mapModel);
+
+    layout->addWidget(featurePanel);
+    layout->addWidget(mapPanel);
     layout->addWidget(propertyPanel);
 
     layout->setStretchFactor(mapPanel, 1);

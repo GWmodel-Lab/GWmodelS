@@ -1,6 +1,6 @@
 #include "gwmodelmappanel.h"
 
-#include <QLayout>
+#include <QStackedLayout>
 #include <QMessageBox>
 
 GWmodelMapPanel::GWmodelMapPanel(QWidget *parent, QStandardItemModel* model)
@@ -10,7 +10,7 @@ GWmodelMapPanel::GWmodelMapPanel(QWidget *parent, QStandardItemModel* model)
     mapCanvas = new QgsMapCanvas();
     mapCanvas->setLayers(mapLayerSet);
     mapCanvas->setVisible(true);
-    QGridLayout* layout = new QGridLayout(parent);
+    QStackedLayout* layout = new QStackedLayout(parent);
     layout->addWidget(mapCanvas);
     layout->setMargin(0);
     setLayout(layout);
