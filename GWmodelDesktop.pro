@@ -16,17 +16,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    gwmodelmappanel.cpp \
     gwmodeltoolbar.cpp \
     main.cpp \
     mainwidget.cpp \
     mainwindow.cpp
 
 HEADERS += \
+    gwmodelmappanel.h \
     gwmodeltoolbar.h \
     mainwidget.h \
     mainwindow.h
 
 FORMS += \
+    gwmodelmappanel.ui \
     gwmodeltoolbar.ui \
     mainwidget.ui \
     mainwindow.ui

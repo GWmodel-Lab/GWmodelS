@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include <gwmodeltoolbar.h>
-#include <qgsmapcanvas.h>
+#include <gwmodelmappanel.h>
 
 //namespace Ui {
 //class MainLayout;
@@ -18,26 +18,23 @@ public:
     ~MainWidget();
 
 
-signals:
-    void openFileImportShapefileSignal();
-    void openFileImportJsonSignal();
-    void openFileImportCsvSignal();
-
-
-private:
+public:
+    QVBoxLayout* mainLayout;
     GWmodelToolbar* toolBar;
     QWidget* mainZone;
-    QgsMapCanvas* mapPanel;
+    GWmodelMapPanel* mapPanel;
     QTreeView* featurePanel;
     QTabWidget* propertyPanel;
 
+    QStandardItemModel* mapModel;
 
+public slots:
     void openFileImportShapefile();
     void openFileImportJson();
     void openFileImportCsv();
-    void createToolBar();
+
+private:
     void createMainZone();
-    void createMapPanel();
     void createFeaturePanel();
     void createPropertyPanel();
 };

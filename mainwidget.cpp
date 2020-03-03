@@ -1,18 +1,19 @@
 #include <QtWidgets>
+#include <QFileInfo>
 #include <qgsvectorlayer.h>
 #include "mainwidget.h"
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
+    , mainLayout(new QVBoxLayout)
     , toolBar(new GWmodelToolbar)
 {
-    createToolBar();
+    mapModel = new QStandardItemModel();
+
     createMainZone();
-    QVBoxLayout* mainLayout = new QVBoxLayout;
     mainLayout->addWidget(toolBar);
     mainLayout->addWidget(mainZone);
     setLayout(mainLayout);
-//    mainLayout->setStretchFactor(toolBar, 1);
     mainLayout->setStretchFactor(mainZone, 1);
 
     connect(toolBar,&GWmodelToolbar::openFileImportShapefileSignal,this,&MainWidget::openFileImportShapefile);
@@ -25,21 +26,26 @@ MainWidget::~MainWidget()
 
 }
 
-void MainWidget::createToolBar()
-{
-
-}
-
 void MainWidget::openFileImportShapefile(){
-    emit openFileImportShapefileSignal();
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open ESRI Shapefile"), tr(""), tr("ESRI Shapefile (*.shp)"));
+    QFileInfo fileInfo(filePath);
+    if (fileInfo.exists())
+    {
+        QString fileName = fileInfo.baseName();
+        QStandardItem* item = new QStandardItem(fileName);
+        QMap<QString, QVariant> itemData;
+        itemData["path"] = QVariant(filePath);
+        item->setData(QVariant(itemData));
+        mapModel->appendRow(item);
+    }
 }
 
 void MainWidget::openFileImportJson(){
-    emit openFileImportJsonSignal();
+    QFileDialog::getOpenFileName(this, tr("Open GeoJson"), tr(""), tr("GeoJson (*.json *.geojson)"));
 }
 
 void MainWidget::openFileImportCsv(){
-    emit openFileImportCsvSignal();
+    QFileDialog::getOpenFileName(this, tr("Open CSV"), tr(""), tr("CSV (*.csv)"));
 }
 
 void MainWidget::createMainZone()
@@ -50,7 +56,7 @@ void MainWidget::createMainZone()
     createFeaturePanel();
     layout->addWidget(featurePanel);
 
-    createMapPanel();
+    mapPanel = new GWmodelMapPanel(mainZone, mapModel);
     layout->addWidget(mapPanel);
 
     createPropertyPanel();
@@ -59,30 +65,13 @@ void MainWidget::createMainZone()
     layout->setStretchFactor(mapPanel, 1);
 }
 
-void MainWidget::createMapPanel()
-{
-    mapPanel = new QgsMapCanvas(mainZone);
-    // Demo Layer
-    // [End] Demo Layer
-}
-
 void MainWidget::createFeaturePanel()
 {
     featurePanel = new QTreeView(mainZone);
     featurePanel->setColumnWidth(0, 320);
-
-    // Demo Model
-    QStandardItemModel* model = new QStandardItemModel(featurePanel);
-    model->setHorizontalHeaderLabels(QStringList() << tr("Features"));
-    QStandardItem* itemFeature = new QStandardItem(tr("road"));
-    itemFeature->setCheckable(true);
-    itemFeature->setAutoTristate(true);
-    model->appendRow(itemFeature);
-    QStandardItem* itemChild = new QStandardItem(tr("Origin"));
-    itemChild->setCheckable(true);
-    itemFeature->appendRow(itemChild);
-    // [End] Demo Model
-    featurePanel->setModel(model);
+    QStringList headerLabels = QStringList() << tr("Features");
+    mapModel->setHorizontalHeaderLabels(headerLabels);
+    featurePanel->setModel(mapModel);
 }
 
 void MainWidget::createPropertyPanel()

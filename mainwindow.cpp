@@ -35,15 +35,15 @@ void MainWindow::createMenus()
     QMenu* menuFileImport = menuFile->addMenu(tr("&Import Layer"));
     // Menu FIle ImportLayer Shpfile
     QAction* actFileImportShp = new QAction(tr("ESRI &Shapefile"));
-    connect(actFileImportShp, &QAction::triggered, this, &MainWindow::openFileImportShapefile);
+    connect(actFileImportShp, &QAction::triggered, mainWidget, &MainWidget::openFileImportShapefile);
     menuFileImport->addAction(actFileImportShp);
     // Menu File ImportLayer JSON
     QAction* actFileImportJson = new QAction(tr("Geo&Json"));
-    connect(actFileImportJson, &QAction::triggered, this, &MainWindow::openFileImportJson);
+    connect(actFileImportJson, &QAction::triggered, mainWidget, &MainWidget::openFileImportJson);
     menuFileImport->addAction(actFileImportJson);
     // Menu File ImportLayer CSV
     QAction* actFileImportCsv = new QAction(tr("&CSV"));
-    connect(actFileImportCsv, &QAction::triggered, this, &MainWindow::openFileImportCsv);
+    connect(actFileImportCsv, &QAction::triggered, mainWidget, &MainWidget::openFileImportCsv);
     menuFileImport->addSeparator();
     menuFileImport->addAction(actFileImportCsv);
     // Menu File Exit
@@ -51,26 +51,7 @@ void MainWindow::createMenus()
     menuFile->addSeparator();
     menuFile->addAction(menuFileExit);
 
-    connect(mainWidget,&MainWidget::openFileImportShapefileSignal,this, &MainWindow::openFileImportShapefile);
-    connect(mainWidget,&MainWidget::openFileImportJsonSignal,this, &MainWindow::openFileImportJson);
-    connect(mainWidget,&MainWidget::openFileImportCsvSignal,this, &MainWindow::openFileImportCsv);
-
     // Show Menu Bar
     menuBar()->show();
-}
-
-void MainWindow::openFileImportShapefile()
-{
-    QFileDialog::getOpenFileName(this, tr("Open ESRI Shapefile"), tr(""), tr("ESRI Shapefile (*.shp)"));
-}
-
-void MainWindow::openFileImportJson()
-{
-    QFileDialog::getOpenFileName(this, tr("Open GeoJson"), tr(""), tr("GeoJson (*.json *.geojson)"));
-}
-
-void MainWindow::openFileImportCsv()
-{
-    QFileDialog::getOpenFileName(this, tr("Open CSV"), tr(""), tr("CSV (*.csv)"));
 }
 
