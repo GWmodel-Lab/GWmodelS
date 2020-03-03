@@ -7,11 +7,13 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
+    , mainWidget(new MainWidget())
 //    , ui(new Ui::MainWindow)
 {
     setMinimumWidth(1280);
     setMinimumHeight(720);
     createMenus();
+    setCentralWidget(mainWidget);
 }
 
 MainWindow::~MainWindow()
@@ -48,6 +50,10 @@ void MainWindow::createMenus()
     QAction* menuFileExit = new QAction(tr("&Exit"));
     menuFile->addSeparator();
     menuFile->addAction(menuFileExit);
+
+    connect(mainWidget,&MainWidget::openFileImportShapefileSignal,this, &MainWindow::openFileImportShapefile);
+    connect(mainWidget,&MainWidget::openFileImportJsonSignal,this, &MainWindow::openFileImportJson);
+    connect(mainWidget,&MainWidget::openFileImportCsvSignal,this, &MainWindow::openFileImportCsv);
 
     // Show Menu Bar
     menuBar()->show();
