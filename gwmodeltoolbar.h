@@ -36,6 +36,8 @@ private:
     QPushButton* gwmodelGWSSBtn;
     QPushButton* gwmodelGWPCABtn;
 
+    QLabel* openBtnInfo;
+
 signals:
     void openFileImportShapefileSignal();
     void openFileImportJsonSignal();
@@ -46,6 +48,8 @@ private:
     void openFileImportShapefile();
     void openFileImportJson();
     void openFileImportCsv();
+
+    bool eventFilter(QObject *watched, QEvent *event);
 };
 
 #endif // GWMODELTOOLBAR_H
