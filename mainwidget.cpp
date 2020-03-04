@@ -36,6 +36,8 @@ void MainWidget::openFileImportShapefile(){
         QMap<QString, QVariant> itemData;
         itemData["path"] = QVariant(filePath);
         item->setData(QVariant(itemData));
+        item->setCheckable(true);
+        item->setCheckState(Qt::CheckState::Checked);
         mapModel->appendRow(item);
     }
 }
