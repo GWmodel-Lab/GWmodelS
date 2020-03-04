@@ -54,6 +54,7 @@ void MainWidget::createMainZone()
 {
     mainZone = new QWidget(this);
     QHBoxLayout* layout = new QHBoxLayout(mainZone);
+    layout->setMargin(0);
 
     createFeaturePanel();
     createPropertyPanel();
