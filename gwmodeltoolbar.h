@@ -37,6 +37,12 @@ private:
     QPushButton* gwmodelGWPCABtn;
 
     QLabel* openBtnInfo;
+    QLabel* saveBtnInfo;
+    QLabel* exportBtnInfo;
+    QLabel* editBtnInfo;
+    QLabel* moveBtnInfo;
+    QLabel* fullScreenBtnInfo;
+    QLabel* showPositionBtnInfo;
 
 signals:
     void openFileImportShapefileSignal();

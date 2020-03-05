@@ -1,5 +1,11 @@
 <RCC>
     <qresource prefix="/icon">
         <file>res/icon/folder.png</file>
+        <file>res/icon/save.png</file>
+        <file>res/icon/download.png</file>
+        <file>res/icon/edit.png</file>
+        <file>res/icon/map.png</file>
+        <file>res/icon/move.png</file>
+        <file>res/icon/view larger.png</file>
     </qresource>
 </RCC>
