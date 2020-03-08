@@ -35,9 +35,9 @@ FORMS += \
     mainwindow.ui
 
 ## QGIS
-INCLUDEPATH += "C:\OSGeo4W64\include"
-INCLUDEPATH += "C:\OSGeo4W64\apps\qgis-dev\include"
-LIBS += -L"C:\OSGeo4W64\apps\qgis-dev\lib" -lqgis_core -lqgis_gui
+INCLUDEPATH += "$(OSGEO_HOME)\include"
+INCLUDEPATH += "$(OSGEO_HOME)\apps\qgis-dev\include"
+LIBS += -L"$(OSGEO_HOME)\apps\qgis-dev\lib" -lqgis_core -lqgis_gui
 GDAL_DATA = ".\share\gdal"
 ## QGIS END
 
