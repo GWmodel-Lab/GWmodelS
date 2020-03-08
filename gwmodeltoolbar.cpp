@@ -7,6 +7,7 @@ GWmodelToolbar::GWmodelToolbar(QWidget *parent) :
     QHBoxLayout* widgetLayout = new QHBoxLayout(this);
     widgetLayout->setMargin(0);
     widgetLayout->addWidget(openLayerBtn);
+    widgetLayout->addWidget(openByXYBtn);
     widgetLayout->addWidget(saveLayerBtn);
     widgetLayout->addWidget(exportLayerBtn);
     widgetLayout->addWidget(editBtn);
@@ -22,6 +23,14 @@ GWmodelToolbar::GWmodelToolbar(QWidget *parent) :
     connect(openLayerBtn,&QPushButton::clicked,this,&GWmodelToolbar::openFileImportShapefile);
     connect(saveLayerBtn,&QPushButton::clicked,this,&GWmodelToolbar::openFileImportJson);
     connect(exportLayerBtn,&QPushButton::clicked,this,&GWmodelToolbar::openFileImportCsv);
+    connect(openByXYBtn,&QPushButton::clicked,this,&GWmodelToolbar::openByXYBtnSlot);
+    connect(editBtn,&QPushButton::clicked,this,&GWmodelToolbar::editBtnSlot);
+    connect(moveBtn,&QPushButton::clicked,this,&GWmodelToolbar::moveBtnSlot);
+    connect(fullScreenBtn,&QPushButton::clicked,this,&GWmodelToolbar::fullScreenBtnSlot);
+    connect(showPositionBtn,&QPushButton::clicked,this,&GWmodelToolbar::showPositionBtnSlot);
+    connect(gwmodelGWRBtn,&QPushButton::clicked,this,&GWmodelToolbar::gwmodelGWRBtnSlot);
+    connect(gwmodelGWSSBtn,&QPushButton::clicked,this,&GWmodelToolbar::gwmodelGWSSBtnSlot);
+    connect(gwmodelGWPCABtn,&QPushButton::clicked,this,&GWmodelToolbar::gwmodelGWPCABtnSlot);
 }
 
 GWmodelToolbar::~GWmodelToolbar()
@@ -41,11 +50,43 @@ void GWmodelToolbar::openFileImportCsv(){
     emit openFileImportCsvSignal();
 }
 
+void GWmodelToolbar::openByXYBtnSlot(){
+    emit openByXYBtnSingnal();
+}
+
+void GWmodelToolbar::editBtnSlot(){
+    emit openFileImportJsonSignal();
+}
+
+void GWmodelToolbar::moveBtnSlot(){
+    emit moveBtnSignal();
+}
+void GWmodelToolbar::fullScreenBtnSlot(){
+    emit fullScreenBtnSignal();
+}
+
+void GWmodelToolbar::showPositionBtnSlot(){
+    emit showPositionBtnSignal();
+}
+
+void GWmodelToolbar::gwmodelGWRBtnSlot(){
+    emit gwmodelGWRBtnSignal();
+}
+
+void GWmodelToolbar::gwmodelGWSSBtnSlot(){
+    emit gwmodelGWSSBtnSignal();
+}
+
+void GWmodelToolbar::gwmodelGWPCABtnSlot(){
+    emit gwmodelGWPCABtnSignal();
+}
+
+
 void GWmodelToolbar::createButtons()
 {
     openLayerBtn = new QPushButton();
     openLayerBtn->setFixedSize(50,50);
-    openLayerBtn->setIcon(QPixmap(":/icon/res/icon/folder.png"));
+    openLayerBtn->setIcon(QPixmap(tr("./release/icon/folder.png")));
     openBtnInfo = new QLabel(this);
     openBtnInfo->setText(tr("Open"));
     openBtnInfo->setContentsMargins(3,3,3,3);
@@ -55,9 +96,21 @@ void GWmodelToolbar::createButtons()
     openLayerBtn->installEventFilter(this);
     openBtnInfo->installEventFilter(this);
 
+    openByXYBtn = new QPushButton();
+    openByXYBtn->setFixedSize(50,50);
+    openByXYBtn->setIcon(QPixmap("./release/icon/csv.png"));
+    openByXYBtnInfo = new QLabel(this);
+    openByXYBtnInfo->setText(tr("Open By XY Coordinate"));
+    openByXYBtnInfo->setContentsMargins(3,3,3,3);
+    openByXYBtnInfo->adjustSize();
+    openByXYBtnInfo->setStyleSheet("background-color:#FFFFFF");
+    openByXYBtnInfo->hide();
+    openByXYBtn->installEventFilter(this);
+    openByXYBtnInfo->installEventFilter(this);
+
     saveLayerBtn = new QPushButton();
     saveLayerBtn->setFixedSize(50,50);
-    saveLayerBtn->setIcon(QPixmap(":/icon/res/icon/save.png"));
+    saveLayerBtn->setIcon(QPixmap("./release/icon/save.png"));
     saveBtnInfo = new QLabel(this);
     saveBtnInfo->setText(tr("Save"));
     saveBtnInfo->setContentsMargins(3,3,3,3);
@@ -69,7 +122,7 @@ void GWmodelToolbar::createButtons()
 
     exportLayerBtn = new QPushButton();
     exportLayerBtn->setFixedSize(50,50);
-    exportLayerBtn->setIcon(QPixmap(":/icon/res/icon/download.png"));
+    exportLayerBtn->setIcon(QPixmap("./release/icon/download.png"));
     exportBtnInfo = new QLabel(this);
     exportBtnInfo->setText(tr("Export"));
     exportBtnInfo->setContentsMargins(3,3,3,3);
@@ -82,7 +135,7 @@ void GWmodelToolbar::createButtons()
 
     editBtn = new QPushButton();
     editBtn->setFixedSize(50,50);
-    editBtn->setIcon(QPixmap(":/icon/res/icon/edit.png"));
+    editBtn->setIcon(QPixmap("./release/icon/edit.png"));
     editBtnInfo = new QLabel(this);
     editBtnInfo->setText(tr("Edit"));
     editBtnInfo->setContentsMargins(3,3,3,3);
@@ -95,7 +148,7 @@ void GWmodelToolbar::createButtons()
 
     moveBtn = new QPushButton();
     moveBtn->setFixedSize(50,50);
-    moveBtn->setIcon(QPixmap(":/icon/res/icon/move.png"));
+    moveBtn->setIcon(QPixmap("./release/icon/move.png"));
     moveBtnInfo = new QLabel(this);
     moveBtnInfo->setText(tr("Move"));
     moveBtnInfo->setContentsMargins(3,3,3,3);
@@ -107,7 +160,7 @@ void GWmodelToolbar::createButtons()
 
     fullScreenBtn = new QPushButton();
     fullScreenBtn->setFixedSize(50,50);
-    fullScreenBtn->setIcon(QPixmap(":/icon/res/icon/view larger.png"));
+    fullScreenBtn->setIcon(QPixmap("./release/icon/view larger.png"));
     fullScreenBtnInfo = new QLabel(this);
     fullScreenBtnInfo->setText(tr("Full"));
     fullScreenBtnInfo->setContentsMargins(3,3,3,3);
@@ -119,7 +172,7 @@ void GWmodelToolbar::createButtons()
 
     showPositionBtn = new QPushButton();
     showPositionBtn->setFixedSize(50,50);
-    showPositionBtn->setIcon(QPixmap(":/icon/res/icon/map.png"));
+    showPositionBtn->setIcon(QPixmap("./release/icon/map.png"));
     showPositionBtnInfo = new QLabel(this);
     showPositionBtnInfo->setText(tr("Pos"));
     showPositionBtnInfo->setContentsMargins(3,3,3,3);
@@ -166,6 +219,35 @@ bool GWmodelToolbar::eventFilter(QObject *watched, QEvent *event)
         else if(QEvent::MouseButtonRelease == event->type()){
             if(!openBtnInfo->isHidden()){
                 openBtnInfo->hide();
+//                return true;
+            }
+        }
+    }
+    else if(openByXYBtn == watched || openByXYBtnInfo == watched){
+        if(QEvent::Enter ==  event->type()){
+            if(openByXYBtnInfo->isHidden()){
+                openByXYBtnInfo->show();
+                QPoint point = openByXYBtn->pos();
+                point.rx() = point.x() + 40 ;
+                point.ry() = point.y() + 20;
+                openByXYBtnInfo->move(point);
+                openByXYBtnInfo->raise();
+                return true;
+            }
+        }
+        else if(QEvent::Leave == event->type()){
+            if(!openByXYBtnInfo->isHidden()){
+                if(!openByXYBtn->geometry().contains(this->mapFromGlobal(QCursor::pos())) //判断鼠标是否在控件上
+                        &&!openByXYBtnInfo->geometry().contains(this->mapFromGlobal(QCursor::pos())) )
+                   {
+                       openByXYBtnInfo->hide();
+                       return true;
+                   }
+            }
+        }
+        else if(QEvent::MouseButtonRelease == event->type()){
+            if(!openByXYBtnInfo->isHidden()){
+                openByXYBtnInfo->hide();
 //                return true;
             }
         }

@@ -19,6 +19,7 @@ MainWidget::MainWidget(QWidget *parent)
     connect(toolBar, &GWmodelToolbar::openFileImportShapefileSignal, this, &MainWidget::openFileImportShapefile);
     connect(toolBar, &GWmodelToolbar::openFileImportJsonSignal, this, &MainWidget::openFileImportJson);
     connect(toolBar, &GWmodelToolbar::openFileImportCsvSignal, this, &MainWidget::openFileImportCsv);
+    connect(toolBar, &GWmodelToolbar::openByXYBtnSingnal, this, &MainWidget::openFileImportCsv);
 }
 
 MainWidget::~MainWidget()
