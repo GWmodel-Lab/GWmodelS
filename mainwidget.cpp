@@ -22,6 +22,16 @@ MainWidget::MainWidget(QWidget *parent)
     connect(toolBar, &GWmodelToolbar::openFileImportJsonSignal, this, &MainWidget::openFileImportJson);
     connect(toolBar, &GWmodelToolbar::openFileImportCsvSignal, this, &MainWidget::openFileImportCsv);
     connect(toolBar, &GWmodelToolbar::openByXYBtnSingnal, this, &MainWidget::openFileImportCsv);
+    // 连接MainWidget和MapPanel
+    connect(this,SIGNAL(sendDataSigShowLayer(const QModelIndex &)), mapPanel, SLOT(receiveShowLayer(const QModelIndex &)));
+    connect(this,SIGNAL(sendDataSigZoomLayer(const QModelIndex &)), mapPanel, SLOT(receiveZoomLayer(const QModelIndex &)));
+    connect(this,SIGNAL(sendDataSigAttributeTable(const QModelIndex &)), mapPanel, SLOT(receiveAttribute(const QModelIndex &)));
+    connect(this,SIGNAL(sendDataSigProj(const QModelIndex &)), mapPanel, SLOT(receiveProj(const QModelIndex &)));
+    connect(this,SIGNAL(sendDataSigSymbol(const QModelIndex &)), mapPanel, SLOT(receiveSymbol(const QModelIndex &)));
+    connect(this,SIGNAL(sendDataSigEsriShp(const QModelIndex &)),mapPanel,SLOT(receiveShp(const QModelIndex &)));
+    connect(this,SIGNAL(sendDataSigGeoJson(const QModelIndex &)),mapPanel,SLOT(receiveGeoJson(const QModelIndex &)));
+    connect(this,SIGNAL(sendDataSigExcel(const QModelIndex &)),mapPanel,SLOT(receiveExcel(const QModelIndex &)));
+    connect(this,SIGNAL(sendDataSigCsv(const QModelIndex &)),mapPanel,SLOT(receiveCsv(const QModelIndex &)));
 }
 
 MainWidget::~MainWidget()
@@ -122,17 +132,22 @@ void MainWidget::showContextMenu(const QPoint &pos)
         // 改为"五个字的 缩放至图层"会报错, 原因未知
         QAction *pZoom = new QAction("缩放图层",this);
         menu->addAction(pZoom);
+        // 处理事件
+        connect(pZoom, SIGNAL(triggered()), this, SLOT(zoomLayer()));
 
         QAction *pAttribute = new QAction("属性表",this);
 //        pAttribute->setCheckable(true);
 //        pAttribute->setChecked(true);
         menu->addAction(pAttribute);
+        connect(pAttribute, SIGNAL(triggered()),this,SLOT(attributeTable()));
 
         QAction *pProj = new QAction("投影到坐标系",this);
         menu->addAction(pProj);
+        connect(pProj, SIGNAL(triggered()),this,SLOT(proj()));
 
         QAction *pSymbol = new QAction("符号",this);
         menu->addAction(pSymbol);
+        connect(pSymbol, SIGNAL(triggered()),this, SLOT(symbol()));
         // 导出是二级菜单
         QAction *pExport = new QAction("导出",this);
         // menu->addAction("导出");
@@ -140,15 +155,19 @@ void MainWidget::showContextMenu(const QPoint &pos)
         QMenu *subMenu = new QMenu(this);
         QAction *pESRI = new QAction("ESRI Shapefile",subMenu);
         subMenu->addAction(pESRI);
+        connect(pESRI, SIGNAL(triggered()),this,SLOT(esrishp()));
 
         QAction *pGeo = new QAction("GeoJSON",subMenu);
         subMenu->addAction(pGeo);
+        connect(pGeo, SIGNAL(triggered()),this,SLOT(geojson()));
 
         QAction *pCsv = new QAction("csv",subMenu);
-        subMenu->addAction(pGeo);
+        subMenu->addAction(pCsv);
+        connect(pCsv, SIGNAL(triggered()),this,SLOT(csv()));
 
         QAction *pXls = new QAction("Excel",subMenu);
         subMenu->addAction(pXls);
+        connect(pXls, SIGNAL(triggered()),this,SLOT(excel()));
         // 设置二级菜单
         pExport->setMenu(subMenu);
         menu->addMenu(subMenu);
@@ -156,16 +175,68 @@ void MainWidget::showContextMenu(const QPoint &pos)
         menu->exec(QCursor::pos());
     }
 }
-// 显示图层信号
-//void MainWidget::showLayerSig(const QModelIndex &index)
-//{
-//    emit showLayer(index);
-//}
 // 显示图层
 void MainWidget::showLayer()
 {
     QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
-    qDebug() << selected[0];
+    //qDebug() << selected[0];
+    emit sendDataSigShowLayer(selected[0]);
 }
 
+// 缩放至图层
+void MainWidget::zoomLayer()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    //qDebug() << selected[0];
+    emit sendDataSigZoomLayer(selected[0]);
+}
+
+// 属性表
+void MainWidget::attributeTable()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    emit sendDataSigAttributeTable(selected[0]);
+}
+
+// 投影到坐标系
+void MainWidget::proj()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    emit sendDataSigProj(selected[0]);
+}
+
+// 符号
+void MainWidget::symbol()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    emit sendDataSigSymbol(selected[0]);
+}
+
+// 导出shp
+void MainWidget::esrishp()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    emit sendDataSigEsriShp(selected[0]);
+}
+
+// 导出GeoJSON
+void MainWidget::geojson()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    emit sendDataSigGeoJson(selected[0]);
+}
+
+// 导出Csv
+void MainWidget::csv()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    emit sendDataSigCsv(selected[0]);
+}
+
+// 导出Excel
+void MainWidget::excel()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    emit sendDataSigExcel(selected[0]);
+}
 
