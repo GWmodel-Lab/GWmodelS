@@ -23,7 +23,7 @@ public:
 public:
     QVBoxLayout* mainLayout;
     QWidget* mainZone;
-    GwmToolbar* toolBar;
+    GwmToolbar* toolbar;
     GwmFeaturePanel* featurePanel;
     QTabWidget* propertyPanel;
 
@@ -37,6 +37,7 @@ public slots:
     void openFileImportCsv();
 
 private:
+    void createToolbar();
     void createMainZone();
     void createFeaturePanel();
     void createPropertyPanel();

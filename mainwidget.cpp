@@ -6,29 +6,14 @@
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mainLayout(new QVBoxLayout)
-    , toolBar(new GwmToolbar)
     , mapModel(new QStandardItemModel)
 {
     createMainZone();
-    mainLayout->addWidget(toolBar);
+    createToolbar();
+    mainLayout->addWidget(toolbar);
     mainLayout->addWidget(mainZone);
     setLayout(mainLayout);
     mainLayout->setStretchFactor(mainZone, 1);
-
-    connect(toolBar, &GwmToolbar::openFileImportShapefileSignal, this, &MainWidget::openFileImportShapefile);
-    connect(toolBar, &GwmToolbar::openFileImportJsonSignal, this, &MainWidget::openFileImportJson);
-    connect(toolBar, &GwmToolbar::openFileImportCsvSignal, this, &MainWidget::openFileImportCsv);
-    connect(toolBar, &GwmToolbar::openByXYBtnSingnal, this, &MainWidget::openFileImportCsv);
-    // 连接MainWidget和MapPanel
-//    connect(this,SIGNAL(sendDataSigShowLayer(const QModelIndex &)), mapPanel, SLOT(receiveShowLayer(const QModelIndex &)));
-//    connect(this,SIGNAL(sendDataSigZoomLayer(const QModelIndex &)), mapPanel, SLOT(receiveZoomLayer(const QModelIndex &)));
-//    connect(this,SIGNAL(sendDataSigAttributeTable(const QModelIndex &)), mapPanel, SLOT(receiveAttribute(const QModelIndex &)));
-//    connect(this,SIGNAL(sendDataSigProj(const QModelIndex &)), mapPanel, SLOT(receiveProj(const QModelIndex &)));
-//    connect(this,SIGNAL(sendDataSigSymbol(const QModelIndex &)), mapPanel, SLOT(receiveSymbol(const QModelIndex &)));
-//    connect(this,SIGNAL(sendDataSigEsriShp(const QModelIndex &)),mapPanel,SLOT(receiveShp(const QModelIndex &)));
-//    connect(this,SIGNAL(sendDataSigGeoJson(const QModelIndex &)),mapPanel,SLOT(receiveGeoJson(const QModelIndex &)));
-//    connect(this,SIGNAL(sendDataSigExcel(const QModelIndex &)),mapPanel,SLOT(receiveExcel(const QModelIndex &)));
-//    connect(this,SIGNAL(sendDataSigCsv(const QModelIndex &)),mapPanel,SLOT(receiveCsv(const QModelIndex &)));
 }
 
 MainWidget::~MainWidget()
@@ -58,6 +43,16 @@ void MainWidget::openFileImportJson(){
 
 void MainWidget::openFileImportCsv(){
     QFileDialog::getOpenFileName(this, tr("Open CSV"), tr(""), tr("CSV (*.csv)"));
+}
+
+void MainWidget::createToolbar()
+{
+    toolbar = new GwmToolbar(this);
+    // 连接信号槽
+    connect(toolbar, &GwmToolbar::openFileImportShapefileSignal, this, &MainWidget::openFileImportShapefile);
+    connect(toolbar, &GwmToolbar::openFileImportJsonSignal, this, &MainWidget::openFileImportJson);
+    connect(toolbar, &GwmToolbar::openFileImportCsvSignal, this, &MainWidget::openFileImportCsv);
+    connect(toolbar, &GwmToolbar::openByXYBtnSingnal, this, &MainWidget::openFileImportCsv);
 }
 
 void MainWidget::createMainZone()
