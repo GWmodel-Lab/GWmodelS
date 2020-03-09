@@ -31,11 +31,13 @@ public:
     QStandardItemModel* mapModel;
     QList<QgsMapLayer*> mapLayerSet;
     QgsMapCanvas* mapCanvas;
+    QMap<QString, QgsVectorLayer*> mapLayerNameDict;
 
 public slots:
     void openFileImportShapefile();
     void openFileImportJson();
     void openFileImportCsv();
+    void onShowLayerProperty(const QModelIndex &index);
 
 private:
     void createToolbar();

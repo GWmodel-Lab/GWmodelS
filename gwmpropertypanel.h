@@ -1,8 +1,13 @@
 #ifndef GWMPROPERTYPANEL_H
 #define GWMPROPERTYPANEL_H
 
+#ifndef M_PI
+#define M_PI (3.14159265358979323846)
+#endif
+
 #include <QTabWidget>
 #include <QStandardItemModel>
+#include <qgsvectorlayer.h>
 #include <PropertyPanelTabs/gwmpropertydefaulttab.h>
 
 namespace Ui {
@@ -22,10 +27,11 @@ private:
     QStandardItemModel* mapModel;
 
 public:
-    void addStatisticTab(QModelIndex index);
+    void addStatisticTab(QModelIndex index, QgsVectorLayer* layer);
 
 private:
-    void setupTabs();
+    bool isDefaultTabShow;
+    void manageDefaultTab();
 
 };
 
