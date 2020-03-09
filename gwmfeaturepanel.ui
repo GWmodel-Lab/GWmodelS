@@ -2,8 +2,8 @@
  <author/>
  <comment/>
  <exportmacro/>
- <class>GWmodelMapPanel</class>
- <widget class="QWidget" name="GWmodelMapPanel">
+ <class>GwmFeaturePanel</class>
+ <widget class="QWidget" name="GwmFeaturePanel">
   <property name="geometry">
    <rect>
     <x>0</x>
