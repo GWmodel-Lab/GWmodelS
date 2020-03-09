@@ -3,12 +3,12 @@
 #include <qgsvectorlayer.h>
 #include "mainwidget.h"
 
-#include "gwmodelmappanel.h"
+#include "gwmmappanel.h"
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mainLayout(new QVBoxLayout)
-    , toolBar(new GWmodelToolbar)
+    , toolBar(new GwmToolbar)
 {
     mapModel = new QStandardItemModel();
 
@@ -18,10 +18,10 @@ MainWidget::MainWidget(QWidget *parent)
     setLayout(mainLayout);
     mainLayout->setStretchFactor(mainZone, 1);
 
-    connect(toolBar, &GWmodelToolbar::openFileImportShapefileSignal, this, &MainWidget::openFileImportShapefile);
-    connect(toolBar, &GWmodelToolbar::openFileImportJsonSignal, this, &MainWidget::openFileImportJson);
-    connect(toolBar, &GWmodelToolbar::openFileImportCsvSignal, this, &MainWidget::openFileImportCsv);
-    connect(toolBar, &GWmodelToolbar::openByXYBtnSingnal, this, &MainWidget::openFileImportCsv);
+    connect(toolBar, &GwmToolbar::openFileImportShapefileSignal, this, &MainWidget::openFileImportShapefile);
+    connect(toolBar, &GwmToolbar::openFileImportJsonSignal, this, &MainWidget::openFileImportJson);
+    connect(toolBar, &GwmToolbar::openFileImportCsvSignal, this, &MainWidget::openFileImportCsv);
+    connect(toolBar, &GwmToolbar::openByXYBtnSingnal, this, &MainWidget::openFileImportCsv);
     // 连接MainWidget和MapPanel
     connect(this,SIGNAL(sendDataSigShowLayer(const QModelIndex &)), mapPanel, SLOT(receiveShowLayer(const QModelIndex &)));
     connect(this,SIGNAL(sendDataSigZoomLayer(const QModelIndex &)), mapPanel, SLOT(receiveZoomLayer(const QModelIndex &)));
@@ -71,7 +71,7 @@ void MainWidget::createMainZone()
 
     createFeaturePanel();
     createPropertyPanel();
-    mapPanel = new GWmodelMapPanel(mainZone, mapModel);
+    mapPanel = new GwmMapPanel(mainZone, mapModel);
 
     layout->addWidget(featurePanel);
     layout->addWidget(mapPanel);

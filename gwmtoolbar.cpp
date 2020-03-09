@@ -1,6 +1,6 @@
-#include "gwmodeltoolbar.h"
+#include "gwmtoolbar.h"
 
-GWmodelToolbar::GWmodelToolbar(QWidget *parent) :
+GwmToolbar::GwmToolbar(QWidget *parent) :
     QWidget(parent)
 {
     createButtons();
@@ -20,69 +20,69 @@ GWmodelToolbar::GWmodelToolbar(QWidget *parent) :
     widgetLayout->addStretch();
     this->setLayout(widgetLayout);
     widgetLayout->setSpacing(5);
-    connect(openLayerBtn,&QPushButton::clicked,this,&GWmodelToolbar::openFileImportShapefile);
-    connect(saveLayerBtn,&QPushButton::clicked,this,&GWmodelToolbar::openFileImportJson);
-    connect(exportLayerBtn,&QPushButton::clicked,this,&GWmodelToolbar::openFileImportCsv);
-    connect(openByXYBtn,&QPushButton::clicked,this,&GWmodelToolbar::openByXYBtnSlot);
-    connect(editBtn,&QPushButton::clicked,this,&GWmodelToolbar::editBtnSlot);
-    connect(moveBtn,&QPushButton::clicked,this,&GWmodelToolbar::moveBtnSlot);
-    connect(fullScreenBtn,&QPushButton::clicked,this,&GWmodelToolbar::fullScreenBtnSlot);
-    connect(showPositionBtn,&QPushButton::clicked,this,&GWmodelToolbar::showPositionBtnSlot);
-    connect(gwmodelGWRBtn,&QPushButton::clicked,this,&GWmodelToolbar::gwmodelGWRBtnSlot);
-    connect(gwmodelGWSSBtn,&QPushButton::clicked,this,&GWmodelToolbar::gwmodelGWSSBtnSlot);
-    connect(gwmodelGWPCABtn,&QPushButton::clicked,this,&GWmodelToolbar::gwmodelGWPCABtnSlot);
+    connect(openLayerBtn,&QPushButton::clicked,this,&GwmToolbar::openFileImportShapefile);
+    connect(saveLayerBtn,&QPushButton::clicked,this,&GwmToolbar::openFileImportJson);
+    connect(exportLayerBtn,&QPushButton::clicked,this,&GwmToolbar::openFileImportCsv);
+    connect(openByXYBtn,&QPushButton::clicked,this,&GwmToolbar::openByXYBtnSlot);
+    connect(editBtn,&QPushButton::clicked,this,&GwmToolbar::editBtnSlot);
+    connect(moveBtn,&QPushButton::clicked,this,&GwmToolbar::moveBtnSlot);
+    connect(fullScreenBtn,&QPushButton::clicked,this,&GwmToolbar::fullScreenBtnSlot);
+    connect(showPositionBtn,&QPushButton::clicked,this,&GwmToolbar::showPositionBtnSlot);
+    connect(gwmodelGWRBtn,&QPushButton::clicked,this,&GwmToolbar::gwmodelGWRBtnSlot);
+    connect(gwmodelGWSSBtn,&QPushButton::clicked,this,&GwmToolbar::gwmodelGWSSBtnSlot);
+    connect(gwmodelGWPCABtn,&QPushButton::clicked,this,&GwmToolbar::gwmodelGWPCABtnSlot);
 }
 
-GWmodelToolbar::~GWmodelToolbar()
+GwmToolbar::~GwmToolbar()
 {
 
 }
 
-void GWmodelToolbar::openFileImportShapefile(){
+void GwmToolbar::openFileImportShapefile(){
     emit openFileImportShapefileSignal();
 }
 
-void GWmodelToolbar::openFileImportJson(){
+void GwmToolbar::openFileImportJson(){
     emit openFileImportJsonSignal();
 }
 
-void GWmodelToolbar::openFileImportCsv(){
+void GwmToolbar::openFileImportCsv(){
     emit openFileImportCsvSignal();
 }
 
-void GWmodelToolbar::openByXYBtnSlot(){
+void GwmToolbar::openByXYBtnSlot(){
     emit openByXYBtnSingnal();
 }
 
-void GWmodelToolbar::editBtnSlot(){
+void GwmToolbar::editBtnSlot(){
     emit openFileImportJsonSignal();
 }
 
-void GWmodelToolbar::moveBtnSlot(){
+void GwmToolbar::moveBtnSlot(){
     emit moveBtnSignal();
 }
-void GWmodelToolbar::fullScreenBtnSlot(){
+void GwmToolbar::fullScreenBtnSlot(){
     emit fullScreenBtnSignal();
 }
 
-void GWmodelToolbar::showPositionBtnSlot(){
+void GwmToolbar::showPositionBtnSlot(){
     emit showPositionBtnSignal();
 }
 
-void GWmodelToolbar::gwmodelGWRBtnSlot(){
+void GwmToolbar::gwmodelGWRBtnSlot(){
     emit gwmodelGWRBtnSignal();
 }
 
-void GWmodelToolbar::gwmodelGWSSBtnSlot(){
+void GwmToolbar::gwmodelGWSSBtnSlot(){
     emit gwmodelGWSSBtnSignal();
 }
 
-void GWmodelToolbar::gwmodelGWPCABtnSlot(){
+void GwmToolbar::gwmodelGWPCABtnSlot(){
     emit gwmodelGWPCABtnSignal();
 }
 
 
-void GWmodelToolbar::createButtons()
+void GwmToolbar::createButtons()
 {
     openLayerBtn = new QPushButton();
     openLayerBtn->setFixedSize(50,50);
@@ -192,7 +192,7 @@ void GWmodelToolbar::createButtons()
     gwmodelGWPCABtn->setFixedSize(50,50);
 }
 
-bool GWmodelToolbar::eventFilter(QObject *watched, QEvent *event)
+bool GwmToolbar::eventFilter(QObject *watched, QEvent *event)
 {
     if(openLayerBtn == watched || openBtnInfo == watched){
         if(QEvent::Enter ==  event->type()){

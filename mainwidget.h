@@ -2,8 +2,8 @@
 #define MAINLAYOUT_H
 
 #include <QWidget>
-#include <gwmodeltoolbar.h>
-#include <gwmodelmappanel.h>
+#include <gwmtoolbar.h>
+#include <gwmmappanel.h>
 
 //namespace Ui {
 //class MainLayout;
@@ -20,9 +20,9 @@ public:
 
 public:
     QVBoxLayout* mainLayout;
-    GWmodelToolbar* toolBar;
+    GwmToolbar* toolBar;
     QWidget* mainZone;
-    GWmodelMapPanel* mapPanel;
+    GwmMapPanel* mapPanel;
     QTreeView* featurePanel;
     QTabWidget* propertyPanel;
 

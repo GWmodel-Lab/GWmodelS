@@ -16,13 +16,13 @@ class QTextEdit;
 class QHBoxLayout;
 QT_END_NAMESPACE
 
-class GWmodelToolbar : public QWidget
+class GwmToolbar : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit GWmodelToolbar(QWidget *parent = nullptr);
-    ~GWmodelToolbar();
+    explicit GwmToolbar(QWidget *parent = nullptr);
+    ~GwmToolbar();
 
 private:
     QPushButton* openLayerBtn;
