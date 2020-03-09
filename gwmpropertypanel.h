@@ -33,6 +33,9 @@ private:
     bool isDefaultTabShow;
     void manageDefaultTab();
 
+private slots:
+    void onTabCloseRequest(int index);
+
 };
 
 #endif // GWMPROPERTYPANEL_H

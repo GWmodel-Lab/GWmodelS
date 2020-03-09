@@ -7,8 +7,8 @@ GwmPropertyPanel::GwmPropertyPanel(QWidget *parent, QStandardItemModel* model) :
     mapModel(model),
     isDefaultTabShow(false)
 {
-    setTabsClosable(true);
     manageDefaultTab();
+    connect(this, &QTabWidget::tabCloseRequested, this, &GwmPropertyPanel::onTabCloseRequest);
 }
 
 GwmPropertyPanel::~GwmPropertyPanel()
@@ -22,11 +22,22 @@ void GwmPropertyPanel::manageDefaultTab()
     {
         removeTab(defaultTabIndex);
         isDefaultTabShow = false;
+        setTabsClosable(true);
     }
     else if (count() < 1)
     {
         addTab(defaultTab, "Default");
         isDefaultTabShow = true;
+        setTabsClosable(false);
+    }
+}
+
+void GwmPropertyPanel::onTabCloseRequest(int index)
+{
+    if (index != indexOf(defaultTab))
+    {
+        removeTab(index);
+        manageDefaultTab();
     }
 }
 
