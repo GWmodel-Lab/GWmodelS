@@ -76,6 +76,7 @@ void MainWidget::createMainZone()
 void MainWidget::createFeaturePanel()
 {
     featurePanel = new GwmFeaturePanel(mainZone, mapModel);
+    featurePanel->setFixedWidth(320);
 }
 
 void MainWidget::createPropertyPanel()
