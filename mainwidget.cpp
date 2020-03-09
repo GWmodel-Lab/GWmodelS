@@ -3,15 +3,12 @@
 #include <qgsvectorlayer.h>
 #include "mainwidget.h"
 
-#include "gwmmappanel.h"
-
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mainLayout(new QVBoxLayout)
     , toolBar(new GwmToolbar)
+    , mapModel(new QStandardItemModel)
 {
-    mapModel = new QStandardItemModel();
-
     createMainZone();
     mainLayout->addWidget(toolBar);
     mainLayout->addWidget(mainZone);
@@ -71,13 +68,14 @@ void MainWidget::createMainZone()
 
     createFeaturePanel();
     createPropertyPanel();
-    mapPanel = new GwmMapPanel(mainZone, mapModel);
+    createMapPanel();
 
     layout->addWidget(featurePanel);
-    layout->addWidget(mapPanel);
+    layout->addWidget(mapCanvas);
     layout->addWidget(propertyPanel);
+    layout->setStretchFactor(mapCanvas, 1);
 
-    layout->setStretchFactor(mapPanel, 1);
+    mainZone->setLayout(layout);
 }
 
 void MainWidget::createFeaturePanel()
@@ -93,4 +91,42 @@ void MainWidget::createPropertyPanel()
     QLabel* demoTab = new QLabel(tr("Select a feature to show its property."), propertyPanel);
     propertyPanel->addTab(demoTab, tr("Property"));
     // [End] Demo Tab
+}
+
+void MainWidget::createMapPanel()
+{
+    mapCanvas = new QgsMapCanvas();
+    mapCanvas->setLayers(mapLayerSet);
+    mapCanvas->setVisible(true);
+
+    // 连接信号槽
+    connect(mapModel, &QStandardItemModel::rowsInserted, this, &MainWidget::onMapItemInserted);
+}
+
+void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int last)
+{
+    if (!parent.isValid())
+    {
+        bool isSetExtend = false;
+        if (mapLayerSet.length() < 1)
+        {
+            isSetExtend = true;
+        }
+        for (int i = first; i <= last; i++)
+        {
+            QMap<QString, QVariant> itemData = mapModel->item(i)->data().toMap();
+            QString path = itemData["path"].toString();
+            QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, QString("Layer%1").arg(i));
+            if (vectorLayer->isValid())
+            {
+                mapLayerSet.append(vectorLayer);
+            }
+        }
+        mapCanvas->setLayers(mapLayerSet);
+        if (isSetExtend && mapLayerSet.length() > 0)
+        {
+            mapCanvas->setExtent(mapLayerSet.first()->extent());
+        }
+        mapCanvas->refresh();
+    }
 }

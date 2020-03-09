@@ -3,8 +3,9 @@
 
 #include <QWidget>
 #include <gwmtoolbar.h>
-#include <gwmmappanel.h>
 #include <gwmfeaturepanel.h>
+#include <qgsmapcanvas.h>
+#include <qgsmaplayer.h>
 
 //namespace Ui {
 //class MainLayout;
@@ -23,11 +24,12 @@ public:
     QVBoxLayout* mainLayout;
     QWidget* mainZone;
     GwmToolbar* toolBar;
-    GwmMapPanel* mapPanel;
     GwmFeaturePanel* featurePanel;
     QTabWidget* propertyPanel;
 
     QStandardItemModel* mapModel;
+    QList<QgsMapLayer*> mapLayerSet;
+    QgsMapCanvas* mapCanvas;
 
 public slots:
     void openFileImportShapefile();
@@ -38,10 +40,11 @@ private:
     void createMainZone();
     void createFeaturePanel();
     void createPropertyPanel();
-    // 官网示例函数
-    void ShowContext(const QModelIndex &index);
-    // 要素区右键显示菜单信号函数
-    void customContextMenuRequested(const QPoint &pos);
+    void createMapPanel();
+    /**
+     * @brief Map item inserted slot.
+     */
+    void onMapItemInserted(const QModelIndex &parent, int first, int last);
 };
 
 #endif // MAINLAYOUT_H

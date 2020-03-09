@@ -17,7 +17,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     gwmfeaturepanel.cpp \
-    gwmmappanel.cpp \
     gwmtoolbar.cpp \
     main.cpp \
     mainwidget.cpp \
@@ -25,14 +24,12 @@ SOURCES += \
 
 HEADERS += \
     gwmfeaturepanel.h \
-    gwmmappanel.h \
     gwmtoolbar.h \
     mainwidget.h \
     mainwindow.h
 
 FORMS += \
     gwmfeaturepanel.ui \
-    gwmmappanel.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui
