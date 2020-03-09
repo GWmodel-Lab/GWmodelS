@@ -81,12 +81,8 @@ void MainWidget::createFeaturePanel()
 
 void MainWidget::createPropertyPanel()
 {
-    propertyPanel = new QTabWidget(mainZone);
+    propertyPanel = new GwmPropertyPanel(mainZone);
     propertyPanel->setFixedWidth(420);
-    // Demo Tab
-    QLabel* demoTab = new QLabel(tr("Select a feature to show its property."), propertyPanel);
-    propertyPanel->addTab(demoTab, tr("Property"));
-    // [End] Demo Tab
 }
 
 void MainWidget::createMapPanel()

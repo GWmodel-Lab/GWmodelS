@@ -6,6 +6,7 @@
 #include <gwmfeaturepanel.h>
 #include <qgsmapcanvas.h>
 #include <qgsmaplayer.h>
+#include <gwmpropertypanel.h>
 
 //namespace Ui {
 //class MainLayout;
@@ -25,7 +26,7 @@ public:
     QWidget* mainZone;
     GwmToolbar* toolbar;
     GwmFeaturePanel* featurePanel;
-    QTabWidget* propertyPanel;
+    GwmPropertyPanel* propertyPanel;
 
     QStandardItemModel* mapModel;
     QList<QgsMapLayer*> mapLayerSet;
