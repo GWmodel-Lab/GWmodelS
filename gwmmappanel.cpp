@@ -1,11 +1,11 @@
-#include "gwmodelmappanel.h"
+#include "gwmmappanel.h"
 
 #include <QStackedLayout>
 #include <QMessageBox>
 
 #include <QDebug>
 
-GWmodelMapPanel::GWmodelMapPanel(QWidget *parent, QStandardItemModel* model)
+GwmMapPanel::GwmMapPanel(QWidget *parent, QStandardItemModel* model)
     : QWidget(parent)
     , mapModel(model)
 {
@@ -17,15 +17,15 @@ GWmodelMapPanel::GWmodelMapPanel(QWidget *parent, QStandardItemModel* model)
     layout->setMargin(0);
     setLayout(layout);
 
-    connect(mapModel, &QStandardItemModel::rowsInserted, this, &GWmodelMapPanel::onMapItemInserted);
+    connect(mapModel, &QStandardItemModel::rowsInserted, this, &GwmMapPanel::onMapItemInserted);
 }
 
-GWmodelMapPanel::~GWmodelMapPanel()
+GwmMapPanel::~GwmMapPanel()
 {
 
 }
 
-void GWmodelMapPanel::onMapItemInserted(const QModelIndex &parent, int first, int last)
+void GwmMapPanel::onMapItemInserted(const QModelIndex &parent, int first, int last)
 {
     if (!parent.isValid())
     {
@@ -54,7 +54,7 @@ void GWmodelMapPanel::onMapItemInserted(const QModelIndex &parent, int first, in
 }
 
 // 显示图层函数
-void GWmodelMapPanel::receiveShowLayer(const QModelIndex &index)
+void GwmMapPanel::receiveShowLayer(const QModelIndex &index)
 {
     //qDebug() << 11;
     qDebug("显示图层");
@@ -62,56 +62,56 @@ void GWmodelMapPanel::receiveShowLayer(const QModelIndex &index)
 }
 
 // 缩放至图层函数
-void GWmodelMapPanel::receiveZoomLayer(const QModelIndex &index)
+void GwmMapPanel::receiveZoomLayer(const QModelIndex &index)
 {
     qDebug("缩放图层");
     qDebug() << index;
 }
 
 // 属性表
-void GWmodelMapPanel::receiveAttribute(const QModelIndex &index)
+void GwmMapPanel::receiveAttribute(const QModelIndex &index)
 {
     qDebug("属性表");
     qDebug() << index;
 }
 
 // 投影到坐标系
-void GWmodelMapPanel::receiveProj(const QModelIndex &index)
+void GwmMapPanel::receiveProj(const QModelIndex &index)
 {
     qDebug("投影");
     qDebug() << index;
 }
 
 // 符号
-void GWmodelMapPanel::receiveSymbol(const QModelIndex &index)
+void GwmMapPanel::receiveSymbol(const QModelIndex &index)
 {
     qDebug("符号");
     qDebug() << index;
 }
 
 // 导出shp
-void GWmodelMapPanel::receiveShp(const QModelIndex &index)
+void GwmMapPanel::receiveShp(const QModelIndex &index)
 {
     qDebug("导出shp");
     qDebug() << index;
 }
 
 // 导出GeoJSON
-void GWmodelMapPanel::receiveGeoJson(const QModelIndex &index)
+void GwmMapPanel::receiveGeoJson(const QModelIndex &index)
 {
     qDebug("导出GeoJson");
     qDebug() << index;
 }
 
 // 导出Excel
-void GWmodelMapPanel::receiveExcel(const QModelIndex &index)
+void GwmMapPanel::receiveExcel(const QModelIndex &index)
 {
     qDebug("导出Excel");
     qDebug() << index;
 }
 
 // 导出Csv
-void GWmodelMapPanel::receiveCsv(const QModelIndex &index)
+void GwmMapPanel::receiveCsv(const QModelIndex &index)
 {
     qDebug("导出Csv");
     qDebug() << index;

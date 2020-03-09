@@ -10,13 +10,13 @@
 #include <qgsmapcanvas.h>
 #include <qgsvectorlayer.h>
 
-class GWmodelMapPanel : public QWidget
+class GwmMapPanel : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit GWmodelMapPanel(QWidget *parent = nullptr, QStandardItemModel* model = new QStandardItemModel);
-    ~GWmodelMapPanel();
+    explicit GwmMapPanel(QWidget *parent = nullptr, QStandardItemModel* model = new QStandardItemModel);
+    ~GwmMapPanel();
 
 private:
     QgsMapCanvas* mapCanvas;
