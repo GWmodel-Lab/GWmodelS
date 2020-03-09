@@ -19,7 +19,7 @@ void GwmFeaturePanel::setupUi()
     // 创建 Feature Panel
     featurePanel = new QTreeView(this);
     featurePanel->setModel(mapModel);
-    featurePanel->setColumnWidth(0, 320);
+    featurePanel->setColumnWidth(0, 315);
     featurePanel->setModel(mapModel);
     // 添加到布局中
     QVBoxLayout* layout = new QVBoxLayout(this);
