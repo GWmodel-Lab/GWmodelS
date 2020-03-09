@@ -17,6 +17,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     gwmfeaturepanel.cpp \
+    PropertyPanelTabs/gwmpropertydefaulttab.cpp \
+    PropertyPanelTabs/gwmpropertystatisticstab.cpp \
+    gwmpropertypanel.cpp \
     gwmtoolbar.cpp \
     main.cpp \
     mainwidget.cpp \
@@ -24,12 +27,18 @@ SOURCES += \
 
 HEADERS += \
     gwmfeaturepanel.h \
+    PropertyPanelTabs/gwmpropertydefaulttab.h \
+    PropertyPanelTabs/gwmpropertystatisticstab.h \
+    gwmpropertypanel.h \
     gwmtoolbar.h \
     mainwidget.h \
     mainwindow.h
 
 FORMS += \
     gwmfeaturepanel.ui \
+    PropertyPanelTabs/gwmpropertydefaulttab.ui \
+    PropertyPanelTabs/gwmpropertystatisticstab.ui \
+    gwmpropertypanel.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui

@@ -31,6 +31,8 @@ signals:
     void sendDataSigExcel(const QModelIndex &index);
     // 导出Csv
     void sendDataSigCsv(const QModelIndex &index);
+    // 显示属性
+    void showLayerPropertySignal(const QModelIndex &index);
 
 private:
     QStandardItemModel* mapModel;
@@ -56,6 +58,8 @@ private:
     void excel();
     // 发送信号(导出csv)
     void csv();
+    // 发出信号(显示属性)
+    void layerProperty();
 };
 
 #endif // GWMFEATUREPANEL_H

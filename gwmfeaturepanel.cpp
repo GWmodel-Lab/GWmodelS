@@ -88,8 +88,14 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
         connect(pXls, &QAction::triggered,this,&GwmFeaturePanel::excel);
         // 设置二级菜单
         pExport->setMenu(subMenu);
-        menu->addMenu(subMenu);
+
+        // 显示属性
+        QAction *pProperty = new QAction("Layer Property",this);
+        menu->addAction(pProperty);
+        connect(pProperty, &QAction::triggered,this, &GwmFeaturePanel::layerProperty);
+
         // QCursor::pos()让menu的位置在鼠标点击的的位置
+        menu->addMenu(subMenu);
         menu->exec(QCursor::pos());
     }
 }
@@ -157,4 +163,10 @@ void GwmFeaturePanel::excel()
 {
     QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
     emit sendDataSigExcel(selected[0]);
+}
+
+void GwmFeaturePanel::layerProperty()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    emit showLayerPropertySignal(selected[0]);
 }

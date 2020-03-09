@@ -7,6 +7,7 @@ MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mainLayout(new QVBoxLayout)
     , mapModel(new QStandardItemModel)
+    , mapLayerNameDict()
 {
     createMainZone();
     createToolbar();
@@ -77,16 +78,14 @@ void MainWidget::createFeaturePanel()
 {
     featurePanel = new GwmFeaturePanel(mainZone, mapModel);
     featurePanel->setFixedWidth(320);
+    // 连接信号槽
+    connect(featurePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &MainWidget::onShowLayerProperty);
 }
 
 void MainWidget::createPropertyPanel()
 {
-    propertyPanel = new QTabWidget(mainZone);
+    propertyPanel = new GwmPropertyPanel(mainZone, mapModel);
     propertyPanel->setFixedWidth(420);
-    // Demo Tab
-    QLabel* demoTab = new QLabel(tr("Select a feature to show its property."), propertyPanel);
-    propertyPanel->addTab(demoTab, tr("Property"));
-    // [End] Demo Tab
 }
 
 void MainWidget::createMapPanel()
@@ -110,12 +109,14 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
         }
         for (int i = first; i <= last; i++)
         {
-            QMap<QString, QVariant> itemData = mapModel->item(i)->data().toMap();
+            QStandardItem* item = mapModel->item(i);
+            QMap<QString, QVariant> itemData = item->data().toMap();
             QString path = itemData["path"].toString();
-            QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, QString("Layer%1").arg(i));
+            QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, item->text());
             if (vectorLayer->isValid())
             {
                 mapLayerSet.append(vectorLayer);
+                mapLayerNameDict[item->text()] = vectorLayer;
             }
         }
         mapCanvas->setLayers(mapLayerSet);
@@ -125,4 +126,13 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
         }
         mapCanvas->refresh();
     }
+}
+
+void MainWidget::onShowLayerProperty(const QModelIndex &index)
+{
+    QStandardItem* item = mapModel->itemFromIndex(index);
+    qDebug() << "Layer Name: " << item->text();
+    QString layerName = item->text();
+    QgsVectorLayer* layer = mapLayerNameDict[layerName];
+    propertyPanel->addStatisticTab(index, layer);
 }
