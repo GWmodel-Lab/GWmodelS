@@ -27,6 +27,7 @@ SOURCES += \
     gwmmaptoolidentifyfeature.cpp \
     gwmopenxyeventlayerdialog.cpp \
     gwmpropertypanel.cpp \
+    gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
     mainwidget.cpp \
@@ -44,6 +45,7 @@ HEADERS += \
     gwmmaptoolidentifyfeature.h \
     gwmopenxyeventlayerdialog.h \
     gwmpropertypanel.h \
+    gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
     mainwindow.h \
