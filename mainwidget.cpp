@@ -8,6 +8,7 @@ MainWidget::MainWidget(QWidget *parent)
     , mainLayout(new QVBoxLayout)
     , mapModel(new QStandardItemModel)
     , mapLayerNameDict()
+    , mapPoint0(-1, -1)
 {
     createMainZone();
     createToolbar();
@@ -38,12 +39,30 @@ void MainWidget::openFileImportShapefile(){
     }
 }
 
-void MainWidget::openFileImportJson(){
+void MainWidget::openFileImportJson()
+{
     QFileDialog::getOpenFileName(this, tr("Open GeoJson"), tr(""), tr("GeoJson (*.json *.geojson)"));
 }
 
-void MainWidget::openFileImportCsv(){
+void MainWidget::openFileImportCsv()
+{
     QFileDialog::getOpenFileName(this, tr("Open CSV"), tr(""), tr("CSV (*.csv)"));
+}
+
+void MainWidget::onSelectMode()
+{
+    mapCanvas->setMapTool(mapIdentifyTool);
+}
+
+void MainWidget::onNavigateMode()
+{
+    mapCanvas->setMapTool(mapPanTool);
+}
+
+void MainWidget::onEditMode()
+{
+    QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerList[0];
+    layer->selectAll();
 }
 
 void MainWidget::createToolbar()
@@ -54,6 +73,10 @@ void MainWidget::createToolbar()
     connect(toolbar, &GwmToolbar::openFileImportJsonSignal, this, &MainWidget::openFileImportJson);
     connect(toolbar, &GwmToolbar::openFileImportCsvSignal, this, &MainWidget::openFileImportCsv);
     connect(toolbar, &GwmToolbar::openByXYBtnSingnal, this, &MainWidget::openFileImportCsv);
+    connect(toolbar, &GwmToolbar::fullScreenBtnSignal, this, &MainWidget::onFullScreen);
+    connect(toolbar, &GwmToolbar::selectBtnSignal, this, &MainWidget::onSelectMode);
+    connect(toolbar, &GwmToolbar::moveBtnSignal, this, &MainWidget::onNavigateMode);
+    connect(toolbar, &GwmToolbar::editBtnSignal, this, &MainWidget::onEditMode);
 }
 
 void MainWidget::createMainZone()
@@ -91,11 +114,18 @@ void MainWidget::createPropertyPanel()
 void MainWidget::createMapPanel()
 {
     mapCanvas = new QgsMapCanvas();
-    mapCanvas->setLayers(mapLayerSet);
+    mapCanvas->setLayers(mapLayerList);
     mapCanvas->setVisible(true);
+//    mapCanvas->setSelectionColor(QColor(255, 0, 0));
+
+    // 工具
+    mapPanTool = new QgsMapToolPan(mapCanvas);
+    mapIdentifyTool = new GwmMapToolIdentifyFeature(mapCanvas);
+    mapCanvas->setMapTool(mapIdentifyTool);
 
     // 连接信号槽
     connect(mapModel, &QStandardItemModel::rowsInserted, this, &MainWidget::onMapItemInserted);
+    connect(mapCanvas, &QgsMapCanvas::selectionChanged, this, &MainWidget::onMapSelectionChanged);
 }
 
 void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int last)
@@ -103,7 +133,7 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
     if (!parent.isValid())
     {
         bool isSetExtend = false;
-        if (mapLayerSet.length() < 1)
+        if (mapLayerList.length() < 1)
         {
             isSetExtend = true;
         }
@@ -115,16 +145,17 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
             QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, item->text());
             if (vectorLayer->isValid())
             {
-                mapLayerSet.append(vectorLayer);
+                mapLayerList.append(vectorLayer);
                 mapLayerNameDict[item->text()] = vectorLayer;
+                mapLayerRubberDict[vectorLayer] = QList<QgsRubberBand*>();
             }
         }
-        mapCanvas->setLayers(mapLayerSet);
-        if (isSetExtend && mapLayerSet.length() > 0)
+        mapCanvas->setLayers(mapLayerList);
+        if (isSetExtend && mapLayerList.length() > 0)
         {
-            mapCanvas->setExtent(mapLayerSet.first()->extent());
+            mapCanvas->setExtent(mapLayerList.first()->extent());
+            mapCanvas->refresh();
         }
-        mapCanvas->refresh();
     }
 }
 
@@ -135,4 +166,37 @@ void MainWidget::onShowLayerProperty(const QModelIndex &index)
     QString layerName = item->text();
     QgsVectorLayer* layer = mapLayerNameDict[layerName];
     propertyPanel->addStatisticTab(index, layer);
+}
+
+void MainWidget::onFullScreen()
+{
+    auto extent = mapCanvas->fullExtent();
+    mapCanvas->setExtent(extent);
+    mapCanvas->refresh();
+}
+
+void MainWidget::onMapSelectionChanged(QgsVectorLayer *layer)
+{
+    qDebug() << "[MainWidget]" << "Map Selection Changed: (layer " << layer->name() << ")";
+    // 移除旧的橡皮条
+    QList<QgsRubberBand*> rubbers0 = mapLayerRubberDict[layer];
+    if (rubbers0.size() > 0)
+    {
+        for (QgsRubberBand* rubber : rubbers0)
+        {
+            rubber->reset();
+        }
+    }
+    rubbers0.clear();
+    // 添加新的橡皮条
+    QgsFeatureList selectedFeatures = layer->selectedFeatures();
+    for (QgsFeature feature : selectedFeatures)
+    {
+        QgsGeometry geometry = feature.geometry();
+        QgsRubberBand* rubber = new QgsRubberBand(mapCanvas, geometry.type());
+        rubber->addGeometry(geometry, layer);
+        rubber->setStrokeColor(QColor(255, 0, 0));
+        rubber->setFillColor(QColor(255, 0, 0, 144));
+        mapLayerRubberDict[layer] += rubber;
+    }
 }

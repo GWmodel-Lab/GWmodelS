@@ -1,4 +1,4 @@
-QT       += core gui xml
+QT       += core gui xml svg
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -19,6 +19,7 @@ SOURCES += \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
+    gwmmaptoolidentifyfeature.cpp \
     gwmpropertypanel.cpp \
     gwmtoolbar.cpp \
     main.cpp \
@@ -29,10 +30,12 @@ HEADERS += \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
+    gwmmaptoolidentifyfeature.h \
     gwmpropertypanel.h \
     gwmtoolbar.h \
     mainwidget.h \
-    mainwindow.h
+    mainwindow.h \
+    prefix.h
 
 FORMS += \
     gwmfeaturepanel.ui \

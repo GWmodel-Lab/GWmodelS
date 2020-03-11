@@ -29,8 +29,9 @@ private:
     QPushButton* openByXYBtn;
     QPushButton* saveLayerBtn;
     QPushButton* exportLayerBtn;
-    QPushButton* editBtn;
+    QPushButton* selectBtn;
     QPushButton* moveBtn;
+    QPushButton* editBtn;
     QPushButton* fullScreenBtn;
     QPushButton* showPositionBtn;
     QPushButton* gwmodelGWRBtn;
@@ -50,8 +51,8 @@ signals:
     void openFileImportShapefileSignal();
     void openFileImportJsonSignal();
     void openFileImportCsvSignal();
-
     void openByXYBtnSingnal();
+    void selectBtnSignal();
     void editBtnSignal();
     void moveBtnSignal();
     void fullScreenBtnSignal();

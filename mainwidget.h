@@ -7,6 +7,8 @@
 #include <qgsmapcanvas.h>
 #include <qgsmaplayer.h>
 #include <gwmpropertypanel.h>
+#include <qgsmaptoolpan.h>
+#include <gwmmaptoolidentifyfeature.h>
 
 //namespace Ui {
 //class MainLayout;
@@ -29,15 +31,23 @@ public:
     GwmPropertyPanel* propertyPanel;
 
     QStandardItemModel* mapModel;
-    QList<QgsMapLayer*> mapLayerSet;
+    QList<QgsMapLayer*> mapLayerList;
     QgsMapCanvas* mapCanvas;
     QMap<QString, QgsVectorLayer*> mapLayerNameDict;
+    QgsMapTool* mapPanTool;
+    QgsMapTool* mapIdentifyTool;
+    QPoint mapPoint0;
+    QMap<QgsVectorLayer*, QList<QgsRubberBand*>> mapLayerRubberDict;
+
 
 public slots:
     void openFileImportShapefile();
     void openFileImportJson();
     void openFileImportCsv();
     void onShowLayerProperty(const QModelIndex &index);
+    void onSelectMode();
+    void onNavigateMode();
+    void onEditMode();
 
 private:
     void createToolbar();
@@ -49,6 +59,10 @@ private:
      * @brief Map item inserted slot.
      */
     void onMapItemInserted(const QModelIndex &parent, int first, int last);
+    void onFullScreen();
+
+private:
+    void onMapSelectionChanged(QgsVectorLayer* layer);
 };
 
 #endif // MAINLAYOUT_H
