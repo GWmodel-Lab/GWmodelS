@@ -8,7 +8,7 @@
 #include <qgsmaplayer.h>
 #include <gwmpropertypanel.h>
 #include <qgsmaptoolpan.h>
-#include <qgsmaptoolidentify.h>
+#include <gwmmaptoolidentifyfeature.h>
 
 //namespace Ui {
 //class MainLayout;
@@ -45,6 +45,7 @@ public slots:
     void onShowLayerProperty(const QModelIndex &index);
     void onSelectMode();
     void onNavigateMode();
+    void onEditMode();
 
 private:
     void createToolbar();

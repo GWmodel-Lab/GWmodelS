@@ -57,7 +57,7 @@ void GwmToolbar::openByXYBtnSlot(){
 }
 
 void GwmToolbar::editBtnSlot(){
-    emit openFileImportJsonSignal();
+    emit editBtnSignal();
 }
 
 void GwmToolbar::moveBtnSlot(){

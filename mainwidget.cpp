@@ -58,6 +58,12 @@ void MainWidget::onNavigateMode()
     mapCanvas->setMapTool(mapPanTool);
 }
 
+void MainWidget::onEditMode()
+{
+    QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerSet[0];
+    layer->selectAll();
+}
+
 void MainWidget::createToolbar()
 {
     toolbar = new GwmToolbar(this);
@@ -69,6 +75,7 @@ void MainWidget::createToolbar()
     connect(toolbar, &GwmToolbar::fullScreenBtnSignal, this, &MainWidget::onFullScreen);
     connect(toolbar, &GwmToolbar::selectBtnSignal, this, &MainWidget::onSelectMode);
     connect(toolbar, &GwmToolbar::moveBtnSignal, this, &MainWidget::onNavigateMode);
+    connect(toolbar, &GwmToolbar::editBtnSignal, this, &MainWidget::onEditMode);
 }
 
 void MainWidget::createMainZone()
@@ -108,10 +115,12 @@ void MainWidget::createMapPanel()
     mapCanvas = new QgsMapCanvas();
     mapCanvas->setLayers(mapLayerSet);
     mapCanvas->setVisible(true);
+    mapCanvas->setSelectionColor(QColor(255, 0, 0));
 
     // 工具
     mapPanTool = new QgsMapToolPan(mapCanvas);
-    mapIdentifyTool = new QgsMapToolIdentify(mapCanvas);
+    mapIdentifyTool = new GwmMapToolIdentifyFeature(mapCanvas);
+    mapCanvas->setMapTool(mapIdentifyTool);
 
     // 连接信号槽
     connect(mapModel, &QStandardItemModel::rowsInserted, this, &MainWidget::onMapItemInserted);
@@ -142,8 +151,8 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
         if (isSetExtend && mapLayerSet.length() > 0)
         {
             mapCanvas->setExtent(mapLayerSet.first()->extent());
+            mapCanvas->refresh();
         }
-        mapCanvas->refresh();
     }
 }
 
