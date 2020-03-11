@@ -49,6 +49,7 @@ private:
      * @brief Map item inserted slot.
      */
     void onMapItemInserted(const QModelIndex &parent, int first, int last);
+    void onFullScreen();
 };
 
 #endif // MAINLAYOUT_H

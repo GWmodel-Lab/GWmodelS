@@ -54,6 +54,7 @@ void MainWidget::createToolbar()
     connect(toolbar, &GwmToolbar::openFileImportJsonSignal, this, &MainWidget::openFileImportJson);
     connect(toolbar, &GwmToolbar::openFileImportCsvSignal, this, &MainWidget::openFileImportCsv);
     connect(toolbar, &GwmToolbar::openByXYBtnSingnal, this, &MainWidget::openFileImportCsv);
+    connect(toolbar, &GwmToolbar::fullScreenBtnSignal, this, &MainWidget::onFullScreen);
 }
 
 void MainWidget::createMainZone()
@@ -135,4 +136,11 @@ void MainWidget::onShowLayerProperty(const QModelIndex &index)
     QString layerName = item->text();
     QgsVectorLayer* layer = mapLayerNameDict[layerName];
     propertyPanel->addStatisticTab(index, layer);
+}
+
+void MainWidget::onFullScreen()
+{
+    auto extent = mapCanvas->fullExtent();
+    mapCanvas->setExtent(extent);
+    mapCanvas->refresh();
 }
