@@ -31,13 +31,13 @@ public:
     GwmPropertyPanel* propertyPanel;
 
     QStandardItemModel* mapModel;
-    QList<QgsMapLayer*> mapLayerSet;
+    QList<QgsMapLayer*> mapLayerList;
     QgsMapCanvas* mapCanvas;
     QMap<QString, QgsVectorLayer*> mapLayerNameDict;
     QgsMapTool* mapPanTool;
     QgsMapTool* mapIdentifyTool;
     QPoint mapPoint0;
-    bool isMapMousePressed;
+    QMap<QgsVectorLayer*, QList<QgsRubberBand*>> mapLayerRubberDict;
 
 
 public slots:
@@ -62,9 +62,7 @@ private:
     void onFullScreen();
 
 private:
-    virtual void mousePressEvent(QMouseEvent *event) override;
-    virtual void mouseMoveEvent(QMouseEvent *event) override;
-    virtual void mouseReleaseEvent(QMouseEvent *event) override;
+    void onMapSelectionChanged(QgsVectorLayer* layer);
 };
 
 #endif // MAINLAYOUT_H

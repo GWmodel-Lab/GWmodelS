@@ -9,7 +9,6 @@ MainWidget::MainWidget(QWidget *parent)
     , mapModel(new QStandardItemModel)
     , mapLayerNameDict()
     , mapPoint0(-1, -1)
-    , isMapMousePressed(false)
 {
     createMainZone();
     createToolbar();
@@ -62,7 +61,7 @@ void MainWidget::onNavigateMode()
 
 void MainWidget::onEditMode()
 {
-    QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerSet[0];
+    QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerList[0];
     layer->selectAll();
 }
 
@@ -115,9 +114,9 @@ void MainWidget::createPropertyPanel()
 void MainWidget::createMapPanel()
 {
     mapCanvas = new QgsMapCanvas();
-    mapCanvas->setLayers(mapLayerSet);
+    mapCanvas->setLayers(mapLayerList);
     mapCanvas->setVisible(true);
-    mapCanvas->setSelectionColor(QColor(255, 0, 0));
+//    mapCanvas->setSelectionColor(QColor(255, 0, 0));
 
     // 工具
     mapPanTool = new QgsMapToolPan(mapCanvas);
@@ -126,6 +125,7 @@ void MainWidget::createMapPanel()
 
     // 连接信号槽
     connect(mapModel, &QStandardItemModel::rowsInserted, this, &MainWidget::onMapItemInserted);
+    connect(mapCanvas, &QgsMapCanvas::selectionChanged, this, &MainWidget::onMapSelectionChanged);
 }
 
 void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int last)
@@ -133,7 +133,7 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
     if (!parent.isValid())
     {
         bool isSetExtend = false;
-        if (mapLayerSet.length() < 1)
+        if (mapLayerList.length() < 1)
         {
             isSetExtend = true;
         }
@@ -145,14 +145,15 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
             QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, item->text());
             if (vectorLayer->isValid())
             {
-                mapLayerSet.append(vectorLayer);
+                mapLayerList.append(vectorLayer);
                 mapLayerNameDict[item->text()] = vectorLayer;
+                mapLayerRubberDict[vectorLayer] = QList<QgsRubberBand*>();
             }
         }
-        mapCanvas->setLayers(mapLayerSet);
-        if (isSetExtend && mapLayerSet.length() > 0)
+        mapCanvas->setLayers(mapLayerList);
+        if (isSetExtend && mapLayerList.length() > 0)
         {
-            mapCanvas->setExtent(mapLayerSet.first()->extent());
+            mapCanvas->setExtent(mapLayerList.first()->extent());
             mapCanvas->refresh();
         }
     }
@@ -174,33 +175,28 @@ void MainWidget::onFullScreen()
     mapCanvas->refresh();
 }
 
-void MainWidget::mousePressEvent(QMouseEvent *event)
+void MainWidget::onMapSelectionChanged(QgsVectorLayer *layer)
 {
-//    qDebug() << "Mouse Press (" << event->x() << "," << event->y() << ")";
-    mapPoint0 = QPoint(event->x(), event->y());
-    isMapMousePressed = true;
-}
-
-void MainWidget::mouseMoveEvent(QMouseEvent *event)
-{
-    if (isMapMousePressed)
+    qDebug() << "[MainWidget]" << "Map Selection Changed: (layer " << layer->name() << ")";
+    // 移除旧的橡皮条
+    QList<QgsRubberBand*> rubbers0 = mapLayerRubberDict[layer];
+    if (rubbers0.size() > 0)
     {
-//        qDebug() << "Mouse Move (" << event->x() << "," << event->y() << ")";
-    }
-}
-
-void MainWidget::mouseReleaseEvent(QMouseEvent *event)
-{
-//    qDebug() << "Mouse Release (" << event->x() << "," << event->y() << ")";
-    isMapMousePressed = false;
-    QPoint cur = QPoint(event->x(), event->y());
-    if (cur != mapPoint0)
-    {
-        QgsRectangle rect(mapPoint0, cur);
-        for (int i = 0; i < mapLayerSet.size(); ++i)
+        for (QgsRubberBand* rubber : rubbers0)
         {
-            QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerSet[i];
-            layer->selectByRect(rect);
+            rubber->reset();
         }
+    }
+    rubbers0.clear();
+    // 添加新的橡皮条
+    QgsFeatureList selectedFeatures = layer->selectedFeatures();
+    for (QgsFeature feature : selectedFeatures)
+    {
+        QgsGeometry geometry = feature.geometry();
+        QgsRubberBand* rubber = new QgsRubberBand(mapCanvas, geometry.type());
+        rubber->addGeometry(geometry, layer);
+        rubber->setStrokeColor(QColor(255, 0, 0));
+        rubber->setFillColor(QColor(255, 0, 0, 144));
+        mapLayerRubberDict[layer] += rubber;
     }
 }
