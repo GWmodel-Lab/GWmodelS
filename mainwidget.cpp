@@ -15,6 +15,7 @@
 
 #include "gwmattributetableview.h"
 
+
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mainLayout(new QVBoxLayout)
@@ -117,6 +118,7 @@ void MainWidget::createFeaturePanel()
 {
     featurePanel = new GwmFeaturePanel(mainZone, mapModel);
     featurePanel->setFixedWidth(320);
+
     // 连接信号槽
     connect(featurePanel, &GwmFeaturePanel::sendDataSigZoomLayer, this, &MainWidget::onZoomToLayer);
     connect(featurePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &MainWidget::onShowLayerProperty);
@@ -124,6 +126,11 @@ void MainWidget::createFeaturePanel()
     connect(featurePanel, &GwmFeaturePanel::beginDragDropSignal, this, &MainWidget::onFeaturePanelBeginDragDrop);
     connect(featurePanel, &GwmFeaturePanel::endDragDropSignal, this, &MainWidget::onFeaturePanelEndDragDrop);
     connect(featurePanel, &GwmFeaturePanel::removeLayerSignal, this, &MainWidget::onRemoveLayer);
+
+
+    //连接槽函数
+    connect(featurePanel,&GwmFeaturePanel::sendDataSigSymbol,this,&MainWidget::symbolSlot);
+
 }
 
 void MainWidget::createPropertyPanel()
@@ -284,6 +291,7 @@ void MainWidget::onMapModelItemChanged(QStandardItem* item)
     }
 }
 
+
 void MainWidget::onFeaturePanelRowOrderChanged(int from, int dest)
 {
     deriveLayersFromModel();
@@ -329,4 +337,15 @@ void MainWidget::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatur
         qDebug() << "[MainWidget::receiveSigAttriToMap]"
                  << "id:" << id;
     }
+
+void MainWidget::symbolSlot(const QModelIndex &index)
+{
+    createSymbolWindow(index);
+    symbolWindow->show();
+}
+
+void MainWidget::createSymbolWindow(const QModelIndex &index)
+{
+    symbolWindow = new GwmSymbolWindow();
+
 }

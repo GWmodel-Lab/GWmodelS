@@ -22,6 +22,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
     gwmmaptoolidentifyfeature.cpp \
     gwmpropertypanel.cpp \
+    gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
     mainwidget.cpp \
@@ -34,6 +35,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
     gwmmaptoolidentifyfeature.h \
     gwmpropertypanel.h \
+    gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
     mainwindow.h \
