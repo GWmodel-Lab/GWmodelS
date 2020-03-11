@@ -10,8 +10,9 @@ GwmToolbar::GwmToolbar(QWidget *parent) :
     widgetLayout->addWidget(openByXYBtn);
     widgetLayout->addWidget(saveLayerBtn);
     widgetLayout->addWidget(exportLayerBtn);
-    widgetLayout->addWidget(editBtn);
+    widgetLayout->addWidget(selectBtn);
     widgetLayout->addWidget(moveBtn);
+    widgetLayout->addWidget(editBtn);
     widgetLayout->addWidget(fullScreenBtn);
     widgetLayout->addWidget(showPositionBtn);
     widgetLayout->addWidget(gwmodelGWRBtn);
@@ -24,8 +25,9 @@ GwmToolbar::GwmToolbar(QWidget *parent) :
     connect(saveLayerBtn,&QPushButton::clicked,this,&GwmToolbar::openFileImportJson);
     connect(exportLayerBtn,&QPushButton::clicked,this,&GwmToolbar::openFileImportCsv);
     connect(openByXYBtn,&QPushButton::clicked,this,&GwmToolbar::openByXYBtnSlot);
-    connect(editBtn,&QPushButton::clicked,this,&GwmToolbar::editBtnSlot);
+    connect(selectBtn, &QPushButton::clicked, this, &GwmToolbar::selectBtnSignal);
     connect(moveBtn,&QPushButton::clicked,this,&GwmToolbar::moveBtnSlot);
+    connect(editBtn,&QPushButton::clicked,this,&GwmToolbar::editBtnSlot);
     connect(fullScreenBtn,&QPushButton::clicked,this,&GwmToolbar::fullScreenBtnSlot);
     connect(showPositionBtn,&QPushButton::clicked,this,&GwmToolbar::showPositionBtnSlot);
     connect(gwmodelGWRBtn,&QPushButton::clicked,this,&GwmToolbar::gwmodelGWRBtnSlot);
@@ -144,6 +146,12 @@ void GwmToolbar::createButtons()
     editBtnInfo->hide();
     editBtn->installEventFilter(this);
     editBtnInfo->installEventFilter(this);
+
+
+    selectBtn = new QPushButton();
+    selectBtn->setFixedSize(50,50);
+    selectBtn->setText("Select");
+    selectBtn->installEventFilter(this);
 
 
     moveBtn = new QPushButton();

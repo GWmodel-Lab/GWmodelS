@@ -38,12 +38,24 @@ void MainWidget::openFileImportShapefile(){
     }
 }
 
-void MainWidget::openFileImportJson(){
+void MainWidget::openFileImportJson()
+{
     QFileDialog::getOpenFileName(this, tr("Open GeoJson"), tr(""), tr("GeoJson (*.json *.geojson)"));
 }
 
-void MainWidget::openFileImportCsv(){
+void MainWidget::openFileImportCsv()
+{
     QFileDialog::getOpenFileName(this, tr("Open CSV"), tr(""), tr("CSV (*.csv)"));
+}
+
+void MainWidget::onSelectMode()
+{
+    mapCanvas->setMapTool(mapIdentifyTool);
+}
+
+void MainWidget::onNavigateMode()
+{
+    mapCanvas->setMapTool(mapPanTool);
 }
 
 void MainWidget::createToolbar()
@@ -55,6 +67,8 @@ void MainWidget::createToolbar()
     connect(toolbar, &GwmToolbar::openFileImportCsvSignal, this, &MainWidget::openFileImportCsv);
     connect(toolbar, &GwmToolbar::openByXYBtnSingnal, this, &MainWidget::openFileImportCsv);
     connect(toolbar, &GwmToolbar::fullScreenBtnSignal, this, &MainWidget::onFullScreen);
+    connect(toolbar, &GwmToolbar::selectBtnSignal, this, &MainWidget::onSelectMode);
+    connect(toolbar, &GwmToolbar::moveBtnSignal, this, &MainWidget::onNavigateMode);
 }
 
 void MainWidget::createMainZone()
@@ -94,6 +108,10 @@ void MainWidget::createMapPanel()
     mapCanvas = new QgsMapCanvas();
     mapCanvas->setLayers(mapLayerSet);
     mapCanvas->setVisible(true);
+
+    // 工具
+    mapPanTool = new QgsMapToolPan(mapCanvas);
+    mapIdentifyTool = new QgsMapToolIdentify(mapCanvas);
 
     // 连接信号槽
     connect(mapModel, &QStandardItemModel::rowsInserted, this, &MainWidget::onMapItemInserted);

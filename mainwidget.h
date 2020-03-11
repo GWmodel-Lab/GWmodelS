@@ -7,6 +7,8 @@
 #include <qgsmapcanvas.h>
 #include <qgsmaplayer.h>
 #include <gwmpropertypanel.h>
+#include <qgsmaptoolpan.h>
+#include <qgsmaptoolidentify.h>
 
 //namespace Ui {
 //class MainLayout;
@@ -32,12 +34,17 @@ public:
     QList<QgsMapLayer*> mapLayerSet;
     QgsMapCanvas* mapCanvas;
     QMap<QString, QgsVectorLayer*> mapLayerNameDict;
+    QgsMapTool* mapPanTool;
+    QgsMapTool* mapIdentifyTool;
+
 
 public slots:
     void openFileImportShapefile();
     void openFileImportJson();
     void openFileImportCsv();
     void onShowLayerProperty(const QModelIndex &index);
+    void onSelectMode();
+    void onNavigateMode();
 
 private:
     void createToolbar();
