@@ -36,6 +36,8 @@ public:
     QMap<QString, QgsVectorLayer*> mapLayerNameDict;
     QgsMapTool* mapPanTool;
     QgsMapTool* mapIdentifyTool;
+    QPoint mapPoint0;
+    bool isMapMousePressed;
 
 
 public slots:
@@ -58,6 +60,11 @@ private:
      */
     void onMapItemInserted(const QModelIndex &parent, int first, int last);
     void onFullScreen();
+
+private:
+    virtual void mousePressEvent(QMouseEvent *event) override;
+    virtual void mouseMoveEvent(QMouseEvent *event) override;
+    virtual void mouseReleaseEvent(QMouseEvent *event) override;
 };
 
 #endif // MAINLAYOUT_H

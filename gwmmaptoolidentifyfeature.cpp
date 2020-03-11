@@ -2,41 +2,49 @@
 
 GwmMapToolIdentifyFeature::GwmMapToolIdentifyFeature(QgsMapCanvas* mapCanvas)
     : QgsMapToolIdentify(mapCanvas)
-    , x0(-1)
-    , y0(-1)
+    , point0(-1, -1)
     , isMousePressed(false)
 {
-
+    rubberBand = new QgsRubberBand(mCanvas, QgsWkbTypes::GeometryType::PolygonGeometry);
+    rubberBand->setStrokeColor(QColor(0, 0, 0));
 }
 
 void GwmMapToolIdentifyFeature::canvasPressEvent(QgsMapMouseEvent *e)
 {
-//    qDebug() << "Mouse Press (" << e->x() << "," << e->y() << ")";
-    x0 = e->x();
-    y0 = e->y();
+    qDebug() << "Mouse Press (" << e->x() << "," << e->y() << ")";
+    point0 = QPoint(e->x(), e->y());
     isMousePressed = true;
 }
 
 
 void GwmMapToolIdentifyFeature::canvasMoveEvent(QgsMapMouseEvent *e)
 {
-//    if (isMousePressed)
-//    {
-//        qDebug() << "Mouse Move (" << e->x() << "," << e->y() << ")";
-//    }
+    if (isMousePressed)
+    {
+        qDebug() << "Mouse Move (" << e->x() << "," << e->y() << ")";
+        QgsPointXY corner1 = toMapCoordinates(point0);
+        QgsPointXY corner2 = toMapCoordinates(QPoint(point0.x(), e->y()));
+        QgsPointXY corner3 = toMapCoordinates(QPoint(e->x(), e->y()));
+        QgsPointXY corner4 = toMapCoordinates(QPoint(e->x(), point0.y()));
+        if (rubberBand)
+        {
+            rubberBand->reset(QgsWkbTypes::PolygonGeometry);
+            rubberBand->addPoint(corner1, false);
+            rubberBand->addPoint(corner2, false);
+            rubberBand->addPoint(corner3, false);
+            rubberBand->addPoint(corner4, true);
+        }
+    }
 }
 
 
 void GwmMapToolIdentifyFeature::canvasReleaseEvent(QgsMapMouseEvent *e)
 {
-//    qDebug() << "Mouse Release (" << e->x() << "," << e->y() << ")";
-    int x = e->x(), y = e->y();
-    if (isMousePressed)
-    {
-        isMousePressed = false;
-    }
+    qDebug() << "Mouse Release (" << e->x() << "," << e->y() << ")";
+    isMousePressed = false;
+    QPoint point(e->x(), e->y());
     IdentifyMode model = QgsMapToolIdentify::LayerSelection;
-    if (x0 == x && y0 == y)
+    if (point0 == point)
     {
         QList<IdentifyResult> results = QgsMapToolIdentify::identify(e->x(), e->y(), model);
         if (!results.isEmpty())
@@ -57,6 +65,27 @@ void GwmMapToolIdentifyFeature::canvasReleaseEvent(QgsMapMouseEvent *e)
                 layer->selectByIds(iterator.value());
             }
         }
+        else
+        {
+            QList<QgsMapLayer*> mapLayerSet = mCanvas->layers();
+            for (int i = 0; i < mapLayerSet.size(); ++i)
+            {
+                QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerSet[i];
+                layer->removeSelection();
+            }
+        }
     }
-
+    else
+    {
+        rubberBand->reset(QgsWkbTypes::PolygonGeometry);
+        QgsPointXY mapPoint0 = toMapCoordinates(point0);
+        QgsPointXY cur = toMapCoordinates(point);
+        QgsRectangle rect(mapPoint0, cur);
+        QList<QgsMapLayer*> mapLayerSet = mCanvas->layers();
+        for (int i = 0; i < mapLayerSet.size(); ++i)
+        {
+            QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerSet[i];
+            layer->selectByRect(rect);
+        }
+    }
 }

@@ -8,6 +8,8 @@ MainWidget::MainWidget(QWidget *parent)
     , mainLayout(new QVBoxLayout)
     , mapModel(new QStandardItemModel)
     , mapLayerNameDict()
+    , mapPoint0(-1, -1)
+    , isMapMousePressed(false)
 {
     createMainZone();
     createToolbar();
@@ -170,4 +172,35 @@ void MainWidget::onFullScreen()
     auto extent = mapCanvas->fullExtent();
     mapCanvas->setExtent(extent);
     mapCanvas->refresh();
+}
+
+void MainWidget::mousePressEvent(QMouseEvent *event)
+{
+//    qDebug() << "Mouse Press (" << event->x() << "," << event->y() << ")";
+    mapPoint0 = QPoint(event->x(), event->y());
+    isMapMousePressed = true;
+}
+
+void MainWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    if (isMapMousePressed)
+    {
+//        qDebug() << "Mouse Move (" << event->x() << "," << event->y() << ")";
+    }
+}
+
+void MainWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+//    qDebug() << "Mouse Release (" << event->x() << "," << event->y() << ")";
+    isMapMousePressed = false;
+    QPoint cur = QPoint(event->x(), event->y());
+    if (cur != mapPoint0)
+    {
+        QgsRectangle rect(mapPoint0, cur);
+        for (int i = 0; i < mapLayerSet.size(); ++i)
+        {
+            QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerSet[i];
+            layer->selectByRect(rect);
+        }
+    }
 }
