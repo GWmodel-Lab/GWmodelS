@@ -35,7 +35,7 @@ public:
     QStandardItemModel* mapModel;
     QList<QgsMapLayer*> mapLayerList;
     QgsMapCanvas* mapCanvas;
-    QMap<QString, QgsVectorLayer*> mapLayerNameDict;
+    QMap<QString, QgsVectorLayer*> mapLayerIdDict;
     QgsMapTool* mapPanTool;
     QgsMapTool* mapIdentifyTool;
     QPoint mapPoint0;
@@ -46,6 +46,12 @@ public slots:
     void openFileImportShapefile();
     void openFileImportJson();
     void openFileImportCsv();
+
+    /**
+     * @brief 移除图层的槽函数
+     * @param index 项的索引
+     */
+    void onRemoveLayer(const QModelIndex &index);
     void onShowLayerProperty(const QModelIndex &index);
     void onSelectMode();
     void onNavigateMode();

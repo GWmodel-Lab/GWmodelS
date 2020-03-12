@@ -35,6 +35,8 @@ signals:
     // 显示属性
     void showLayerPropertySignal(const QModelIndex &index);
 
+    void removeLayerSignal(const QModelIndex &index);
+
     /**
      * @brief 当行顺序改变时触发的信号
      * @param from 原始的行号
@@ -145,6 +147,11 @@ private:
     void showContextMenu(const QPoint &pos);
     // 发送信号给地图模块(显示图层)
     void showLayer();
+
+    /**
+     * @brief 移除图层
+     */
+    void removeLayer();
     // 发送信号(缩放至图层)
     void zoomLayer();
     // 发送信号(属性表)

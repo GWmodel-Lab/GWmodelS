@@ -57,6 +57,10 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
         // 处理事件
         connect(pShow, &QAction::triggered, this, &GwmFeaturePanel::showLayer);
 
+        QAction *pRemove = new QAction(tr("Remove"), this);
+        menu->addAction(pRemove);
+        connect(pRemove, &QAction::triggered, this, &GwmFeaturePanel::removeLayer);
+
         // 改为"五个字的 缩放至图层"会报错, 原因未知
         QAction *pZoom = new QAction("缩放图层",this);
         menu->addAction(pZoom);
@@ -98,7 +102,7 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
         pExport->setMenu(subMenu);
 
         // 显示属性
-        QAction *pProperty = new QAction("Layer Property",this);
+        QAction *pProperty = new QAction(tr("Layer Property"),this);
         menu->addAction(pProperty);
         connect(pProperty, &QAction::triggered,this, &GwmFeaturePanel::layerProperty);
 
@@ -114,6 +118,12 @@ void GwmFeaturePanel::showLayer()
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
     //qDebug() << selected[0];
     emit sendDataSigShowLayer(selected[0]);
+}
+
+void GwmFeaturePanel::removeLayer()
+{
+    QModelIndexList selected = this->selectionModel()->selectedIndexes();
+    emit removeLayerSignal(selected[0]);
 }
 
 // 缩放至图层

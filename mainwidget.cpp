@@ -8,7 +8,7 @@ MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mainLayout(new QVBoxLayout)
     , mapModel(new QStandardItemModel)
-    , mapLayerNameDict()
+    , mapLayerIdDict()
     , mapPoint0(-1, -1)
     , isFeaturePanelDragging(false)
 {
@@ -33,24 +33,9 @@ void MainWidget::openFileImportShapefile(){
     if (fileInfo.exists())
     {
         QString fileName = fileInfo.baseName();
-        // 遍历查找同名元素的个数
-        int duplicateCount = 0;
-        for (int i = 0; i < mapModel->rowCount(); ++i)
-        {
-            QStandardItem* cur = mapModel->item(i);
-            if (cur->text().startsWith(fileName))
-            {
-                duplicateCount++;
-            }
-        }
-        // 重复名字后面添加标号
-        QString itemText = duplicateCount > 0 ?
-                    QString("%1 (%2)").arg(fileName).arg(duplicateCount + 1) :
-                    fileName;
-        QStandardItem* item = new QStandardItem(itemText);
+        QStandardItem* item = new QStandardItem(fileName);
         QMap<QString, QVariant> itemData;
         itemData["path"] = QVariant(filePath);
-        itemData["name"] = QVariant(fileName);
         item->setData(QVariant(itemData));
         item->setCheckable(true);
         item->setCheckState(Qt::CheckState::Checked);
@@ -125,6 +110,7 @@ void MainWidget::createFeaturePanel()
     connect(featurePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &MainWidget::onFeaturePanelRowOrderChanged);
     connect(featurePanel, &GwmFeaturePanel::beginDragDropSignal, this, &MainWidget::onFeaturePanelBeginDragDrop);
     connect(featurePanel, &GwmFeaturePanel::endDragDropSignal, this, &MainWidget::onFeaturePanelEndDragDrop);
+    connect(featurePanel, &GwmFeaturePanel::removeLayerSignal, this, &MainWidget::onRemoveLayer);
 }
 
 void MainWidget::createPropertyPanel()
@@ -170,9 +156,15 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
                 QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, name);
                 if (vectorLayer->isValid())
                 {
+                    QString layerID = QString("%1")
+                            .arg((unsigned long long)vectorLayer, 0, 16)
+                            .toUpper();
                     mapLayerList.append(vectorLayer);
-                    mapLayerNameDict[name] = vectorLayer;
+                    mapLayerIdDict[layerID] = vectorLayer;
                     mapLayerRubberDict[vectorLayer] = QList<QgsRubberBand*>();
+                    // 记录ID
+                    itemData["ID"] = QVariant(layerID);
+                    item->setData(itemData);
                 }
             }
             mapCanvas->setLayers(mapLayerList);
@@ -185,12 +177,27 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
     }
 }
 
+void MainWidget::onRemoveLayer(const QModelIndex &index)
+{
+    QStandardItem* item = mapModel->itemFromIndex(index);
+    QString layerName = item->text();
+    QString layerID = item->data().toMap()["ID"].toString();
+    QgsVectorLayer* layer = mapLayerIdDict[layerID];
+    mapModel->removeRow(index.row());
+    mapLayerIdDict.remove(layerID);
+    delete layer;
+    deriveLayersFromModel();
+    mapCanvas->setLayers(mapLayerList);
+    mapCanvas->refresh();
+}
+
 void MainWidget::onShowLayerProperty(const QModelIndex &index)
 {
     QStandardItem* item = mapModel->itemFromIndex(index);
     qDebug() << "Layer Name: " << item->text();
     QString layerName = item->text();
-    QgsVectorLayer* layer = mapLayerNameDict[layerName];
+    QString layerID = item->data().toMap()["ID"].toString();
+    QgsVectorLayer* layer = mapLayerIdDict[layerID];
     propertyPanel->addStatisticTab(index, layer);
 }
 
@@ -234,11 +241,11 @@ void MainWidget::deriveLayersFromModel()
     for (int r = 0; r < modelSize; ++r)
     {
         QStandardItem* item = mapModel->item(r);
-        QString name = item->text();
         bool isLayerShow = item->checkState() == Qt::Unchecked ? false : true;
         if (isLayerShow)
         {
-            mapLayerList += mapLayerNameDict[name];
+            QString layerID = item->data().toMap()["ID"].toString();
+            mapLayerList += mapLayerIdDict[layerID];
         }
     }
 }
