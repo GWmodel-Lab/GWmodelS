@@ -30,6 +30,8 @@ public:
     GwmFeaturePanel* featurePanel;
     GwmPropertyPanel* propertyPanel;
 
+    bool isFeaturePanelDragging;
+
     QStandardItemModel* mapModel;
     QList<QgsMapLayer*> mapLayerList;
     QgsMapCanvas* mapCanvas;
@@ -75,6 +77,12 @@ private slots:
      * @param item 改变的项
      */
     void onMapModelItemChanged(QStandardItem* item);
+
+    void onFeaturePanelRowOrderChanged(int from, int dest);
+
+    void onFeaturePanelBeginDragDrop();
+
+    void onFeaturePanelEndDragDrop();
 };
 
 #endif // MAINLAYOUT_H

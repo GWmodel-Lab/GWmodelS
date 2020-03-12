@@ -10,6 +10,7 @@ MainWidget::MainWidget(QWidget *parent)
     , mapModel(new QStandardItemModel)
     , mapLayerNameDict()
     , mapPoint0(-1, -1)
+    , isFeaturePanelDragging(false)
 {
     createMainZone();
     createToolbar();
@@ -121,6 +122,9 @@ void MainWidget::createFeaturePanel()
     featurePanel->setFixedWidth(320);
     // 连接信号槽
     connect(featurePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &MainWidget::onShowLayerProperty);
+    connect(featurePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &MainWidget::onFeaturePanelRowOrderChanged);
+    connect(featurePanel, &GwmFeaturePanel::beginDragDropSignal, this, &MainWidget::onFeaturePanelBeginDragDrop);
+    connect(featurePanel, &GwmFeaturePanel::endDragDropSignal, this, &MainWidget::onFeaturePanelEndDragDrop);
 }
 
 void MainWidget::createPropertyPanel()
@@ -148,32 +152,35 @@ void MainWidget::createMapPanel()
 
 void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int last)
 {
-    if (!parent.isValid())
+    if (!isFeaturePanelDragging)
     {
-        bool isSetExtend = false;
-        if (mapLayerList.length() < 1)
+        if (!parent.isValid())
         {
-            isSetExtend = true;
-        }
-        for (int i = first; i <= last; i++)
-        {
-            QStandardItem* item = mapModel->item(i);
-            QMap<QString, QVariant> itemData = item->data().toMap();
-            QString path = itemData["path"].toString();
-            QString name = itemData["name"].toString();
-            QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, name);
-            if (vectorLayer->isValid())
+            bool isSetExtend = false;
+            if (mapLayerList.length() < 1)
             {
-                mapLayerList.append(vectorLayer);
-                mapLayerNameDict[item->text()] = vectorLayer;
-                mapLayerRubberDict[vectorLayer] = QList<QgsRubberBand*>();
+                isSetExtend = true;
             }
-        }
-        mapCanvas->setLayers(mapLayerList);
-        if (isSetExtend && mapLayerList.length() > 0)
-        {
-            mapCanvas->setExtent(mapLayerList.first()->extent());
-            mapCanvas->refresh();
+            for (int i = first; i <= last; i++)
+            {
+                QStandardItem* item = mapModel->item(i);
+                QMap<QString, QVariant> itemData = item->data().toMap();
+                QString path = itemData["path"].toString();
+                QString name = item->text();
+                QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, name);
+                if (vectorLayer->isValid())
+                {
+                    mapLayerList.append(vectorLayer);
+                    mapLayerNameDict[name] = vectorLayer;
+                    mapLayerRubberDict[vectorLayer] = QList<QgsRubberBand*>();
+                }
+            }
+            mapCanvas->setLayers(mapLayerList);
+            if (isSetExtend && mapLayerList.length() > 0)
+            {
+                mapCanvas->setExtent(mapLayerList.first()->extent());
+                mapCanvas->refresh();
+            }
         }
     }
 }
@@ -238,7 +245,31 @@ void MainWidget::deriveLayersFromModel()
 
 void MainWidget::onMapModelItemChanged(QStandardItem* item)
 {
+    qDebug() << "[MainWidget::onMapModelItemChanged]"
+             << "isFeaturePanelDragging" << isFeaturePanelDragging;
+    if (!isFeaturePanelDragging)
+    {
+        deriveLayersFromModel();
+        mapCanvas->setLayers(mapLayerList);
+        mapCanvas->refresh();
+    }
+}
+
+void MainWidget::onFeaturePanelRowOrderChanged(int from, int dest)
+{
     deriveLayersFromModel();
+    qDebug() << "[MainWidget::onFeaturePanelRowOrderChanged]"
+             << "layer list size" << mapLayerList.size();
     mapCanvas->setLayers(mapLayerList);
     mapCanvas->refresh();
+}
+
+void MainWidget::onFeaturePanelBeginDragDrop()
+{
+    this->isFeaturePanelDragging = true;
+}
+
+void MainWidget::onFeaturePanelEndDragDrop()
+{
+    this->isFeaturePanelDragging = false;
 }
