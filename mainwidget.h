@@ -55,14 +55,26 @@ private:
     void createFeaturePanel();
     void createPropertyPanel();
     void createMapPanel();
+
     /**
      * @brief Map item inserted slot.
      */
     void onMapItemInserted(const QModelIndex &parent, int first, int last);
     void onFullScreen();
 
-private:
+    /**
+     * @brief 从模型中导出地图所需要显示的图层
+     */
+    void deriveLayersFromModel();
+
+private slots:
     void onMapSelectionChanged(QgsVectorLayer* layer);
+
+    /**
+     * @brief 当模型项发生改变时触发的槽
+     * @param item 改变的项
+     */
+    void onMapModelItemChanged(QStandardItem* item);
 };
 
 #endif // MAINLAYOUT_H

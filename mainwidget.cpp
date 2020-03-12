@@ -1,6 +1,7 @@
 #include <QtWidgets>
 #include <QFileInfo>
 #include <qgsvectorlayer.h>
+#include <qgsrenderer.h>
 #include "mainwidget.h"
 
 MainWidget::MainWidget(QWidget *parent)
@@ -16,6 +17,8 @@ MainWidget::MainWidget(QWidget *parent)
     mainLayout->addWidget(mainZone);
     setLayout(mainLayout);
     mainLayout->setStretchFactor(mainZone, 1);
+    // 绑定模型 itemChanged 信号
+    connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
 }
 
 MainWidget::~MainWidget()
@@ -29,9 +32,24 @@ void MainWidget::openFileImportShapefile(){
     if (fileInfo.exists())
     {
         QString fileName = fileInfo.baseName();
-        QStandardItem* item = new QStandardItem(fileName);
+        // 遍历查找同名元素的个数
+        int duplicateCount = 0;
+        for (int i = 0; i < mapModel->rowCount(); ++i)
+        {
+            QStandardItem* cur = mapModel->item(i);
+            if (cur->text().startsWith(fileName))
+            {
+                duplicateCount++;
+            }
+        }
+        // 重复名字后面添加标号
+        QString itemText = duplicateCount > 0 ?
+                    QString("%1 (%2)").arg(fileName).arg(duplicateCount + 1) :
+                    fileName;
+        QStandardItem* item = new QStandardItem(itemText);
         QMap<QString, QVariant> itemData;
         itemData["path"] = QVariant(filePath);
+        itemData["name"] = QVariant(fileName);
         item->setData(QVariant(itemData));
         item->setCheckable(true);
         item->setCheckState(Qt::CheckState::Checked);
@@ -142,7 +160,8 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
             QStandardItem* item = mapModel->item(i);
             QMap<QString, QVariant> itemData = item->data().toMap();
             QString path = itemData["path"].toString();
-            QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, item->text());
+            QString name = itemData["name"].toString();
+            QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, name);
             if (vectorLayer->isValid())
             {
                 mapLayerList.append(vectorLayer);
@@ -199,4 +218,27 @@ void MainWidget::onMapSelectionChanged(QgsVectorLayer *layer)
         rubber->setFillColor(QColor(255, 0, 0, 144));
         mapLayerRubberDict[layer] += rubber;
     }
+}
+
+void MainWidget::deriveLayersFromModel()
+{
+    int modelSize = mapModel->rowCount();
+    mapLayerList.clear();
+    for (int r = 0; r < modelSize; ++r)
+    {
+        QStandardItem* item = mapModel->item(r);
+        QString name = item->text();
+        bool isLayerShow = item->checkState() == Qt::Unchecked ? false : true;
+        if (isLayerShow)
+        {
+            mapLayerList += mapLayerNameDict[name];
+        }
+    }
+}
+
+void MainWidget::onMapModelItemChanged(QStandardItem* item)
+{
+    deriveLayersFromModel();
+    mapCanvas->setLayers(mapLayerList);
+    mapCanvas->refresh();
 }
