@@ -4,7 +4,7 @@
 #include <QTreeView>
 #include <QStandardItemModel>
 
-class GwmFeaturePanel : public QWidget
+class GwmFeaturePanel : public QTreeView
 {
     Q_OBJECT
 
@@ -36,7 +36,6 @@ signals:
 
 private:
     QStandardItemModel* mapModel;
-    QTreeView* featurePanel;
 
     void setupUi();
     void showContextMenu(const QPoint &pos);
