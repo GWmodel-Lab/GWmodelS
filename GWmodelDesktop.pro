@@ -24,7 +24,8 @@ SOURCES += \
     gwmtoolbar.cpp \
     main.cpp \
     mainwidget.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    qgsattributetableviewextend.cpp
 
 HEADERS += \
     gwmfeaturepanel.h \
@@ -36,6 +37,7 @@ HEADERS += \
     mainwidget.h \
     mainwindow.h \
     prefix.h
+    qgsattributetableviewextend.h
 
 FORMS += \
     gwmfeaturepanel.ui \

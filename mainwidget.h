@@ -42,10 +42,14 @@ public:
     QMap<QgsVectorLayer*, QList<QgsRubberBand*>> mapLayerRubberDict;
 
 
+
 public slots:
     void openFileImportShapefile();
     void openFileImportJson();
     void openFileImportCsv();
+    // 要素区属性表窗口
+    void receiveAttributeTable(const QModelIndex &index);
+    void receiveSigAttriToMap(QList<QgsFeatureId> list);
 
     /**
      * @brief 移除图层的槽函数
