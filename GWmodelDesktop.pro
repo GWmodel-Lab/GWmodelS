@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    gwmattributetableview.cpp \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
@@ -24,10 +25,10 @@ SOURCES += \
     gwmtoolbar.cpp \
     main.cpp \
     mainwidget.cpp \
-    mainwindow.cpp \
-    qgsattributetableviewextend.cpp
+    mainwindow.cpp
 
 HEADERS += \
+    gwmattributetableview.h \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \

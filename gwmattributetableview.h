@@ -3,13 +3,13 @@
 
 #include "qgsattributetableview.h"
 
-class QgsAttributeTableViewExtend: public QgsAttributeTableView
+class GwmAttributeTableView: public QgsAttributeTableView
 {
     Q_OBJECT
 
 public:
-    explicit QgsAttributeTableViewExtend(QgsAttributeTableView *parent = nullptr);
-    ~QgsAttributeTableViewExtend();
+    explicit GwmAttributeTableView(QgsAttributeTableView *parent = nullptr);
+    ~GwmAttributeTableView();
     virtual bool eventFilter( QObject* object, QEvent* event );
 signals:
     // 发送信号给地图区主窗口

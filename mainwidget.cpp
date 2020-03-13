@@ -310,7 +310,7 @@ void MainWidget::receiveAttributeTable(const QModelIndex &index)
     QgsVectorLayerCache* lc = new QgsVectorLayerCache( currentLayer, currentLayer->featureCount() );
     // 分别创建 QgsAttributeTableView 和 QgsAttributeTableModel 用于显示属性表格
     // 派生类
-    QgsAttributeTableViewExtend* tv = new QgsAttributeTableViewExtend();
+    GwmAttributeTableView* tv = new GwmAttributeTableView();
     QgsAttributeTableModel* tm = new QgsAttributeTableModel( lc );
     // 加载一下图层,让model里有图层的属性数据
     tm->loadLayer();
@@ -324,7 +324,7 @@ void MainWidget::receiveAttributeTable(const QModelIndex &index)
     connect(tv,SIGNAL(sendSigAttriToMap(QList<QgsFeatureId>)),this,SLOT(receiveSigAttriToMap(QList<QgsFeatureId>)));
 }
 
-bool QgsAttributeTableViewExtend::eventFilter(QObject *object, QEvent *event)
+bool GwmAttributeTableView::eventFilter(QObject *object, QEvent *event)
 {
     if(event->type()==QEvent::MouseButtonRelease){
         //qDebug() << this->selectedFeaturesIds();
