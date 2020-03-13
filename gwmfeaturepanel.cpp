@@ -48,13 +48,17 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
 {
     // 获取要素区列表索引值
     QModelIndex index = this->indexAt(pos);
+    QStandardItem* item = mMapModel->itemFromIndex(index);
     // qDebug() << index;
     if (index.isValid())
     {
         QMenu *menu = new QMenu(this);
-        QAction *pShow = new QAction("显示",this);
+
+        // 显示/隐藏
+        QAction *pShow = new QAction(tr("Show/Hide"),this);
         menu->addAction(pShow);
-        // 处理事件
+        pShow->setCheckable(true);
+        pShow->setChecked(item->checkState() == Qt::CheckState::Checked);
         connect(pShow, &QAction::triggered, this, &GwmFeaturePanel::showLayer);
 
         QAction *pRemove = new QAction(tr("Remove"), this);
@@ -116,8 +120,20 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
 void GwmFeaturePanel::showLayer()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
-    //qDebug() << selected[0];
-    emit sendDataSigShowLayer(selected[0]);
+    for (QModelIndex index : selected) {
+        QStandardItem* item = mMapModel->itemFromIndex(index);
+        Qt::CheckState checkState = item->checkState();
+        switch (checkState) {
+        case Qt::CheckState::Checked:
+            item->setCheckState(Qt::CheckState::Unchecked);
+            break;
+        case Qt::CheckState::Unchecked:
+            item->setCheckState(Qt::CheckState::Checked);
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 void GwmFeaturePanel::removeLayer()
