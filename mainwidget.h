@@ -99,6 +99,8 @@ private slots:
     void onSelectMode();
     void onNavigateMode();
     void onEditMode();
+
+    void refreshCanvas();
 };
 
 #endif // MAINLAYOUT_H
