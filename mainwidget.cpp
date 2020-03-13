@@ -13,7 +13,14 @@
 #include <qgsfeatureselectionmodel.h>
 
 #include "gwmattributetableview.h"
+
 #include "gwmopenxyeventlayerdialog.h"
+
+
+//#include "qgssymbolselectordialog.h"
+//#include "qgssinglesymbolrenderer.h"
+#include "qgsstyle.h"
+#include <qdebug.h>
 
 
 MainWidget::MainWidget(QWidget *parent)
@@ -350,11 +357,15 @@ void MainWidget::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatur
 void MainWidget::symbolSlot(const QModelIndex &index)
 {
     createSymbolWindow(index);
+    connect(symbolWindow,&GwmSymbolWindow::canvasRefreshSingal,this,&MainWidget::refreshCanvas);
     symbolWindow->show();
+}
+
+void MainWidget::refreshCanvas(){
+    mapCanvas->refresh();
 }
 
 void MainWidget::createSymbolWindow(const QModelIndex &index)
 {
-    symbolWindow = new GwmSymbolWindow();
-
+    symbolWindow = new GwmSymbolWindow(dynamic_cast<QgsVectorLayer *>(mapLayerSet[index.row()]));
 }
