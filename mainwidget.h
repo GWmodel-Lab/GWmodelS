@@ -42,6 +42,7 @@ public:
     QMap<QgsVectorLayer*, QList<QgsRubberBand*>> mapLayerRubberDict;
 
 
+
 public slots:
     void openFileImportShapefile();
     void openFileImportJson();
@@ -68,6 +69,9 @@ private:
      * @brief Map item inserted slot.
      */
     void onMapItemInserted(const QModelIndex &parent, int first, int last);
+    // 要素区属性表窗口
+    void onShowAttributeTable(const QModelIndex &index);
+    void onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list);
     void onFullScreen();
 
     /**

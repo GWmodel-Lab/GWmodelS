@@ -4,6 +4,17 @@
 #include <qgsrenderer.h>
 #include "mainwidget.h"
 
+#include <qgsattributetableview.h>
+#include <qgsattributetablemodel.h>
+#include <qgsvectorlayercache.h>
+#include <qgsattributetablefiltermodel.h>
+#include <qgseditorwidgetregistry.h>
+
+#include <qgsfeatureselectionmodel.h>
+#include <QMouseEvent>
+
+#include "gwmattributetableview.h"
+
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mainLayout(new QVBoxLayout)
@@ -18,8 +29,9 @@ MainWidget::MainWidget(QWidget *parent)
     mainLayout->addWidget(mainZone);
     setLayout(mainLayout);
     mainLayout->setStretchFactor(mainZone, 1);
-    // 绑定模型 itemChanged 信号
     connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
+    // 连接featurePanel和mainWidget
+    connect(featurePanel, &GwmFeaturePanel::sendDataSigAttributeTable,this, &MainWidget::onShowAttributeTable);
 }
 
 MainWidget::~MainWidget()
@@ -279,4 +291,32 @@ void MainWidget::onFeaturePanelBeginDragDrop()
 void MainWidget::onFeaturePanelEndDragDrop()
 {
     this->isFeaturePanelDragging = false;
+}
+
+// 属性表
+void MainWidget::onShowAttributeTable(const QModelIndex &index)
+{
+    // qDebug() << 123;
+    qDebug() << index;
+    // QgsEditorWidgetRegistry test;
+    // test.initEditors(mapCanvas);
+    // 获取当前矢量图层路径
+    QMap<QString, QVariant> itemData = mapModel->itemFromIndex(index)->data().toMap();
+    // 当前矢量图层
+    QString layerID = itemData["ID"].toString();
+    QgsVectorLayer* currentLayer = mapLayerIdDict[layerID];
+    // 设置图层编码格式支持中文
+    currentLayer->setProviderEncoding("UTF-8");
+    GwmAttributeTableView* tv = new GwmAttributeTableView();
+    tv->setDisplayMapLayer(mapCanvas, currentLayer);
+    tv->show();
+}
+
+void MainWidget::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list)
+{
+    for (QgsFeatureId id : list)
+    {
+        qDebug() << "[MainWidget::receiveSigAttriToMap]"
+                 << "id:" << id;
+    }
 }
