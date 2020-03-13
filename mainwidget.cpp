@@ -118,6 +118,7 @@ void MainWidget::createFeaturePanel()
     featurePanel = new GwmFeaturePanel(mainZone, mapModel);
     featurePanel->setFixedWidth(320);
     // 连接信号槽
+    connect(featurePanel, &GwmFeaturePanel::sendDataSigZoomLayer, this, &MainWidget::onZoomToLayer);
     connect(featurePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &MainWidget::onShowLayerProperty);
     connect(featurePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &MainWidget::onFeaturePanelRowOrderChanged);
     connect(featurePanel, &GwmFeaturePanel::beginDragDropSignal, this, &MainWidget::onFeaturePanelBeginDragDrop);
@@ -187,6 +188,15 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
             }
         }
     }
+}
+
+void MainWidget::onZoomToLayer(const QModelIndex &index)
+{
+    QStandardItem* item = mapModel->itemFromIndex(index);
+    QString layerID = item->data().toMap()["ID"].toString();
+    QgsVectorLayer* layer = mapLayerIdDict[layerID];
+    mapCanvas->setExtent(layer->extent());
+    mapCanvas->refresh();
 }
 
 void MainWidget::onRemoveLayer(const QModelIndex &index)

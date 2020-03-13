@@ -65,10 +65,9 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
         menu->addAction(pRemove);
         connect(pRemove, &QAction::triggered, this, &GwmFeaturePanel::removeLayer);
 
-        // 改为"五个字的 缩放至图层"会报错, 原因未知
-        QAction *pZoom = new QAction("缩放图层",this);
+        // 缩放到图层
+        QAction *pZoom = new QAction(tr("Zoom to this layer"),this);
         menu->addAction(pZoom);
-        // 处理事件
         connect(pZoom, &QAction::triggered, this, &GwmFeaturePanel::zoomLayer);
 
         QAction *pAttribute = new QAction("属性表",this);
@@ -146,8 +145,10 @@ void GwmFeaturePanel::removeLayer()
 void GwmFeaturePanel::zoomLayer()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
-    //qDebug() << selected[0];
-    emit sendDataSigZoomLayer(selected[0]);
+    for (QModelIndex index : selected)
+    {
+        emit sendDataSigZoomLayer(index);
+    }
 }
 
 // 属性表
