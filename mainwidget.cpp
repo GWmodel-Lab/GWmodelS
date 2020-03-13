@@ -13,7 +13,7 @@
 #include <qgsfeatureselectionmodel.h>
 #include <QMouseEvent>
 
-#include "qgsattributetableviewextend.h"
+#include "gwmattributetableview.h"
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -30,7 +30,8 @@ MainWidget::MainWidget(QWidget *parent)
     setLayout(mainLayout);
     mainLayout->setStretchFactor(mainZone, 1);
     connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
-    connect(featurePanel,SIGNAL(sendDataSigAttributeTable(const QModelIndex &)),this,SLOT(receiveAttributeTable(const QModelIndex &)));
+    // 连接featurePanel和mainWidget
+    connect(featurePanel, &GwmFeaturePanel::sendDataSigAttributeTable,this, &MainWidget::onShowAttributeTable);
 }
 
 MainWidget::~MainWidget()
@@ -293,7 +294,7 @@ void MainWidget::onFeaturePanelEndDragDrop()
 }
 
 // 属性表
-void MainWidget::receiveAttributeTable(const QModelIndex &index)
+void MainWidget::onShowAttributeTable(const QModelIndex &index)
 {
     // qDebug() << 123;
     qDebug() << index;
@@ -301,43 +302,21 @@ void MainWidget::receiveAttributeTable(const QModelIndex &index)
     // test.initEditors(mapCanvas);
     // 获取当前矢量图层路径
     QMap<QString, QVariant> itemData = mapModel->itemFromIndex(index)->data().toMap();
-    QString currentLayerPath = itemData["path"].toString();
     // 当前矢量图层
-    QgsVectorLayer* currentLayer = new QgsVectorLayer(currentLayerPath);
+    QString layerID = itemData["ID"].toString();
+    QgsVectorLayer* currentLayer = mapLayerIdDict[layerID];
     // 设置图层编码格式支持中文
     currentLayer->setProviderEncoding("UTF-8");
-    // Cache 进 QgsVectorLayerCache 类中以便用于构造
-    QgsVectorLayerCache* lc = new QgsVectorLayerCache( currentLayer, currentLayer->featureCount() );
-    // 分别创建 QgsAttributeTableView 和 QgsAttributeTableModel 用于显示属性表格
-    // 派生类
     GwmAttributeTableView* tv = new GwmAttributeTableView();
-    QgsAttributeTableModel* tm = new QgsAttributeTableModel( lc );
-    // 加载一下图层,让model里有图层的属性数据
-    tm->loadLayer();
-    // 使用QgsAttributeTableFilterModel 来建立 QgsAttributeTableModel 和 QgsAttributeTableView 的之间联系
-    QgsAttributeTableFilterModel* tfm = new QgsAttributeTableFilterModel( mapCanvas, tm, tm );
-    tv->setModel( tfm );
-    // 将属性表格显示出来
-    tv->installEventFilter(tv);
+    tv->setDisplayMapLayer(mapCanvas, currentLayer);
     tv->show();
-    // 连接QgsAttributeTableViewExtend和主窗口
-    connect(tv,SIGNAL(sendSigAttriToMap(QList<QgsFeatureId>)),this,SLOT(receiveSigAttriToMap(QList<QgsFeatureId>)));
 }
 
-bool GwmAttributeTableView::eventFilter(QObject *object, QEvent *event)
+void MainWidget::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list)
 {
-    if(event->type()==QEvent::MouseButtonRelease){
-        //qDebug() << this->selectedFeaturesIds();
-        emit sendSigAttriToMap(this->selectedFeaturesIds());
+    for (QgsFeatureId id : list)
+    {
+        qDebug() << "[MainWidget::receiveSigAttriToMap]"
+                 << "id:" << id;
     }
-    if(event->type()==QEvent::Drop){
-        //qDebug() << this->selectedFeaturesIds();
-        emit sendSigAttriToMap(this->selectedFeaturesIds());
-    }
-    return false;
-}
-
-void MainWidget::receiveSigAttriToMap(QList<QgsFeatureId> list)
-{
-    qDebug()<< list;
 }

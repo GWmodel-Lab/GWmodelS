@@ -47,9 +47,6 @@ public slots:
     void openFileImportShapefile();
     void openFileImportJson();
     void openFileImportCsv();
-    // 要素区属性表窗口
-    void receiveAttributeTable(const QModelIndex &index);
-    void receiveSigAttriToMap(QList<QgsFeatureId> list);
 
     /**
      * @brief 移除图层的槽函数
@@ -72,6 +69,9 @@ private:
      * @brief Map item inserted slot.
      */
     void onMapItemInserted(const QModelIndex &parent, int first, int last);
+    // 要素区属性表窗口
+    void onShowAttributeTable(const QModelIndex &index);
+    void onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list);
     void onFullScreen();
 
     /**
