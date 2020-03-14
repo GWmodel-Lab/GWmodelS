@@ -48,16 +48,6 @@ public slots:
     void openFileImportJson();
     void openFileImportCsv();
 
-    /**
-     * @brief 移除图层的槽函数
-     * @param index 项的索引
-     */
-    void onRemoveLayer(const QModelIndex &index);
-    void onShowLayerProperty(const QModelIndex &index);
-    void onSelectMode();
-    void onNavigateMode();
-    void onEditMode();
-
 private:
     void createToolbar();
     void createMainZone();
@@ -93,6 +83,17 @@ private slots:
     void onFeaturePanelBeginDragDrop();
 
     void onFeaturePanelEndDragDrop();
+
+    /**
+     * @brief 移除图层的槽函数
+     * @param index 项的索引
+     */
+    void onZoomToLayer(const QModelIndex &index);
+    void onRemoveLayer(const QModelIndex &index);
+    void onShowLayerProperty(const QModelIndex &index);
+    void onSelectMode();
+    void onNavigateMode();
+    void onEditMode();
 };
 
 #endif // MAINLAYOUT_H

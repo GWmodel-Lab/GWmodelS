@@ -48,23 +48,26 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
 {
     // 获取要素区列表索引值
     QModelIndex index = this->indexAt(pos);
+    QStandardItem* item = mMapModel->itemFromIndex(index);
     // qDebug() << index;
     if (index.isValid())
     {
         QMenu *menu = new QMenu(this);
-        QAction *pShow = new QAction("显示",this);
+
+        // 显示/隐藏
+        QAction *pShow = new QAction(tr("Show/Hide"),this);
         menu->addAction(pShow);
-        // 处理事件
+        pShow->setCheckable(true);
+        pShow->setChecked(item->checkState() == Qt::CheckState::Checked);
         connect(pShow, &QAction::triggered, this, &GwmFeaturePanel::showLayer);
 
         QAction *pRemove = new QAction(tr("Remove"), this);
         menu->addAction(pRemove);
         connect(pRemove, &QAction::triggered, this, &GwmFeaturePanel::removeLayer);
 
-        // 改为"五个字的 缩放至图层"会报错, 原因未知
-        QAction *pZoom = new QAction("缩放图层",this);
+        // 缩放到图层
+        QAction *pZoom = new QAction(tr("Zoom to this layer"),this);
         menu->addAction(pZoom);
-        // 处理事件
         connect(pZoom, &QAction::triggered, this, &GwmFeaturePanel::zoomLayer);
 
         QAction *pAttribute = new QAction("属性表",this);
@@ -116,8 +119,20 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
 void GwmFeaturePanel::showLayer()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
-    //qDebug() << selected[0];
-    emit sendDataSigShowLayer(selected[0]);
+    for (QModelIndex index : selected) {
+        QStandardItem* item = mMapModel->itemFromIndex(index);
+        Qt::CheckState checkState = item->checkState();
+        switch (checkState) {
+        case Qt::CheckState::Checked:
+            item->setCheckState(Qt::CheckState::Unchecked);
+            break;
+        case Qt::CheckState::Unchecked:
+            item->setCheckState(Qt::CheckState::Checked);
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 void GwmFeaturePanel::removeLayer()
@@ -130,8 +145,10 @@ void GwmFeaturePanel::removeLayer()
 void GwmFeaturePanel::zoomLayer()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
-    //qDebug() << selected[0];
-    emit sendDataSigZoomLayer(selected[0]);
+    for (QModelIndex index : selected)
+    {
+        emit sendDataSigZoomLayer(index);
+    }
 }
 
 // 属性表
