@@ -1,6 +1,7 @@
 #ifndef GWMOPENXYEVENTLAYERDIALOG_H
 #define GWMOPENXYEVENTLAYERDIALOG_H
 
+#include "prefix.h"
 #include <QDialog>
 
 namespace Ui {
