@@ -21,6 +21,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
     gwmmaptoolidentifyfeature.cpp \
+    gwmopenxyeventlayerdialog.cpp \
     gwmpropertypanel.cpp \
     gwmtoolbar.cpp \
     main.cpp \
@@ -33,6 +34,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
     gwmmaptoolidentifyfeature.h \
+    gwmopenxyeventlayerdialog.h \
     gwmpropertypanel.h \
     gwmtoolbar.h \
     mainwidget.h \
@@ -44,6 +46,7 @@ FORMS += \
     gwmfeaturepanel.ui \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
+    gwmopenxyeventlayerdialog.ui \
     gwmpropertypanel.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
