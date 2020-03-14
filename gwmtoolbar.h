@@ -62,6 +62,7 @@ signals:
     void gwmodelGWPCABtnSignal();
 
 private:
+    void setupUi();
     void createButtons();
     void openFileImportShapefile();
     void openFileImportJson();
@@ -74,8 +75,6 @@ private:
     void gwmodelGWRBtnSlot();
     void gwmodelGWSSBtnSlot();
     void gwmodelGWPCABtnSlot();
-
-    bool eventFilter(QObject *watched, QEvent *event);
 };
 
 #endif // GWMODELTOOLBAR_H
