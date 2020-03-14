@@ -15,6 +15,13 @@ public:
     explicit GwmOpenXYEventLayerDialog(QWidget *parent = nullptr);
     ~GwmOpenXYEventLayerDialog();
 
+private slots:
+    void onFormatCSVRadioToggled(bool checked);
+
+    void onFormatRegRadioToggled(bool checked);
+
+    void onFormatCustomRadioToggled(bool checked);
+
 private:
     Ui::GwmOpenXYEventLayerDialog *ui;
 };

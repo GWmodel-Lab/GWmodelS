@@ -14,6 +14,7 @@
 #include <QMouseEvent>
 
 #include "gwmattributetableview.h"
+#include "gwmopenxyeventlayerdialog.h"
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -62,7 +63,8 @@ void MainWidget::openFileImportJson()
 
 void MainWidget::openFileImportCsv()
 {
-    QFileDialog::getOpenFileName(this, tr("Open CSV"), tr(""), tr("CSV (*.csv)"));
+    GwmOpenXYEventLayerDialog* dialog = new GwmOpenXYEventLayerDialog(this);
+    dialog->show();
 }
 
 void MainWidget::onSelectMode()
