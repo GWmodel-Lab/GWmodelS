@@ -27,18 +27,15 @@ GwmSymbolWindow::GwmSymbolWindow(QgsVectorLayer* vectorLayer,QWidget *parent) : 
     setMinimumWidth(880);
     setMinimumHeight(520);
     setWindowTitle("Symbol");
-    mSingleRenderer = (QgsSingleSymbolRenderer*)mLayer->renderer();
-    mSymbol =  mSingleRenderer->symbol() ? mSingleRenderer->symbol()->clone() : nullptr ;
+    getLayerSymbol();
     createComboBox();
     createStackWidget();
     createButtons();
     createLayout();
-    getLayerSymbol();
 }
 
 void GwmSymbolWindow::createsingleSymbolWidget()
 {
-//    std::unique_ptr< QgsSymbol > symbol( mSingleRenderer->symbol() ? mSingleRenderer->symbol()->clone() : nullptr );
     singleSymbolWidget = new QgsSymbolSelectorWidget( mSymbol, QgsStyle::defaultStyle(), mLayer, this);
 }
 
@@ -76,8 +73,6 @@ void GwmSymbolWindow::createLayout()
 void GwmSymbolWindow::createComboBox()
 {
     symbolTypeSelect = new QComboBox(this);
-//    symbolTypeSelect->setMaximumWidth(this->width()-10);
-//    symbolTypeSelect->setStyleSheet("border");
     symbolTypeSelect->setStyle(QStyleFactory::create("Fusion"));
     symbolTypeSelect->addItem("Single Symbol");
     symbolTypeSelect->addItem("Categorized");
@@ -128,42 +123,37 @@ void GwmSymbolWindow::createButtons()
     btnLayout->addWidget(helpBtn);
 
     connect(applyBtn,&QPushButton::clicked,this,&GwmSymbolWindow::applyLayerSymbol);
-
+    connect(cancelBtn,&QPushButton::clicked,this,&GwmSymbolWindow::close);
+    connect(okBtn,&QPushButton::clicked,this,&GwmSymbolWindow::onOkBtnClicked);
     btnContainer->setLayout(btnLayout);
 }
 
 void GwmSymbolWindow::applyLayerSymbol()
 {
-//    QStringList colorList = QColor::colorNames();
-//    QColor color = QColor( colorList[ colorCombobox->currentIndex() ] );
-//    QgsSimpleMarkerSymbolLayer* newMarkerSymbol = new QgsSimpleMarkerSymbolLayer(
-//                QgsSimpleMarkerSymbolLayerBase::Star,
-//                3,
-//                0.0,
-//                QgsSymbol::ScaleDiameter,
-//                color
-//                );
-//    QgsSymbolLayerList symList;
-//    symList.append(newMarkerSymbol);
-//    QgsMarkerSymbol* markSym = new QgsMarkerSymbol(symList);
-//    QgsSingleSymbolRenderer* symRenderer = new QgsSingleSymbolRenderer(markSym);
-//    mLayer->setRenderer(symRenderer);
-//    emit canvasRefreshSingal();
-    mSingleRenderer->setSymbol( mSymbol );
+//    mSingleRenderer->setSymbol( mSymbol );
     mLayer->triggerRepaint();
     mLayer->emitStyleChanged();
+    mLastSymbol = mSingleRenderer->symbol()->clone();
+
 }
 
+void GwmSymbolWindow::onOkBtnClicked()
+{
+    applyLayerSymbol();
+    this->close();
+}
 
-
+void GwmSymbolWindow::closeEvent(QCloseEvent *ev)
+{
+    mSingleRenderer->setSymbol(mLastSymbol);
+    ev->accept();
+}
 
 void GwmSymbolWindow::getLayerSymbol()
 {
-//    QgsSingleSymbolRenderer* render = (QgsSingleSymbolRenderer*)mLayer->renderer();
-//    QgsSymbol* layerSymbol = render->symbol();
-//    QgsMarkerSymbolLayer* svgMarker = (QgsMarkerSymbolLayer*)layerSymbol->symbolLayers().at(0);
-//    svgMarker->size();
-//    qDebug() << svgMarker->color();
+    mSingleRenderer = (QgsSingleSymbolRenderer*)mLayer->renderer();
+    mSymbol =  mSingleRenderer->symbol();
+    mLastSymbol = mSingleRenderer->symbol()->clone();
+    std::unique_ptr< QgsSymbol > symbol( mSingleRenderer->symbol() ? mSingleRenderer->symbol()->clone() : nullptr );
 
-//    qDebug() << svgMarker;
 }

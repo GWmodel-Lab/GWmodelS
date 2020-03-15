@@ -26,9 +26,7 @@ class QPushButton;
 class QTextEdit;
 class QHBoxLayout;
 class QVBoxLayout;
-class SymbolLayerItem;
 QT_END_NAMESPACE
-
 
 
 class GwmSymbolWindow : public QWidget
@@ -89,33 +87,26 @@ public:
     QWidget* btnContainer;
 
     /**
-     * @brief 符号修改图层
+     * @brief 目标图层
      */
     QgsVectorLayer* mLayer;
-
-    QTreeView* layersTree;
-
-    QComboBox* colorCombobox;
-
-    QStandardItemModel *model = nullptr;
-
+    /**
+     * @brief 图层样式
+     */
     QgsStyle *mStyle = nullptr;
+    /**
+     * @brief 图层符号
+     */
     QgsSymbol *mSymbol = nullptr;
-    std::unique_ptr<DataDefinedRestorer> mDataDefineRestorer;
-    QMenu *mAdvancedMenu = nullptr;
-
-    QStackedWidget* stackedWidget;
-
-    QgsStyleItemsListWidget* mStyleItemsListWidget;
-
+    /**
+      * @brief 未修改的图层符号
+      */
+    QgsSymbol* mLastSymbol = nullptr;
+     std::unique_ptr< QgsSymbol > symbol;
+    /**
+     * @brief mSingleRenderer
+     */
     QgsSingleSymbolRenderer* mSingleRenderer;
-    std::unique_ptr< QgsSymbol > symbol;
-protected:
-//    std::unique_ptr< QgsCategorizedSymbolRenderer > mRenderer;
-
-//    std::unique_ptr< QgsSymbol > mCategorizedSymbol;
-
-//    QgsCategorizedSymbolRendererModel *mModel = nullptr;
 
 private:
     /**
@@ -146,17 +137,29 @@ private:
      * @brief 创建graduated 窗口
      */
     void creategraduatedWidget();
-
+    /**
+     * @brief 获取图层的符号样式属性
+     */
     void getLayerSymbol();
-
+    /**
+     * @brief 修改后符号应用到图层上
+     */
     void applyLayerSymbol();
-//    void setWidget( QWidget *widget );
-//    void layerChanged();
-
-    void loadSymbol( QgsSymbol *symbol, SymbolLayerItem *parent = nullptr );
-
+    /**
+     * @brief OK按钮响应函数
+     */
+    void onOkBtnClicked();
+    /**
+     * @brief closeEvent 关闭窗口前改回图层符号
+     * @param ev 窗口关闭信号
+     */
+    virtual void closeEvent(QCloseEvent* ev)override;
 
 public slots:
+    /**
+     * @brief 切换StackWidget窗口
+     * @param index 窗口索引号
+     */
     void toggleWidget(int index);
 
 
