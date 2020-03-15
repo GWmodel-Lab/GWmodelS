@@ -367,29 +367,6 @@ void MainWidget::symbolSlot(const QModelIndex &index)
     createSymbolWindow(index);
     connect(symbolWindow,&GwmSymbolWindow::canvasRefreshSingal,this,&MainWidget::refreshCanvas);
     symbolWindow->show();
-//    QgsVectorLayer *layer = dynamic_cast<QgsVectorLayer *>(mapLayerSet[index.row()]);
-//    if ( !layer )
-//      return;
-
-//    QgsSingleSymbolRenderer *singleRenderer = dynamic_cast< QgsSingleSymbolRenderer * >( layer->renderer() );
-//    if ( !singleRenderer )
-//      return;
-
-//    std::unique_ptr< QgsSymbol > symbol( singleRenderer->symbol() ? singleRenderer->symbol()->clone() : nullptr );
-//    QgsSymbolSelectorDialog dlg( symbol.get(), QgsStyle::defaultStyle(), layer, featurePanel->window() );
-//    dlg.setWindowTitle( tr( "Symbol Selector" ) );
-//    QgsSymbolWidgetContext context;
-//    context.setMapCanvas( mapCanvas );
-//    context.setMessageBar( QgisApp::instance()->messageBar() );
-//    dlg.setContext( context );
-//    if ( dlg.exec() )
-//    {
-//      singleRenderer->setSymbol( symbol.release() );
-//      layer->triggerRepaint();
-//      mView->refreshLayerSymbology( layer->id() );
-//      layer->emitStyleChanged();
-//      QgsProject::instance()->setDirty( true );
-//    }
 }
 
 void MainWidget::refreshCanvas(){
