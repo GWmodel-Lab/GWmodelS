@@ -25,6 +25,9 @@ private slots:
 
 private:
     Ui::GwmOpenXYEventLayerDialog *ui;
+
+    void updateFieldsAndEnable();
+    void enableAccept();
 };
 
 #endif // GWMOPENXYEVENTLAYERDIALOG_H
