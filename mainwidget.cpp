@@ -348,7 +348,7 @@ void MainWidget::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatur
         qDebug() << "[MainWidget::receiveSigAttriToMap]"
                  << "id:" << id;
     }
-
+}
 void MainWidget::symbolSlot(const QModelIndex &index)
 {
     createSymbolWindow(index);
@@ -362,5 +362,5 @@ void MainWidget::refreshCanvas(){
 
 void MainWidget::createSymbolWindow(const QModelIndex &index)
 {
-    symbolWindow = new GwmSymbolWindow(dynamic_cast<QgsVectorLayer *>(mapLayerSet[index.row()]));
+    symbolWindow = new GwmSymbolWindow(dynamic_cast<QgsVectorLayer *>(mapLayerList[index.row()]));
 }
