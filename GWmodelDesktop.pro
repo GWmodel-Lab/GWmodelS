@@ -16,7 +16,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    DelimitedText/qgsdelimitedtextfeatureiterator.cpp \
+    DelimitedText/qgsdelimitedtextfile.cpp \
+    DelimitedText/qgsdelimitedtextprovider.cpp \
     gwmattributetableview.cpp \
+    gwmdelimitedtextfile.cpp \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
@@ -29,7 +33,11 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
+    DelimitedText/qgsdelimitedtextfeatureiterator.h \
+    DelimitedText/qgsdelimitedtextfile.h \
+    DelimitedText/qgsdelimitedtextprovider.h \
     gwmattributetableview.h \
+    gwmdelimitedtextfile.h \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \

@@ -1,17 +1,16 @@
+#include "mainwidget.h"
 #include <QtWidgets>
 #include <QFileInfo>
+#include <QMouseEvent>
+
 #include <qgsvectorlayer.h>
 #include <qgsrenderer.h>
-#include "mainwidget.h"
-
 #include <qgsattributetableview.h>
 #include <qgsattributetablemodel.h>
 #include <qgsvectorlayercache.h>
 #include <qgsattributetablefiltermodel.h>
 #include <qgseditorwidgetregistry.h>
-
 #include <qgsfeatureselectionmodel.h>
-#include <QMouseEvent>
 
 #include "gwmattributetableview.h"
 #include "gwmopenxyeventlayerdialog.h"
