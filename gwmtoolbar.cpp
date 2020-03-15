@@ -16,6 +16,7 @@ void GwmToolbar::setupUi()
     createButtons();
     QHBoxLayout* widgetLayout = new QHBoxLayout(this);
     widgetLayout->setMargin(0);
+    widgetLayout->setSpacing(0);
     widgetLayout->addWidget(openLayerBtn);
     widgetLayout->addWidget(openByXYBtn);
     widgetLayout->addWidget(saveLayerBtn);
