@@ -20,11 +20,11 @@ void GwmToolbar::setupUi()
     widgetLayout->addWidget(openByXYBtn);
     widgetLayout->addWidget(saveLayerBtn);
     widgetLayout->addWidget(exportLayerBtn);
-    widgetLayout->addWidget(selectBtn);
     QFrame* seperator1 =  new QFrame(this);
     seperator1->setLineWidth(1);
     seperator1->setFrameStyle(QFrame::Shape::VLine);
     widgetLayout->addWidget(seperator1);
+    widgetLayout->addWidget(selectBtn);
     widgetLayout->addWidget(moveBtn);
     widgetLayout->addWidget(editBtn);
     widgetLayout->addWidget(fullScreenBtn);
@@ -108,15 +108,15 @@ QPushButton* createToolbarButton(QString icon, QString tooltip)
 
 void GwmToolbar::createButtons()
 {
-    openLayerBtn = createToolbarButton(QStringLiteral("res/icon/folder.png"), tr("Open"));
-    openByXYBtn = createToolbarButton(QStringLiteral("res/icon/csv.png"), tr("Open By XY Coordinate"));
-    saveLayerBtn = createToolbarButton(QStringLiteral("res/icon/save.png"), tr("Save"));
-    exportLayerBtn = createToolbarButton(QStringLiteral("res/icon/download.png"), tr("Export"));
-    editBtn = createToolbarButton(QStringLiteral("res/icon/edit.png"), tr("Edit"));
-    selectBtn = createToolbarButton(QStringLiteral("res/icon/select.png"), tr("Select"));
-    moveBtn = createToolbarButton(QStringLiteral("res/icon/move.png"), tr("Move"));
-    fullScreenBtn = createToolbarButton(QStringLiteral("res/icon/view larger.png"), tr("Full"));
-    showPositionBtn = createToolbarButton(QStringLiteral("res/icon/map.png"), tr("Set center position"));
+    openLayerBtn = createToolbarButton(QStringLiteral(":/icon/res/icon/folder.png"), tr("Open"));
+    openByXYBtn = createToolbarButton(QStringLiteral(":/icon/res/icon/csv.png"), tr("Open By XY Coordinate"));
+    saveLayerBtn = createToolbarButton(QStringLiteral(":/icon/res/icon/save.png"), tr("Save"));
+    exportLayerBtn = createToolbarButton(QStringLiteral(":/icon/res/icon/download.png"), tr("Export"));
+    editBtn = createToolbarButton(QStringLiteral(":/icon/res/icon/edit.png"), tr("Edit"));
+    selectBtn = createToolbarButton(QStringLiteral(":/icon/res/icon/select.png"), tr("Select"));
+    moveBtn = createToolbarButton(QStringLiteral(":/icon/res/icon/move.png"), tr("Move"));
+    fullScreenBtn = createToolbarButton(QStringLiteral(":/icon/res/icon/view larger.png"), tr("Full"));
+    showPositionBtn = createToolbarButton(QStringLiteral(":/icon/res/icon/map.png"), tr("Set center position"));
 
     gwmodelGWRBtn = new QPushButton(tr("GWR"));
 
