@@ -8,6 +8,9 @@
 
 int main(int argc, char *argv[])
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(5,6,0))
+    QgsApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
     QgsApplication a(argc, argv, true);
     MainWindow w;
     w.show();
