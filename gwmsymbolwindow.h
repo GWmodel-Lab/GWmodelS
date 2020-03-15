@@ -10,7 +10,9 @@
 #include <QStandardItemModel>
 #include <QTreeView>
 //#include <qgslayerpropertieswidget.h>
-//#include <qgssymbolslistwidget.h>
+#include <qgsstyleitemslistwidget.h>
+#include <qgssinglesymbolrenderer.h>
+#include <qgssymbolselectordialog.h>
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -27,32 +29,6 @@ class QVBoxLayout;
 class SymbolLayerItem;
 QT_END_NAMESPACE
 
-class DataDefinedRestorer: public QObject
-{
-    Q_OBJECT
-  public:
-    DataDefinedRestorer( QgsSymbol *symbol, const QgsSymbolLayer *symbolLayer );
-
-  public slots:
-    void restore();
-
-  private:
-    QgsMarkerSymbol *mMarker = nullptr;
-    const QgsMarkerSymbolLayer *mMarkerSymbolLayer = nullptr;
-    double mSize;
-    double mAngle;
-    QPointF mMarkerOffset;
-    QgsProperty mDDSize;
-    QgsProperty mDDAngle;
-
-    QgsLineSymbol *mLine = nullptr;
-    const QgsLineSymbolLayer *mLineSymbolLayer = nullptr;
-    double mWidth;
-    double mLineOffset;
-    QgsProperty mDDWidth;
-
-    void save();
-};
 
 
 class GwmSymbolWindow : public QWidget
@@ -97,7 +73,7 @@ public:
     /**
      * @brief singleSymbol 窗口
      */
-    QWidget* singleSymbolWidget;
+    QgsSymbolSelectorWidget* singleSymbolWidget;
     /**
      * @brief categorized 窗口
      */
@@ -130,6 +106,10 @@ public:
 
     QStackedWidget* stackedWidget;
 
+    QgsStyleItemsListWidget* mStyleItemsListWidget;
+
+    QgsSingleSymbolRenderer* mSingleRenderer;
+    std::unique_ptr< QgsSymbol > symbol;
 protected:
 //    std::unique_ptr< QgsCategorizedSymbolRenderer > mRenderer;
 

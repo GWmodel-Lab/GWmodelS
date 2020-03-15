@@ -6,9 +6,13 @@
 #include <gwmfeaturepanel.h>
 #include <qgsmapcanvas.h>
 #include <qgsmaplayer.h>
+
 #include <gwmpropertypanel.h>
 #include <qgsmaptoolpan.h>
 #include <gwmmaptoolidentifyfeature.h>
+
+#include <qgssymbolselectordialog.h>
+
 #include "gwmsymbolwindow.h"
 
 
