@@ -1,19 +1,19 @@
+#include "mainwidget.h"
 #include <QtWidgets>
 #include <QFileInfo>
+#include <QMouseEvent>
+
 #include <qgsvectorlayer.h>
 #include <qgsrenderer.h>
-#include "mainwidget.h"
-
 #include <qgsattributetableview.h>
 #include <qgsattributetablemodel.h>
 #include <qgsvectorlayercache.h>
 #include <qgsattributetablefiltermodel.h>
 #include <qgseditorwidgetregistry.h>
-
 #include <qgsfeatureselectionmodel.h>
-#include <QMouseEvent>
 
 #include "gwmattributetableview.h"
+#include "gwmopenxyeventlayerdialog.h"
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -45,13 +45,7 @@ void MainWidget::openFileImportShapefile(){
     if (fileInfo.exists())
     {
         QString fileName = fileInfo.baseName();
-        QStandardItem* item = new QStandardItem(fileName);
-        QMap<QString, QVariant> itemData;
-        itemData["path"] = QVariant(filePath);
-        item->setData(QVariant(itemData));
-        item->setCheckable(true);
-        item->setCheckState(Qt::CheckState::Checked);
-        mapModel->appendRow(item);
+        addLayerToModel(filePath, fileName, "ogr");
     }
 }
 
@@ -62,7 +56,9 @@ void MainWidget::openFileImportJson()
 
 void MainWidget::openFileImportCsv()
 {
-    QFileDialog::getOpenFileName(this, tr("Open CSV"), tr(""), tr("CSV (*.csv)"));
+    GwmOpenXYEventLayerDialog* dialog = new GwmOpenXYEventLayerDialog(this);
+    connect(dialog, &GwmOpenXYEventLayerDialog::addVectorLayer, this, &MainWidget::addLayerToModel);
+    dialog->show();
 }
 
 void MainWidget::onSelectMode()
@@ -149,6 +145,18 @@ void MainWidget::createMapPanel()
     connect(mapCanvas, &QgsMapCanvas::selectionChanged, this, &MainWidget::onMapSelectionChanged);
 }
 
+void MainWidget::addLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey)
+{
+    QStandardItem* item = new QStandardItem(layerName);
+    QMap<QString, QVariant> itemData;
+    itemData["path"] = QVariant(uri);
+    itemData["provider"] = QVariant(providerKey);
+    item->setData(QVariant(itemData));
+    item->setCheckable(true);
+    item->setCheckState(Qt::CheckState::Checked);
+    mapModel->appendRow(item);
+}
+
 void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int last)
 {
     if (!isFeaturePanelDragging)
@@ -164,9 +172,10 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
             {
                 QStandardItem* item = mapModel->item(i);
                 QMap<QString, QVariant> itemData = item->data().toMap();
-                QString path = itemData["path"].toString();
                 QString name = item->text();
-                QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, name);
+                QString path = itemData["path"].toString();
+                QString provider = itemData["provider"].toString();
+                QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, name, provider);
                 if (vectorLayer->isValid())
                 {
                     QString layerID = QString("%1")
