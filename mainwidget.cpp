@@ -19,8 +19,11 @@
 
 //#include "qgssymbolselectordialog.h"
 //#include "qgssinglesymbolrenderer.h"
+#include <qgsapplication.h>
 #include "qgsstyle.h"
 #include <qdebug.h>
+#include <qgsstylemodel.h>
+#include <qgssinglesymbolrenderer.h>
 
 
 MainWidget::MainWidget(QWidget *parent)
@@ -37,9 +40,14 @@ MainWidget::MainWidget(QWidget *parent)
     mainLayout->addWidget(mainZone);
     setLayout(mainLayout);
     mainLayout->setStretchFactor(mainZone, 1);
+
     connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
     // 连接featurePanel和mainWidget
     connect(featurePanel, &GwmFeaturePanel::sendDataSigAttributeTable,this, &MainWidget::onShowAttributeTable);
+
+    QgsApplication::setPrefixPath("C:/OSGeo4W64/apps/qgis-dev", true);
+    QgsApplication::initQgis();
+
 }
 
 MainWidget::~MainWidget()
@@ -359,6 +367,29 @@ void MainWidget::symbolSlot(const QModelIndex &index)
     createSymbolWindow(index);
     connect(symbolWindow,&GwmSymbolWindow::canvasRefreshSingal,this,&MainWidget::refreshCanvas);
     symbolWindow->show();
+//    QgsVectorLayer *layer = dynamic_cast<QgsVectorLayer *>(mapLayerSet[index.row()]);
+//    if ( !layer )
+//      return;
+
+//    QgsSingleSymbolRenderer *singleRenderer = dynamic_cast< QgsSingleSymbolRenderer * >( layer->renderer() );
+//    if ( !singleRenderer )
+//      return;
+
+//    std::unique_ptr< QgsSymbol > symbol( singleRenderer->symbol() ? singleRenderer->symbol()->clone() : nullptr );
+//    QgsSymbolSelectorDialog dlg( symbol.get(), QgsStyle::defaultStyle(), layer, featurePanel->window() );
+//    dlg.setWindowTitle( tr( "Symbol Selector" ) );
+//    QgsSymbolWidgetContext context;
+//    context.setMapCanvas( mapCanvas );
+//    context.setMessageBar( QgisApp::instance()->messageBar() );
+//    dlg.setContext( context );
+//    if ( dlg.exec() )
+//    {
+//      singleRenderer->setSymbol( symbol.release() );
+//      layer->triggerRepaint();
+//      mView->refreshLayerSymbology( layer->id() );
+//      layer->emitStyleChanged();
+//      QgsProject::instance()->setDirty( true );
+//    }
 }
 
 void MainWidget::refreshCanvas(){
