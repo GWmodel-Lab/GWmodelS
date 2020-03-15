@@ -219,7 +219,7 @@ void GwmOpenXYEventLayerDialog::accept()
 
 
     // add the layer to the map
-    emit addVectorLayer( QString::fromLatin1( url.toEncoded() ), ui->layerNameEdit->text() );
+    emit addVectorLayer( QString::fromLatin1( url.toEncoded() ), ui->layerNameEdit->text(), "delimitedtext" );
 
     // clear the file and layer name show something has happened, ready for another file
 

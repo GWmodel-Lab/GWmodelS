@@ -54,6 +54,7 @@ private:
     void createFeaturePanel();
     void createPropertyPanel();
     void createMapPanel();
+    void addLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
 
     /**
      * @brief Map item inserted slot.
