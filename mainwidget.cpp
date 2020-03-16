@@ -13,6 +13,13 @@
 #include <qgsfeatureselectionmodel.h>
 
 #include "gwmattributetableview.h"
+//#include "qgssymbolselectordialog.h"
+//#include "qgssinglesymbolrenderer.h"
+#include <qgsapplication.h>
+#include "qgsstyle.h"
+#include <qdebug.h>
+#include <qgsstylemodel.h>
+#include <qgssinglesymbolrenderer.h>
 
 #include "gwmopenxyeventlayerdialog.h"
 
