@@ -64,7 +64,7 @@ void GwmSymbolWindow::createLayout()
 {
     QVBoxLayout* windowLayout = new QVBoxLayout(this);
     windowLayout->addWidget(symbolTypeSelect);
-    windowLayout->setMargin(1);
+    windowLayout->setMargin(6);
     windowLayout->addWidget(stack);
     windowLayout->addWidget(btnContainer);
     setLayout(windowLayout);

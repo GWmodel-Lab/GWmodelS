@@ -60,7 +60,9 @@ FORMS += \
     gwmpropertypanel.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
-    mainwindow.ui
+    mainwindow.ui \
+    qgsstyleitemslistwidgetbase.ui \
+    qgssymbolselectordialogbase.ui
 
 ## QGIS
 INCLUDEPATH += "$(OSGEO_HOME)\include"
