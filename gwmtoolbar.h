@@ -32,20 +32,12 @@ private:
     QPushButton* selectBtn;
     QPushButton* moveBtn;
     QPushButton* editBtn;
-    QPushButton* fullScreenBtn;
-    QPushButton* showPositionBtn;
+    QPushButton* zoomFull;
+    QPushButton* zoomToLayer;
+    QPushButton* zoomToSelection;
     QPushButton* gwmodelGWRBtn;
     QPushButton* gwmodelGWSSBtn;
     QPushButton* gwmodelGWPCABtn;
-
-    QLabel* openBtnInfo;
-    QLabel* openByXYBtnInfo;
-    QLabel* saveBtnInfo;
-    QLabel* exportBtnInfo;
-    QLabel* editBtnInfo;
-    QLabel* moveBtnInfo;
-    QLabel* fullScreenBtnInfo;
-    QLabel* showPositionBtnInfo;
 
 signals:
     void openFileImportShapefileSignal();
@@ -55,8 +47,9 @@ signals:
     void selectBtnSignal();
     void editBtnSignal();
     void moveBtnSignal();
-    void fullScreenBtnSignal();
-    void showPositionBtnSignal();
+    void zoomFullBtnSignal();
+    void zoomToLayerBtnSignal();
+    void zoomToSelectionBtnSignal();
     void gwmodelGWRBtnSignal();
     void gwmodelGWSSBtnSignal();
     void gwmodelGWPCABtnSignal();
@@ -64,17 +57,6 @@ signals:
 private:
     void setupUi();
     void createButtons();
-    void openFileImportShapefile();
-    void openFileImportJson();
-    void openByXYBtnSlot();
-    void openFileImportCsv();
-    void editBtnSlot();
-    void moveBtnSlot();
-    void fullScreenBtnSlot();
-    void showPositionBtnSlot();
-    void gwmodelGWRBtnSlot();
-    void gwmodelGWSSBtnSlot();
-    void gwmodelGWPCABtnSlot();
 };
 
 #endif // GWMODELTOOLBAR_H
