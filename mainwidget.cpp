@@ -36,14 +36,10 @@ MainWidget::MainWidget(QWidget *parent)
     mainLayout->addWidget(mainZone);
     setLayout(mainLayout);
     mainLayout->setStretchFactor(mainZone, 1);
-
+    QgsApplication::initQgis();
     connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
     // 连接featurePanel和mainWidget
     connect(featurePanel, &GwmFeaturePanel::sendDataSigAttributeTable,this, &MainWidget::onShowAttributeTable);
-
-    QgsApplication::setPrefixPath("C:/OSGeo4W64/apps/qgis-dev", true);
-    QgsApplication::initQgis();
-
 }
 
 MainWidget::~MainWidget()
