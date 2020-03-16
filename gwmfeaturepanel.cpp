@@ -8,6 +8,7 @@
 #include "QDrag"
 #include "QHeaderView"
 
+
 GwmFeaturePanel::GwmFeaturePanel(QWidget *parent, QStandardItemModel* model) :
     QTreeView(parent),
     mMapModel(model)

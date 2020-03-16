@@ -6,9 +6,15 @@
 #include <gwmfeaturepanel.h>
 #include <qgsmapcanvas.h>
 #include <qgsmaplayer.h>
+
 #include <gwmpropertypanel.h>
 #include <qgsmaptoolpan.h>
 #include <gwmmaptoolidentifyfeature.h>
+
+#include <qgssymbolselectordialog.h>
+
+#include "gwmsymbolwindow.h"
+
 
 //namespace Ui {
 //class MainLayout;
@@ -43,10 +49,13 @@ public:
 
 
 
+    GwmSymbolWindow* symbolWindow;
+
 public slots:
     void openFileImportShapefile();
     void openFileImportJson();
     void openFileImportCsv();
+    void symbolSlot(const QModelIndex &index);
 
 private:
     void createToolbar();
@@ -54,8 +63,10 @@ private:
     void createFeaturePanel();
     void createPropertyPanel();
     void createMapPanel();
+
     void addLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
 
+    void createSymbolWindow(const QModelIndex &index);
     /**
      * @brief Map item inserted slot.
      */
@@ -95,6 +106,8 @@ private slots:
     void onSelectMode();
     void onNavigateMode();
     void onEditMode();
+
+    void refreshCanvas();
 };
 
 #endif // MAINLAYOUT_H

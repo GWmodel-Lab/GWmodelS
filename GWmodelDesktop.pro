@@ -27,6 +27,7 @@ SOURCES += \
     gwmmaptoolidentifyfeature.cpp \
     gwmopenxyeventlayerdialog.cpp \
     gwmpropertypanel.cpp \
+    gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
     mainwidget.cpp \
@@ -44,6 +45,7 @@ HEADERS += \
     gwmmaptoolidentifyfeature.h \
     gwmopenxyeventlayerdialog.h \
     gwmpropertypanel.h \
+    gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
     mainwindow.h \
@@ -76,4 +78,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
+    images/images.qrc \
     res.qrc
