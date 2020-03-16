@@ -104,7 +104,7 @@ void MainWidget::createToolbar()
     connect(toolbar, &GwmToolbar::openFileImportJsonSignal, this, &MainWidget::openFileImportJson);
     connect(toolbar, &GwmToolbar::openFileImportCsvSignal, this, &MainWidget::openFileImportCsv);
     connect(toolbar, &GwmToolbar::openByXYBtnSingnal, this, &MainWidget::openFileImportCsv);
-    connect(toolbar, &GwmToolbar::fullScreenBtnSignal, this, &MainWidget::onFullScreen);
+    connect(toolbar, &GwmToolbar::zoomFullBtnSignal, this, &MainWidget::onFullScreen);
     connect(toolbar, &GwmToolbar::selectBtnSignal, this, &MainWidget::onSelectMode);
     connect(toolbar, &GwmToolbar::moveBtnSignal, this, &MainWidget::onNavigateMode);
     connect(toolbar, &GwmToolbar::editBtnSignal, this, &MainWidget::onEditMode);
