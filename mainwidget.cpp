@@ -212,6 +212,15 @@ void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int las
                     // 记录ID
                     itemData["ID"] = QVariant(layerID);
                     item->setData(itemData);
+                    // 获取符号
+                    QgsSingleSymbolRenderer* renderer = (QgsSingleSymbolRenderer*) vectorLayer->renderer();
+                    QgsSymbol* symbol = renderer->symbol();
+                    QSize iconSize(12, 12);
+                    QPixmap icon(iconSize);
+                    icon.fill(Qt::transparent);
+                    QPainter iconPainter(&icon);
+                    symbol->drawPreviewIcon(&iconPainter, iconSize);
+                    item->setIcon(icon);
                 }
             }
             mapCanvas->setLayers(mapLayerList);
