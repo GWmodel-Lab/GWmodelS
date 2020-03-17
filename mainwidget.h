@@ -15,6 +15,7 @@
 
 #include "symbolwindow/gwmsymbolwindow.h"
 
+#include <gwmcoordinate.h>
 
 namespace Ui {
 class MainWidget;
@@ -66,6 +67,13 @@ private:
     void onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list);
     void onFullScreen();
 
+    /**
+     * @brief 从模型中导出地图所需要显示的图层
+     */
+    void deriveLayersFromModel();
+
+    GwmCoordinate *Gwm_Coordinate;
+
 private slots:
     void onMapSelectionChanged(QgsVectorLayer* layer);
 
@@ -89,6 +97,11 @@ private slots:
     void onEditMode();
 
     void refreshCanvas();
+    void onShowCoordinate(const QModelIndex &index);
+
+    void handleCoordinate(QString,QModelIndex);
+
+    //void setNewCoordinate(QgsCoordinateReferenceSystem,QString,QModelIndex);
 };
 
 #endif // MAINLAYOUT_H
