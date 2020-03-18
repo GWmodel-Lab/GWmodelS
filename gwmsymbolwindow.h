@@ -18,6 +18,10 @@
 #include <qgscategorizedsymbolrendererwidget.h>
 #include <qgsrulebasedrendererwidget.h>
 #include <qgsnullsymbolrendererwidget.h>
+#include <qgspointdisplacementrendererwidget.h>
+#include <qgspointclusterrendererwidget.h>
+#include <qgsheatmaprendererwidget.h>
+#include <qgsinvertedpolygonrendererwidget.h>
 
 QT_BEGIN_NAMESPACE
 class QAction;
