@@ -3,6 +3,7 @@ QT       += core gui xml svg
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
+CONFIG += qwt
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -27,7 +28,7 @@ SOURCES += \
     gwmmaptoolidentifyfeature.cpp \
     gwmopenxyeventlayerdialog.cpp \
     gwmpropertypanel.cpp \
-    gwmsymbolwindow.cpp \
+    symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
     mainwidget.cpp \
@@ -45,7 +46,7 @@ HEADERS += \
     gwmmaptoolidentifyfeature.h \
     gwmopenxyeventlayerdialog.h \
     gwmpropertypanel.h \
-    gwmsymbolwindow.h \
+    symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
     mainwindow.h \
@@ -61,8 +62,25 @@ FORMS += \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui \
-    qgsstyleitemslistwidgetbase.ui \
-    qgssymbolselectordialogbase.ui
+    symbolwindow/qgscategorizedsymbolrendererwidget.ui \
+    symbolwindow/qgsgraduatedsymbolrendererwidget.ui \
+    symbolwindow/qgsheatmaprendererwidgetbase.ui \
+    symbolwindow/qgshistogramwidgetbase.ui \
+    symbolwindow/qgsinvertedpolygonrendererwidgetbase.ui \
+    symbolwindow/qgsmapunitscalewidgetbase.ui \
+    symbolwindow/qgspointclusterrendererwidgetbase.ui \
+    symbolwindow/qgspointdisplacementrendererwidgetbase.ui \
+    symbolwindow/qgsrendererrulepropsdialogbase.ui \
+    symbolwindow/qgsrulebasedrendererwidget.ui \
+    symbolwindow/qgsstyleitemslistwidgetbase.ui \
+    symbolwindow/qgssymbolselectordialogbase.ui \
+    symbolwindow/qgsunitselectionwidget.ui \
+    symbolwindow/widget_set_dd_value.ui
+##Qwt
+DEFINES += QT_DLL QWT_DLL
+LIBS += -L"C:\Qt\5.12.7\msvc2017_64\lib" -lqwtd -lqwt
+INCLUDEPATH += "C:\Qt\5.12.7\msvc2017_64\include\qwt"
+##Qwt END
 
 ## QGIS
 INCLUDEPATH += "$(OSGEO_HOME)\include"
