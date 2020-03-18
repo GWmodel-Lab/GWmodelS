@@ -13,7 +13,7 @@
 
 #include <qgssymbolselectordialog.h>
 
-#include "gwmsymbolwindow.h"
+#include "symbolwindow/gwmsymbolwindow.h"
 
 
 //namespace Ui {

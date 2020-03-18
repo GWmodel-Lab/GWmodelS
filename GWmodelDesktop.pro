@@ -78,14 +78,14 @@ FORMS += \
     symbolwindow/widget_set_dd_value.ui
 ##Qwt
 DEFINES += QT_DLL QWT_DLL
-LIBS += -L"C:\Qt\5.12.7\msvc2017_64\lib" -lqwtd -lqwt
-INCLUDEPATH += "C:\Qt\5.12.7\msvc2017_64\include\qwt"
+LIBS += -L"$(QT_HOME)/lib" -lqwt
+INCLUDEPATH += "$(QT_HOME)/include/qwt"
 ##Qwt END
 
 ## QGIS
-INCLUDEPATH += "$(OSGEO_HOME)\include"
-INCLUDEPATH += "$(OSGEO_HOME)\apps\qgis-dev\include"
-LIBS += -L"$(OSGEO_HOME)\apps\qgis-dev\lib" -lqgis_core -lqgis_gui
+INCLUDEPATH += "$(OSGEO_HOME)/include"
+INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-dev/include"
+LIBS += -L"$(OSGEO_HOME)/apps/qgis-dev/lib" -lqgis_core -lqgis_gui
 GDAL_DATA = ".\share\gdal"
 ## QGIS END
 
