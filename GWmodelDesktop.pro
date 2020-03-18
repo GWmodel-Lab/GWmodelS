@@ -64,8 +64,12 @@ FORMS += \
     mainwindow.ui \
     qgscategorizedsymbolrendererwidget.ui \
     qgsgraduatedsymbolrendererwidget.ui \
+    qgsheatmaprendererwidgetbase.ui \
     qgshistogramwidgetbase.ui \
+    qgsinvertedpolygonrendererwidgetbase.ui \
     qgsmapunitscalewidgetbase.ui \
+    qgspointclusterrendererwidgetbase.ui \
+    qgspointdisplacementrendererwidgetbase.ui \
     qgsrendererrulepropsdialogbase.ui \
     qgsrulebasedrendererwidget.ui \
     qgsstyleitemslistwidgetbase.ui \

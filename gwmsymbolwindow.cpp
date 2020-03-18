@@ -50,10 +50,10 @@ static void _initRendererWidgetFunctions()
   _initRenderer( QStringLiteral( "categorizedSymbol" ), QgsCategorizedSymbolRendererWidget::create, QStringLiteral( "rendererCategorizedSymbol.svg" ) );
   _initRenderer( QStringLiteral( "graduatedSymbol" ), QgsGraduatedSymbolRendererWidget::create, QStringLiteral( "rendererGraduatedSymbol.svg" ) );
   _initRenderer( QStringLiteral( "RuleRenderer" ), QgsRuleBasedRendererWidget::create, QStringLiteral( "rendererRuleBasedSymbol.svg" ) );
-//  _initRenderer( QStringLiteral( "pointDisplacement" ), QgsPointDisplacementRendererWidget::create, QStringLiteral( "rendererPointDisplacementSymbol.svg" ) );
-//  _initRenderer( QStringLiteral( "pointCluster" ), QgsPointClusterRendererWidget::create, QStringLiteral( "rendererPointClusterSymbol.svg" ) );
-//  _initRenderer( QStringLiteral( "invertedPolygonRenderer" ), QgsInvertedPolygonRendererWidget::create, QStringLiteral( "rendererInvertedSymbol.svg" ) );
-//  _initRenderer( QStringLiteral( "heatmapRenderer" ), QgsHeatmapRendererWidget::create, QStringLiteral( "rendererHeatmapSymbol.svg" ) );
+  _initRenderer( QStringLiteral( "pointDisplacement" ), QgsPointDisplacementRendererWidget::create, QStringLiteral( "rendererPointDisplacementSymbol.svg" ) );
+  _initRenderer( QStringLiteral( "pointCluster" ), QgsPointClusterRendererWidget::create, QStringLiteral( "rendererPointClusterSymbol.svg" ) );
+  _initRenderer( QStringLiteral( "invertedPolygonRenderer" ), QgsInvertedPolygonRendererWidget::create, QStringLiteral( "rendererInvertedSymbol.svg" ) );
+  _initRenderer( QStringLiteral( "heatmapRenderer" ), QgsHeatmapRendererWidget::create, QStringLiteral( "rendererHeatmapSymbol.svg" ) );
 //  _initRenderer( QStringLiteral( "25dRenderer" ), Qgs25DRendererWidget::create, QStringLiteral( "renderer25dSymbol.svg" ) );
   _initRenderer( QStringLiteral( "nullSymbol" ), QgsNullSymbolRendererWidget::create, QStringLiteral( "rendererNullSymbol.svg" ) );
   sInitialized = true;
@@ -79,10 +79,12 @@ GwmSymbolWindow::GwmSymbolWindow(QgsVectorLayer* vectorLayer,QWidget *parent) : 
     for ( const QString &name : constRenderers )
     {
       QgsRendererAbstractMetadata *m = reg->rendererMetadata( name );
+//      if(name != "RuleRenderer")
       symbolTypeSelect->addItem( m->icon(), m->visibleName(), name );
     }
-    symbolTypeSelect->setCurrentIndex( 0 ); // set no current renderer
-    rendererChanged(0);
+//    symbolTypeSelect->setCurrentIndex( -1 );
+    symbolTypeSelect->setCurrentIndex( 1 ); // set no current renderer
+    rendererChanged(1);
     connect( symbolTypeSelect, static_cast<void ( QComboBox::* )( int )>( &QComboBox::currentIndexChanged ), this, &GwmSymbolWindow::rendererChanged );
     createButtons();
     createLayout();
@@ -114,15 +116,17 @@ void GwmSymbolWindow::rendererChanged(int index)
 
     //Retrieve the previous renderer: from the old active widget if possible, otherwise from the layer
     QgsFeatureRenderer *oldRenderer = nullptr;
-    if ( mActiveWidget && mActiveWidget->renderer() )
-    {
-      oldRenderer = mActiveWidget->renderer()->clone();
-    }
-    else
-    {
-      oldRenderer = mLayer->renderer()->clone();
-    }
-
+//    if ( mActiveWidget && mActiveWidget->renderer() )
+//    {
+//      qDebug() << "true";
+//      oldRenderer = mActiveWidget->renderer()->clone();
+//    }
+//    else
+//    {
+//      qDebug() << "false";
+//      oldRenderer = mLayer->renderer()->clone();
+//    }
+    oldRenderer = mLayer->renderer()->clone();
     // get rid of old active widget (if any)
     if ( mActiveWidget )
     {
@@ -137,7 +141,6 @@ void GwmSymbolWindow::rendererChanged(int index)
     if ( m )
       w = m->createRendererWidget( mLayer, mStyle, oldRenderer );
     delete oldRenderer;
-
     if ( w )
     {
       // instantiate the widget and set as active
