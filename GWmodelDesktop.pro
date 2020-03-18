@@ -28,7 +28,7 @@ SOURCES += \
     gwmmaptoolidentifyfeature.cpp \
     gwmopenxyeventlayerdialog.cpp \
     gwmpropertypanel.cpp \
-    gwmsymbolwindow.cpp \
+    symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
     mainwidget.cpp \
@@ -46,7 +46,7 @@ HEADERS += \
     gwmmaptoolidentifyfeature.h \
     gwmopenxyeventlayerdialog.h \
     gwmpropertypanel.h \
-    gwmsymbolwindow.h \
+    symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
     mainwindow.h \
@@ -62,20 +62,20 @@ FORMS += \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui \
-    qgscategorizedsymbolrendererwidget.ui \
-    qgsgraduatedsymbolrendererwidget.ui \
-    qgsheatmaprendererwidgetbase.ui \
-    qgshistogramwidgetbase.ui \
-    qgsinvertedpolygonrendererwidgetbase.ui \
-    qgsmapunitscalewidgetbase.ui \
-    qgspointclusterrendererwidgetbase.ui \
-    qgspointdisplacementrendererwidgetbase.ui \
-    qgsrendererrulepropsdialogbase.ui \
-    qgsrulebasedrendererwidget.ui \
-    qgsstyleitemslistwidgetbase.ui \
-    qgssymbolselectordialogbase.ui \
-    qgsunitselectionwidget.ui \
-    widget_set_dd_value.ui
+    symbolwindow/qgscategorizedsymbolrendererwidget.ui \
+    symbolwindow/qgsgraduatedsymbolrendererwidget.ui \
+    symbolwindow/qgsheatmaprendererwidgetbase.ui \
+    symbolwindow/qgshistogramwidgetbase.ui \
+    symbolwindow/qgsinvertedpolygonrendererwidgetbase.ui \
+    symbolwindow/qgsmapunitscalewidgetbase.ui \
+    symbolwindow/qgspointclusterrendererwidgetbase.ui \
+    symbolwindow/qgspointdisplacementrendererwidgetbase.ui \
+    symbolwindow/qgsrendererrulepropsdialogbase.ui \
+    symbolwindow/qgsrulebasedrendererwidget.ui \
+    symbolwindow/qgsstyleitemslistwidgetbase.ui \
+    symbolwindow/qgssymbolselectordialogbase.ui \
+    symbolwindow/qgsunitselectionwidget.ui \
+    symbolwindow/widget_set_dd_value.ui
 
 ##Qwt
 DEFINES += QT_DLL QWT_DLL
