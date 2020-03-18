@@ -20,6 +20,12 @@ SOURCES += \
     DelimitedText/qgsdelimitedtextfeatureiterator.cpp \
     DelimitedText/qgsdelimitedtextfile.cpp \
     DelimitedText/qgsdelimitedtextprovider.cpp \
+    Model/gwmlayergroupitem.cpp \
+    Model/gwmlayergwritem.cpp \
+    Model/gwmlayeritem.cpp \
+    Model/gwmlayeritemmodel.cpp \
+    Model/gwmlayersymbolitem.cpp \
+    Model/gwmlayervectoritem.cpp \
     gwmattributetableview.cpp \
     gwmdelimitedtextfile.cpp \
     gwmfeaturepanel.cpp \
@@ -38,6 +44,12 @@ HEADERS += \
     DelimitedText/qgsdelimitedtextfeatureiterator.h \
     DelimitedText/qgsdelimitedtextfile.h \
     DelimitedText/qgsdelimitedtextprovider.h \
+    Model/gwmlayergroupitem.h \
+    Model/gwmlayergwritem.h \
+    Model/gwmlayeritem.h \
+    Model/gwmlayeritemmodel.h \
+    Model/gwmlayersymbolitem.h \
+    Model/gwmlayervectoritem.h \
     gwmattributetableview.h \
     gwmdelimitedtextfile.h \
     gwmfeaturepanel.h \
