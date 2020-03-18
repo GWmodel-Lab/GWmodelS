@@ -76,7 +76,6 @@ FORMS += \
     symbolwindow/qgssymbolselectordialogbase.ui \
     symbolwindow/qgsunitselectionwidget.ui \
     symbolwindow/widget_set_dd_value.ui
-
 ##Qwt
 DEFINES += QT_DLL QWT_DLL
 LIBS += -L"C:\Qt\5.12.7\msvc2017_64\lib" -lqwtd -lqwt
