@@ -67,9 +67,6 @@ GwmSymbolWindow::GwmSymbolWindow(QgsVectorLayer* vectorLayer,QWidget *parent) : 
     setMinimumWidth(880);
     setMinimumHeight(520);
     setWindowTitle("Symbol");
-//    getLayerSymbol();
-
-    // initialize registry's widget functions
     _initRendererWidgetFunctions();
 
     QgsRendererRegistry *reg = QgsApplication::rendererRegistry();
@@ -86,39 +83,12 @@ GwmSymbolWindow::GwmSymbolWindow(QgsVectorLayer* vectorLayer,QWidget *parent) : 
     }
     symbolTypeSelect->setCurrentIndex( 0 ); // set no current renderer
     rendererChanged(0);
-//    createComboBox();
     connect( symbolTypeSelect, static_cast<void ( QComboBox::* )( int )>( &QComboBox::currentIndexChanged ), this, &GwmSymbolWindow::rendererChanged );
-//    createStackWidget();
     createButtons();
     createLayout();
 }
 
-void GwmSymbolWindow::createsingleSymbolWidget()
-{
-//    singleSymbolWidget = new QgsSymbolSelectorWidget( mSymbol, QgsStyle::defaultStyle(), mLayer, this);
-    singleSymbolWidget = new QgsSingleSymbolRendererWidget(mLayer,QgsStyle::defaultStyle(),mSingleRenderer);
-}
 
-void GwmSymbolWindow::createcategorizedWidget()
-{
-    categorizedWidget = new QWidget(this);
-    QVBoxLayout* mainLayout = new QVBoxLayout(stack);
-    mainLayout->setMargin(0);
-    categorizedWidget->setLayout(mainLayout);
-    QLabel* label1 = new QLabel("categorizedWidget");
-    label1->adjustSize();
-    mainLayout->addWidget(label1);
-}
-
-void GwmSymbolWindow::creategraduatedWidget()
-{
-    graduatedWidget = new QWidget(this);
-    QVBoxLayout* mainLayout = new QVBoxLayout(stack);
-    graduatedWidget->setLayout(mainLayout);
-
-    mainLayout->addWidget(new QLabel(tr("graduatedWidget")));
-
-}
 
 void GwmSymbolWindow::createLayout()
 {
@@ -130,27 +100,6 @@ void GwmSymbolWindow::createLayout()
     setLayout(windowLayout);
 }
 
-void GwmSymbolWindow::createComboBox()
-{
-    symbolTypeSelect = new QComboBox(this);
-    symbolTypeSelect->setStyle(QStyleFactory::create("Fusion"));
-    symbolTypeSelect->addItem("Single Symbol");
-    symbolTypeSelect->addItem("Categorized");
-    symbolTypeSelect->addItem("Graduated");
-//    connect(symbolTypeSelect,SIGNAL(currentIndexChanged(int)),this,SLOT(toggleWidget(int)));
-}
-
-void GwmSymbolWindow::createStackWidget()
-{
-    stack = new QStackedWidget(this);
-    stack->setFrameStyle(QFrame::Panel | QFrame::Raised );
-    createsingleSymbolWidget();
-    createcategorizedWidget();
-    creategraduatedWidget();
-    stack->addWidget(singleSymbolWidget);
-    stack->addWidget(categorizedWidget);
-    stack->addWidget(graduatedWidget);
-}
 
 //combobox值改变 切换窗口槽函数
 void GwmSymbolWindow::rendererChanged(int index)
@@ -250,10 +199,6 @@ void GwmSymbolWindow::createButtons()
 
 void GwmSymbolWindow::applyLayerSymbol()
 {
-//    mSingleRenderer->setSymbol( mSymbol );
-//    mLayer->triggerRepaint();
-//    mLayer->emitStyleChanged();
-//    mLastSymbol = mSingleRenderer->symbol()->clone();
     if ( !mActiveWidget || !mLayer )
       {
         return;
@@ -280,16 +225,3 @@ void GwmSymbolWindow::onOkBtnClicked()
     this->close();
 }
 
-//void GwmSymbolWindow::closeEvent(QCloseEvent *ev)
-//{
-//    mSingleRenderer->setSymbol(mLastSymbol);
-//    ev->accept();
-//}
-
-void GwmSymbolWindow::getLayerSymbol()
-{
-    mSingleRenderer = (QgsSingleSymbolRenderer*)mLayer->renderer();
-    mSymbol =  mSingleRenderer->symbol();
-    mLastSymbol = mSingleRenderer->symbol()->clone();
-    std::unique_ptr< QgsSymbol > symbol( mSingleRenderer->symbol() ? mSingleRenderer->symbol()->clone() : nullptr );
-}

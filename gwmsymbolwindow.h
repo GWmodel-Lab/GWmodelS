@@ -77,20 +77,10 @@ public:
      * @brief 目前激活的符号窗口
      */
     QgsRendererWidget *mActiveWidget = nullptr;
+    /**
+     * @brief 空窗口
+     */
     QWidget* pageNoWidget = new QWidget(this);
-    /**
-     * @brief singleSymbol 窗口
-     */
-//    QgsSymbolSelectorWidget* singleSymbolWidget;
-    QgsSingleSymbolRendererWidget* singleSymbolWidget;
-    /**
-     * @brief categorized 窗口
-     */
-    QWidget* categorizedWidget;
-    /**
-     * @brief graduated 窗口
-     */
-    QWidget* graduatedWidget;
 
     /**
      * @brief 底部按钮容器
@@ -109,15 +99,6 @@ public:
      * @brief 图层符号
      */
     QgsSymbol *mSymbol = nullptr;
-    /**
-      * @brief 未修改的图层符号
-      */
-    QgsSymbol* mLastSymbol = nullptr;
-     std::unique_ptr< QgsSymbol > symbol;
-    /**
-     * @brief mSingleRenderer
-     */
-    QgsSingleSymbolRenderer* mSingleRenderer;
 
 private:
     /**
@@ -125,33 +106,9 @@ private:
      */
     void createButtons();
     /**
-     * @brief 创建分页窗口
-     */
-    void createStackWidget();
-    /**
      * @brief 创建窗口布局
      */
     void createLayout();
-    /**
-     * @brief 创建符号类型选择下拉框
-     */
-    void createComboBox();
-    /**
-     * @brief 创建singleSymbol 窗口
-     */
-    void createsingleSymbolWidget();
-    /**
-     * @brief 创建categorized 窗口
-     */
-    void createcategorizedWidget();
-    /**
-     * @brief 创建graduated 窗口
-     */
-    void creategraduatedWidget();
-    /**
-     * @brief 获取图层的符号样式属性
-     */
-    void getLayerSymbol();
     /**
      * @brief 修改后符号应用到图层上
      */
