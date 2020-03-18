@@ -13,6 +13,11 @@
 #include <qgsstyleitemslistwidget.h>
 #include <qgssinglesymbolrenderer.h>
 #include <qgssymbolselectordialog.h>
+#include <qgsgraduatedsymbolrendererwidget.h>
+#include "qgssinglesymbolrendererwidget.h"
+#include <qgscategorizedsymbolrendererwidget.h>
+#include <qgsrulebasedrendererwidget.h>
+#include <qgsnullsymbolrendererwidget.h>
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -69,9 +74,15 @@ public:
      */
     QStackedWidget* stack;
     /**
+     * @brief 目前激活的符号窗口
+     */
+    QgsRendererWidget *mActiveWidget = nullptr;
+    QWidget* pageNoWidget = new QWidget(this);
+    /**
      * @brief singleSymbol 窗口
      */
-    QgsSymbolSelectorWidget* singleSymbolWidget;
+//    QgsSymbolSelectorWidget* singleSymbolWidget;
+    QgsSingleSymbolRendererWidget* singleSymbolWidget;
     /**
      * @brief categorized 窗口
      */
@@ -93,7 +104,7 @@ public:
     /**
      * @brief 图层样式
      */
-    QgsStyle *mStyle = nullptr;
+    QgsStyle *mStyle = QgsStyle::defaultStyle();
     /**
      * @brief 图层符号
      */
@@ -153,14 +164,14 @@ private:
      * @brief closeEvent 关闭窗口前改回图层符号
      * @param ev 窗口关闭信号
      */
-    virtual void closeEvent(QCloseEvent* ev)override;
+//    virtual void closeEvent(QCloseEvent* ev)override;
 
 public slots:
     /**
      * @brief 切换StackWidget窗口
      * @param index 窗口索引号
      */
-    void toggleWidget(int index);
+    void rendererChanged(int index);
 
 
 };
