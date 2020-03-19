@@ -65,12 +65,21 @@ public:
 
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::Vector; }
 
+    QString provider() const;
+    void setProvider(const QString &provider);
+
+    QString path() const;
+    void setPath(const QString &path);
+
 protected:
     QgsVectorLayer* mLayer;
     SymbolType mSymbolType;
     QList<GwmLayerSymbolItem*> mSymbolChildren;
 
 private:
+    QString mProvider;
+    QString mPath;
+
     void createSymbolChildren();
 
 private slots:

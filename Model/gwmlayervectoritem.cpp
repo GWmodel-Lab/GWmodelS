@@ -165,3 +165,23 @@ QList<GwmLayerItem*> GwmLayerVectorItem::takeChildren(int position, int count)
 {
     return QList<GwmLayerItem*>();
 }
+
+QString GwmLayerVectorItem::provider() const
+{
+    return mProvider;
+}
+
+void GwmLayerVectorItem::setProvider(const QString &provider)
+{
+    mProvider = provider;
+}
+
+QString GwmLayerVectorItem::path() const
+{
+    return mPath;
+}
+
+void GwmLayerVectorItem::setPath(const QString &path)
+{
+    mPath = path;
+}
