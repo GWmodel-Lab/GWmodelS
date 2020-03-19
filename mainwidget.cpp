@@ -281,7 +281,7 @@ void MainWidget::onShowAttributeTable(const QModelIndex &index)
     if (currentLayer)
     {
         currentLayer->setProviderEncoding("UTF-8");
-        GwmAttributeTableView* tv = new GwmAttributeTableView();
+        GwmAttributeTableView* tv = new GwmAttributeTableView(this);
         tv->setDisplayMapLayer(mapCanvas, currentLayer);
         tv->show();
     }
@@ -308,5 +308,10 @@ void MainWidget::refreshCanvas(){
 
 void MainWidget::createSymbolWindow(const QModelIndex &index)
 {
-    symbolWindow = new GwmSymbolWindow(dynamic_cast<QgsVectorLayer *>(mapLayerList[index.row()]));
+    GwmLayerItem* item = mapModel->itemFromIndex(index);
+    QgsVectorLayer* layer = mapModel->layerFromItem(item);
+    if (layer)
+    {
+        symbolWindow = new GwmSymbolWindow(layer);
+    }
 }

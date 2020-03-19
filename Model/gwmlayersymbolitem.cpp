@@ -7,7 +7,7 @@
 
 #include "gwmlayervectoritem.h"
 
-GwmLayerSymbolItem::GwmLayerSymbolItem(GwmLayerVectorItem* parent, QgsSymbol* symbol, QString label)
+GwmLayerSymbolItem::GwmLayerSymbolItem(GwmLayerVectorItem* parent, QIcon symbol, QString label)
     : GwmLayerItem((GwmLayerItem*) parent)
     , mLabel(label)
     , mSymbol(symbol)
@@ -21,19 +21,15 @@ QString GwmLayerSymbolItem::text()
 
 QVariant GwmLayerSymbolItem::data(int col, int role)
 {
-    if (col == 0 && mSymbol)
+//    qDebug() << mSymbol->color();
+    if (col == 0)
     {
         switch (role) {
         case Qt::DisplayRole:
             return col == 0 ? text() : QString();
         case Qt::DecorationRole:
         {
-            QSize iconSize(12, 12);
-            QPixmap pixmap(iconSize);
-            pixmap.fill(Qt::GlobalColor::transparent);
-            QPainter painter(&pixmap);
-            mSymbol->drawPreviewIcon(&painter, iconSize);
-            return QIcon(pixmap);
+            return mSymbol;
         }
         default:
             break;

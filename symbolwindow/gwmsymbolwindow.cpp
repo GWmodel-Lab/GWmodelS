@@ -203,15 +203,15 @@ void GwmSymbolWindow::createButtons()
 void GwmSymbolWindow::applyLayerSymbol()
 {
     if ( !mActiveWidget || !mLayer )
-      {
+    {
         return;
-      }
+    }
 
-      mActiveWidget->applyChanges();
+    mActiveWidget->applyChanges();
 
-      QgsFeatureRenderer *renderer = mActiveWidget->renderer();
-      if ( renderer )
-      {
+    QgsFeatureRenderer *renderer = mActiveWidget->renderer();
+    if ( renderer )
+    {
        // renderer->setPaintEffect( mPaintEffect->clone() );
         // set the order by
        // renderer->setOrderBy( mOrderBy );
@@ -219,7 +219,7 @@ void GwmSymbolWindow::applyLayerSymbol()
 
         mLayer->setRenderer( renderer->clone() );
         emit canvasRefreshSingal();
-      }
+    }
 }
 
 void GwmSymbolWindow::onOkBtnClicked()

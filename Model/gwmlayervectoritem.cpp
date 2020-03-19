@@ -22,7 +22,9 @@ GwmLayerVectorItem::GwmLayerVectorItem(GwmLayerItem* parent, QgsVectorLayer* vec
 {
     if (vector)
     {
+        createSymbolChildren();
         mSymbolType = GwmLayerVectorItem::renderTypeToSymbolType(vector->renderer()->type());
+        connect(mLayer, &QgsVectorLayer::rendererChanged, this, &GwmLayerVectorItem::onLayerRendererChanged);
     }
 }
 
@@ -86,14 +88,24 @@ QVariant GwmLayerVectorItem::data(int col, int role)
         {
             if (mSymbolType == singleSymbol)
             {
-                QgsSingleSymbolRenderer* renderer = (QgsSingleSymbolRenderer*)mLayer->renderer();
-                QgsSymbol* symbol = renderer->symbol();
-                QSize iconSize(12, 12);
-                QPixmap pixmap(iconSize);
-                pixmap.fill(Qt::GlobalColor::transparent);
-                QPainter painter(&pixmap);
-                symbol->drawPreviewIcon(&painter, iconSize);
-                return QIcon(pixmap);
+                return mSymbolChildren.first()->symbol();
+            }
+            else
+            {
+                switch (mLayer->geometryType())
+                {
+                case QgsWkbTypes::PointGeometry:
+                    return  QIcon(QStringLiteral(":/images/themes/default/mIconPointLayer.svg"));
+                    break;
+                case QgsWkbTypes::LineGeometry:
+                    return  QIcon(QStringLiteral(":/images/themes/default/mIconLineLayer.svg"));
+                    break;
+                case QgsWkbTypes::PolygonGeometry:
+                    return  QIcon(QStringLiteral(":/images/themes/default/mIconPolygonLayer.svg"));
+                    break;
+                default:
+                    break;
+                }
             }
         }
         case Qt::CheckStateRole:
@@ -113,12 +125,27 @@ Qt::ItemFlags GwmLayerVectorItem::flags()
 
 void GwmLayerVectorItem::createSymbolChildren()
 {
+    mSymbolChildren.clear();
+    QList<GwmLayerSymbolItem*> symbols;
     auto symbolItemList = mLayer->renderer()->legendSymbolItems();
     for (auto symbolItem : symbolItemList)
     {
         auto symbol = symbolItem.symbol();
+        QSize iconSize(12, 12);
+        QPixmap pixmap(iconSize);
+        pixmap.fill(Qt::GlobalColor::transparent);
+        QPainter painter(&pixmap);
+        symbol->drawPreviewIcon(&painter, iconSize);
         auto label = symbolItem.label();
-        auto item = new GwmLayerSymbolItem(this, symbol, label);
-        mSymbolChildren.append(item);
+        auto item = new GwmLayerSymbolItem(this, pixmap, label);
+        symbols.append(item);
     }
+    mSymbolChildren = symbols;
+}
+
+void GwmLayerVectorItem::onLayerRendererChanged()
+{
+    this->createSymbolChildren();
+    this->mSymbolType = GwmLayerVectorItem::renderTypeToSymbolType(mLayer->renderer()->type());
+    emit itemSymbolChangedSignal();
 }

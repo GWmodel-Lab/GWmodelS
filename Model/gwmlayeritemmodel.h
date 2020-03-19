@@ -47,8 +47,6 @@ public:
 
     void addLayer(QgsVectorLayer* layer);
 
-    void setupModel();
-
     inline GwmLayerGroupItem* item(int i) { return mRootItem->children().at(i); }
     GwmLayerItem* itemFromIndex(const QModelIndex& index) const;
     QgsVectorLayer* layerFromItem(GwmLayerItem* item) const;
@@ -57,6 +55,9 @@ public:
 
 private:
     GwmLayerItem* mRootItem;
+
+private slots:
+    void onVectorItemSymbolChanged();
 };
 
 #endif // GWMLAYERITEMMODEL_H

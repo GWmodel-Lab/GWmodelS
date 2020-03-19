@@ -145,6 +145,7 @@ void GwmLayerItemModel::addLayer(QgsVectorLayer *layer)
     beginInsertRows(QModelIndex(), nRow, nRow + 1);
     auto groupItem = new GwmLayerGroupItem(mRootItem, layer);
     mRootItem->appendChildren(groupItem);
+    connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
     endInsertRows();
 
     emit layerAddedSignal();
@@ -205,30 +206,7 @@ QList<QgsMapLayer *> GwmLayerItemModel::toMapLayerList()
     return layerList;
 }
 
-void GwmLayerItemModel::setupModel()
+void GwmLayerItemModel::onVectorItemSymbolChanged()
 {
-    mRootItem = new GwmLayerItem();
-//    for (int i = 0; i < 3; i++)
-//    {
-//        QString groupName = QString("Group %1").arg(i);
-//        GwmLayerGroupItem* group = new GwmLayerGroupItem(groupName, mRootItem);
-//        for (int s = 0; s < 5; s++)
-//        {
-//            QString symbolName = QString("Symbol %1").arg(s);
-//            GwmLayerVectorItem* origin = group->originChild();
-//            origin->symbolChildren().append(new GwmLayerSymbolItem(symbolName, origin));
-//        }
-//        for (int a = 0; a < 4; a++)
-//        {
-//            QString analyseName = QString("GWR %1").arg(a);
-//            GwmLayerGWRItem* analyse = new GwmLayerGWRItem(analyseName, group);
-//            for (int s = 0; s < 5; s++)
-//            {
-//                QString symbolName = QString("Symbol %1").arg(s);
-//                analyse->symbolChildren().append(new GwmLayerSymbolItem(symbolName, analyse));
-//            }
-//            group->analyseChildren().append(analyse);
-//        }
-//        mRootItem->children().append(group);
-//    }
+    emit layoutChanged();
 }

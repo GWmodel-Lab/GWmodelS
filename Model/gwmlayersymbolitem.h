@@ -11,7 +11,7 @@ class GwmLayerSymbolItem : public GwmLayerItem
 {
     Q_OBJECT
 public:
-    GwmLayerSymbolItem(GwmLayerVectorItem* parentItem = nullptr, QgsSymbol* symbol = nullptr, QString label = QStringLiteral(""));
+    GwmLayerSymbolItem(GwmLayerVectorItem* parentItem = nullptr, QIcon symbol = QIcon(), QString label = QStringLiteral(""));
 
 public:
     virtual QString text();
@@ -26,8 +26,8 @@ public:
     virtual bool removeChildren(int position, int count) override;
 
 
-    inline QgsSymbol *symbol() const;
-    inline void setSymbol(QgsSymbol *symbol);
+    inline QIcon symbol() const;
+    inline void setSymbol(QIcon symbol);
 
     inline QString label() const;
     inline void setLabel(const QString &label);
@@ -35,7 +35,7 @@ public:
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::Symbol; }
 
 private:
-    QgsSymbol* mSymbol;
+    QIcon mSymbol;
     QString mLabel;
 };
 
@@ -44,12 +44,12 @@ inline Qt::ItemFlags GwmLayerSymbolItem::flags()
     return Qt::ItemNeverHasChildren | GwmLayerItem::flags();
 }
 
-inline QgsSymbol *GwmLayerSymbolItem::symbol() const
+inline QIcon GwmLayerSymbolItem::symbol() const
 {
     return mSymbol;
 }
 
-inline void GwmLayerSymbolItem::setSymbol(QgsSymbol *symbol)
+inline void GwmLayerSymbolItem::setSymbol(QIcon symbol)
 {
     mSymbol = symbol;
 }

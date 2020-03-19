@@ -11,7 +11,7 @@ class GwmAttributeTableView: public QgsAttributeTableView
     Q_OBJECT
 
 public:
-    explicit GwmAttributeTableView(QgsAttributeTableView *parent = nullptr);
+    explicit GwmAttributeTableView(QWidget *parent = nullptr);
     ~GwmAttributeTableView();
 //    virtual bool eventFilter( QObject* object, QEvent* event );
 

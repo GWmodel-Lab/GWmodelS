@@ -33,6 +33,11 @@ public:
     explicit GwmLayerVectorItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr);
     ~GwmLayerVectorItem();
 
+signals:
+    void itemSymbolChangedSignal();
+
+public:
+
     virtual QString text() override;
     virtual QVariant data(int col, int role) override;
     virtual Qt::ItemFlags flags() override;
@@ -62,6 +67,9 @@ protected:
 
 private:
     void createSymbolChildren();
+
+private slots:
+    void onLayerRendererChanged();
 };
 
 
