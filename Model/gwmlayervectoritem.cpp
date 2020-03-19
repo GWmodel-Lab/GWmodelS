@@ -1,4 +1,5 @@
 #include "gwmlayervectoritem.h"
+#include "gwmlayersymbolitem.h"
 #include <qgsrenderer.h>
 #include <qgssinglesymbolrenderer.h>
 #include <qgscategorizedsymbolrenderer.h>
@@ -148,4 +149,19 @@ void GwmLayerVectorItem::onLayerRendererChanged()
     this->createSymbolChildren();
     this->mSymbolType = GwmLayerVectorItem::renderTypeToSymbolType(mLayer->renderer()->type());
     emit itemSymbolChangedSignal();
+}
+
+bool GwmLayerVectorItem::insertChildren(int position, QList<GwmLayerItem *> items)
+{
+    return false;
+}
+
+bool GwmLayerVectorItem::appendChildren(QList<GwmLayerItem *> items)
+{
+    return false;
+}
+
+QList<GwmLayerItem*> GwmLayerVectorItem::takeChildren(int position, int count)
+{
+    return QList<GwmLayerItem*>();
 }

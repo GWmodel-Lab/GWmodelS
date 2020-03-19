@@ -177,7 +177,7 @@ void MainWidget::addLayerToModel(const QString &uri, const QString &layerName, c
     QgsVectorLayer* vectorLayer = new QgsVectorLayer(uri, layerName, providerKey);
     if (vectorLayer->isValid())
     {
-        mapModel->addLayer(vectorLayer);
+        mapModel->appendItem(vectorLayer);
     }
     else delete vectorLayer;
 }

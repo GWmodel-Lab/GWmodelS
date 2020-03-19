@@ -91,3 +91,52 @@ bool GwmLayerGroupItem::removeChildren(int position, int count)
 
     return true;
 }
+
+bool GwmLayerGroupItem::insertChildren(int position, QList<GwmLayerItem *> items)
+{
+    int count = items.size();
+    if (position < 0 || position > mAnalyseChildren.size())
+        return false;
+    else if (position == mAnalyseChildren.size())
+    {
+        return appendChildren(items);
+    }
+    else
+    {
+        for (int row = count -1; row >= 0; row--)
+        {
+            GwmLayerItem* item = items.at(row);
+            if (item->itemType() == GwmLayerItemType::Group)
+                mAnalyseChildren.insert(position, (GwmLayerVectorItem*)item);
+            else return true;
+        }
+    }
+    return true;
+}
+
+bool GwmLayerGroupItem::appendChildren(QList<GwmLayerItem *> items)
+{
+    for (int row = 0; row < items.size(); row ++)
+    {
+        GwmLayerItem* item = items.at(row);
+        if (item->itemType() == GwmLayerItemType::Group)
+            mAnalyseChildren.append((GwmLayerVectorItem*)item);
+        else return false;
+    }
+    return true;
+}
+
+QList<GwmLayerItem *> GwmLayerGroupItem::takeChildren(int position, int count)
+{
+    position = position - 1;
+    QList<GwmLayerItem*> takenItems;
+    if (position < 0 || position + count > mAnalyseChildren.size())
+        return takenItems;
+
+    for (int r = 0; r < count; r++)
+    {
+        takenItems += mAnalyseChildren.takeAt(position);
+    }
+
+    return takenItems;
+}

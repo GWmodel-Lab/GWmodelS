@@ -25,6 +25,10 @@ public:
     virtual bool insertChildren(int position, int count) override;
     virtual bool removeChildren(int position, int count) override;
 
+    virtual bool insertChildren(int position, QList<GwmLayerItem*> items) override;
+    virtual bool appendChildren(QList<GwmLayerItem*> items) override;
+    virtual QList<GwmLayerItem*> takeChildren(int position, int count) override;
+
 
     inline QIcon symbol() const;
     inline void setSymbol(QIcon symbol);

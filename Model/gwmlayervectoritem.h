@@ -8,7 +8,8 @@
 #include <QVariant>
 #include <qgsvectorlayer.h>
 #include "gwmlayeritem.h"
-#include "gwmlayersymbolitem.h"
+
+class GwmLayerSymbolItem;
 
 class GwmLayerVectorItem : public GwmLayerItem
 {
@@ -47,6 +48,10 @@ public:
 
     virtual bool insertChildren(int position, int count) override;
     virtual bool removeChildren(int position, int count) override;
+
+    virtual bool insertChildren(int position, QList<GwmLayerItem*> items) override;
+    virtual bool appendChildren(QList<GwmLayerItem*> items) override;
+    virtual QList<GwmLayerItem*> takeChildren(int position, int count) override;
 
     inline QgsVectorLayer *layer() const;
     inline void setLayer(QgsVectorLayer* layer);
