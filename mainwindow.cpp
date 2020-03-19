@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
     setMinimumHeight(720);
     createMenus();
     setCentralWidget(mainWidget);
+    setAttribute(Qt::WA_QuitOnClose);
 }
 
 MainWindow::~MainWindow()

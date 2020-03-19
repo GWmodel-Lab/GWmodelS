@@ -276,18 +276,15 @@ void MainWidget::onShowAttributeTable(const QModelIndex &index)
     // qDebug() << 123;
     qDebug() << "[MainWidget::onShowAttributeTable]"
              << "index:" << index;
-//    // QgsEditorWidgetRegistry test;
-//    // test.initEditors(mapCanvas);
-//    // 获取当前矢量图层路径
-//    QMap<QString, QVariant> itemData = mapModel->itemFromIndex(index)->data().toMap();
-//    // 当前矢量图层
-//    QString layerID = itemData["ID"].toString();
-//    QgsVectorLayer* currentLayer = mapLayerIdDict[layerID];
-//    // 设置图层编码格式支持中文
-//    currentLayer->setProviderEncoding("UTF-8");
-//    GwmAttributeTableView* tv = new GwmAttributeTableView();
-//    tv->setDisplayMapLayer(mapCanvas, currentLayer);
-//    tv->show();
+    GwmLayerItem* item = mapModel->itemFromIndex(index);
+    QgsVectorLayer* currentLayer = mapModel->layerFromItem(item);
+    if (currentLayer)
+    {
+        currentLayer->setProviderEncoding("UTF-8");
+        GwmAttributeTableView* tv = new GwmAttributeTableView();
+        tv->setDisplayMapLayer(mapCanvas, currentLayer);
+        tv->show();
+    }
 }
 
 void MainWidget::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list)
