@@ -82,6 +82,22 @@ QVariant GwmLayerVectorItem::data(int col, int role)
         switch (role) {
         case Qt::DisplayRole:
             return col == 0 ? text() : QString();
+        case Qt::DecorationRole:
+        {
+            if (mSymbolType == singleSymbol)
+            {
+                QgsSingleSymbolRenderer* renderer = (QgsSingleSymbolRenderer*)mLayer->renderer();
+                QgsSymbol* symbol = renderer->symbol();
+                QSize iconSize(12, 12);
+                QPixmap pixmap(iconSize);
+                pixmap.fill(Qt::GlobalColor::transparent);
+                QPainter painter(&pixmap);
+                symbol->drawPreviewIcon(&painter, iconSize);
+                return QIcon(pixmap);
+            }
+        }
+        case Qt::CheckStateRole:
+            return mCheckState;
         default:
             break;
         }
@@ -89,27 +105,13 @@ QVariant GwmLayerVectorItem::data(int col, int role)
     return QVariant();
 }
 
-GwmLayerVectorItem::SymbolType GwmLayerVectorItem::symbolType() const
+Qt::ItemFlags GwmLayerVectorItem::flags()
 {
-    return mSymbolType;
+    return Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | GwmLayerItem::flags();
 }
 
-void GwmLayerVectorItem::setSymbolType(const SymbolType &symbolType)
-{
-    mSymbolType = symbolType;
-}
 
-void GwmLayerVectorItem::setSymbolChildren(const QList<GwmLayerSymbolItem *> &symbolChildren)
-{
-    mSymbolChildren = symbolChildren;
-}
-
-QgsVectorLayer *GwmLayerVectorItem::layer() const
-{
-    return mLayer;
-}
-
-void GwmLayerVectorItem::getSymbolChildren()
+void GwmLayerVectorItem::createSymbolChildren()
 {
     auto symbolItemList = mLayer->renderer()->legendSymbolItems();
     for (auto symbolItem : symbolItemList)

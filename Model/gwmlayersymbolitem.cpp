@@ -67,23 +67,3 @@ bool GwmLayerSymbolItem::removeChildren(int position, int count)
 {
     return false;
 }
-
-QgsSymbol *GwmLayerSymbolItem::symbol() const
-{
-    return mSymbol;
-}
-
-void GwmLayerSymbolItem::setSymbol(QgsSymbol *symbol)
-{
-    mSymbol = symbol;
-}
-
-QString GwmLayerSymbolItem::label() const
-{
-    return mLabel;
-}
-
-void GwmLayerSymbolItem::setLabel(const QString &label)
-{
-    mLabel = label;
-}

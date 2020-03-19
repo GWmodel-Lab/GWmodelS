@@ -2,8 +2,7 @@
 #include "gwmlayergroupitem.h"
 
 GwmLayerItem::GwmLayerItem(GwmLayerItem* parent)
-    : mName(QStringLiteral("root"))
-    , mParentItem(parent)
+    : mParentItem(parent)
     , mChildren()
 {
 }
@@ -20,7 +19,7 @@ QString GwmLayerItem::text()
     return QStringLiteral("");
 }
 
-GwmLayerItem* GwmLayerItem::parentItem()
+GwmLayerItem* GwmLayerItem::parentItem() const
 {
     return mParentItem;
 }
@@ -47,19 +46,29 @@ QVariant GwmLayerItem::data(int col, int role)
     return QVariant();
 }
 
-QList<GwmLayerGroupItem*>& GwmLayerItem::children()
+Qt::ItemFlags GwmLayerItem::flags()
 {
-    return mChildren;
+    return Qt::ItemIsEnabled;
+}
+
+bool GwmLayerItem::setData(int col, int role, QVariant value)
+{
+    if (col == 0)
+    {
+        switch (role) {
+        case Qt::CheckStateRole:
+            mCheckState = Qt::CheckState(value.toInt());
+            break;
+        default:
+            return false;
+        }
+    }
+    return true;
 }
 
 void GwmLayerItem::setParentItem(GwmLayerItem *parentItem)
 {
     mParentItem = parentItem;
-}
-
-void GwmLayerItem::setChildren(const QList<GwmLayerGroupItem *> &children)
-{
-    mChildren = children;
 }
 
 bool GwmLayerItem::insertChildren(int position, int count)
@@ -87,4 +96,14 @@ bool GwmLayerItem::removeChildren(int position, int count)
     }
 
     return true;
+}
+
+Qt::CheckState GwmLayerItem::checkState() const
+{
+    return mCheckState;
+}
+
+void GwmLayerItem::setCheckState(const Qt::CheckState &checkState)
+{
+    mCheckState = checkState;
 }

@@ -7,7 +7,7 @@ GwmLayerGroupItem::GwmLayerGroupItem(GwmLayerItem* parent, QgsVectorLayer* vecto
 {
     if (vector)
     {
-        mOriginChild = new GwmLayerVectorItem(this, vector);
+        mOriginChild = new GwmLayerOriginItem(this, vector);
     }
 }
 
@@ -28,11 +28,18 @@ QVariant GwmLayerGroupItem::data(int col, int role)
         switch (role) {
         case Qt::DisplayRole:
             return QVariant(text());
+        case Qt::CheckStateRole:
+            return mCheckState;
         default:
             break;
         }
     }
     return QVariant();
+}
+
+Qt::ItemFlags GwmLayerGroupItem::flags()
+{
+    return Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | GwmLayerItem::flags();
 }
 
 QString GwmLayerGroupItem::text()
@@ -83,24 +90,4 @@ bool GwmLayerGroupItem::removeChildren(int position, int count)
     }
 
     return true;
-}
-
-void GwmLayerGroupItem::setOriginChild(GwmLayerVectorItem *originChild)
-{
-    mOriginChild = originChild;
-}
-
-void GwmLayerGroupItem::setAnalyseChildren(const QList<GwmLayerVectorItem *> &analyseChildren)
-{
-    mAnalyseChildren = analyseChildren;
-}
-
-GwmLayerVectorItem* GwmLayerGroupItem::originChild()
-{
-    return mOriginChild;
-}
-
-QList<GwmLayerVectorItem*>& GwmLayerGroupItem::analyseChildren()
-{
-    return mAnalyseChildren;
 }

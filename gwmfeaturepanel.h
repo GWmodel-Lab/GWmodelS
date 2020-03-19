@@ -3,14 +3,14 @@
 
 #include <QLabel>
 #include <QTreeView>
-#include <QStandardItemModel>
+#include "Model/gwmlayeritemmodel.h"
 
 class GwmFeaturePanel : public QTreeView
 {
     Q_OBJECT
 
 public:
-    explicit GwmFeaturePanel(QWidget *parent = nullptr, QStandardItemModel* model = new QStandardItemModel);
+    explicit GwmFeaturePanel(QWidget *parent = nullptr, GwmLayerItemModel* model = new GwmLayerItemModel);
     ~GwmFeaturePanel();
 
 signals:
@@ -52,34 +52,34 @@ protected:
      * @brief 重写 mousePressEvent 事件
      * @param event 事件参数
      */
-    virtual void mousePressEvent(QMouseEvent *e) override;
+//    virtual void mousePressEvent(QMouseEvent *e) override;
 
     /**
      * @brief 重写 mouseMoveEvent 事件
      * @param event 事件参数
      */
-    virtual void mouseMoveEvent(QMouseEvent *e) override;
+//    virtual void mouseMoveEvent(QMouseEvent *e) override;
 
     /**
      * @brief 重写 dragEnterEvent 事件
      * @param event 事件参数
      */
-    virtual void dragEnterEvent(QDragEnterEvent* e) override;
+//    virtual void dragEnterEvent(QDragEnterEvent* e) override;
 
     /**
      * @brief 重写 dragMoveEvent 事件
      * @param event 事件参数
      */
-    virtual void dragMoveEvent(QDragMoveEvent *e) override;
+//    virtual void dragMoveEvent(QDragMoveEvent *e) override;
 
     /**
      * @brief 重写 dropEvent 事件
      * @param event 事件参数
      */
-    virtual void dropEvent(QDropEvent* e) override;
+//    virtual void dropEvent(QDropEvent* e) override;
 
 private:
-    QStandardItemModel* mMapModel;
+    GwmLayerItemModel* mMapModel;
 
     /**
      * @brief 拖动位置指示器
@@ -121,24 +121,24 @@ private:
      * @param index 项的索引
      * @return 总行高
      */
-    int sumRowHeight(QModelIndex index);
+//    int sumRowHeight(QModelIndex index);
 
     /**
      * @brief 执行拖拽
      */
-    void doDrag();
+//    void doDrag();
 
     /**
      * @brief 重设序号
      */
-    void resetOrder();
+//    void resetOrder();
 
     /**
      * @brief 移动所选的行
      * @param from 拖动起始行
      * @param to 拖动结束行
      */
-    void doMoveRow(int from, int dest);
+//    void doMoveRow(int from, int dest);
 
     /**
      * @brief 设置界面

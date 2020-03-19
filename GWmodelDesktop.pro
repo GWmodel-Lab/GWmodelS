@@ -24,6 +24,7 @@ SOURCES += \
     Model/gwmlayergwritem.cpp \
     Model/gwmlayeritem.cpp \
     Model/gwmlayeritemmodel.cpp \
+    Model/gwmlayeroriginitem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     gwmattributetableview.cpp \
@@ -48,8 +49,10 @@ HEADERS += \
     Model/gwmlayergwritem.h \
     Model/gwmlayeritem.h \
     Model/gwmlayeritemmodel.h \
+    Model/gwmlayeroriginitem.h \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
+    PropertyPanelTabs/utils.h \
     gwmattributetableview.h \
     gwmdelimitedtextfile.h \
     gwmfeaturepanel.h \

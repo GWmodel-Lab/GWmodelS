@@ -12,6 +12,18 @@ class GwmLayerGroupItem;
 class GwmLayerItem : public QObject
 {
     Q_OBJECT
+
+public:
+    enum GwmLayerItemType
+    {
+        Base,
+        Group,
+        Vector,
+        Origin,
+        GWR,
+        Symbol
+    };
+
 public:
     explicit GwmLayerItem(GwmLayerItem* parentItem = nullptr);
     ~GwmLayerItem();
@@ -19,6 +31,8 @@ public:
 public:
     virtual QString text();
     virtual QVariant data(int col, int role);
+    virtual Qt::ItemFlags flags();
+    virtual bool setData(int col, int role, QVariant value);
 
     virtual GwmLayerItem* parentItem() const;
     inline void setParentItem(GwmLayerItem *parentItem);
@@ -29,12 +43,18 @@ public:
     virtual bool insertChildren(int position, int count);
     virtual bool removeChildren(int position, int count);
 
-    inline QList<GwmLayerGroupItem*>& children();
-    inline void setChildren(const QList<GwmLayerGroupItem *> &children);
+    inline QList<GwmLayerGroupItem *> children() const { return mChildren; }
+    inline void setChildren(const QList<GwmLayerGroupItem *> &children) { mChildren = children; }
     inline void appendChildren(GwmLayerGroupItem* item) { mChildren.append(item); }
+
+    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::Base; }
+
+    Qt::CheckState checkState() const;
+    void setCheckState(const Qt::CheckState &checkState);
 
 protected:
     GwmLayerItem* mParentItem;
+    Qt::CheckState mCheckState = Qt::CheckState::Checked;
 
 private:
     QList<GwmLayerGroupItem*> mChildren;

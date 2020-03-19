@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QStandardItemModel>
+#include "Model/gwmlayeroriginitem.h"
 
 namespace Ui {
 class GwmPropertyStatisticsTab;
@@ -13,12 +14,15 @@ class GwmPropertyStatisticsTab : public QWidget
     Q_OBJECT
 
 public:
-    explicit GwmPropertyStatisticsTab(QWidget *parent = nullptr, QStandardItemModel* model = new QStandardItemModel);
+    explicit GwmPropertyStatisticsTab(QWidget *parent = nullptr, GwmLayerOriginItem* layerItem = new GwmLayerOriginItem);
     ~GwmPropertyStatisticsTab();
+
+    void createModel();
 
 private:
     Ui::GwmPropertyStatisticsTab *ui;
-    QStandardItemModel* propertyModel;
+    GwmLayerOriginItem* mLayerItem;
+    QStandardItemModel* mModel;
 };
 
 #endif // GWMFEATURESTATISTICSTAB_H

@@ -7,6 +7,7 @@
 #include <qgsvectorlayer.h>
 #include "gwmlayeritem.h"
 #include "gwmlayervectoritem.h"
+#include "gwmlayeroriginitem.h"
 
 class GwmLayerGroupItem : public GwmLayerItem
 {
@@ -18,6 +19,8 @@ public:
 public:
     virtual QString text() override;
     virtual QVariant data(int col, int role) override;
+    virtual Qt::ItemFlags flags() override;
+
     virtual GwmLayerItem * child(int row) override;
     virtual int childCount() override;
     virtual int childNumber() override;
@@ -25,17 +28,35 @@ public:
     virtual bool insertChildren(int position, int count) override;
     virtual bool removeChildren(int position, int count) override;
 
-    inline void setOriginItem(GwmLayerVectorItem* item) { mOriginChild = item; }
+    inline void setOriginItem(GwmLayerOriginItem* item) { mOriginChild = item; }
 
-    inline GwmLayerVectorItem* originChild() const;
-    inline void setOriginChild(GwmLayerVectorItem *originChild);
+    inline GwmLayerOriginItem *originChild() const;
+    inline void setOriginChild(GwmLayerOriginItem *originChild);
 
-    inline QList<GwmLayerVectorItem*>& analyseChildren() const;
+    inline QList<GwmLayerVectorItem *> analyseChildren() const { return mAnalyseChildren; }
     inline void setAnalyseChildren(const QList<GwmLayerVectorItem *> &analyseChildren);
 
+    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::Group; }
+
 private:
-    GwmLayerVectorItem* mOriginChild;
+    GwmLayerOriginItem* mOriginChild;
     QList<GwmLayerVectorItem*> mAnalyseChildren;
 };
+
+
+inline void GwmLayerGroupItem::setOriginChild(GwmLayerOriginItem *originChild)
+{
+    mOriginChild = originChild;
+}
+
+inline void GwmLayerGroupItem::setAnalyseChildren(const QList<GwmLayerVectorItem *> &analyseChildren)
+{
+    mAnalyseChildren = analyseChildren;
+}
+
+inline GwmLayerOriginItem *GwmLayerGroupItem::originChild() const
+{
+    return mOriginChild;
+}
 
 #endif // GWMLAYERGROUPITEM_H

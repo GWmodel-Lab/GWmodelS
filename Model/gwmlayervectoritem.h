@@ -27,7 +27,7 @@ public:
         nullSymbol
     };
 
-    static SymbolType renderTypeToSymbolType(QString type);
+    static SymbolType renderTypeToSymbolType(QString itemType);
 
 public:
     explicit GwmLayerVectorItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr);
@@ -35,6 +35,7 @@ public:
 
     virtual QString text() override;
     virtual QVariant data(int col, int role) override;
+    virtual Qt::ItemFlags flags() override;
     virtual GwmLayerItem * child(int row) override;
     virtual int childCount() override;
     virtual int childNumber() override;
@@ -45,11 +46,14 @@ public:
     inline QgsVectorLayer *layer() const;
     inline void setLayer(QgsVectorLayer* layer);
 
-    inline virtual QList<GwmLayerSymbolItem*>& symbolChildren();
+
+    inline QList<GwmLayerSymbolItem *> symbolChildren() const;
     inline void setSymbolChildren(const QList<GwmLayerSymbolItem *> &symbolChildren);
 
     inline SymbolType symbolType() const;
     inline void setSymbolType(const SymbolType &symbolType);
+
+    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::Vector; }
 
 protected:
     QgsVectorLayer* mLayer;
@@ -57,7 +61,39 @@ protected:
     QList<GwmLayerSymbolItem*> mSymbolChildren;
 
 private:
-    void getSymbolChildren();
+    void createSymbolChildren();
 };
+
+
+inline GwmLayerVectorItem::SymbolType GwmLayerVectorItem::symbolType() const
+{
+    return mSymbolType;
+}
+
+inline void GwmLayerVectorItem::setSymbolType(const SymbolType &symbolType)
+{
+    mSymbolType = symbolType;
+}
+
+inline QList<GwmLayerSymbolItem *> GwmLayerVectorItem::symbolChildren() const
+{
+    return mSymbolChildren;
+}
+
+inline QgsVectorLayer *GwmLayerVectorItem::layer() const
+{
+    return mLayer;
+}
+
+inline void GwmLayerVectorItem::setLayer(QgsVectorLayer *layer)
+{
+    mLayer = layer;
+}
+
+
+inline void GwmLayerVectorItem::setSymbolChildren(const QList<GwmLayerSymbolItem *> &symbolChildren)
+{
+    mSymbolChildren = symbolChildren;
+}
 
 #endif // GWMLAYERVECTOR_H

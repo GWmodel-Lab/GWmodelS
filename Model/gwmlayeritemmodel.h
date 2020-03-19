@@ -8,6 +8,11 @@ class GwmLayerItemModel : public QAbstractItemModel
 {
     Q_OBJECT
 
+signals:
+    void layerAddedSignal();
+    void layerRemovedSignal();
+    void layerItemChangedSignal(GwmLayerItem* item);
+
 public:
     explicit GwmLayerItemModel(QObject *parent = nullptr);
 
@@ -44,9 +49,14 @@ public:
 
     void setupModel();
 
+    inline GwmLayerGroupItem* item(int i) { return mRootItem->children().at(i); }
+    GwmLayerItem* itemFromIndex(const QModelIndex& index) const;
+    QgsVectorLayer* layerFromItem(GwmLayerItem* item) const;
+
+    QList<QgsMapLayer*> toMapLayerList();
+
 private:
     GwmLayerItem* mRootItem;
-    GwmLayerItem* itemFromIndex(const QModelIndex& index) const;
 };
 
 #endif // GWMLAYERITEMMODEL_H

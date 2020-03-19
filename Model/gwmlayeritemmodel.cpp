@@ -82,11 +82,10 @@ QVariant GwmLayerItemModel::data(const QModelIndex &index, int role) const
 
 bool GwmLayerItemModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (role != Qt::EditRole)
-        return false;
-
     GwmLayerItem* item = itemFromIndex(index);
-    item->setName(0, value);
+    bool state = item->setData(index.column(), role, value);
+    emit layerItemChangedSignal(item);
+    return state;
 }
 
 Qt::ItemFlags GwmLayerItemModel::flags(const QModelIndex &index) const
@@ -94,7 +93,9 @@ Qt::ItemFlags GwmLayerItemModel::flags(const QModelIndex &index) const
     if (!index.isValid())
         return Qt::NoItemFlags;
 
-    return Qt::ItemIsEditable | QAbstractItemModel::flags(index); // FIXME: Implement me!
+    GwmLayerItem* item = itemFromIndex(index);
+
+    return item->flags(); // FIXME: Implement me!
 }
 
 bool GwmLayerItemModel::insertRows(int row, int count, const QModelIndex &parent)
@@ -105,6 +106,11 @@ bool GwmLayerItemModel::insertRows(int row, int count, const QModelIndex &parent
     beginInsertRows(parent, row, row + count - 1);
     success = parentItem->insertChildren(row, count);
     endInsertRows();
+
+    if (success)
+    {
+        emit layerAddedSignal();
+    }
 
     return success;
 }
@@ -125,6 +131,11 @@ bool GwmLayerItemModel::removeRows(int row, int count, const QModelIndex &parent
     success = parentItem->removeChildren(row, count);
     endRemoveRows();
 
+    if (success)
+    {
+        emit layerRemovedSignal();
+    }
+
     return success;
 }
 
@@ -135,6 +146,8 @@ void GwmLayerItemModel::addLayer(QgsVectorLayer *layer)
     auto groupItem = new GwmLayerGroupItem(mRootItem, layer);
     mRootItem->appendChildren(groupItem);
     endInsertRows();
+
+    emit layerAddedSignal();
 }
 
 //bool GwmLayerItemModel::removeColumns(int column, int count, const QModelIndex &parent)
@@ -152,6 +165,44 @@ GwmLayerItem* GwmLayerItemModel::itemFromIndex(const QModelIndex &index) const
         if (item) return item;
     }
     return mRootItem;
+}
+
+QgsVectorLayer *GwmLayerItemModel::layerFromItem(GwmLayerItem* item) const
+{
+    switch (item->itemType())
+    {
+    case GwmLayerItem::GwmLayerItemType::Group:
+        return ((GwmLayerGroupItem*)item)->originChild()->layer();
+    case GwmLayerItem::GwmLayerItemType::Vector:
+    case GwmLayerItem::GwmLayerItemType::Origin:
+    case GwmLayerItem::GwmLayerItemType::GWR:
+        return ((GwmLayerOriginItem*)item)->layer();
+    default:
+        return nullptr;
+    }
+}
+
+QList<QgsMapLayer *> GwmLayerItemModel::toMapLayerList()
+{
+    QList<QgsMapLayer*> layerList;
+    for (GwmLayerGroupItem* group : mRootItem->children())
+    {
+        if (group->checkState() == Qt::CheckState::Checked)
+        {
+            if (group->originChild()->checkState() == Qt::CheckState::Checked)
+            {
+                layerList += group->originChild()->layer();
+            }
+            for (GwmLayerVectorItem* analyse : group->analyseChildren())
+            {
+                if (group->checkState() == Qt::CheckState::Checked)
+                {
+                    layerList += analyse->layer();
+                }
+            }
+        }
+    }
+    return layerList;
 }
 
 void GwmLayerItemModel::setupModel()
