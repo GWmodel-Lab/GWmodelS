@@ -36,7 +36,7 @@
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mainLayout(new QVBoxLayout)
-    , mapModel(new QStandardItemModel)
+    , mapModel(new GwmLayerItemModel)
     , mapLayerIdDict()
     , mapPoint0(-1, -1)
     , isFeaturePanelDragging(false)
@@ -48,7 +48,7 @@ MainWidget::MainWidget(QWidget *parent)
     setLayout(mainLayout);
     mainLayout->setStretchFactor(mainZone, 1);
     QgsApplication::initQgis();
-    connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
+//    connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
     // 连接featurePanel和mainWidget
     connect(featurePanel, &GwmFeaturePanel::sendDataSigAttributeTable,this, &MainWidget::onShowAttributeTable);
 }
@@ -139,8 +139,6 @@ void MainWidget::createFeaturePanel()
     connect(featurePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &MainWidget::onFeaturePanelRowOrderChanged);
     connect(featurePanel, &GwmFeaturePanel::beginDragDropSignal, this, &MainWidget::onFeaturePanelBeginDragDrop);
     connect(featurePanel, &GwmFeaturePanel::endDragDropSignal, this, &MainWidget::onFeaturePanelEndDragDrop);
-    connect(featurePanel, &GwmFeaturePanel::removeLayerSignal, this, &MainWidget::onRemoveLayer);
-
 
     //连接槽函数
     connect(featurePanel,&GwmFeaturePanel::sendDataSigSymbol,this,&MainWidget::symbolSlot);
@@ -166,95 +164,35 @@ void MainWidget::createMapPanel()
     mapCanvas->setMapTool(mapIdentifyTool);
 
     // 连接信号槽
-    connect(mapModel, &QStandardItemModel::rowsInserted, this, &MainWidget::onMapItemInserted);
+    connect(mapModel, &GwmLayerItemModel::layerAddedSignal, this, &MainWidget::onMapModelChanged);
+    connect(mapModel, &GwmLayerItemModel::layerRemovedSignal, this, &MainWidget::onMapModelChanged);
+    connect(mapModel, &GwmLayerItemModel::layerItemChangedSignal, this, &MainWidget::onMapModelChanged);
     connect(mapCanvas, &QgsMapCanvas::selectionChanged, this, &MainWidget::onMapSelectionChanged);
 }
 
 void MainWidget::addLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey)
 {
-    QStandardItem* item = new QStandardItem(layerName);
-    QMap<QString, QVariant> itemData;
-    itemData["path"] = QVariant(uri);
-    itemData["provider"] = QVariant(providerKey);
-    item->setData(QVariant(itemData));
-    item->setCheckable(true);
-    item->setCheckState(Qt::CheckState::Checked);
-    mapModel->appendRow(item);
-}
-
-void MainWidget::onMapItemInserted(const QModelIndex &parent, int first, int last)
-{
-    if (!isFeaturePanelDragging)
+    qDebug() << "[MainWidget::addLayerToModel]"
+             << uri << layerName << providerKey;
+    QgsVectorLayer* vectorLayer = new QgsVectorLayer(uri, layerName, providerKey);
+    if (vectorLayer->isValid())
     {
-        if (!parent.isValid())
-        {
-            bool isSetExtend = false;
-            if (mapLayerList.length() < 1)
-            {
-                isSetExtend = true;
-            }
-            for (int i = first; i <= last; i++)
-            {
-                QStandardItem* item = mapModel->item(i);
-                QMap<QString, QVariant> itemData = item->data().toMap();
-                QString name = item->text();
-                QString path = itemData["path"].toString();
-                QString provider = itemData["provider"].toString();
-                QgsVectorLayer* vectorLayer = new QgsVectorLayer(path, name, provider);
-                if (vectorLayer->isValid())
-                {
-                    QString layerID = QString("%1")
-                            .arg((unsigned long long)vectorLayer, 0, 16)
-                            .toUpper();
-                    mapLayerList.append(vectorLayer);
-                    mapLayerIdDict[layerID] = vectorLayer;
-                    mapLayerRubberDict[vectorLayer] = QList<QgsRubberBand*>();
-                    // 记录ID
-                    itemData["ID"] = QVariant(layerID);
-                    item->setData(itemData);
-                }
-            }
-            mapCanvas->setLayers(mapLayerList);
-            if (isSetExtend && mapLayerList.length() > 0)
-            {
-                mapCanvas->setExtent(mapLayerList.first()->extent());
-                mapCanvas->refresh();
-            }
-        }
+        mapModel->addLayer(vectorLayer);
     }
+    else delete vectorLayer;
 }
 
 void MainWidget::onZoomToLayer(const QModelIndex &index)
 {
-    QStandardItem* item = mapModel->itemFromIndex(index);
-    QString layerID = item->data().toMap()["ID"].toString();
-    QgsVectorLayer* layer = mapLayerIdDict[layerID];
-    mapCanvas->setExtent(layer->extent());
-    mapCanvas->refresh();
-}
-
-void MainWidget::onRemoveLayer(const QModelIndex &index)
-{
-    QStandardItem* item = mapModel->itemFromIndex(index);
-    QString layerName = item->text();
-    QString layerID = item->data().toMap()["ID"].toString();
-    QgsVectorLayer* layer = mapLayerIdDict[layerID];
-    mapModel->removeRow(index.row());
-    mapLayerIdDict.remove(layerID);
-    delete layer;
-    deriveLayersFromModel();
-    mapCanvas->setLayers(mapLayerList);
-    mapCanvas->refresh();
-}
-
-void MainWidget::onShowLayerProperty(const QModelIndex &index)
-{
-    QStandardItem* item = mapModel->itemFromIndex(index);
-    qDebug() << "Layer Name: " << item->text();
-    QString layerName = item->text();
-    QString layerID = item->data().toMap()["ID"].toString();
-    QgsVectorLayer* layer = mapLayerIdDict[layerID];
-    propertyPanel->addStatisticTab(index, layer);
+    qDebug() << "[MainWidget::onZoomToLayer]"
+             << "index:" << index;
+    GwmLayerItem* item = mapModel->itemFromIndex(index);
+    QgsVectorLayer* layer = mapModel->layerFromItem(item);
+    if (layer)
+    {
+        mapCanvas->setExtent(layer->extent());
+        mapCanvas->refresh();
+    }
 }
 
 void MainWidget::onFullScreen()
@@ -290,40 +228,34 @@ void MainWidget::onMapSelectionChanged(QgsVectorLayer *layer)
     }
 }
 
-void MainWidget::deriveLayersFromModel()
-{
-    int modelSize = mapModel->rowCount();
-    mapLayerList.clear();
-    for (int r = 0; r < modelSize; ++r)
-    {
-        QStandardItem* item = mapModel->item(r);
-        bool isLayerShow = item->checkState() == Qt::Unchecked ? false : true;
-        if (isLayerShow)
-        {
-            QString layerID = item->data().toMap()["ID"].toString();
-            mapLayerList += mapLayerIdDict[layerID];
-        }
-    }
-}
-
-void MainWidget::onMapModelItemChanged(QStandardItem* item)
+void MainWidget::onMapModelChanged()
 {
     qDebug() << "[MainWidget::onMapModelItemChanged]"
              << "isFeaturePanelDragging" << isFeaturePanelDragging;
     if (!isFeaturePanelDragging)
     {
-        deriveLayersFromModel();
+        mapLayerList = mapModel->toMapLayerList();
         mapCanvas->setLayers(mapLayerList);
+        if (mapLayerList.size() == 1)
+        {
+            QgsRectangle extent = mapLayerList.first()->extent();
+            mapCanvas->setExtent(extent);
+        }
         mapCanvas->refresh();
     }
+}
+
+void MainWidget::onShowLayerProperty(const QModelIndex &index)
+{
+    propertyPanel->addPropertyTab(index);
 }
 
 
 void MainWidget::onFeaturePanelRowOrderChanged(int from, int dest)
 {
-    deriveLayersFromModel();
     qDebug() << "[MainWidget::onFeaturePanelRowOrderChanged]"
              << "layer list size" << mapLayerList.size();
+    mapLayerList = mapModel->toMapLayerList();
     mapCanvas->setLayers(mapLayerList);
     mapCanvas->refresh();
 }
@@ -342,19 +274,17 @@ void MainWidget::onFeaturePanelEndDragDrop()
 void MainWidget::onShowAttributeTable(const QModelIndex &index)
 {
     // qDebug() << 123;
-    qDebug() << index;
-    // QgsEditorWidgetRegistry test;
-    // test.initEditors(mapCanvas);
-    // 获取当前矢量图层路径
-    QMap<QString, QVariant> itemData = mapModel->itemFromIndex(index)->data().toMap();
-    // 当前矢量图层
-    QString layerID = itemData["ID"].toString();
-    QgsVectorLayer* currentLayer = mapLayerIdDict[layerID];
-    // 设置图层编码格式支持中文
-    currentLayer->setProviderEncoding("UTF-8");
-    GwmAttributeTableView* tv = new GwmAttributeTableView();
-    tv->setDisplayMapLayer(mapCanvas, currentLayer);
-    tv->show();
+    qDebug() << "[MainWidget::onShowAttributeTable]"
+             << "index:" << index;
+    GwmLayerItem* item = mapModel->itemFromIndex(index);
+    QgsVectorLayer* currentLayer = mapModel->layerFromItem(item);
+    if (currentLayer)
+    {
+        currentLayer->setProviderEncoding("UTF-8");
+        GwmAttributeTableView* tv = new GwmAttributeTableView(this);
+        tv->setDisplayMapLayer(mapCanvas, currentLayer);
+        tv->show();
+    }
 }
 
 void MainWidget::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list)
@@ -378,5 +308,10 @@ void MainWidget::refreshCanvas(){
 
 void MainWidget::createSymbolWindow(const QModelIndex &index)
 {
-    symbolWindow = new GwmSymbolWindow(dynamic_cast<QgsVectorLayer *>(mapLayerList[index.row()]));
+    GwmLayerItem* item = mapModel->itemFromIndex(index);
+    QgsVectorLayer* layer = mapModel->layerFromItem(item);
+    if (layer)
+    {
+        symbolWindow = new GwmSymbolWindow(layer);
+    }
 }

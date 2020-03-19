@@ -6,7 +6,7 @@
 #include <qgsattributetablemodel.h>
 #include <qgsattributetablefiltermodel.h>
 
-GwmAttributeTableView::GwmAttributeTableView(QgsAttributeTableView *parent)
+GwmAttributeTableView::GwmAttributeTableView(QWidget *parent)
     : QgsAttributeTableView(parent)
 {
     this->setAttribute(Qt::WA_DeleteOnClose);

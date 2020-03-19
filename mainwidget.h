@@ -38,7 +38,7 @@ public:
 
     bool isFeaturePanelDragging;
 
-    QStandardItemModel* mapModel;
+    GwmLayerItemModel* mapModel;
     QList<QgsMapLayer*> mapLayerList;
     QgsMapCanvas* mapCanvas;
     QMap<QString, QgsVectorLayer*> mapLayerIdDict;
@@ -67,19 +67,10 @@ private:
     void addLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
 
     void createSymbolWindow(const QModelIndex &index);
-    /**
-     * @brief Map item inserted slot.
-     */
-    void onMapItemInserted(const QModelIndex &parent, int first, int last);
     // 要素区属性表窗口
     void onShowAttributeTable(const QModelIndex &index);
     void onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list);
     void onFullScreen();
-
-    /**
-     * @brief 从模型中导出地图所需要显示的图层
-     */
-    void deriveLayersFromModel();
 
 private slots:
     void onMapSelectionChanged(QgsVectorLayer* layer);
@@ -88,7 +79,9 @@ private slots:
      * @brief 当模型项发生改变时触发的槽
      * @param item 改变的项
      */
-    void onMapModelItemChanged(QStandardItem* item);
+    void onMapModelChanged();
+
+    void onShowLayerProperty(const QModelIndex& index);
 
     void onFeaturePanelRowOrderChanged(int from, int dest);
 
@@ -101,8 +94,6 @@ private slots:
      * @param index 项的索引
      */
     void onZoomToLayer(const QModelIndex &index);
-    void onRemoveLayer(const QModelIndex &index);
-    void onShowLayerProperty(const QModelIndex &index);
     void onSelectMode();
     void onNavigateMode();
     void onEditMode();

@@ -7,6 +7,7 @@
 #include <QStandardItemModel>
 #include <qgsvectorlayer.h>
 #include <PropertyPanelTabs/gwmpropertydefaulttab.h>
+#include "Model/gwmlayeritemmodel.h"
 
 namespace Ui {
 class GwmPropertyPanel;
@@ -17,15 +18,15 @@ class GwmPropertyPanel : public QTabWidget
     Q_OBJECT
 
 public:
-    explicit GwmPropertyPanel(QWidget *parent = nullptr, QStandardItemModel* model = new QStandardItemModel);
+    explicit GwmPropertyPanel(QWidget *parent = nullptr, GwmLayerItemModel* model = new GwmLayerItemModel);
     ~GwmPropertyPanel();
 
 private:
     GwmPropertyDefaultTab* defaultTab;
-    QStandardItemModel* mapModel;
+    GwmLayerItemModel* mapModel;
 
 public:
-    void addStatisticTab(QModelIndex index, QgsVectorLayer* layer);
+    void addPropertyTab(const QModelIndex& index);
 
 private:
     bool isDefaultTabShow;
