@@ -63,3 +63,18 @@ bool GwmLayerSymbolItem::removeChildren(int position, int count)
 {
     return false;
 }
+
+bool GwmLayerSymbolItem::insertChildren(int position, QList<GwmLayerItem *> items)
+{
+    return false;
+}
+
+bool GwmLayerSymbolItem::appendChildren(QList<GwmLayerItem *> items)
+{
+    return false;
+}
+
+QList<GwmLayerItem*> GwmLayerSymbolItem::takeChildren(int position, int count)
+{
+    return QList<GwmLayerItem*>();
+}

@@ -98,6 +98,54 @@ bool GwmLayerItem::removeChildren(int position, int count)
     return true;
 }
 
+bool GwmLayerItem::insertChildren(int position, QList<GwmLayerItem *> items)
+{
+    int count = items.size();
+    if (position < 0 || position > mChildren.size())
+        return false;
+    else if (position == mChildren.size())
+    {
+        return appendChildren(items);
+    }
+    else
+    {
+        for (int row = count -1; row >= 0; row--)
+        {
+            GwmLayerItem* item = items.at(row);
+            if (item->itemType() == GwmLayerItemType::Group)
+                mChildren.insert(position, (GwmLayerGroupItem*)item);
+            else return false;
+        }
+    }
+    return true;
+}
+
+bool GwmLayerItem::appendChildren(QList<GwmLayerItem *> items)
+{
+    for (int row = 0; row < items.size(); row ++)
+    {
+        GwmLayerItem* item = items.at(row);
+        if (item->itemType() == GwmLayerItemType::Group)
+            mChildren.append((GwmLayerGroupItem*)item);
+        else return false;
+    }
+    return true;
+}
+
+QList<GwmLayerItem*> GwmLayerItem::takeChildren(int position, int count)
+{
+    QList<GwmLayerItem*> takenItems;
+    if (position < 0 || position + count > mChildren.size())
+        return takenItems;
+
+    for (int r = 0; r < count; r++)
+    {
+        takenItems += mChildren.takeAt(position);
+    }
+
+    return takenItems;
+}
+
 Qt::CheckState GwmLayerItem::checkState() const
 {
     return mCheckState;

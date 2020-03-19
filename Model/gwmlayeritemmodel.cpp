@@ -47,6 +47,11 @@ QModelIndex GwmLayerItemModel::parent(const QModelIndex &index) const
     int row = index.row();
     int col = index.column();
 
+    qDebug() << "[GwmLayerItemModel::parent]"
+             << "row" << row
+             << "col" << col
+             << "index" << index;
+
     // Find target item
     if (!index.isValid()) return QModelIndex();
 
@@ -98,6 +103,23 @@ Qt::ItemFlags GwmLayerItemModel::flags(const QModelIndex &index) const
     return item->flags(); // FIXME: Implement me!
 }
 
+bool GwmLayerItemModel::insertItem(int row, GwmLayerItem *item, const QModelIndex &parent)
+{
+    GwmLayerItem* parentItem = itemFromIndex(parent);
+    bool success = false;
+
+    beginInsertRows(parent, row, row + 1 - 1);
+    success = parentItem->insertChildren(row, QList<GwmLayerItem*>() << item);
+    endInsertRows();
+
+    if (success)
+    {
+        emit layerAddedSignal();
+    }
+
+    return success;
+}
+
 bool GwmLayerItemModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     GwmLayerItem* parentItem = itemFromIndex(parent);
@@ -139,16 +161,58 @@ bool GwmLayerItemModel::removeRows(int row, int count, const QModelIndex &parent
     return success;
 }
 
-void GwmLayerItemModel::addLayer(QgsVectorLayer *layer)
+GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
+{
+    qDebug() << "[GwmLayerItemModel::takeItem]"
+             << "children count" << mRootItem->childCount()
+             << "row" << row;
+
+    QList<GwmLayerItem*> takenItems = takeRows(row, 1, parent);
+    if (takenItems.size() > 0)
+        return takenItems.first();
+    else
+        return nullptr;
+
+}
+
+QList<GwmLayerItem *> GwmLayerItemModel::takeRows(int row, int count, const QModelIndex &parent)
+{
+    GwmLayerItem* parentItem = itemFromIndex(parent);
+    QList<GwmLayerItem *> takenItems;
+
+    beginRemoveRows(parent, row, row + count - 1);
+
+    takenItems = parentItem->takeChildren(row, count);
+
+    qDebug() << "[GwmLayerItemModel::takeItem]"
+           << "children count" << mRootItem->childCount();
+
+    endRemoveRows();
+
+    if (takenItems.size() > 0)
+    {
+        emit layerRemovedSignal();
+    }
+    return takenItems;
+}
+
+void GwmLayerItemModel::appendItem(QgsVectorLayer *layer)
 {
     int nRow = mRootItem->childCount();
     beginInsertRows(QModelIndex(), nRow, nRow + 1);
     auto groupItem = new GwmLayerGroupItem(mRootItem, layer);
-    mRootItem->appendChildren(groupItem);
+    mRootItem->appendChildren(QList<GwmLayerItem*>() << groupItem);
     connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
     endInsertRows();
 
     emit layerAddedSignal();
+}
+
+GwmLayerGroupItem *GwmLayerItemModel::item(int i)
+{
+    if (i >= 0 && i < mRootItem->childCount())
+        return mRootItem->children().at(i);
+    else return nullptr;
 }
 
 //bool GwmLayerItemModel::removeColumns(int column, int count, const QModelIndex &parent)
@@ -166,6 +230,21 @@ GwmLayerItem* GwmLayerItemModel::itemFromIndex(const QModelIndex &index) const
         if (item) return item;
     }
     return mRootItem;
+}
+
+QModelIndex GwmLayerItemModel::indexFromItem(GwmLayerItem* item) const
+{
+    if (item)
+    {
+        qDebug() << "[GwmLayerItemModel::indexFromItem]"
+                 << item->itemType() << item->text();
+        GwmLayerItem* parentItem = item->parentItem();
+        if (parentItem)
+            return createIndex(item->childNumber(), 0, parentItem);
+        else
+            return QModelIndex();
+    }
+    else return QModelIndex();
 }
 
 QgsVectorLayer *GwmLayerItemModel::layerFromItem(GwmLayerItem* item) const

@@ -37,18 +37,19 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
-    // Add data:
+
     bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-//    bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
-
-    // Remove data:
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-//    bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
+    QList<GwmLayerItem*> takeRows(int row, int count, const QModelIndex &parent = QModelIndex());
 
-    void addLayer(QgsVectorLayer* layer);
+    bool insertItem(int row, GwmLayerItem *item, const QModelIndex& parent = QModelIndex());
+    GwmLayerItem* takeItem(int row, const QModelIndex& parent = QModelIndex());
 
-    inline GwmLayerGroupItem* item(int i) { return mRootItem->children().at(i); }
+    void appendItem(QgsVectorLayer* layer);
+
+    GwmLayerGroupItem* item(int i);
     GwmLayerItem* itemFromIndex(const QModelIndex& index) const;
+    QModelIndex indexFromItem(GwmLayerItem* item) const;
     QgsVectorLayer* layerFromItem(GwmLayerItem* item) const;
 
     QList<QgsMapLayer*> toMapLayerList();
