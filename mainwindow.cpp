@@ -12,7 +12,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     setupMenus();
-    setCentralWidget(mainWidget);
     setAttribute(Qt::WA_QuitOnClose);
 }
 
