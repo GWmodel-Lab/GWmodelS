@@ -47,10 +47,8 @@ QModelIndex GwmLayerItemModel::parent(const QModelIndex &index) const
     int row = index.row();
     int col = index.column();
 
-    qDebug() << "[GwmLayerItemModel::parent]"
-             << "row" << row
-             << "col" << col
-             << "index" << index;
+//    qDebug() << "[GwmLayerItemModel::parent]"
+//             << "row" << row << "col" << col << "index" << index;
 
     // Find target item
     if (!index.isValid()) return QModelIndex();
@@ -89,7 +87,10 @@ bool GwmLayerItemModel::setData(const QModelIndex &index, const QVariant &value,
 {
     GwmLayerItem* item = itemFromIndex(index);
     bool state = item->setData(index.column(), role, value);
-    emit layerItemChangedSignal(item);
+    if (state)
+    {
+        emit layerItemChangedSignal(item);
+    }
     return state;
 }
 
