@@ -308,6 +308,12 @@ void MainWidget::onShowCoordinate(const QModelIndex &index)
     Gwm_Coordinate->show();
 
     qDebug()<<currentLayer->getGeometry(1).asJson()<<1;
+
+    //test
+    qDebug() << QgsProjectionSelectionWidget::crsOptionText(currentLayer->crs());
+    qDebug() << currentLayer->fields().names();
+    qDebug() << currentLayer->fields()[0].typeName();
+    qDebug() << currentLayer->geometryType();
 }
 
 // 投影到坐标系的实现函数
@@ -334,6 +340,8 @@ void MainWidget::handleCoordinate(QString des, QModelIndex index)
     QString layerID = itemData["ID"].toString();
     QgsVectorLayer* currentLayer = mapLayerIdDict[layerID];
 //    // qDebug() << mapCanvas->getCoordinateTransform();
+
+    QgsVectorLayer* copyCurrentLayer = currentLayer;
 
 //    ori = currentLayer->crs().toWkt();
 //    // 获取用户填写的目标坐标系
@@ -362,10 +370,12 @@ void MainWidget::handleCoordinate(QString des, QModelIndex index)
     int idx = 0;
 
     // 放入新的图层
-    QString layerProperties = "Point?";    // 几何类型
-    //QString layerProperties = currentLayer->geometryType();
-    QgsVectorLayer *newLayer = new QgsVectorLayer(layerProperties, QString( "临时点层" ), QString( "memory" ));
-    QgsVectorDataProvider* dateProvider = newLayer->dataProvider();
+//    QString layerProperties = "Point?";    // 几何类型
+
+//    //QString layerProperties = currentLayer->geometryType();
+//    QgsVectorLayer *newLayer = new QgsVectorLayer(layerProperties, QString( "临时点层" ), QString( "memory" ));
+    QgsVectorDataProvider* dataProvider = currentLayer->dataProvider();
+    dataProvider->deleteFeatures(currentLayer->allFeatureIds());
 
     while(featureIt.nextFeature(f))
     {
@@ -382,15 +392,15 @@ void MainWidget::handleCoordinate(QString des, QModelIndex index)
             f.clearGeometry();
         }
         idx++;
-        dateProvider->addFeature(f);
-        newLayer->commitChanges();
+        dataProvider->addFeature(f);
+        currentLayer->commitChanges();
     }
     //mapCanvas->refresh();
     //qDebug()<<currentLayer->getGeometry(1).asJson()<<2;
-    mapLayerList.append(newLayer);
+    mapLayerList.append(currentLayer);
     mapCanvas->setLayers(mapLayerList);
     mapCanvas->refresh();
-    qDebug() << newLayer->getGeometry(1).asJson() << 3;
+    qDebug() << currentLayer->getGeometry(1).asJson() << 3;
 }
 
 
