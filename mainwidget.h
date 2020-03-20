@@ -16,9 +16,9 @@
 #include "symbolwindow/gwmsymbolwindow.h"
 
 
-//namespace Ui {
-//class MainLayout;
-//}
+namespace Ui {
+class MainWidget;
+}
 
 class MainWidget : public QWidget
 {
@@ -29,22 +29,17 @@ public:
     ~MainWidget();
 
 
-public:
-    QVBoxLayout* mainLayout;
-    QWidget* mainZone;
+private:
+    Ui::MainWidget* ui;
     GwmToolbar* toolbar;
     GwmFeaturePanel* featurePanel;
     GwmPropertyPanel* propertyPanel;
 
-    bool isFeaturePanelDragging;
-
     GwmLayerItemModel* mapModel;
-    QList<QgsMapLayer*> mapLayerList;
     QgsMapCanvas* mapCanvas;
-    QMap<QString, QgsVectorLayer*> mapLayerIdDict;
+    QList<QgsMapLayer*> mapLayerList;
     QgsMapTool* mapPanTool;
     QgsMapTool* mapIdentifyTool;
-    QPoint mapPoint0;
     QMap<QgsVectorLayer*, QList<QgsRubberBand*>> mapLayerRubberDict;
 
 
@@ -55,14 +50,13 @@ public slots:
     void openFileImportShapefile();
     void openFileImportJson();
     void openFileImportCsv();
-    void symbolSlot(const QModelIndex &index);
+    void onShowSymbolSetting(const QModelIndex &index);
 
 private:
-    void createToolbar();
-    void createMainZone();
-    void createFeaturePanel();
-    void createPropertyPanel();
-    void createMapPanel();
+    void setupToolbar();
+    void setupFeaturePanel();
+    void setupPropertyPanel();
+    void setupMapPanel();
 
     void addLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
 
@@ -84,10 +78,6 @@ private slots:
     void onShowLayerProperty(const QModelIndex& index);
 
     void onFeaturePanelRowOrderChanged(int from, int dest);
-
-    void onFeaturePanelBeginDragDrop();
-
-    void onFeaturePanelEndDragDrop();
 
     /**
      * @brief 移除图层的槽函数

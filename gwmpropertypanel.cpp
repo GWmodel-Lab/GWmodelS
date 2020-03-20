@@ -1,10 +1,10 @@
 #include "gwmpropertypanel.h"
 #include "PropertyPanelTabs/gwmpropertystatisticstab.h"
 
-GwmPropertyPanel::GwmPropertyPanel(QWidget *parent, GwmLayerItemModel* model) :
+GwmPropertyPanel::GwmPropertyPanel(QWidget *parent) :
     QTabWidget(parent),
-    defaultTab(new GwmPropertyDefaultTab),
-    mapModel(model),
+    mDefaultTab(new GwmPropertyDefaultTab),
+    mMapModel(new GwmLayerItemModel),
     isDefaultTabShow(false)
 {
     manageDefaultTab();
@@ -15,9 +15,22 @@ GwmPropertyPanel::~GwmPropertyPanel()
 {
 }
 
+GwmLayerItemModel *GwmPropertyPanel::mapModel() const
+{
+    return mMapModel;
+}
+
+void GwmPropertyPanel::setMapModel(GwmLayerItemModel *mapModel)
+{
+    if (!isMapModelSetted)
+        delete mMapModel;
+    mMapModel = mapModel;
+    isMapModelSetted = true;
+}
+
 void GwmPropertyPanel::manageDefaultTab()
 {
-    auto defaultTabIndex = indexOf(defaultTab);
+    auto defaultTabIndex = indexOf(mDefaultTab);
     if (isDefaultTabShow)
     {
         removeTab(defaultTabIndex);
@@ -26,7 +39,7 @@ void GwmPropertyPanel::manageDefaultTab()
     }
     else if (count() < 1)
     {
-        addTab(defaultTab, "Default");
+        addTab(mDefaultTab, "Default");
         isDefaultTabShow = true;
         setTabsClosable(false);
     }
@@ -34,7 +47,7 @@ void GwmPropertyPanel::manageDefaultTab()
 
 void GwmPropertyPanel::onTabCloseRequest(int index)
 {
-    if (index != indexOf(defaultTab))
+    if (index != indexOf(mDefaultTab))
     {
         removeTab(index);
         manageDefaultTab();
@@ -46,7 +59,7 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
     qDebug() << "[GwmPropertyPanel::addPropertyTab]"
              << "index:" << index;
     // 创建标签页
-    GwmLayerItem* item = mapModel->itemFromIndex(index);
+    GwmLayerItem* item = mMapModel->itemFromIndex(index);
     QString tabName = item->text();
     QWidget* tabWidget = nullptr;
     switch (item->itemType())

@@ -18,15 +18,19 @@ class GwmPropertyPanel : public QTabWidget
     Q_OBJECT
 
 public:
-    explicit GwmPropertyPanel(QWidget *parent = nullptr, GwmLayerItemModel* model = new GwmLayerItemModel);
+    explicit GwmPropertyPanel(QWidget *parent = nullptr);
     ~GwmPropertyPanel();
 
 private:
-    GwmPropertyDefaultTab* defaultTab;
-    GwmLayerItemModel* mapModel;
+    GwmPropertyDefaultTab* mDefaultTab;
+    GwmLayerItemModel* mMapModel;
+    bool isMapModelSetted;
 
 public:
     void addPropertyTab(const QModelIndex& index);
+
+    GwmLayerItemModel *mapModel() const;
+    void setMapModel(GwmLayerItemModel *mapModel);
 
 private:
     bool isDefaultTabShow;

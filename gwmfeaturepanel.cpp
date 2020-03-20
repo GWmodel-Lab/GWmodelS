@@ -9,9 +9,10 @@
 #include "QHeaderView"
 
 
-GwmFeaturePanel::GwmFeaturePanel(QWidget *parent, GwmLayerItemModel* model) :
-    QTreeView(parent),
-    mMapModel(model)
+GwmFeaturePanel::GwmFeaturePanel(QWidget *parent)
+    : QTreeView(parent)
+    , mMapModel(new GwmLayerItemModel)
+    , isMapModelSetted(false)
 {
     setupUi();
 }
@@ -20,11 +21,24 @@ GwmFeaturePanel::~GwmFeaturePanel()
 {
 }
 
+GwmLayerItemModel *GwmFeaturePanel::mapModel() const
+{
+    return mMapModel;
+}
+
+void GwmFeaturePanel::setMapModel(GwmLayerItemModel *mapModel)
+{
+    if (!isMapModelSetted)
+        delete mMapModel;
+    mMapModel = mapModel;
+    isMapModelSetted = true;
+    this->setModel(mMapModel);
+}
+
 void GwmFeaturePanel::setupUi()
 {
-//    mMapModel->setHorizontalHeaderLabels(QStringList() << tr("Features"));
+    //    mMapModel->setHorizontalHeaderLabels(QStringList() << tr("Features"));
     // 创建 Feature Panel
-    this->setModel(mMapModel);
     this->setColumnWidth(0, 315);
     this->setModel(mMapModel);
     this->setDragEnabled(true);
@@ -33,11 +47,6 @@ void GwmFeaturePanel::setupUi()
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &QTreeView::customContextMenuRequested, this, &GwmFeaturePanel::showContextMenu);
     // 设置拖动指示器
-    mIndicator = new QLabel(this);
-    mIndicator->setFixedHeight(2);
-    mIndicator->setGeometry(1, 0, width(), 2);
-    mIndicator->setStyleSheet("border: 1px solid #CCCCCC;");
-    mIndicator->hide();
 }
 
 //void GwmFeaturePanel::customContextMenuRequested(const QPoint &pos)
@@ -151,7 +160,7 @@ void GwmFeaturePanel::zoomLayer()
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
     for (QModelIndex index : selected)
     {
-        emit sendDataSigZoomLayer(index);
+        emit zoomToLayerSignal(index);
     }
 }
 
@@ -159,7 +168,7 @@ void GwmFeaturePanel::zoomLayer()
 void GwmFeaturePanel::attributeTable()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
-    emit sendDataSigAttributeTable(selected[0]);
+    emit showAttributeTableSignal(selected[0]);
 }
 
 // 投影到坐标系
@@ -173,7 +182,7 @@ void GwmFeaturePanel::proj()
 void GwmFeaturePanel::symbol()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
-    emit sendDataSigSymbol(selected[0]);
+    emit showSymbolSettingSignal(selected[0]);
 }
 
 // 导出shp

@@ -21,7 +21,7 @@ public:
 
 signals:
     void enableButtons(bool enable);
-    void addVectorLayer( const QString &uri, const QString &layerName, const QString &providerKey = QString() );
+    void addVectorLayerSignal( const QString &uri, const QString &layerName, const QString &providerKey = QString() );
 
 private slots:
     void onFormatCSVRadioToggled(bool checked);
