@@ -101,6 +101,7 @@ INCLUDEPATH += "$(QT_HOME)/include/qwt"
 INCLUDEPATH += "$(OSGEO_HOME)/include"
 INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-dev/include"
 LIBS += -L"$(OSGEO_HOME)/apps/qgis-dev/lib" -lqgis_core -lqgis_gui
+LIBS += -L"$(OSGEO_HOME)/lib" -lgdal_i
 GDAL_DATA = ".\share\gdal"
 ## QGIS END
 

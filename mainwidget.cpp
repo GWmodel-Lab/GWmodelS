@@ -89,6 +89,8 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::selectBtnSignal, this, &MainWidget::onSelectMode);
     connect(toolbar, &GwmToolbar::moveBtnSignal, this, &MainWidget::onNavigateMode);
     connect(toolbar, &GwmToolbar::editBtnSignal, this, &MainWidget::onEditMode);
+    connect(toolbar, &GwmToolbar::saveLayerBtnSignal, this, &MainWidget::onSaveLayer);
+    connect(toolbar, &GwmToolbar::exportLayerBtnSignal, this, &MainWidget::onExportLayer);
 }
 
 void MainWidget::setupFeaturePanel()
@@ -132,7 +134,7 @@ void MainWidget::addLayerToModel(const QString &uri, const QString &layerName, c
     QgsVectorLayer* vectorLayer = new QgsVectorLayer(uri, layerName, providerKey);
     if (vectorLayer->isValid())
     {
-        mapModel->appendItem(vectorLayer);
+        mapModel->appendItem(vectorLayer,uri,providerKey);
     }
     else delete vectorLayer;
 }
@@ -155,6 +157,75 @@ void MainWidget::onFullScreen()
     auto extent = mapCanvas->fullExtent();
     mapCanvas->setExtent(extent);
     mapCanvas->refresh();
+}
+
+void MainWidget::onSaveLayer()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex index : selected)
+    {
+        GwmLayerVectorItem* layerItem;
+        GwmLayerItem* item = mapModel->itemFromIndex(index);
+        switch (item->itemType()) {
+            case GwmLayerItem::GwmLayerItemType::Group:
+                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+            break;
+            case GwmLayerItem::GwmLayerItemType::Vector:
+            case GwmLayerItem::GwmLayerItemType::Origin:
+            case GwmLayerItem::GwmLayerItemType::GWR:
+                layerItem = ((GwmLayerVectorItem*)item);
+            break;
+            default:
+                layerItem = nullptr;
+        }
+        if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
+            if(layerItem->provider() != "ogr"){
+                QString filePath = QFileDialog::getSaveFileName(this,tr("Save file"),tr(""),tr("ESRI Shapefile (*.shp)"));
+                QFileInfo fileInfo(filePath);
+                QString fileName = fileInfo.baseName();
+                QString file_suffix = fileInfo.suffix();
+                layerItem->save(filePath,fileName,file_suffix);
+
+            }
+            else
+            {
+                QString filePath = layerItem->path();
+                QFileInfo fileInfo(filePath);
+                QString fileName = fileInfo.baseName();
+                QString file_suffix = fileInfo.suffix();
+                layerItem->save(filePath,fileName,file_suffix);
+            }
+        }
+    }
+}
+
+void MainWidget::onExportLayer()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex index : selected)
+    {
+        GwmLayerVectorItem* layerItem;
+        GwmLayerItem* item = mapModel->itemFromIndex(index);
+        switch (item->itemType()) {
+            case GwmLayerItem::GwmLayerItemType::Group:
+                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+            break;
+            case GwmLayerItem::GwmLayerItemType::Vector:
+            case GwmLayerItem::GwmLayerItemType::Origin:
+            case GwmLayerItem::GwmLayerItemType::GWR:
+                layerItem = ((GwmLayerVectorItem*)item);
+            break;
+            default:
+                layerItem = nullptr;
+        }
+        if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
+                QString filePath = QFileDialog::getSaveFileName(this,tr("Save file"),tr(""),tr("ESRI Shapefile (*.shp)"));
+                QFileInfo fileInfo(filePath);
+                QString fileName = fileInfo.baseName();
+                QString file_suffix = fileInfo.suffix();
+                layerItem->save(filePath,fileName,file_suffix);
+        }
+    }
 }
 
 void MainWidget::onMapSelectionChanged(QgsVectorLayer *layer)

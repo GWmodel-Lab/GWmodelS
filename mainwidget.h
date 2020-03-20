@@ -87,6 +87,8 @@ private slots:
     void onSelectMode();
     void onNavigateMode();
     void onEditMode();
+    void onSaveLayer();
+    void onExportLayer();
 
     void refreshCanvas();
 };

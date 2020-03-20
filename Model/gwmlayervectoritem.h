@@ -9,6 +9,8 @@
 #include <qgsvectorlayer.h>
 #include "gwmlayeritem.h"
 
+#include <qgsvectorfilewriter.h>
+
 class GwmLayerSymbolItem;
 
 class GwmLayerVectorItem : public GwmLayerItem
@@ -70,6 +72,8 @@ public:
 
     QString path() const;
     void setPath(const QString &path);
+
+    void save(QString filePath, QString fileName, QString fileType,QgsVectorFileWriter::SaveVectorOptions& options = *(new QgsVectorFileWriter::SaveVectorOptions()));
 
 protected:
     QgsVectorLayer* mLayer;

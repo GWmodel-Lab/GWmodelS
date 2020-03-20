@@ -23,5 +23,7 @@ GwmToolbar::GwmToolbar(QWidget *parent) :
 
 GwmToolbar::~GwmToolbar()
 {
+
     delete ui;
+
 }

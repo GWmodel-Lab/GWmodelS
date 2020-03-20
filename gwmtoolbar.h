@@ -45,6 +45,10 @@ signals:
     void gwmodelGWRBtnSignal();
     void gwmodelGWSSBtnSignal();
     void gwmodelGWPCABtnSignal();
+
+    void saveLayerBtnSignal();
+    void exportLayerBtnSignal();
+
 };
 
 #endif // GWMODELTOOLBAR_H
