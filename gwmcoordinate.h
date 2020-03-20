@@ -7,6 +7,9 @@
 #include <qgsvectorlayer.h>
 #include <qgsrenderer.h>
 
+#include "qgsprojectionselectionwidget.h"
+#include "qgsprojectionselectiondialog.h"
+
 namespace Ui {
 class GwmCoordinate;
 }
@@ -33,6 +36,8 @@ private slots:
 
 private:
     Ui::GwmCoordinate *ui;
+    QgsProjectionSelectionWidget* mCRSSelector;
+    QgsCoordinateReferenceSystem desCrs;
 };
 
 #endif // GWMCOORDINATE_H

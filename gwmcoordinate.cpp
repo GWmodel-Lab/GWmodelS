@@ -13,6 +13,8 @@ GwmCoordinate::GwmCoordinate(QWidget *parent) :
 {
     ui->setupUi(this);
     //ui->lineEditOri->setText(QString(this->property("resPrj").toString()));
+    mCRSSelector = new QgsProjectionSelectionWidget(this);
+    ui->horizontalLayout_2->addWidget(mCRSSelector);
 }
 
 GwmCoordinate::~GwmCoordinate()
@@ -22,7 +24,7 @@ GwmCoordinate::~GwmCoordinate()
 
 void GwmCoordinate::on_btnOK_clicked()
 {
-    emit sendSigCoordinate(this->property("crs").toString(),this->property("MapIndex").toModelIndex());
+    emit sendSigCoordinate(this->mCRSSelector->crs().toWkt(),this->property("MapIndex").toModelIndex());
 }
 
 void GwmCoordinate::on_btnCancel_clicked()
@@ -36,7 +38,7 @@ void GwmCoordinate::on_BtnCrs_clicked()
     test.selectCrs();
     //qDebug() << test.crs().toProj();
     //qDebug() << test.crsOptionText(test.crs());
-    this->ui->lineEditTar->setText(test.crsOptionText(test.crs()));
+    //this->ui->lineEditTar->setText(test.crsOptionText(test.crs()));
     //this->setProperty("crs",test.crs());
     //emit sendSigSetCoordinate(test.crs(),test.crsOptionText(test.crs()),this->property("MapIndex").toModelIndex());
     this->setProperty("crs",test.crs().toWkt());

@@ -46,20 +46,6 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QLineEdit" name="lineEditTar">
-         <property name="maxLength">
-          <number>32799</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="BtnCrs">
-         <property name="text">
-          <string>Select</string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </item>
      <item>
