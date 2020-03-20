@@ -8,51 +8,24 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , mainWidget(new MainWidget())
-//    , ui(new Ui::MainWindow)
+    , ui(new Ui::MainWindow)
 {
-    setMinimumWidth(1280);
-    setMinimumHeight(720);
-    createMenus();
+    ui->setupUi(this);
+    setupMenus();
     setCentralWidget(mainWidget);
     setAttribute(Qt::WA_QuitOnClose);
 }
 
 MainWindow::~MainWindow()
 {
-//    delete ui;
+    delete ui;
 }
 
-void MainWindow::createMenus()
+void MainWindow::setupMenus()
 {
-    // Menu File
-    QMenu* menuFile = menuBar()->addMenu(tr("&File"));
-    // Menu File Open
-    QAction* menuFileOpen = new QAction(tr("&Open Project"));
-    menuFile->addAction(menuFileOpen);
-    // Menu File Save
-    QAction* menuFileSave = new QAction(tr("&Save Project"));
-    menuFile->addAction(menuFileSave);
-    // Menu File ImportLayer
-    QMenu* menuFileImport = menuFile->addMenu(tr("&Import Layer"));
-    // Menu FIle ImportLayer Shpfile
-    QAction* actFileImportShp = new QAction(tr("ESRI &Shapefile"));
-    connect(actFileImportShp, &QAction::triggered, mainWidget, &MainWidget::openFileImportShapefile);
-    menuFileImport->addAction(actFileImportShp);
-    // Menu File ImportLayer JSON
-    QAction* actFileImportJson = new QAction(tr("Geo&Json"));
-    connect(actFileImportJson, &QAction::triggered, mainWidget, &MainWidget::openFileImportJson);
-    menuFileImport->addAction(actFileImportJson);
-    // Menu File ImportLayer CSV
-    QAction* actFileImportCsv = new QAction(tr("&CSV"));
-    connect(actFileImportCsv, &QAction::triggered, mainWidget, &MainWidget::openFileImportCsv);
-    menuFileImport->addSeparator();
-    menuFileImport->addAction(actFileImportCsv);
-    // Menu File Exit
-    QAction* menuFileExit = new QAction(tr("&Exit"));
-    menuFile->addSeparator();
-    menuFile->addAction(menuFileExit);
 
-    // Show Menu Bar
-    menuBar()->show();
+    connect(ui->action_ESRI_Shapefile, &QAction::triggered, mainWidget, &MainWidget::openFileImportShapefile);
+    connect(ui->actionGeo_Json, &QAction::triggered, mainWidget, &MainWidget::openFileImportJson);
+    connect(ui->action_CSV, &QAction::triggered, mainWidget, &MainWidget::openFileImportCsv);
 }
 

@@ -4,9 +4,9 @@
 #include <QMainWindow>
 #include "mainwidget.h"
 
-//QT_BEGIN_NAMESPACE
-//namespace Ui { class MainWindow; }
-//QT_END_NAMESPACE
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
@@ -17,11 +17,11 @@ public:
     ~MainWindow();
 
 private:
-    void createMenus();
+    void setupMenus();
     void openFileImportShapefile();
     void openFileImportJson();
     void openFileImportCsv();
-//    Ui::MainWindow *ui;
+    Ui::MainWindow *ui;
 
     MainWidget* mainWidget;
 };

@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>783</width>
-    <height>521</height>
+    <width>1280</width>
+    <height>720</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1280</width>
+    <height>720</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
@@ -19,15 +25,61 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>783</width>
-     <height>22</height>
+     <width>1280</width>
+     <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <widget class="QMenu" name="menu_Import_Layer">
+     <property name="title">
+      <string>&amp;Import Layer</string>
+     </property>
+     <addaction name="action_ESRI_Shapefile"/>
+     <addaction name="actionGeo_Json"/>
+     <addaction name="separator"/>
+     <addaction name="action_CSV"/>
+    </widget>
+    <addaction name="action_Open_Project"/>
+    <addaction name="action_Save_Project"/>
+    <addaction name="separator"/>
+    <addaction name="menu_Import_Layer"/>
+    <addaction name="separator"/>
+    <addaction name="action_Exit"/>
+   </widget>
+   <addaction name="menu_File"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionFile">
+  <action name="action_Open_Project">
    <property name="text">
-    <string>Open</string>
+    <string>&amp;Open Project</string>
+   </property>
+  </action>
+  <action name="action_Save_Project">
+   <property name="text">
+    <string>&amp;Save Project</string>
+   </property>
+  </action>
+  <action name="action_ESRI_Shapefile">
+   <property name="text">
+    <string>&amp;ESRI Shapefile</string>
+   </property>
+  </action>
+  <action name="actionGeo_Json">
+   <property name="text">
+    <string>Geo&amp;JSON</string>
+   </property>
+  </action>
+  <action name="action_CSV">
+   <property name="text">
+    <string>&amp;CSV</string>
+   </property>
+  </action>
+  <action name="action_Exit">
+   <property name="text">
+    <string>&amp;Exit</string>
    </property>
   </action>
  </widget>
