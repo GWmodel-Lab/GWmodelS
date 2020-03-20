@@ -73,8 +73,18 @@ void MainWidget::onNavigateMode()
 
 void MainWidget::onEditMode()
 {
-    QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerList[0];
-    layer->selectAll();
+//    QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerList[0];
+//    layer->selectAll();
+    if ( QMessageBox::question( this,tr( "Warning" ),
+                                          tr( "Are you sure to delete the features?" ) ) == QMessageBox::Yes ){
+        for(int i = 0; i < mapLayerList.size(); i++){
+            ((QgsVectorLayer *)mapLayerList[i])->startEditing();
+            qDebug() << ((QgsVectorLayer *)mapLayerList[i])->deleteSelectedFeatures();
+            qDebug() << ((QgsVectorLayer *)mapLayerList[i])->commitChanges();
+            onMapSelectionChanged((QgsVectorLayer *)mapLayerList[i]);
+        }
+        mapCanvas->refresh();
+    }
 }
 
 void MainWidget::setupToolbar()
