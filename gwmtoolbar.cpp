@@ -25,5 +25,4 @@ GwmToolbar::~GwmToolbar()
 {
 
     delete ui;
-
 }
