@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
     QgsApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
     QgsApplication a(argc, argv, true);
+    QgsApplication::initQgis();
     QString pluginDir = "./plugins";
     QgsProviderRegistry::instance(pluginDir);
     MainWindow w;

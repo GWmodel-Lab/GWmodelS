@@ -1,7 +1,10 @@
 #include "mainwidget.h"
+#include "ui_mainwidget.h"
+
 #include <QtWidgets>
 #include <QFileInfo>
 #include <QMouseEvent>
+#include <QDebug>
 
 #include <qgsvectorlayer.h>
 #include <qgsrenderer.h>
@@ -11,51 +14,29 @@
 #include <qgsattributetablefiltermodel.h>
 #include <qgseditorwidgetregistry.h>
 #include <qgsfeatureselectionmodel.h>
+#include <qgsapplication.h>
+#include <qgsstyle.h>
+#include <qgsstylemodel.h>
+#include <qgssinglesymbolrenderer.h>
 
 #include "gwmattributetableview.h"
-//#include "qgssymbolselectordialog.h"
-//#include "qgssinglesymbolrenderer.h"
-#include <qgsapplication.h>
-#include "qgsstyle.h"
-#include <qdebug.h>
-#include <qgsstylemodel.h>
-#include <qgssinglesymbolrenderer.h>
-
 #include "gwmopenxyeventlayerdialog.h"
-
-
-//#include "qgssymbolselectordialog.h"
-//#include "qgssinglesymbolrenderer.h"
-#include <qgsapplication.h>
-#include "qgsstyle.h"
-#include <qdebug.h>
-#include <qgsstylemodel.h>
-#include <qgssinglesymbolrenderer.h>
 
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
-    , mainLayout(new QVBoxLayout)
     , mapModel(new GwmLayerItemModel)
-    , mapLayerIdDict()
-    , mapPoint0(-1, -1)
-    , isFeaturePanelDragging(false)
+    , ui(new Ui::MainWidget)
 {
-    createMainZone();
-    createToolbar();
-    mainLayout->addWidget(toolbar);
-    mainLayout->addWidget(mainZone);
-    setLayout(mainLayout);
-    mainLayout->setStretchFactor(mainZone, 1);
-    QgsApplication::initQgis();
-//    connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
-    // 连接featurePanel和mainWidget
-    connect(featurePanel, &GwmFeaturePanel::sendDataSigAttributeTable,this, &MainWidget::onShowAttributeTable);
+    ui->setupUi(this);
+    setupMapPanel();
+    setupFeaturePanel();
+    setupToolbar();
 }
 
 MainWidget::~MainWidget()
 {
-
+    delete ui;
 }
 
 void MainWidget::openFileImportShapefile(){
@@ -76,7 +57,7 @@ void MainWidget::openFileImportJson()
 void MainWidget::openFileImportCsv()
 {
     GwmOpenXYEventLayerDialog* dialog = new GwmOpenXYEventLayerDialog(this);
-    connect(dialog, &GwmOpenXYEventLayerDialog::addVectorLayer, this, &MainWidget::addLayerToModel);
+    connect(dialog, &GwmOpenXYEventLayerDialog::addVectorLayerSignal, this, &MainWidget::addLayerToModel);
     dialog->show();
 }
 
@@ -96,9 +77,9 @@ void MainWidget::onEditMode()
     layer->selectAll();
 }
 
-void MainWidget::createToolbar()
+void MainWidget::setupToolbar()
 {
-    toolbar = new GwmToolbar(this);
+    toolbar = ui->toolbar;
     // 连接信号槽
     connect(toolbar, &GwmToolbar::openFileImportShapefileSignal, this, &MainWidget::openFileImportShapefile);
     connect(toolbar, &GwmToolbar::openFileImportJsonSignal, this, &MainWidget::openFileImportJson);
@@ -110,54 +91,28 @@ void MainWidget::createToolbar()
     connect(toolbar, &GwmToolbar::editBtnSignal, this, &MainWidget::onEditMode);
 }
 
-void MainWidget::createMainZone()
+void MainWidget::setupFeaturePanel()
 {
-    mainZone = new QWidget(this);
-    QHBoxLayout* layout = new QHBoxLayout(mainZone);
-    layout->setMargin(0);
-
-    createFeaturePanel();
-    createPropertyPanel();
-    createMapPanel();
-
-    layout->addWidget(featurePanel);
-    layout->addWidget(mapCanvas);
-    layout->addWidget(propertyPanel);
-    layout->setStretchFactor(mapCanvas, 1);
-
-    mainZone->setLayout(layout);
-}
-
-void MainWidget::createFeaturePanel()
-{
-    featurePanel = new GwmFeaturePanel(mainZone, mapModel);
-    featurePanel->setFixedWidth(320);
-
+    featurePanel = ui->featurePanel;
+    featurePanel->setMapModel(mapModel);
     // 连接信号槽
-    connect(featurePanel, &GwmFeaturePanel::sendDataSigZoomLayer, this, &MainWidget::onZoomToLayer);
+    connect(featurePanel, &GwmFeaturePanel::showAttributeTableSignal,this, &MainWidget::onShowAttributeTable);
+    connect(featurePanel, &GwmFeaturePanel::zoomToLayerSignal, this, &MainWidget::onZoomToLayer);
     connect(featurePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &MainWidget::onShowLayerProperty);
     connect(featurePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &MainWidget::onFeaturePanelRowOrderChanged);
-    connect(featurePanel, &GwmFeaturePanel::beginDragDropSignal, this, &MainWidget::onFeaturePanelBeginDragDrop);
-    connect(featurePanel, &GwmFeaturePanel::endDragDropSignal, this, &MainWidget::onFeaturePanelEndDragDrop);
-
-    //连接槽函数
-    connect(featurePanel,&GwmFeaturePanel::sendDataSigSymbol,this,&MainWidget::symbolSlot);
+    connect(featurePanel, &GwmFeaturePanel::showSymbolSettingSignal, this, &MainWidget::onShowSymbolSetting);
 
 }
 
-void MainWidget::createPropertyPanel()
+void MainWidget::setupPropertyPanel()
 {
-    propertyPanel = new GwmPropertyPanel(mainZone, mapModel);
-    propertyPanel->setFixedWidth(420);
+    propertyPanel = ui->propertyPanel;
+    propertyPanel->setMapModel(mapModel);
 }
 
-void MainWidget::createMapPanel()
+void MainWidget::setupMapPanel()
 {
-    mapCanvas = new QgsMapCanvas();
-    mapCanvas->setLayers(mapLayerList);
-    mapCanvas->setVisible(true);
-//    mapCanvas->setSelectionColor(QColor(255, 0, 0));
-
+    mapCanvas = ui->mapCanvas;
     // 工具
     mapPanTool = new QgsMapToolPan(mapCanvas);
     mapIdentifyTool = new GwmMapToolIdentifyFeature(mapCanvas);
@@ -230,19 +185,14 @@ void MainWidget::onMapSelectionChanged(QgsVectorLayer *layer)
 
 void MainWidget::onMapModelChanged()
 {
-    qDebug() << "[MainWidget::onMapModelItemChanged]"
-             << "isFeaturePanelDragging" << isFeaturePanelDragging;
-    if (!isFeaturePanelDragging)
+    mapLayerList = mapModel->toMapLayerList();
+    mapCanvas->setLayers(mapLayerList);
+    if (mapLayerList.size() == 1)
     {
-        mapLayerList = mapModel->toMapLayerList();
-        mapCanvas->setLayers(mapLayerList);
-        if (mapLayerList.size() == 1)
-        {
-            QgsRectangle extent = mapLayerList.first()->extent();
-            mapCanvas->setExtent(extent);
-        }
-        mapCanvas->refresh();
+        QgsRectangle extent = mapLayerList.first()->extent();
+        mapCanvas->setExtent(extent);
     }
+    mapCanvas->refresh();
 }
 
 void MainWidget::onShowLayerProperty(const QModelIndex &index)
@@ -258,16 +208,6 @@ void MainWidget::onFeaturePanelRowOrderChanged(int from, int dest)
     mapLayerList = mapModel->toMapLayerList();
     mapCanvas->setLayers(mapLayerList);
     mapCanvas->refresh();
-}
-
-void MainWidget::onFeaturePanelBeginDragDrop()
-{
-    this->isFeaturePanelDragging = true;
-}
-
-void MainWidget::onFeaturePanelEndDragDrop()
-{
-    this->isFeaturePanelDragging = false;
 }
 
 // 属性表
@@ -295,7 +235,7 @@ void MainWidget::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatur
                  << "id:" << id;
     }
 }
-void MainWidget::symbolSlot(const QModelIndex &index)
+void MainWidget::onShowSymbolSetting(const QModelIndex &index)
 {
     createSymbolWindow(index);
     connect(symbolWindow,&GwmSymbolWindow::canvasRefreshSingal,this,&MainWidget::refreshCanvas);

@@ -16,6 +16,10 @@ class QTextEdit;
 class QHBoxLayout;
 QT_END_NAMESPACE
 
+namespace Ui {
+class GwmToolbar;
+}
+
 class GwmToolbar : public QWidget
 {
     Q_OBJECT
@@ -25,19 +29,7 @@ public:
     ~GwmToolbar();
 
 private:
-    QPushButton* openLayerBtn;
-    QPushButton* openByXYBtn;
-    QPushButton* saveLayerBtn;
-    QPushButton* exportLayerBtn;
-    QPushButton* selectBtn;
-    QPushButton* moveBtn;
-    QPushButton* editBtn;
-    QPushButton* zoomFull;
-    QPushButton* zoomToLayer;
-    QPushButton* zoomToSelection;
-    QPushButton* gwmodelGWRBtn;
-    QPushButton* gwmodelGWSSBtn;
-    QPushButton* gwmodelGWPCABtn;
+    Ui::GwmToolbar* ui;
 
 signals:
     void openFileImportShapefileSignal();
@@ -53,10 +45,6 @@ signals:
     void gwmodelGWRBtnSignal();
     void gwmodelGWSSBtnSignal();
     void gwmodelGWPCABtnSignal();
-
-private:
-    void setupUi();
-    void createButtons();
 };
 
 #endif // GWMODELTOOLBAR_H
