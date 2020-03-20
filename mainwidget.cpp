@@ -57,7 +57,7 @@ MainWidget::MainWidget(QWidget *parent)
     mainLayout->setStretchFactor(mainZone, 1);
     QgsApplication::initQgis();
 //    connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
-    connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
+    //connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
 
     Gwm_Coordinate = new GwmCoordinate();
 
@@ -295,11 +295,9 @@ void MainWidget::createSymbolWindow(const QModelIndex &index)
 void MainWidget::onShowCoordinate(const QModelIndex &index)
 {
     // qDebug() << index;
-    // 获取当前矢量图层路径
-    QMap<QString, QVariant> itemData = mapModel->itemFromIndex(index)->data().toMap();
-    // 当前矢量图层
-    QString layerID = itemData["ID"].toString();
-    QgsVectorLayer* currentLayer = mapLayerIdDict[layerID];
+    // 获取当前矢量图层
+    GwmLayerItem* item = mapModel->itemFromIndex(index);
+    QgsVectorLayer* currentLayer = mapModel->layerFromItem(item);
     // 原始图层的投影坐标系
     QString resPrj = QgsProjectionSelectionWidget::crsOptionText(currentLayer->sourceCrs());
     //qDebug() << resPrj;
@@ -335,13 +333,11 @@ void MainWidget::handleCoordinate(QString des, QModelIndex index)
 //    qDebug()<<"trans116,40="<<ptweb.x()<<","<<ptweb.y();
 
     // 获取当前矢量图层路径
-    QMap<QString, QVariant> itemData = mapModel->itemFromIndex(index)->data().toMap();
-//    // 当前矢量图层
-    QString layerID = itemData["ID"].toString();
-    QgsVectorLayer* currentLayer = mapLayerIdDict[layerID];
+    GwmLayerItem* item = mapModel->itemFromIndex(index);
+    QgsVectorLayer* currentLayer = mapModel->layerFromItem(item);
 //    // qDebug() << mapCanvas->getCoordinateTransform();
 
-    QgsVectorLayer* copyCurrentLayer = currentLayer;
+    //QgsVectorLayer* copyCurrentLayer = currentLayer;
 
 //    ori = currentLayer->crs().toWkt();
 //    // 获取用户填写的目标坐标系
