@@ -24,7 +24,6 @@ public:
 private:
     GwmPropertyDefaultTab* mDefaultTab;
     GwmLayerItemModel* mMapModel;
-    bool isMapModelSetted;
 
 public:
     void addPropertyTab(const QModelIndex& index);

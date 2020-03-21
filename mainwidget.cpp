@@ -40,6 +40,7 @@
 
 #include "qgsprojectionselectionwidget.h"
 
+
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mapModel(new GwmLayerItemModel)
@@ -49,15 +50,10 @@ MainWidget::MainWidget(QWidget *parent)
     setupMapPanel();
     setupFeaturePanel();
     setupToolbar();
-    QgsApplication::initQgis();
-//    connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
-    //connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
+    setupPropertyPanel();
 
-
-    // 连接featurePanel和mainWidget
-    //connect(featurePanel, &GwmFeaturePanel::sendDataSigAttributeTable,this, &MainWidget::onShowAttributeTable);
-    connect(featurePanel, &GwmFeaturePanel::sendDataSigProj,this,&MainWidget::onShowCoordinateTransDlg);
-    //connect(Gwm_Coordinate, &GwmCoordinate::sendSigSetCoordinate,this,&MainWidget::setNewCoordinate);
+    // ！！！重要！！！
+    // 将 FeaturePanel, MapCanvas, PropertyPanel 相关的设置代码全部写在对应的 setup函数 中！
 }
 
 MainWidget::~MainWidget()
@@ -127,6 +123,7 @@ void MainWidget::setupFeaturePanel()
     connect(featurePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &MainWidget::onShowLayerProperty);
     connect(featurePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &MainWidget::onFeaturePanelRowOrderChanged);
     connect(featurePanel, &GwmFeaturePanel::showSymbolSettingSignal, this, &MainWidget::onShowSymbolSetting);
+    connect(featurePanel, &GwmFeaturePanel::showCoordinateTransDlg,this,&MainWidget::onShowCoordinateTransDlg);
 
 }
 

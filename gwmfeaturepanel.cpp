@@ -188,7 +188,7 @@ void GwmFeaturePanel::attributeTable()
 void GwmFeaturePanel::proj()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
-    emit sendDataSigProj(selected[0]);
+    emit showCoordinateTransDlg(selected[0]);
 }
 
 // 符号
