@@ -28,8 +28,8 @@ SOURCES += \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     gwmattributetableview.cpp \
+    gwmcoordtranssettingdialog.cpp \
     gwmdelimitedtextfile.cpp \
-    gwmcoordinate.cpp \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
@@ -55,8 +55,8 @@ HEADERS += \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/utils.h \
     gwmattributetableview.h \
+    gwmcoordtranssettingdialog.h \
     gwmdelimitedtextfile.h \
-    gwmcoordinate.h \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
@@ -71,7 +71,7 @@ HEADERS += \
     qgsattributetableviewextend.h
 
 FORMS += \
-    gwmcoordinate.ui \
+    gwmcoordtranssettingdialog.ui \
     gwmfeaturepanel.ui \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \

@@ -36,7 +36,7 @@
 #include <qgssinglesymbolrenderer.h>
 
 
-#include "gwmcoordinate.h"
+#include "gwmcoordtranssettingdialog.h"
 
 #include "qgsprojectionselectionwidget.h"
 
@@ -53,13 +53,10 @@ MainWidget::MainWidget(QWidget *parent)
 //    connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
     //connect(mapModel, &QStandardItemModel::itemChanged, this, &MainWidget::onMapModelItemChanged);
 
-    Gwm_Coordinate = new GwmCoordinate();
 
     // 连接featurePanel和mainWidget
     //connect(featurePanel, &GwmFeaturePanel::sendDataSigAttributeTable,this, &MainWidget::onShowAttributeTable);
-    connect(featurePanel, &GwmFeaturePanel::sendDataSigProj,this,&MainWidget::onShowCoordinate);
-    // 连接投影坐标系窗口和主窗口
-    connect(Gwm_Coordinate, &GwmCoordinate::sendSigCoordinate,this,&MainWidget::handleCoordinate);
+    connect(featurePanel, &GwmFeaturePanel::sendDataSigProj,this,&MainWidget::onShowCoordinateTransDlg);
     //connect(Gwm_Coordinate, &GwmCoordinate::sendSigSetCoordinate,this,&MainWidget::setNewCoordinate);
 }
 
@@ -286,144 +283,36 @@ void MainWidget::createSymbolWindow(const QModelIndex &index)
 }
 
 // 投影到坐标系
-void MainWidget::onShowCoordinate(const QModelIndex &index)
+void MainWidget::onShowCoordinateTransDlg(const QModelIndex &index)
 {
     // qDebug() << index;
     // 获取当前矢量图层
     GwmLayerItem* item = mapModel->itemFromIndex(index);
     QgsVectorLayer* currentLayer = mapModel->layerFromItem(item);
     // 原始图层的投影坐标系
-    QString resPrj = QgsProjectionSelectionWidget::crsOptionText(currentLayer->sourceCrs());
-    //qDebug() << resPrj;
-    Gwm_Coordinate->setProperty("resPrj",resPrj);
-    Gwm_Coordinate->setProperty("MapIndex",index);
-    Gwm_Coordinate->show();
-
-    qDebug()<<currentLayer->getGeometry(0).asJson()<<1;
-
-    //test
-//    qDebug() << QgsProjectionSelectionWidget::crsOptionText(currentLayer->crs());
-//    qDebug() << currentLayer->fields().names();
-//    qDebug() << currentLayer->fields()[0].typeName();
-//    qDebug() << currentLayer->geometryType();
+    if (currentLayer)
+    {
+        GwmCoordTransSettingDialog *mCoordinateTransDlg = new GwmCoordTransSettingDialog(this);
+        // 连接投影坐标系窗口和主窗口
+        mCoordinateTransDlg->setSrcCrs(currentLayer->crs());
+        if (mCoordinateTransDlg->exec() == QDialog::Accepted)
+        {
+            transformCoordinate(mCoordinateTransDlg->desCrs(), index);
+        }
+    }
 }
 
 // 投影到坐标系的实现函数
-void MainWidget::handleCoordinate(QString des, QModelIndex index)
+void MainWidget::transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index)
 {
-//    qDebug()<<"PKGPath="<<QgsApplication::pkgDataPath();
-//    qDebug()<<"DBFilePath="<<QgsApplication::srsDatabaseFilePath();
-//    QgsCoordinateReferenceSystem wgs84(4326,QgsCoordinateReferenceSystem::EpsgCrsId);
-//    qDebug()<<"WGS84="<<wgs84.toWkt();
-//    QgsCoordinateReferenceSystem web(3857,QgsCoordinateReferenceSystem::EpsgCrsId);
-
-
-
-//    QgsCoordinateTransform trans;
-//    trans.setSourceCrs(wgs84);
-//    trans.setDestinationCrs(web);
-//    QgsPointXY pt(116,40);
-//    QgsPointXY ptweb = trans.transform(pt,QgsCoordinateTransform::ForwardTransform);
-//    qDebug()<<"trans116,40="<<ptweb.x()<<","<<ptweb.y();
-
-//    // 获取当前矢量图层路径
-//    GwmLayerItem* item = mapModel->itemFromIndex(index);
-//    QgsVectorLayer* currentLayer = mapModel->layerFromItem(item);
-//    // qDebug() << mapCanvas->getCoordinateTransform();
-
-    //QgsVectorLayer* copyCurrentLayer = currentLayer;
-
-//    ori = currentLayer->crs().toWkt();
-//    // 获取用户填写的目标坐标系
-//    int UserDes = des.toInt();
-//    QgsCoordinateReferenceSystem DesCoordinate(UserDes,QgsCoordinateReferenceSystem::EpsgCrsId);
-//    mapCanvas->setDestinationCrs(DesCoordinate);
-//    mapCanvas->setExtent(mapCanvas->fullExtent());
-//    mapCanvas->refresh();
-    // qDebug() << mapCanvas->getCoordinateTransform();
-    //qDebug() << currentLayer->crs().fromWkt(des);
-    // 设置新的坐标系
-//    currentLayer->setCrs(currentLayer->crs().fromWkt(des));
-//    // 当前坐标系
-//    qDebug() << currentLayer->sourceCrs().toWkt();
-//    mapCanvas->refresh();
-    //qDebug()<<currentLayer->getGeometry(1).asJson()<<1;
-
-//    QgsCoordinateTransform myTransform;
-//    myTransform.setSourceCrs(currentLayer->sourceCrs());
-    //qDebug() << currentLayer->sourceCrs().authid();
-//    myTransform.setDestinationCrs(QgsCoordinateReferenceSystem::fromWkt(des));
-//    //qDebug() << QgsCoordinateReferenceSystem::fromWkt(des).authid();
-
-//    QgsFeatureIterator featureIt = currentLayer->getFeatures();
-//    QgsFeatureIds featureIdSet = currentLayer->allFeatureIds();
-//    QgsFeatureIds::iterator featureIdItera = featureIdSet.begin();
-//    QgsFeature f;
-//    int idx = 0;
-
-    // 放入新的图层
-//    QString layerProperties = "Point?";    // 几何类型
-
-//    //QString layerProperties = currentLayer->geometryType();
-//    QgsVectorLayer *newLayer = new QgsVectorLayer(layerProperties, QString( "临时点层" ), QString( "memory" ));
-    //QgsVectorDataProvider* dataProvider = currentLayer->dataProvider();
-    //dataProvider->deleteFeatures(currentLayer->allFeatureIds());
-
- //   currentLayer->startEditing();
-
-//    QgsFeature featureTmp = currentLayer->getFeature(1);
-//    QgsGeometry g = currentLayer->getFeature(1).geometry();
-//    qDebug() << g.transform(myTransform);
-//    //currentLayer->getFeature(1).setGeometry(g);
-//    featureTmp.clearGeometry();
-//    featureTmp.setGeometry(g);
-
-//    currentLayer->deleteFeature(1);
-//    currentLayer->addFeature(featureTmp);
-
-//    currentLayer->commitChanges();
-
-//    qDebug() << currentLayer->getFeature(featureTmp.id()).geometry().asJson();
-    //currentLayer->setCrs(QgsCoordinateReferenceSystem::fromWkt(des));
-//    while(featureIt.nextFeature(f))
-//    {
-//        //qDebug() << idx;
-//        QgsGeometry g = f.geometry();
-//        if(g.transform(myTransform) == 0 && idx <2)
-//        {
-//            //qDebug() << f.geometry().asJson();
-//            //f.setGeometry(g);
-//            currentLayer->changeGeometry(f.id(),g);
-//            //qDebug() << f.geometry().asJson();
-//        }
-//        else
-//        {
-//            f.clearGeometry();
-//        }
-//        idx++;
-//        //dataProvider->addFeature(f);
-//        //currentLayer->commitChanges();
-//    }
-//    currentLayer->commitChanges();
-    //mapCanvas->refresh();
-//    qDebug()<<currentLayer->getGeometry(0).asJson()<<2;
-//    mapLayerList.append(currentLayer);
-//    mapCanvas->setLayers(mapLayerList);
-//    mapCanvas->refresh();
-    //qDebug() << currentLayer->getGeometry(1).asJson() << 3;
-
     // 获取当前矢量图层路径
     GwmLayerItem* item = mapModel->itemFromIndex(index);
     QgsVectorLayer* currentLayer = mapModel->layerFromItem(item);
+
     // 构造转换
     QgsCoordinateTransform myTransform;
     myTransform.setSourceCrs(currentLayer->sourceCrs());
-    myTransform.setDestinationCrs(QgsCoordinateReferenceSystem::fromWkt(des));
-
-    // 测试转换坐标
-//    QgsGeometry test = currentLayer->getFeature(0).geometry();
-//    test.transform(myTransform);
-//    qDebug() << test.asJson() << "test";
+    myTransform.setDestinationCrs(des);
 
     //输出当前图层的属性
     qDebug() << currentLayer->fields().names();
@@ -438,7 +327,6 @@ void MainWidget::handleCoordinate(QString des, QModelIndex index)
     int idx = 0;
 
     currentLayer->startEditing();
-    //QgsVectorDataProvider* dataProvider = currentLayer->dataProvider();
 
     while(featureIt.nextFeature(f))
     {

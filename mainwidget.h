@@ -15,7 +15,7 @@
 
 #include "symbolwindow/gwmsymbolwindow.h"
 
-#include <gwmcoordinate.h>
+#include <gwmcoordtranssettingdialog.h>
 
 namespace Ui {
 class MainWidget;
@@ -72,8 +72,6 @@ private:
      */
     void deriveLayersFromModel();
 
-    GwmCoordinate *Gwm_Coordinate;
-
 private slots:
     void onMapSelectionChanged(QgsVectorLayer* layer);
 
@@ -97,9 +95,9 @@ private slots:
     void onEditMode();
 
     void refreshCanvas();
-    void onShowCoordinate(const QModelIndex &index);
+    void onShowCoordinateTransDlg(const QModelIndex &index);
 
-    void handleCoordinate(QString,QModelIndex);
+    void transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index);
 
     //void setNewCoordinate(QgsCoordinateReferenceSystem,QString,QModelIndex);
 };
