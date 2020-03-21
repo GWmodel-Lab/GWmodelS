@@ -34,22 +34,20 @@ void GwmCoordTransSettingDialog::reject()
 
 QgsCoordinateReferenceSystem GwmCoordTransSettingDialog::desCrs() const
 {
-    return mDesCrs;
+    return ui->mDesCRSSelector->crs();
 }
 
 void GwmCoordTransSettingDialog::setDesCrs(const QgsCoordinateReferenceSystem &desCrs)
 {
-    mDesCrs = desCrs;
     ui->mDesCRSSelector->setCrs(desCrs);
 }
 
 QgsCoordinateReferenceSystem GwmCoordTransSettingDialog::srcCrs() const
 {
-    return mSrcCrs;
+    return ui->mSrcCRSSelector->crs();
 }
 
 void GwmCoordTransSettingDialog::setSrcCrs(const QgsCoordinateReferenceSystem &srcCrs)
 {
-    mSrcCrs = srcCrs;
     ui->mSrcCRSSelector->setCrs(srcCrs);
 }

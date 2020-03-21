@@ -34,8 +34,6 @@ public:
 
 private:
     Ui::GwmCoordTransSettingDialog *ui;
-    QgsCoordinateReferenceSystem mDesCrs;
-    QgsCoordinateReferenceSystem mSrcCrs;
 };
 
 #endif // GWMCOORDINATE_H

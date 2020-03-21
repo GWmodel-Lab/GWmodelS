@@ -311,6 +311,9 @@ void MainWidget::transformCoordinate(const QgsCoordinateReferenceSystem des, con
     myTransform.setSourceCrs(currentLayer->sourceCrs());
     myTransform.setDestinationCrs(des);
 
+    qDebug() << "[MainWidget::transformCoordinate]"
+             << "des crs: " << des.authid();
+
     //输出当前图层的属性
     qDebug() << currentLayer->fields().names();
     //输出当前图层的属性类型
