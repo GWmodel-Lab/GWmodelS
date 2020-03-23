@@ -89,6 +89,8 @@ private slots:
     void onEditMode();
     void onSaveLayer();
     void onExportLayer();
+    void onZoomToSelection();
+    void onZoomToLayerBtn();
 
     void refreshCanvas();
 };

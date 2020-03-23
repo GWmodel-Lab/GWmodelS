@@ -101,6 +101,9 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::editBtnSignal, this, &MainWidget::onEditMode);
     connect(toolbar, &GwmToolbar::saveLayerBtnSignal, this, &MainWidget::onSaveLayer);
     connect(toolbar, &GwmToolbar::exportLayerBtnSignal, this, &MainWidget::onExportLayer);
+    connect(toolbar,&GwmToolbar::zoomToLayerBtnSignal,this,&MainWidget::onZoomToLayerBtn);
+    connect(toolbar,&GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
+
 }
 
 void MainWidget::setupFeaturePanel()
@@ -235,6 +238,23 @@ void MainWidget::onExportLayer()
                 QString file_suffix = fileInfo.suffix();
                 layerItem->save(filePath,fileName,file_suffix);
         }
+    }
+}
+
+void MainWidget::onZoomToLayerBtn(){
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex index : selected){
+        onZoomToLayer(index);
+    }
+}
+
+void MainWidget::onZoomToSelection(){
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex index : selected){
+        GwmLayerItem* item = mapModel->itemFromIndex(index);
+        QgsVectorLayer* layer = mapModel->layerFromItem(item);
+        mapCanvas->zoomToSelected(layer);
+        mapCanvas->refresh();
     }
 }
 
