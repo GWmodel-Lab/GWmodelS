@@ -157,7 +157,26 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
     qDebug() << current;
     qDebug() << previous;
     if(current.isValid()){
-        toolbar->setBtnEnabled(true);
+        GwmLayerVectorItem* layerItem;
+        GwmLayerItem* item = mapModel->itemFromIndex(current);
+        switch (item->itemType()) {
+            case GwmLayerItem::GwmLayerItemType::Group:
+                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+            break;
+            case GwmLayerItem::GwmLayerItemType::Vector:
+            case GwmLayerItem::GwmLayerItemType::Origin:
+            case GwmLayerItem::GwmLayerItemType::GWR:
+                layerItem = ((GwmLayerVectorItem*)item);
+            break;
+            default:
+                layerItem = nullptr;
+        }
+        if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
+            toolbar->setBtnEnabled(true);
+        }
+        else{
+            toolbar->setBtnEnabled(false);
+        }
     }
     else{
         toolbar->setBtnEnabled(false);
