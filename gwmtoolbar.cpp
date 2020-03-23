@@ -27,3 +27,10 @@ GwmToolbar::~GwmToolbar()
     delete ui;
 
 }
+
+void GwmToolbar::setBtnEnabled(bool flag){
+    ui->zoomToLayerBtn->setEnabled(flag);
+    ui->zoomToSelectionBtn->setEnabled(flag);
+    ui->saveLayerBtn->setEnabled(flag);
+    ui->saveAsBtn->setEnabled(flag);
+}

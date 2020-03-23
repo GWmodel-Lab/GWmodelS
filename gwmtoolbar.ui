@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1015</width>
+    <width>1285</width>
     <height>83</height>
    </rect>
   </property>
@@ -79,6 +79,9 @@
    </item>
    <item>
     <widget class="QToolButton" name="saveLayerBtn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="toolTip">
       <string>Save</string>
      </property>
@@ -103,6 +106,9 @@
    </item>
    <item>
     <widget class="QToolButton" name="saveAsBtn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="toolTip">
       <string>Save As</string>
      </property>
@@ -236,6 +242,9 @@
    </item>
    <item>
     <widget class="QToolButton" name="zoomToLayerBtn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="toolTip">
       <string>Zoom to Layer</string>
      </property>
@@ -260,6 +269,9 @@
    </item>
    <item>
     <widget class="QToolButton" name="zoomToSelectionBtn">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="toolTip">
       <string>Zoom to Selection</string>
      </property>

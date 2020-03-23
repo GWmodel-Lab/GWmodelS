@@ -116,6 +116,7 @@ void MainWidget::setupFeaturePanel()
     connect(featurePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &MainWidget::onShowLayerProperty);
     connect(featurePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &MainWidget::onFeaturePanelRowOrderChanged);
     connect(featurePanel, &GwmFeaturePanel::showSymbolSettingSignal, this, &MainWidget::onShowSymbolSetting);
+    connect(featurePanel, &GwmFeaturePanel::currentChanged,this,&MainWidget::onFeaturePanelCurrentChanged);
 
 }
 
@@ -150,6 +151,17 @@ void MainWidget::addLayerToModel(const QString &uri, const QString &layerName, c
         mapModel->appendItem(vectorLayer,uri,providerKey);
     }
     else delete vectorLayer;
+}
+
+void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const QModelIndex &previous){
+    qDebug() << current;
+    qDebug() << previous;
+    if(current.isValid()){
+        toolbar->setBtnEnabled(true);
+    }
+    else{
+        toolbar->setBtnEnabled(false);
+    }
 }
 
 void MainWidget::onZoomToLayer(const QModelIndex &index)

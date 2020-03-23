@@ -49,6 +49,8 @@ signals:
     void saveLayerBtnSignal();
     void exportLayerBtnSignal();
 
+public:
+    void setBtnEnabled(bool flag);
 };
 
 #endif // GWMODELTOOLBAR_H

@@ -92,6 +92,8 @@ private slots:
     void onZoomToSelection();
     void onZoomToLayerBtn();
 
+    void onFeaturePanelCurrentChanged(const QModelIndex &current, const QModelIndex &previous);
+
     void refreshCanvas();
 };
 

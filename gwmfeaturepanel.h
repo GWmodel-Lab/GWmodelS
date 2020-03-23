@@ -37,6 +37,8 @@ signals:
 
     void removeLayerSignal(const QModelIndex &index);
 
+    void currentChanged(const QModelIndex &current, const QModelIndex &previous) override;
+
     /**
      * @brief 当行顺序改变时触发的信号
      * @param from 原始的行号
