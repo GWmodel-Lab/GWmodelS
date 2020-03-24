@@ -7,6 +7,8 @@
 #include "qgsprojectionselectionwidget.h"
 #include "qgsprojectionselectiondialog.h"
 
+#include "gwmcoordtransthread.h"
+
 GwmCoordTransSettingDialog::GwmCoordTransSettingDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmCoordTransSettingDialog)
@@ -14,6 +16,8 @@ GwmCoordTransSettingDialog::GwmCoordTransSettingDialog(QWidget *parent) :
     ui->setupUi(this);
     connect(ui->btnOK, &QPushButton::clicked, this, &GwmCoordTransSettingDialog::accept);
     connect(ui->btnCancel, &QPushButton::clicked, this, &GwmCoordTransSettingDialog::reject);
+
+    //m_transThread = new GwmCoordTransThread(this);
 }
 
 GwmCoordTransSettingDialog::~GwmCoordTransSettingDialog()
@@ -50,4 +54,43 @@ QgsCoordinateReferenceSystem GwmCoordTransSettingDialog::srcCrs() const
 void GwmCoordTransSettingDialog::setSrcCrs(const QgsCoordinateReferenceSystem &srcCrs)
 {
     ui->mSrcCRSSelector->setCrs(srcCrs);
+}
+
+void GwmCoordTransSettingDialog::transformCoordinate(QgsCoordinateReferenceSystem desCrs, QgsVectorLayer *handleLayer)
+{
+//    qDebug() << desCrs.authid();
+//    qDebug() << handleLayer->fields().names();
+//    qDebug() << handleLayer->getFeature(0).geometry().asJson();
+    m_transThread = new GwmCoordTransThread(handleLayer,desCrs);
+    connect(m_transThread,SIGNAL(percentTransd(int,int)),this,SLOT(updateTransProgress(int,int)));
+
+    this->progressDialog = new QProgressDialog();
+
+    this->progressDialog->show();
+//    this->progressDialog->setRange(0,50000);
+    this->progressDialog->setModal(true);
+    this->progressDialog->setLabelText("Processing......");
+    this->progressDialog->autoClose();
+
+//    for(int i=0;i<50000;i++)
+//    {
+//        for(int j=0;j<20000;j++);
+//        Sleep(1);
+//        this->progressDialog->setValue(i);
+//        if(this->progressDialog->wasCanceled()){
+//        break;
+//        }
+//    }
+
+    m_transThread->start();
+}
+
+void GwmCoordTransSettingDialog::updateTransProgress(int progress,int total)
+{
+    this->progressDialog->setRange(0,total-1);
+    this->progressDialog->setValue(progress);
+
+    if(this->progressDialog->wasCanceled()){
+        this->progressDialog->close();
+    }
 }

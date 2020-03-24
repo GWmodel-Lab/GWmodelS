@@ -40,6 +40,8 @@
 
 #include "qgsprojectionselectionwidget.h"
 
+#include "gwmcoordtranssettingdialog.h"
+
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -294,12 +296,13 @@ void MainWidget::onShowCoordinateTransDlg(const QModelIndex &index)
         mCoordinateTransDlg->setSrcCrs(currentLayer->crs());
         if (mCoordinateTransDlg->exec() == QDialog::Accepted)
         {
-            transformCoordinate(mCoordinateTransDlg->desCrs(), index);
+            mCoordinateTransDlg->transformCoordinate(mCoordinateTransDlg->desCrs(), currentLayer);
         }
     }
 }
 
 // 投影到坐标系的实现函数
+/*
 void MainWidget::transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index)
 {
     // 获取当前矢量图层路径
@@ -322,6 +325,8 @@ void MainWidget::transformCoordinate(const QgsCoordinateReferenceSystem des, con
         qDebug() << currentLayer->fields()[i].typeName();
     }
 
+     旧方法：
+     * 迭代器直接修改图层
     QgsFeatureIterator featureIt = currentLayer->getFeatures();
     QgsFeature f;
     int idx = 0;
@@ -350,6 +355,55 @@ void MainWidget::transformCoordinate(const QgsCoordinateReferenceSystem des, con
     mapLayerList.append(currentLayer);
     mapCanvas->setLayers(mapLayerList);
     mapCanvas->refresh();
-}
+
+    // 创建新的矢量图层
+    // 类型
+    // qDebug() << QgsWkbTypes::displayString(currentLayer->wkbType());
+    QString newLayerType = QgsWkbTypes::displayString(currentLayer->wkbType());
+    // EPSG
+    //qDebug() << currentLayer->crs().authid();
+    QString newLayerProperties = newLayerType.append("?").append(currentLayer->crs().authid());
+    // 构造图层
+    QgsVectorLayer *newLayer = new QgsVectorLayer(newLayerProperties,QString("测试图层"),QString("memory"));
+    QgsVectorDataProvider* newLayerDataProvider = newLayer->dataProvider();
+    // 属性构造
+    QList<QgsField> tmp;
+    for(int i=0;i<currentLayer->fields().size();i++){
+        tmp.append(currentLayer->fields()[i]);
+    }
+    newLayerDataProvider->addAttributes(tmp);
+    newLayer->updateFields();
+
+    // 添加feature
+    QgsFeatureIterator featureIt = currentLayer->getFeatures();
+    QgsFeature f;
+    newLayer->startEditing();
+    while(featureIt.nextFeature(f)){
+        QgsGeometry g = f.geometry();
+        if(g.transform(myTransform) == 0)
+        {
+            f.setGeometry(g);
+        }
+        else
+        {
+            f.clearGeometry();
+        }
+        newLayerDataProvider->addFeature(f);
+    }
+    newLayer->commitChanges();
+
+    // 输出测试结果
+    qDebug() << newLayer->fields().names();
+    for(int i=0;i<newLayer->fields().size();i++){
+        qDebug() << newLayer->fields()[i].typeName();
+    }
+    qDebug() << newLayer->crs().authid() <<1;
+
+    qDebug() << currentLayer->getFeature(1).geometry().asJson() << "Before trans";
+    qDebug() << newLayer->getFeature(1).geometry().asJson() << "trans";
+
+
+} */
+
 
 

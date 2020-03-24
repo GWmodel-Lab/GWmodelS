@@ -29,6 +29,7 @@ SOURCES += \
     Model/gwmlayervectoritem.cpp \
     gwmattributetableview.cpp \
     gwmcoordtranssettingdialog.cpp \
+    gwmcoordtransthread.cpp \
     gwmdelimitedtextfile.cpp \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
@@ -56,6 +57,7 @@ HEADERS += \
     PropertyPanelTabs/utils.h \
     gwmattributetableview.h \
     gwmcoordtranssettingdialog.h \
+    gwmcoordtransthread.h \
     gwmdelimitedtextfile.h \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \

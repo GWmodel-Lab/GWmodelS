@@ -97,7 +97,7 @@ private slots:
     void refreshCanvas();
     void onShowCoordinateTransDlg(const QModelIndex &index);
 
-    void transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index);
+   // void transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index);
 
     //void setNewCoordinate(QgsCoordinateReferenceSystem,QString,QModelIndex);
 };
