@@ -3,6 +3,8 @@
 #include <qgsrenderer.h>
 #include <qgssinglesymbolrenderer.h>
 #include <qgscategorizedsymbolrenderer.h>
+#include <qgsvectorfilewritertask.h>
+#include <qgsapplication.h>
 
 GwmLayerVectorItem::SymbolType GwmLayerVectorItem::renderTypeToSymbolType(QString type)
 {
@@ -165,3 +167,47 @@ QList<GwmLayerItem*> GwmLayerVectorItem::takeChildren(int position, int count)
 {
     return QList<GwmLayerItem*>();
 }
+
+QString GwmLayerVectorItem::provider() const
+{
+    return mProvider;
+}
+
+void GwmLayerVectorItem::setProvider(const QString &provider)
+{
+    mProvider = provider;
+}
+
+QString GwmLayerVectorItem::path() const
+{
+    return mPath;
+}
+
+void GwmLayerVectorItem::setPath(const QString &path)
+{
+    mPath = path;
+}
+
+void GwmLayerVectorItem::save(QString filePath, QString fileName, QString fileType, QgsVectorFileWriter::SaveVectorOptions& options)
+{
+    qDebug() << filePath;
+    qDebug() << fileName;
+    qDebug() << fileType;
+    QgsVectorFileWriter::ActionOnExistingFile mActionOnExistingFile;
+    mActionOnExistingFile = QgsVectorFileWriter::CreateOrOverwriteFile;
+    options.actionOnExistingFile = mActionOnExistingFile;
+//    options.layerName = fileType;
+    if (fileType == "shp"){
+        options.driverName = "ESRI Shapefile";
+    }
+    else{
+        options.driverName = "ESRI Shapefile";
+    }
+
+    QgsVectorFileWriterTask *writerTask = new QgsVectorFileWriterTask( mLayer, filePath, options );
+    // when writer is successful:
+
+    QgsApplication::taskManager()->addTask( writerTask );
+}
+
+

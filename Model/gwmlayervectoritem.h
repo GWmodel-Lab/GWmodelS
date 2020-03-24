@@ -9,6 +9,8 @@
 #include <qgsvectorlayer.h>
 #include "gwmlayeritem.h"
 
+#include <qgsvectorfilewriter.h>
+
 class GwmLayerSymbolItem;
 
 class GwmLayerVectorItem : public GwmLayerItem
@@ -65,12 +67,23 @@ public:
 
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::Vector; }
 
+    QString provider() const;
+    void setProvider(const QString &provider);
+
+    QString path() const;
+    void setPath(const QString &path);
+
+    void save(QString filePath, QString fileName, QString fileType,QgsVectorFileWriter::SaveVectorOptions& options = *(new QgsVectorFileWriter::SaveVectorOptions()));
+
 protected:
     QgsVectorLayer* mLayer;
     SymbolType mSymbolType;
     QList<GwmLayerSymbolItem*> mSymbolChildren;
 
 private:
+    QString mProvider;
+    QString mPath;
+
     void createSymbolChildren();
 
 private slots:

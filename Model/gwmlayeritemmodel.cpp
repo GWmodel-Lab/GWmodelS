@@ -197,11 +197,14 @@ QList<GwmLayerItem *> GwmLayerItemModel::takeRows(int row, int count, const QMod
     return takenItems;
 }
 
-void GwmLayerItemModel::appendItem(QgsVectorLayer *layer)
+void GwmLayerItemModel::appendItem(QgsVectorLayer *layer, const QString path, const QString provider)
 {
     int nRow = mRootItem->childCount();
+
     beginInsertRows(QModelIndex(), nRow, nRow + 1);
     auto groupItem = new GwmLayerGroupItem(mRootItem, layer);
+    groupItem->originChild()->setPath(path);
+    groupItem->originChild()->setProvider(provider);
     mRootItem->appendChildren(QList<GwmLayerItem*>() << groupItem);
     connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
     endInsertRows();

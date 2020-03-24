@@ -7,8 +7,8 @@ GwmToolbar::GwmToolbar(QWidget *parent) :
 {
     ui->setupUi(this);
     connect(ui->openLayerBtn, &QPushButton::clicked, this, &GwmToolbar::openFileImportShapefileSignal);
-    connect(ui->saveLayerBtn, &QPushButton::clicked, this, &GwmToolbar::openFileImportJsonSignal);
-    connect(ui->saveAsBtn, &QPushButton::clicked, this, &GwmToolbar::openFileImportCsvSignal);
+    connect(ui->saveLayerBtn, &QPushButton::clicked, this, &GwmToolbar::saveLayerBtnSignal);
+    connect(ui->saveAsBtn, &QPushButton::clicked, this, &GwmToolbar::exportLayerBtnSignal);
     connect(ui->openByXYBtn, &QPushButton::clicked, this, &GwmToolbar::openByXYBtnSingnal);
     connect(ui->selectBtn,  &QPushButton::clicked,  this , &GwmToolbar::selectBtnSignal);
     connect(ui->moveBtn, &QPushButton::clicked, this, &GwmToolbar::moveBtnSignal);
@@ -23,5 +23,14 @@ GwmToolbar::GwmToolbar(QWidget *parent) :
 
 GwmToolbar::~GwmToolbar()
 {
+
     delete ui;
+
+}
+
+void GwmToolbar::setBtnEnabled(bool flag){
+    ui->zoomToLayerBtn->setEnabled(flag);
+    ui->zoomToSelectionBtn->setEnabled(flag);
+    ui->saveLayerBtn->setEnabled(flag);
+    ui->saveAsBtn->setEnabled(flag);
 }

@@ -87,6 +87,12 @@ private slots:
     void onSelectMode();
     void onNavigateMode();
     void onEditMode();
+    void onSaveLayer();
+    void onExportLayer();
+    void onZoomToSelection();
+    void onZoomToLayerBtn();
+
+    void onFeaturePanelCurrentChanged(const QModelIndex &current, const QModelIndex &previous);
 
     void refreshCanvas();
 };

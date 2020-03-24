@@ -73,8 +73,18 @@ void MainWidget::onNavigateMode()
 
 void MainWidget::onEditMode()
 {
-    QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerList[0];
-    layer->selectAll();
+//    QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerList[0];
+//    layer->selectAll();
+    if ( QMessageBox::question( this,tr( "Warning" ),
+                                          tr( "Are you sure to delete the features?" ) ) == QMessageBox::Yes ){
+        for(int i = 0; i < mapLayerList.size(); i++){
+            ((QgsVectorLayer *)mapLayerList[i])->startEditing();
+            qDebug() << ((QgsVectorLayer *)mapLayerList[i])->deleteSelectedFeatures();
+            qDebug() << ((QgsVectorLayer *)mapLayerList[i])->commitChanges();
+            onMapSelectionChanged((QgsVectorLayer *)mapLayerList[i]);
+        }
+        mapCanvas->refresh();
+    }
 }
 
 void MainWidget::setupToolbar()
@@ -89,6 +99,11 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::selectBtnSignal, this, &MainWidget::onSelectMode);
     connect(toolbar, &GwmToolbar::moveBtnSignal, this, &MainWidget::onNavigateMode);
     connect(toolbar, &GwmToolbar::editBtnSignal, this, &MainWidget::onEditMode);
+    connect(toolbar, &GwmToolbar::saveLayerBtnSignal, this, &MainWidget::onSaveLayer);
+    connect(toolbar, &GwmToolbar::exportLayerBtnSignal, this, &MainWidget::onExportLayer);
+    connect(toolbar,&GwmToolbar::zoomToLayerBtnSignal,this,&MainWidget::onZoomToLayerBtn);
+    connect(toolbar,&GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
+
 }
 
 void MainWidget::setupFeaturePanel()
@@ -101,6 +116,7 @@ void MainWidget::setupFeaturePanel()
     connect(featurePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &MainWidget::onShowLayerProperty);
     connect(featurePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &MainWidget::onFeaturePanelRowOrderChanged);
     connect(featurePanel, &GwmFeaturePanel::showSymbolSettingSignal, this, &MainWidget::onShowSymbolSetting);
+    connect(featurePanel, &GwmFeaturePanel::currentChanged,this,&MainWidget::onFeaturePanelCurrentChanged);
 
 }
 
@@ -132,9 +148,39 @@ void MainWidget::addLayerToModel(const QString &uri, const QString &layerName, c
     QgsVectorLayer* vectorLayer = new QgsVectorLayer(uri, layerName, providerKey);
     if (vectorLayer->isValid())
     {
-        mapModel->appendItem(vectorLayer);
+        mapModel->appendItem(vectorLayer,uri,providerKey);
     }
     else delete vectorLayer;
+}
+
+void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const QModelIndex &previous){
+    qDebug() << current;
+    qDebug() << previous;
+    if(current.isValid()){
+        GwmLayerVectorItem* layerItem;
+        GwmLayerItem* item = mapModel->itemFromIndex(current);
+        switch (item->itemType()) {
+            case GwmLayerItem::GwmLayerItemType::Group:
+                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+            break;
+            case GwmLayerItem::GwmLayerItemType::Vector:
+            case GwmLayerItem::GwmLayerItemType::Origin:
+            case GwmLayerItem::GwmLayerItemType::GWR:
+                layerItem = ((GwmLayerVectorItem*)item);
+            break;
+            default:
+                layerItem = nullptr;
+        }
+        if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
+            toolbar->setBtnEnabled(true);
+        }
+        else{
+            toolbar->setBtnEnabled(false);
+        }
+    }
+    else{
+        toolbar->setBtnEnabled(false);
+    }
 }
 
 void MainWidget::onZoomToLayer(const QModelIndex &index)
@@ -155,6 +201,92 @@ void MainWidget::onFullScreen()
     auto extent = mapCanvas->fullExtent();
     mapCanvas->setExtent(extent);
     mapCanvas->refresh();
+}
+
+void MainWidget::onSaveLayer()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex index : selected)
+    {
+        GwmLayerVectorItem* layerItem;
+        GwmLayerItem* item = mapModel->itemFromIndex(index);
+        switch (item->itemType()) {
+            case GwmLayerItem::GwmLayerItemType::Group:
+                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+            break;
+            case GwmLayerItem::GwmLayerItemType::Vector:
+            case GwmLayerItem::GwmLayerItemType::Origin:
+            case GwmLayerItem::GwmLayerItemType::GWR:
+                layerItem = ((GwmLayerVectorItem*)item);
+            break;
+            default:
+                layerItem = nullptr;
+        }
+        if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
+            if(layerItem->provider() != "ogr"){
+                QString filePath = QFileDialog::getSaveFileName(this,tr("Save file"),tr(""),tr("ESRI Shapefile (*.shp)"));
+                QFileInfo fileInfo(filePath);
+                QString fileName = fileInfo.baseName();
+                QString file_suffix = fileInfo.suffix();
+                layerItem->save(filePath,fileName,file_suffix);
+
+            }
+            else
+            {
+                QString filePath = layerItem->path();
+                QFileInfo fileInfo(filePath);
+                QString fileName = fileInfo.baseName();
+                QString file_suffix = fileInfo.suffix();
+                layerItem->save(filePath,fileName,file_suffix);
+            }
+        }
+    }
+}
+
+void MainWidget::onExportLayer()
+{
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex index : selected)
+    {
+        GwmLayerVectorItem* layerItem;
+        GwmLayerItem* item = mapModel->itemFromIndex(index);
+        switch (item->itemType()) {
+            case GwmLayerItem::GwmLayerItemType::Group:
+                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+            break;
+            case GwmLayerItem::GwmLayerItemType::Vector:
+            case GwmLayerItem::GwmLayerItemType::Origin:
+            case GwmLayerItem::GwmLayerItemType::GWR:
+                layerItem = ((GwmLayerVectorItem*)item);
+            break;
+            default:
+                layerItem = nullptr;
+        }
+        if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
+                QString filePath = QFileDialog::getSaveFileName(this,tr("Save file"),tr(""),tr("ESRI Shapefile (*.shp)"));
+                QFileInfo fileInfo(filePath);
+                QString fileName = fileInfo.baseName();
+                QString file_suffix = fileInfo.suffix();
+                layerItem->save(filePath,fileName,file_suffix);
+        }
+    }
+}
+
+void MainWidget::onZoomToLayerBtn(){
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex index : selected){
+        onZoomToLayer(index);
+    }
+}
+
+void MainWidget::onZoomToSelection(){
+    QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex index : selected){
+        GwmLayerItem* item = mapModel->itemFromIndex(index);
+        QgsVectorLayer* layer = mapModel->layerFromItem(item);
+        mapCanvas->zoomToSelected(layer);
+        mapCanvas->refresh();
+    }
 }
 
 void MainWidget::onMapSelectionChanged(QgsVectorLayer *layer)
