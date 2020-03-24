@@ -15,6 +15,7 @@ GwmCoordTransThread::GwmCoordTransThread(QgsVectorLayer *handleLayer,QgsCoordina
 }
 void GwmCoordTransThread::run()
 {
+    this->cancelFlag = 0;
     //新线程入口
     //初始化和操作放在这里
 //    qDebug() << this->handleLayer->fields().names();
@@ -63,19 +64,22 @@ void GwmCoordTransThread::run()
     }
 
     while(featureIt.nextFeature(f)){
-        QgsGeometry g = f.geometry();
-        if(g.transform(myTransform) == 0)
-        {
-            f.setGeometry(g);
+
+        if(this->cancelFlag == 0){
+            QgsGeometry g = f.geometry();
+            if(g.transform(myTransform) == 0)
+            {
+                f.setGeometry(g);
+            }
+            else
+            {
+                f.clearGeometry();
+            }
+            newLayerDataProvider->addFeature(f);
+            sleep(1);
+            emit percentTransd(progress,total);
+            progress ++;
         }
-        else
-        {
-            f.clearGeometry();
-        }
-        newLayerDataProvider->addFeature(f);
-        sleep(1);
-        emit percentTransd(progress,total);
-        progress ++;
     }
     newLayer->commitChanges();
 
@@ -88,4 +92,8 @@ void GwmCoordTransThread::run()
 
     qDebug() << this->handleLayer->getFeature(1).geometry().asJson() << "Before trans";
     qDebug() << newLayer->getFeature(1).geometry().asJson() << "trans";
+}
+
+void GwmCoordTransThread::cancelTransSlo(int flag){
+    this->cancelFlag = flag;
 }

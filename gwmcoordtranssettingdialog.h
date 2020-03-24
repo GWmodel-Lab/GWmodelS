@@ -27,6 +27,8 @@ public:
     ~GwmCoordTransSettingDialog();
 private slots:
     void updateTransProgress(int progress,int total);
+signals:
+    void cancelTransSig(int flag);
 public:
     QgsCoordinateReferenceSystem desCrs() const;
     void setDesCrs(const QgsCoordinateReferenceSystem &desCrs);

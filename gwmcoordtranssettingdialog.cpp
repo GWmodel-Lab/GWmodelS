@@ -62,7 +62,9 @@ void GwmCoordTransSettingDialog::transformCoordinate(QgsCoordinateReferenceSyste
 //    qDebug() << handleLayer->fields().names();
 //    qDebug() << handleLayer->getFeature(0).geometry().asJson();
     m_transThread = new GwmCoordTransThread(handleLayer,desCrs);
+
     connect(m_transThread,SIGNAL(percentTransd(int,int)),this,SLOT(updateTransProgress(int,int)));
+    connect(this,SIGNAL(cancelTransSig(int)),m_transThread,SLOT(cancelTransSlo(int)));
 
     this->progressDialog = new QProgressDialog();
 
@@ -90,7 +92,10 @@ void GwmCoordTransSettingDialog::updateTransProgress(int progress,int total)
     this->progressDialog->setRange(0,total-1);
     this->progressDialog->setValue(progress);
 
+    int cancelFlag = 1;
+
     if(this->progressDialog->wasCanceled()){
+        emit cancelTransSig(cancelFlag);
         this->progressDialog->close();
     }
 }

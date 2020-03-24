@@ -19,10 +19,13 @@ public:
     QgsVectorLayer *handleLayer;
 
     //void transformCoordinate(const QgsCoordinateReferenceSystem des, QgsVectorLayer handleLayer);
+    int cancelFlag;
 protected:
     void run() override; //新线程入口
 signals:
     void percentTransd(int progress,int total);
+public slots:
+    void cancelTransSlo(int canceledFlag);
 };
 
 #endif // GWMCOORDTRANSTHREAD_H
