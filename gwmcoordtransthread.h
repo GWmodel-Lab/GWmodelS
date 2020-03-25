@@ -8,8 +8,9 @@
 #include "qgsprojectionselectionwidget.h"
 #include "qgsprojectionselectiondialog.h"
 #include <qgsmapcanvas.h>
+#include "gwmtaskthread.h"
 
-class GwmCoordTransThread: public QThread
+class GwmCoordTransThread: public GwmTaskThread
 {
     Q_OBJECT
 public:
@@ -23,8 +24,7 @@ public:
     int cancelFlag;
 protected:
     void run() override; //新线程入口
-signals:
-    void percentTransd(int progress,int total);
+
 public slots:
     void onCancelTrans(int canceledFlag);
 };

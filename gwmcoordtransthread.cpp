@@ -15,22 +15,11 @@ GwmCoordTransThread::GwmCoordTransThread(QgsVectorLayer *handleLayer,QgsCoordina
 }
 void GwmCoordTransThread::run()
 {
+    emit message(QStringLiteral("Projecting ..."));
     this->cancelFlag = 0;
-    //新线程入口
-    //初始化和操作放在这里
-//    qDebug() << this->handleLayer->fields().names();
-//    qDebug() << this->desCrs.authid();
-    // 构造转换
     QgsCoordinateTransform myTransform;
     myTransform.setSourceCrs(this->handleLayer->sourceCrs());
     myTransform.setDestinationCrs(this->desCrs);
-
-    //输出当前图层的属性
-    qDebug() << this->handleLayer->fields().names();
-    //输出当前图层的属性类型
-    for(int i=0;i<this->handleLayer->fields().size();i++){
-        qDebug() << this->handleLayer->fields()[i].typeName();
-    }
 
     // 创建新的矢量图层
     // 类型
@@ -78,21 +67,12 @@ void GwmCoordTransThread::run()
             }
             newLayerDataProvider->addFeature(f);
             sleep(1);
-            emit percentTransd(progress,total);
+            emit tick(progress,total);
             progress ++;
         }
     }
     newLayer->commitChanges();
-
-    // 输出测试结果
-    qDebug() << "[GwmCoordTransThread::run] result test" << newLayer->fields().names();
-    for(int i=0;i<newLayer->fields().size();i++){
-        qDebug() << "[GwmCoordTransThread::run] result test" << newLayer->fields()[i].typeName();
-    }
-    qDebug() << "[GwmCoordTransThread::run] result test" << newLayer->crs().authid() <<1;
-
-    qDebug() << "[GwmCoordTransThread::run] result test" << this->handleLayer->getFeature(1).geometry().asJson() << "Before trans";
-    qDebug() << "[GwmCoordTransThread::run] result test" << newLayer->getFeature(1).geometry().asJson() << "trans";
+    emit success();
 }
 
 void GwmCoordTransThread::onCancelTrans(int flag){
