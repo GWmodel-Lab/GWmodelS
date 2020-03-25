@@ -58,28 +58,28 @@ void GwmCoordTransSettingDialog::setSrcCrs(const QgsCoordinateReferenceSystem &s
 
 void GwmCoordTransSettingDialog::transformCoordinate(QgsCoordinateReferenceSystem desCrs, QgsVectorLayer *handleLayer)
 {
-    mTransThread = new GwmCoordTransThread(handleLayer,desCrs);
-    connect(mTransThread, &GwmCoordTransThread::percentTransd,this, &GwmCoordTransSettingDialog::updateTransProgress);
-    connect(this, &GwmCoordTransSettingDialog::cancelTransSignal, mTransThread, &GwmCoordTransThread::onCancelTrans);
+//    mTransThread = new GwmCoordTransThread(handleLayer,desCrs);
+//    connect(mTransThread, &GwmCoordTransThread::tick,this, &GwmCoordTransSettingDialog::updateTransProgress);
+//    connect(this, &GwmCoordTransSettingDialog::cancelTransSignal, mTransThread, &GwmCoordTransThread::onCancelTrans);
 
-    this->progressDialog = new QProgressDialog();
-    this->progressDialog->show();
-    this->progressDialog->setModal(true);
-    this->progressDialog->setLabelText("Reprojecting ...");
-    this->progressDialog->autoClose();
+//    this->progressDialog = new QProgressDialog();
+//    this->progressDialog->show();
+//    this->progressDialog->setModal(true);
+//    this->progressDialog->setLabelText("Reprojecting ...");
+//    this->progressDialog->autoClose();
 
-    mTransThread->start();
+//    mTransThread->start();
 }
 
 void GwmCoordTransSettingDialog::updateTransProgress(int progress,int total)
 {
-    this->progressDialog->setRange(0,total-1);
-    this->progressDialog->setValue(progress);
+//    this->progressDialog->setRange(0,total-1);
+//    this->progressDialog->setValue(progress);
 
-    int cancelFlag = 1;
+//    int cancelFlag = 1;
 
-    if(this->progressDialog->wasCanceled()){
-        emit cancelTransSignal(cancelFlag);
-        this->progressDialog->close();
-    }
+//    if(this->progressDialog->wasCanceled()){
+//        emit cancelTransSignal(cancelFlag);
+//        this->progressDialog->close();
+//    }
 }

@@ -36,6 +36,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
     gwmmaptoolidentifyfeature.cpp \
     gwmopenxyeventlayerdialog.cpp \
+    gwmprogressdialog.cpp \
     gwmpropertypanel.cpp \
     gwmtaskthread.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
@@ -65,6 +66,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
     gwmmaptoolidentifyfeature.h \
     gwmopenxyeventlayerdialog.h \
+    gwmprogressdialog.h \
     gwmpropertypanel.h \
     gwmtaskthread.h \
     symbolwindow/gwmsymbolwindow.h \
@@ -80,6 +82,7 @@ FORMS += \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
     gwmopenxyeventlayerdialog.ui \
+    gwmprogressdialog.ui \
     gwmpropertypanel.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
