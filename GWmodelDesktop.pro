@@ -29,7 +29,7 @@ SOURCES += \
     Model/gwmlayervectoritem.cpp \
     gwmattributetableview.cpp \
     gwmcoordtranssettingdialog.cpp \
-    gwmcoordtransthread.cpp \
+    TaskThread/gwmcoordtransthread.cpp \
     gwmdelimitedtextfile.cpp \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
@@ -38,7 +38,7 @@ SOURCES += \
     gwmopenxyeventlayerdialog.cpp \
     gwmprogressdialog.cpp \
     gwmpropertypanel.cpp \
-    gwmtaskthread.cpp \
+    TaskThread/gwmtaskthread.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
@@ -59,7 +59,7 @@ HEADERS += \
     PropertyPanelTabs/utils.h \
     gwmattributetableview.h \
     gwmcoordtranssettingdialog.h \
-    gwmcoordtransthread.h \
+    TaskThread/gwmcoordtransthread.h \
     gwmdelimitedtextfile.h \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
@@ -68,7 +68,7 @@ HEADERS += \
     gwmopenxyeventlayerdialog.h \
     gwmprogressdialog.h \
     gwmpropertypanel.h \
-    gwmtaskthread.h \
+    TaskThread/gwmtaskthread.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
