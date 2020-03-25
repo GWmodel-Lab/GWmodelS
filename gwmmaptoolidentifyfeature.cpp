@@ -1,4 +1,5 @@
 #include "gwmmaptoolidentifyfeature.h"
+#include <qgsproject.h>
 
 GwmMapToolIdentifyFeature::GwmMapToolIdentifyFeature(QgsMapCanvas* mapCanvas)
     : QgsMapToolIdentify(mapCanvas)
@@ -87,6 +88,10 @@ void GwmMapToolIdentifyFeature::canvasReleaseEvent(QgsMapMouseEvent *e)
         for (int i = 0; i < mapLayerSet.size(); ++i)
         {
             QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerSet[i];
+            QgsCoordinateTransform transform;
+            transform.setSourceCrs(QgsProject::instance()->crs());
+            transform.setDestinationCrs(layer->crs());
+            rect = transform.transformBoundingBox(rect);
             layer->selectByRect(rect);
         }
     }
