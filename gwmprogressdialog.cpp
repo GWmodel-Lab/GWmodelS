@@ -35,7 +35,7 @@ void GwmProgressDialog::setTaskThread(GwmTaskThread *taskThread)
 
 void GwmProgressDialog::accept()
 {
-
+    return QDialog::accept();
 }
 
 void GwmProgressDialog::reject()

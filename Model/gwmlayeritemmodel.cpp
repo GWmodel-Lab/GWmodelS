@@ -272,13 +272,13 @@ QList<QgsMapLayer *> GwmLayerItemModel::toMapLayerList()
         {
             if (group->originChild()->checkState() == Qt::CheckState::Checked)
             {
-                layerList += group->originChild()->layer();
+                layerList.push_front(group->originChild()->layer());
             }
             for (GwmLayerVectorItem* analyse : group->analyseChildren())
             {
                 if (group->checkState() == Qt::CheckState::Checked)
                 {
-                    layerList += analyse->layer();
+                    layerList.push_front(analyse->layer());
                 }
             }
         }

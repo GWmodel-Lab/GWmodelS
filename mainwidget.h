@@ -59,7 +59,8 @@ private:
     void setupPropertyPanel();
     void setupMapPanel();
 
-    void addLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
+    void addLayerToModel(QgsVectorLayer* layer);
+    void createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
 
     void createSymbolWindow(const QModelIndex &index);
     // 要素区属性表窗口

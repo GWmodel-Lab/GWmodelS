@@ -37,10 +37,9 @@
 
 
 #include "gwmcoordtranssettingdialog.h"
-
 #include "qgsprojectionselectionwidget.h"
-
 #include "gwmcoordtranssettingdialog.h"
+#include "gwmprogressdialog.h"
 
 
 MainWidget::MainWidget(QWidget *parent)
@@ -69,7 +68,7 @@ void MainWidget::openFileImportShapefile(){
     if (fileInfo.exists())
     {
         QString fileName = fileInfo.baseName();
-        addLayerToModel(filePath, fileName, "ogr");
+        createLayerToModel(filePath, fileName, "ogr");
     }
 }
 
@@ -81,7 +80,7 @@ void MainWidget::openFileImportJson()
 void MainWidget::openFileImportCsv()
 {
     GwmOpenXYEventLayerDialog* dialog = new GwmOpenXYEventLayerDialog(this);
-    connect(dialog, &GwmOpenXYEventLayerDialog::addVectorLayerSignal, this, &MainWidget::addLayerToModel);
+    connect(dialog, &GwmOpenXYEventLayerDialog::addVectorLayerSignal, this, &MainWidget::createLayerToModel);
     dialog->show();
 }
 
@@ -150,7 +149,15 @@ void MainWidget::setupMapPanel()
     connect(mapCanvas, &QgsMapCanvas::selectionChanged, this, &MainWidget::onMapSelectionChanged);
 }
 
-void MainWidget::addLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey)
+void MainWidget::addLayerToModel(QgsVectorLayer *layer)
+{
+    if (layer->isValid())
+    {
+        mapModel->appendItem(layer);
+    }
+}
+
+void MainWidget::createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey)
 {
     qDebug() << "[MainWidget::addLayerToModel]"
              << uri << layerName << providerKey;
@@ -296,7 +303,15 @@ void MainWidget::onShowCoordinateTransDlg(const QModelIndex &index)
         mCoordinateTransDlg->setSrcCrs(currentLayer->crs());
         if (mCoordinateTransDlg->exec() == QDialog::Accepted)
         {
-            mCoordinateTransDlg->transformCoordinate(mCoordinateTransDlg->desCrs(), currentLayer);
+            QgsCoordinateReferenceSystem desCrs = mCoordinateTransDlg->desCrs();
+            GwmCoordTransThread* thread = new GwmCoordTransThread(currentLayer, desCrs);
+            GwmProgressDialog* progressDlg = new GwmProgressDialog(thread, this);
+            if (progressDlg->exec() == QDialog::Accepted)
+            {
+                qDebug() << "[MainWidget::onShowCoordinateTransDlg]"
+                         << "Finished";
+                addLayerToModel(thread->getWorkLayer());
+            }
         }
     }
 }

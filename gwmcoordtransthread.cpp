@@ -11,8 +11,8 @@ GwmCoordTransThread::GwmCoordTransThread(QgsVectorLayer *handleLayer,QgsCoordina
 {
     this->handleLayer = handleLayer;
     this->desCrs = desCrs;
-
 }
+
 void GwmCoordTransThread::run()
 {
     emit message(QStringLiteral("Projecting ..."));
@@ -24,25 +24,23 @@ void GwmCoordTransThread::run()
     // 创建新的矢量图层
     // 类型
     QString newLayerType = QgsWkbTypes::displayString(this->handleLayer->wkbType());
-    // EPSG
-    //qDebug() << currentLayer->crs().authid();
-    QString newLayerProperties = newLayerType.append("?").append(this->handleLayer->crs().authid());
-    // 构造图层
-    QgsVectorLayer *newLayer = new QgsVectorLayer(newLayerProperties,QString("测试图层"),QString("memory"));
-    newLayer->setCrs(desCrs);
-    QgsVectorDataProvider* newLayerDataProvider = newLayer->dataProvider();
+    QString newLayerProperties = newLayerType.append("?");
+    QString newLayerName = handleLayer->name().append(" ").append(desCrs.authid());
+    workLayer = new QgsVectorLayer(newLayerProperties, newLayerName, QStringLiteral("memory"));
+    workLayer->setCrs(desCrs);
+    QgsVectorDataProvider* newLayerDataProvider = workLayer->dataProvider();
     // 属性构造
     QList<QgsField> tmp;
     for(int i=0;i<this->handleLayer->fields().size();i++){
         tmp.append(this->handleLayer->fields()[i]);
     }
     newLayerDataProvider->addAttributes(tmp);
-    newLayer->updateFields();
+    workLayer->updateFields();
 
     // 添加feature
     QgsFeatureIterator featureIt = this->handleLayer->getFeatures();
     QgsFeature f;
-    newLayer->startEditing();
+    workLayer->startEditing();
 
     // 进度条显示需要
     int progress = 0;
@@ -60,21 +58,42 @@ void GwmCoordTransThread::run()
             if(g.transform(myTransform) == 0)
             {
                 f.setGeometry(g);
+                newLayerDataProvider->addFeature(f);
             }
-            else
-            {
-                f.clearGeometry();
-            }
-            newLayerDataProvider->addFeature(f);
-            sleep(1);
+//            sleep(0.2);
             emit tick(progress,total);
-            progress ++;
+            progress++;
         }
     }
-    newLayer->commitChanges();
+    workLayer->commitChanges();
     emit success();
 }
 
 void GwmCoordTransThread::onCancelTrans(int flag){
     this->cancelFlag = flag;
+}
+
+QgsCoordinateReferenceSystem GwmCoordTransThread::getDesCrs() const
+{
+    return desCrs;
+}
+
+void GwmCoordTransThread::setDesCrs(const QgsCoordinateReferenceSystem &value)
+{
+    desCrs = value;
+}
+
+QgsVectorLayer *GwmCoordTransThread::getWorkLayer() const
+{
+    return workLayer;
+}
+
+QgsVectorLayer *GwmCoordTransThread::getHandleLayer() const
+{
+    return handleLayer;
+}
+
+void GwmCoordTransThread::setHandleLayer(QgsVectorLayer *value)
+{
+    handleLayer = value;
 }
