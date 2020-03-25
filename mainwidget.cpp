@@ -176,8 +176,8 @@ void MainWidget::createLayerToModel(const QString &uri, const QString &layerName
 }
 
 void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const QModelIndex &previous){
-    qDebug() << current;
-    qDebug() << previous;
+//    qDebug() << current;
+//    qDebug() << previous;
     if(current.isValid()){
         GwmLayerVectorItem* layerItem;
         GwmLayerItem* item = mapModel->itemFromIndex(current);

@@ -158,6 +158,21 @@ void GwmFeaturePanel::showLayer()
     }
 }
 
+void GwmFeaturePanel::mousePressEvent(QMouseEvent *event)
+{
+    if( event->button() == Qt::LeftButton ){
+//        QModelIndex lastindex = this->currentIndex();
+        QModelIndex index = indexAt(event->pos());  //取出按下点的元素索引index
+        if( !index.isValid() )                   //判断index是否有效
+        {
+            this->clearSelection();
+            this->setCurrentIndex(index);   //设置CurrentIndex为空
+//            emit currentChanged(index,lastindex);
+        }
+    }
+    return QTreeView::mousePressEvent(event);
+}
+
 void GwmFeaturePanel::removeLayer()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
