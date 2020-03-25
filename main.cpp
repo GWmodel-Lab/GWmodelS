@@ -6,6 +6,8 @@
 #include "qgsapplication.h"
 #include <QApplication>
 #include <qgsproviderregistry.h>
+#include <qgsproject.h>
+#include <qgscoordinatereferencesystem.h>
 
 int main(int argc, char *argv[])
 {
@@ -16,6 +18,7 @@ int main(int argc, char *argv[])
     QgsApplication::initQgis();
     QString pluginDir = "./plugins";
     QgsProviderRegistry::instance(pluginDir);
+    QgsProject::instance()->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(4326));
     MainWindow w;
     w.show();
     return a.exec();

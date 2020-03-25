@@ -87,6 +87,8 @@ FORMS += \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui \
+    qgscoordinateoperationwidgetbase.ui \
+    qgsdatumtransformdialogbase.ui \
     symbolwindow/qgscategorizedsymbolrendererwidget.ui \
     symbolwindow/qgsgraduatedsymbolrendererwidget.ui \
     symbolwindow/qgsheatmaprendererwidgetbase.ui \

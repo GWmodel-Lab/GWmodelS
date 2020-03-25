@@ -41,6 +41,9 @@
 #include "gwmcoordtranssettingdialog.h"
 #include "gwmprogressdialog.h"
 
+#include <qgsproviderregistry.h>
+#include <qgsdatumtransformdialog.h>
+
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -52,7 +55,6 @@ MainWidget::MainWidget(QWidget *parent)
     setupFeaturePanel();
     setupToolbar();
     setupPropertyPanel();
-
     // ！！！重要！！！
     // 将 FeaturePanel, MapCanvas, PropertyPanel 相关的设置代码全部写在对应的 setup函数 中！
 }
@@ -137,6 +139,7 @@ void MainWidget::setupPropertyPanel()
 void MainWidget::setupMapPanel()
 {
     mapCanvas = ui->mapCanvas;
+    mapCanvas->setDestinationCrs(QgsProject::instance()->crs());
     // 工具
     mapPanTool = new QgsMapToolPan(mapCanvas);
     mapIdentifyTool = new GwmMapToolIdentifyFeature(mapCanvas);
@@ -189,6 +192,40 @@ void MainWidget::onFullScreen()
     mapCanvas->refresh();
 }
 
+bool MainWidget::askUserForDatumTransfrom(const QgsCoordinateReferenceSystem &sourceCrs, const QgsCoordinateReferenceSystem &destinationCrs, const QgsMapLayer *layer)
+{
+    Q_ASSERT( qApp->thread() == QThread::currentThread() );
+
+      QString title;
+      if ( layer )
+      {
+        // try to make a user-friendly (short!) identifier for the layer
+        QString layerIdentifier;
+        if ( !layer->name().isEmpty() )
+        {
+          layerIdentifier = layer->name();
+        }
+        else
+        {
+          const QVariantMap parts = QgsProviderRegistry::instance()->decodeUri( layer->providerType(), layer->source() );
+          if ( parts.contains( QStringLiteral( "path" ) ) )
+          {
+            const QFileInfo fi( parts.value( QStringLiteral( "path" ) ).toString() );
+            layerIdentifier = fi.fileName();
+          }
+          else if ( layer->dataProvider() )
+          {
+            const QgsDataSourceUri uri( layer->source() );
+            layerIdentifier = uri.table();
+          }
+        }
+        if ( !layerIdentifier.isEmpty() )
+          title = tr( "Select Transformation for %1" ).arg( layerIdentifier );
+      }
+
+      return QgsDatumTransformDialog::run( sourceCrs, destinationCrs, this, mapCanvas, title );
+}
+
 void MainWidget::onMapSelectionChanged(QgsVectorLayer *layer)
 {
     qDebug() << "[MainWidget]" << "Map Selection Changed: (layer " << layer->name() << ")";
@@ -212,6 +249,8 @@ void MainWidget::onMapSelectionChanged(QgsVectorLayer *layer)
         rubber->setStrokeColor(QColor(255, 0, 0));
         rubber->setFillColor(QColor(255, 0, 0, 144));
         mapLayerRubberDict[layer] += rubber;
+        qDebug() << "[MainWidget::onMapSelectionChanged]"
+                 << "selected" << geometry.asWkt();
     }
 }
 
@@ -221,7 +260,11 @@ void MainWidget::onMapModelChanged()
     mapCanvas->setLayers(mapLayerList);
     if (mapLayerList.size() == 1)
     {
-        QgsRectangle extent = mapLayerList.first()->extent();
+        QgsMapLayer* firstLayer = mapLayerList.first();
+        QgsRectangle extent = mapCanvas->mapSettings().layerExtentToOutputExtent(firstLayer, firstLayer->extent());
+        qDebug() << "[MainWidget::onMapModelChanged]"
+                 << "origin extent: " << firstLayer->extent()
+                 << "trans extent: " << extent;
         mapCanvas->setExtent(extent);
     }
     mapCanvas->refresh();
@@ -272,6 +315,22 @@ void MainWidget::onShowSymbolSetting(const QModelIndex &index)
     createSymbolWindow(index);
     connect(symbolWindow,&GwmSymbolWindow::canvasRefreshSingal,this,&MainWidget::refreshCanvas);
     symbolWindow->show();
+}
+
+bool MainWidget::eventFilter(QObject *obj, QEvent *e)
+{
+    if (obj == mapCanvas)
+    {
+        switch (e->type()) {
+        case QEvent::MouseMove:
+            qDebug() << "[MainWidget::eventFilter]"
+                     << "Cur map position: (" << mapCanvas->getCoordinateTransform()->toMapCoordinates(((QMouseEvent*)e)->pos()).asWkt();
+            return true;
+        default:
+            break;
+        }
+    }
+    return false;
 }
 
 void MainWidget::refreshCanvas(){

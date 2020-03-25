@@ -53,6 +53,9 @@ public slots:
     void openFileImportCsv();
     void onShowSymbolSetting(const QModelIndex &index);
 
+public:
+    bool eventFilter(QObject* obj, QEvent* e);
+
 private:
     void setupToolbar();
     void setupFeaturePanel();
@@ -72,6 +75,8 @@ private:
      * @brief 从模型中导出地图所需要显示的图层
      */
     void deriveLayersFromModel();
+
+    bool askUserForDatumTransfrom(const QgsCoordinateReferenceSystem& sourceCrs, const QgsCoordinateReferenceSystem& destinationCrs, const QgsMapLayer* layer = nullptr);
 
 private slots:
     void onMapSelectionChanged(QgsVectorLayer* layer);

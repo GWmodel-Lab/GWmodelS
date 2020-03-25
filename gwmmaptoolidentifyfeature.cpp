@@ -11,7 +11,9 @@ GwmMapToolIdentifyFeature::GwmMapToolIdentifyFeature(QgsMapCanvas* mapCanvas)
 
 void GwmMapToolIdentifyFeature::canvasPressEvent(QgsMapMouseEvent *e)
 {
-    qDebug() << "Mouse Press (" << e->x() << "," << e->y() << ")";
+    qDebug() << "[GwmMapToolIdentifyFeature::canvasPressEvent]"
+             << "Mouse Press (" << e->x() << "," << e->y() << ")"
+             << toMapCoordinates(e->pos()).asWkt();
     point0 = QPoint(e->x(), e->y());
     isMousePressed = true;
 }
