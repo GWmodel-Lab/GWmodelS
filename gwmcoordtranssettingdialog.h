@@ -12,8 +12,6 @@
 #include "qgsprojectionselectionwidget.h"
 #include "qgsprojectionselectiondialog.h"
 
-#include "gwmcoordtransthread.h"
-
 #include "QProgressDialog"
 
 namespace Ui {
@@ -27,8 +25,7 @@ class GwmCoordTransSettingDialog : public QDialog
 public:
     explicit GwmCoordTransSettingDialog(QWidget *parent = nullptr);
     ~GwmCoordTransSettingDialog();
-private slots:
-    void updateTransProgress(int progress,int total);
+
 signals:
     void cancelTransSignal(int flag);
 public:
@@ -41,15 +38,10 @@ public:
     virtual void accept() override;
     virtual void reject() override;
 
-    // 投影转换
-    void transformCoordinate(QgsCoordinateReferenceSystem desCrs, QgsVectorLayer *handleLayer);
-
     QProgressDialog *progressDialog;
 
 private:
     Ui::GwmCoordTransSettingDialog *ui;
-
-    GwmCoordTransThread *mTransThread; //用于投影转换的子线程
 
 };
 

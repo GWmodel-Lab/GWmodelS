@@ -7,8 +7,6 @@
 #include "qgsprojectionselectionwidget.h"
 #include "qgsprojectionselectiondialog.h"
 
-#include "gwmcoordtransthread.h"
-
 GwmCoordTransSettingDialog::GwmCoordTransSettingDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmCoordTransSettingDialog)
@@ -54,32 +52,4 @@ QgsCoordinateReferenceSystem GwmCoordTransSettingDialog::srcCrs() const
 void GwmCoordTransSettingDialog::setSrcCrs(const QgsCoordinateReferenceSystem &srcCrs)
 {
     ui->mSrcCRSSelector->setCrs(srcCrs);
-}
-
-void GwmCoordTransSettingDialog::transformCoordinate(QgsCoordinateReferenceSystem desCrs, QgsVectorLayer *handleLayer)
-{
-//    mTransThread = new GwmCoordTransThread(handleLayer,desCrs);
-//    connect(mTransThread, &GwmCoordTransThread::tick,this, &GwmCoordTransSettingDialog::updateTransProgress);
-//    connect(this, &GwmCoordTransSettingDialog::cancelTransSignal, mTransThread, &GwmCoordTransThread::onCancelTrans);
-
-//    this->progressDialog = new QProgressDialog();
-//    this->progressDialog->show();
-//    this->progressDialog->setModal(true);
-//    this->progressDialog->setLabelText("Reprojecting ...");
-//    this->progressDialog->autoClose();
-
-//    mTransThread->start();
-}
-
-void GwmCoordTransSettingDialog::updateTransProgress(int progress,int total)
-{
-//    this->progressDialog->setRange(0,total-1);
-//    this->progressDialog->setValue(progress);
-
-//    int cancelFlag = 1;
-
-//    if(this->progressDialog->wasCanceled()){
-//        emit cancelTransSignal(cancelFlag);
-//        this->progressDialog->close();
-//    }
 }

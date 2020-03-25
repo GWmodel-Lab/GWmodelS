@@ -11,7 +11,6 @@
 #include "mainwidget.h"
 
 #include <qgsapplication.h>
-
 #include <qgsattributetableview.h>
 #include <qgsattributetablemodel.h>
 #include <qgsvectorlayercache.h>
@@ -22,27 +21,15 @@
 #include <qgsstyle.h>
 #include <qgsstylemodel.h>
 #include <qgssinglesymbolrenderer.h>
+#include <qgsprojectionselectionwidget.h>
+#include <qgsproviderregistry.h>
+#include <qgsdatumtransformdialog.h>
 
 #include "gwmattributetableview.h"
 #include "gwmopenxyeventlayerdialog.h"
-
-
-//#include "qgssymbolselectordialog.h"
-//#include "qgssinglesymbolrenderer.h"
-#include <qgsapplication.h>
-#include "qgsstyle.h"
-#include <qdebug.h>
-#include <qgsstylemodel.h>
-#include <qgssinglesymbolrenderer.h>
-
-
-#include "gwmcoordtranssettingdialog.h"
-#include "qgsprojectionselectionwidget.h"
-#include "gwmcoordtranssettingdialog.h"
 #include "gwmprogressdialog.h"
-
-#include <qgsproviderregistry.h>
-#include <qgsdatumtransformdialog.h>
+#include "gwmcoordtranssettingdialog.h"
+#include "TaskThread/gwmcoordtransthread.h"
 
 
 MainWidget::MainWidget(QWidget *parent)
@@ -172,7 +159,7 @@ void MainWidget::addLayerToModel(QgsVectorLayer *layer)
 {
     if (layer->isValid())
     {
-        mapModel->appendItem(layer);
+        mapModel->appendItem(layer, layer->dataProvider()->dataSourceUri(), layer->providerType());
     }
 }
 

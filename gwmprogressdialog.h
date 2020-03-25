@@ -2,7 +2,7 @@
 #define GWMPROGRESSDIALOG_H
 
 #include <QDialog>
-#include "gwmtaskthread.h"
+#include "TaskThread/gwmtaskthread.h"
 
 namespace Ui {
 class GwmProgressDialog;
