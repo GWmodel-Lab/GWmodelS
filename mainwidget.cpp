@@ -113,8 +113,8 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::editBtnSignal, this, &MainWidget::onEditMode);
     connect(toolbar, &GwmToolbar::saveLayerBtnSignal, this, &MainWidget::onSaveLayer);
     connect(toolbar, &GwmToolbar::exportLayerBtnSignal, this, &MainWidget::onExportLayer);
-    connect(toolbar,&GwmToolbar::zoomToLayerBtnSignal,this,&MainWidget::onZoomToLayerBtn);
-    connect(toolbar,&GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
+    connect(toolbar, &GwmToolbar::zoomToLayerBtnSignal,this,&MainWidget::onZoomToLayerBtn);
+    connect(toolbar, &GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
 
 }
 
@@ -130,7 +130,7 @@ void MainWidget::setupFeaturePanel()
     connect(featurePanel, &GwmFeaturePanel::showSymbolSettingSignal, this, &MainWidget::onShowSymbolSetting);
     connect(featurePanel, &GwmFeaturePanel::showCoordinateTransDlg,this,&MainWidget::onShowCoordinateTransDlg);
     connect(featurePanel, &GwmFeaturePanel::currentChanged,this,&MainWidget::onFeaturePanelCurrentChanged);
-
+    connect(ui->featureSortUpBtn, &QAbstractButton::clicked, featurePanel, &GwmFeaturePanel::onSortUpBtnClicked);
 }
 
 void MainWidget::setupPropertyPanel()
@@ -152,6 +152,7 @@ void MainWidget::setupMapPanel()
     connect(mapModel, &GwmLayerItemModel::layerAddedSignal, this, &MainWidget::onMapModelChanged);
     connect(mapModel, &GwmLayerItemModel::layerRemovedSignal, this, &MainWidget::onMapModelChanged);
     connect(mapModel, &GwmLayerItemModel::layerItemChangedSignal, this, &MainWidget::onMapModelChanged);
+    connect(mapModel, &GwmLayerItemModel::layerItemMovedSignal, this, &MainWidget::onMapModelChanged);
     connect(mapCanvas, &QgsMapCanvas::selectionChanged, this, &MainWidget::onMapSelectionChanged);
 }
 
@@ -199,6 +200,10 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
         else{
             toolbar->setBtnEnabled(false);
         }
+        // 设置图层组件工具按钮的状态
+        ui->featureSortUpBtn->setEnabled(mapModel->canMoveUp(current));
+        ui->featureSortDownBtn->setEnabled(mapModel->canMoveDown(current));
+        ui->featureRemoveBtn->setEnabled(mapModel->canRemove(current));
     }
     else{
         toolbar->setBtnEnabled(false);
@@ -497,4 +502,5 @@ void MainWidget::onShowCoordinateTransDlg(const QModelIndex &index)
         }
     }
 }
+
 

@@ -35,6 +35,24 @@ void GwmFeaturePanel::setMapModel(GwmLayerItemModel *mapModel)
     this->setModel(mMapModel);
 }
 
+void GwmFeaturePanel::onSortUpBtnClicked()
+{
+    QModelIndex selected = this->selectionModel()->selectedIndexes().first();
+    mMapModel->moveUp(selected);
+}
+
+void GwmFeaturePanel::onSortDownBtnClicked()
+{
+    QModelIndex selected = this->selectionModel()->selectedIndexes().first();
+    mMapModel->moveDown(selected);
+}
+
+void GwmFeaturePanel::onRemoveBtnClicked()
+{
+    QModelIndex selected = this->selectionModel()->selectedIndexes().first();
+    mMapModel->remove(selected);
+}
+
 void GwmFeaturePanel::setupUi()
 {
     //    mMapModel->setHorizontalHeaderLabels(QStringList() << tr("Features"));

@@ -12,6 +12,7 @@ signals:
     void layerAddedSignal();
     void layerRemovedSignal();
     void layerItemChangedSignal(GwmLayerItem* item);
+    void layerItemMovedSignal();
 
 public:
     explicit GwmLayerItemModel(QObject *parent = nullptr);
@@ -53,6 +54,15 @@ public:
     QgsVectorLayer* layerFromItem(GwmLayerItem* item) const;
 
     QList<QgsMapLayer*> toMapLayerList();
+
+public: // 要素区工具栏相关函数
+    bool canMoveUp(const QModelIndex& index);
+    bool canMoveDown(const QModelIndex& index);
+    bool canRemove(const QModelIndex& index);
+
+    void moveUp(const QModelIndex& index);
+    void moveDown(const QModelIndex& index);
+    void remove(const QModelIndex& index);
 
 private:
     GwmLayerItem* mRootItem;

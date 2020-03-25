@@ -10,10 +10,10 @@ GwmLayerItemModel::GwmLayerItemModel(QObject *parent)
 QVariant GwmLayerItemModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     switch (role) {
-    case Qt::DisplayRole:
-        return section == 0 ? QString(tr("Feature")) : QStringLiteral("");
+//    case Qt::DisplayRole:
+//        return section == 0 ? QString(tr("Feature")) : QStringLiteral("");
     case Qt::TextAlignmentRole:
-        return Qt::AlignCenter;
+        return Qt::AlignLeft;
     default:
         return QVariant();
     }
@@ -287,6 +287,78 @@ QList<QgsMapLayer *> GwmLayerItemModel::toMapLayerList()
         }
     }
     return layerList;
+}
+
+bool GwmLayerItemModel::canMoveUp(const QModelIndex &index)
+{
+    int row = index.row();
+    GwmLayerItem* item = itemFromIndex(index);
+    switch (item->itemType())
+    {
+    case GwmLayerItem::Group:
+        return row > 0 && row < item->parentItem()->childCount();
+    case GwmLayerItem::GWR:
+        return row > 1 && row < (item->parentItem()->childCount() - 1);
+    default:
+        return false;
+    }
+}
+
+bool GwmLayerItemModel::canMoveDown(const QModelIndex &index)
+{
+    int row = index.row();
+    GwmLayerItem* item = itemFromIndex(index);
+    switch (item->itemType())
+    {
+    case GwmLayerItem::Group:
+        return row >= 0 && row < (item->parentItem()->childCount() - 1);
+    case GwmLayerItem::GWR:
+        return row >= 1 && row < (item->parentItem()->childCount() - 2);
+    default:
+        return false;
+    }
+}
+
+bool GwmLayerItemModel::canRemove(const QModelIndex &index)
+{
+    GwmLayerItem* item = itemFromIndex(index);
+    switch (item->itemType())
+    {
+    case GwmLayerItem::Group:
+    case GwmLayerItem::GWR:
+        return true;
+    default:
+        return false;
+    }
+}
+
+void GwmLayerItemModel::moveUp(const QModelIndex &index)
+{
+    int row = index.row();
+    GwmLayerItem* item = itemFromIndex(index);
+    GwmLayerItem* parent = item->parentItem();
+    parent->moveChildren(row, 1, row - 1);
+    emit layoutChanged();
+    emit layerItemMovedSignal();
+}
+
+void GwmLayerItemModel::moveDown(const QModelIndex &index)
+{
+    int row = index.row();
+    GwmLayerItem* item = itemFromIndex(index);
+    GwmLayerItem* parent = item->parentItem();
+    parent->moveChildren(row, 1, row + 1);
+    emit layoutChanged();
+    emit layerItemMovedSignal();
+}
+
+void GwmLayerItemModel::remove(const QModelIndex &index)
+{
+    int row = index.row();
+    GwmLayerItem* item = itemFromIndex(index);
+    GwmLayerItem* parent = item->parentItem();
+    parent->removeChildren(row, 1);
+    emit layerRemovedSignal();
 }
 
 void GwmLayerItemModel::onVectorItemSymbolChanged()

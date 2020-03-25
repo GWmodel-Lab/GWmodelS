@@ -53,6 +53,12 @@ public:
     GwmLayerItemModel *mapModel() const;
     void setMapModel(GwmLayerItemModel *mapModel);
 
+
+public slots:
+    void onSortUpBtnClicked();
+    void onSortDownBtnClicked();
+    void onRemoveBtnClicked();
+
 private:
     GwmLayerItemModel* mMapModel;
     bool isMapModelSetted;

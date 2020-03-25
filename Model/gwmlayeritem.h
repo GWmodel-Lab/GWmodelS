@@ -46,6 +46,7 @@ public:
     virtual bool insertChildren(int position, QList<GwmLayerItem*> items);
     virtual bool appendChildren(QList<GwmLayerItem*> items);
     virtual QList<GwmLayerItem*> takeChildren(int position, int count);
+    virtual bool moveChildren(int position, int count, int destination);
 
 
     inline QList<GwmLayerGroupItem *> children() const { return mChildren; }
