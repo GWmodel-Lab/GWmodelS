@@ -15,6 +15,7 @@ GwmFeaturePanel::GwmFeaturePanel(QWidget *parent)
     , isMapModelSetted(false)
 {
     setupUi();
+    setHeaderHidden(true);
 }
 
 GwmFeaturePanel::~GwmFeaturePanel()
