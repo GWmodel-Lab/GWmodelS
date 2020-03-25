@@ -40,6 +40,7 @@ void GwmCoordTransThread::run()
     QString newLayerProperties = newLayerType.append("?").append(this->handleLayer->crs().authid());
     // 构造图层
     QgsVectorLayer *newLayer = new QgsVectorLayer(newLayerProperties,QString("测试图层"),QString("memory"));
+    newLayer->setCrs(desCrs);
     QgsVectorDataProvider* newLayerDataProvider = newLayer->dataProvider();
     // 属性构造
     QList<QgsField> tmp;
@@ -84,16 +85,16 @@ void GwmCoordTransThread::run()
     newLayer->commitChanges();
 
     // 输出测试结果
-    qDebug() << newLayer->fields().names();
+    qDebug() << "[GwmCoordTransThread::run] result test" << newLayer->fields().names();
     for(int i=0;i<newLayer->fields().size();i++){
-        qDebug() << newLayer->fields()[i].typeName();
+        qDebug() << "[GwmCoordTransThread::run] result test" << newLayer->fields()[i].typeName();
     }
-    qDebug() << newLayer->crs().authid() <<1;
+    qDebug() << "[GwmCoordTransThread::run] result test" << newLayer->crs().authid() <<1;
 
-    qDebug() << this->handleLayer->getFeature(1).geometry().asJson() << "Before trans";
-    qDebug() << newLayer->getFeature(1).geometry().asJson() << "trans";
+    qDebug() << "[GwmCoordTransThread::run] result test" << this->handleLayer->getFeature(1).geometry().asJson() << "Before trans";
+    qDebug() << "[GwmCoordTransThread::run] result test" << newLayer->getFeature(1).geometry().asJson() << "trans";
 }
 
-void GwmCoordTransThread::cancelTransSlo(int flag){
+void GwmCoordTransThread::onCancelTrans(int flag){
     this->cancelFlag = flag;
 }

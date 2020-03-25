@@ -1,6 +1,8 @@
 #ifndef GWMCOORDINATE_H
 #define GWMCOORDINATE_H
 
+#include "prefix.h"
+
 #include <QDialog>
 #include <QtWidgets>
 #include <qgsapplication.h>
@@ -28,7 +30,7 @@ public:
 private slots:
     void updateTransProgress(int progress,int total);
 signals:
-    void cancelTransSig(int flag);
+    void cancelTransSignal(int flag);
 public:
     QgsCoordinateReferenceSystem desCrs() const;
     void setDesCrs(const QgsCoordinateReferenceSystem &desCrs);
@@ -47,7 +49,7 @@ public:
 private:
     Ui::GwmCoordTransSettingDialog *ui;
 
-    GwmCoordTransThread *m_transThread; //用于投影转换的子线程
+    GwmCoordTransThread *mTransThread; //用于投影转换的子线程
 
 };
 

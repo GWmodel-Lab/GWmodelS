@@ -1,6 +1,7 @@
 #ifndef GWMCOORDTRANSTHREAD_H
 #define GWMCOORDTRANSTHREAD_H
 
+#include "prefix.h"
 #include <QObject>
 #include <QThread>
 #include <QWidget>
@@ -25,7 +26,7 @@ protected:
 signals:
     void percentTransd(int progress,int total);
 public slots:
-    void cancelTransSlo(int canceledFlag);
+    void onCancelTrans(int canceledFlag);
 };
 
 #endif // GWMCOORDTRANSTHREAD_H
