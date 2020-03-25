@@ -15,6 +15,7 @@
 
 #include "symbolwindow/gwmsymbolwindow.h"
 
+#include <gwmcoordtranssettingdialog.h>
 
 namespace Ui {
 class MainWidget;
@@ -52,19 +53,30 @@ public slots:
     void openFileImportCsv();
     void onShowSymbolSetting(const QModelIndex &index);
 
+public:
+    bool eventFilter(QObject* obj, QEvent* e);
+
 private:
     void setupToolbar();
     void setupFeaturePanel();
     void setupPropertyPanel();
     void setupMapPanel();
 
-    void addLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
+    void addLayerToModel(QgsVectorLayer* layer);
+    void createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
 
     void createSymbolWindow(const QModelIndex &index);
     // 要素区属性表窗口
     void onShowAttributeTable(const QModelIndex &index);
     void onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list);
     void onFullScreen();
+
+    /**
+     * @brief 从模型中导出地图所需要显示的图层
+     */
+    void deriveLayersFromModel();
+
+    bool askUserForDatumTransfrom(const QgsCoordinateReferenceSystem& sourceCrs, const QgsCoordinateReferenceSystem& destinationCrs, const QgsMapLayer* layer = nullptr);
 
 private slots:
     void onMapSelectionChanged(QgsVectorLayer* layer);
@@ -95,6 +107,11 @@ private slots:
     void onFeaturePanelCurrentChanged(const QModelIndex &current, const QModelIndex &previous);
 
     void refreshCanvas();
+    void onShowCoordinateTransDlg(const QModelIndex &index);
+
+   // void transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index);
+
+    //void setNewCoordinate(QgsCoordinateReferenceSystem,QString,QModelIndex);
 };
 
 #endif // MAINLAYOUT_H

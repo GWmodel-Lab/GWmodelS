@@ -8,6 +8,10 @@
 
 #include <qgsvectorlayer.h>
 #include <qgsrenderer.h>
+#include "mainwidget.h"
+
+#include <qgsapplication.h>
+
 #include <qgsattributetableview.h>
 #include <qgsattributetablemodel.h>
 #include <qgsvectorlayercache.h>
@@ -23,6 +27,24 @@
 #include "gwmopenxyeventlayerdialog.h"
 
 
+//#include "qgssymbolselectordialog.h"
+//#include "qgssinglesymbolrenderer.h"
+#include <qgsapplication.h>
+#include "qgsstyle.h"
+#include <qdebug.h>
+#include <qgsstylemodel.h>
+#include <qgssinglesymbolrenderer.h>
+
+
+#include "gwmcoordtranssettingdialog.h"
+#include "qgsprojectionselectionwidget.h"
+#include "gwmcoordtranssettingdialog.h"
+#include "gwmprogressdialog.h"
+
+#include <qgsproviderregistry.h>
+#include <qgsdatumtransformdialog.h>
+
+
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mapModel(new GwmLayerItemModel)
@@ -32,6 +54,9 @@ MainWidget::MainWidget(QWidget *parent)
     setupMapPanel();
     setupFeaturePanel();
     setupToolbar();
+    setupPropertyPanel();
+    // ！！！重要！！！
+    // 将 FeaturePanel, MapCanvas, PropertyPanel 相关的设置代码全部写在对应的 setup函数 中！
 }
 
 MainWidget::~MainWidget()
@@ -45,7 +70,7 @@ void MainWidget::openFileImportShapefile(){
     if (fileInfo.exists())
     {
         QString fileName = fileInfo.baseName();
-        addLayerToModel(filePath, fileName, "ogr");
+        createLayerToModel(filePath, fileName, "ogr");
     }
 }
 
@@ -57,7 +82,7 @@ void MainWidget::openFileImportJson()
 void MainWidget::openFileImportCsv()
 {
     GwmOpenXYEventLayerDialog* dialog = new GwmOpenXYEventLayerDialog(this);
-    connect(dialog, &GwmOpenXYEventLayerDialog::addVectorLayerSignal, this, &MainWidget::addLayerToModel);
+    connect(dialog, &GwmOpenXYEventLayerDialog::addVectorLayerSignal, this, &MainWidget::createLayerToModel);
     dialog->show();
 }
 
@@ -116,6 +141,7 @@ void MainWidget::setupFeaturePanel()
     connect(featurePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &MainWidget::onShowLayerProperty);
     connect(featurePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &MainWidget::onFeaturePanelRowOrderChanged);
     connect(featurePanel, &GwmFeaturePanel::showSymbolSettingSignal, this, &MainWidget::onShowSymbolSetting);
+    connect(featurePanel, &GwmFeaturePanel::showCoordinateTransDlg,this,&MainWidget::onShowCoordinateTransDlg);
     connect(featurePanel, &GwmFeaturePanel::currentChanged,this,&MainWidget::onFeaturePanelCurrentChanged);
 
 }
@@ -129,6 +155,7 @@ void MainWidget::setupPropertyPanel()
 void MainWidget::setupMapPanel()
 {
     mapCanvas = ui->mapCanvas;
+    mapCanvas->setDestinationCrs(QgsProject::instance()->crs());
     // 工具
     mapPanTool = new QgsMapToolPan(mapCanvas);
     mapIdentifyTool = new GwmMapToolIdentifyFeature(mapCanvas);
@@ -141,7 +168,15 @@ void MainWidget::setupMapPanel()
     connect(mapCanvas, &QgsMapCanvas::selectionChanged, this, &MainWidget::onMapSelectionChanged);
 }
 
-void MainWidget::addLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey)
+void MainWidget::addLayerToModel(QgsVectorLayer *layer)
+{
+    if (layer->isValid())
+    {
+        mapModel->appendItem(layer);
+    }
+}
+
+void MainWidget::createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey)
 {
     qDebug() << "[MainWidget::addLayerToModel]"
              << uri << layerName << providerKey;
@@ -191,7 +226,11 @@ void MainWidget::onZoomToLayer(const QModelIndex &index)
     QgsVectorLayer* layer = mapModel->layerFromItem(item);
     if (layer)
     {
-        mapCanvas->setExtent(layer->extent());
+        QgsCoordinateTransform transform;
+        transform.setSourceCrs(layer->crs());
+        transform.setDestinationCrs(QgsProject::instance()->crs());
+        QgsRectangle extent = transform.transformBoundingBox(layer->extent());
+        mapCanvas->setExtent(extent);
         mapCanvas->refresh();
     }
 }
@@ -289,6 +328,40 @@ void MainWidget::onZoomToSelection(){
     }
 }
 
+bool MainWidget::askUserForDatumTransfrom(const QgsCoordinateReferenceSystem &sourceCrs, const QgsCoordinateReferenceSystem &destinationCrs, const QgsMapLayer *layer)
+{
+    Q_ASSERT( qApp->thread() == QThread::currentThread() );
+
+      QString title;
+      if ( layer )
+      {
+        // try to make a user-friendly (short!) identifier for the layer
+        QString layerIdentifier;
+        if ( !layer->name().isEmpty() )
+        {
+          layerIdentifier = layer->name();
+        }
+        else
+        {
+          const QVariantMap parts = QgsProviderRegistry::instance()->decodeUri( layer->providerType(), layer->source() );
+          if ( parts.contains( QStringLiteral( "path" ) ) )
+          {
+            const QFileInfo fi( parts.value( QStringLiteral( "path" ) ).toString() );
+            layerIdentifier = fi.fileName();
+          }
+          else if ( layer->dataProvider() )
+          {
+            const QgsDataSourceUri uri( layer->source() );
+            layerIdentifier = uri.table();
+          }
+        }
+        if ( !layerIdentifier.isEmpty() )
+          title = tr( "Select Transformation for %1" ).arg( layerIdentifier );
+      }
+
+      return QgsDatumTransformDialog::run( sourceCrs, destinationCrs, this, mapCanvas, title );
+}
+
 void MainWidget::onMapSelectionChanged(QgsVectorLayer *layer)
 {
     qDebug() << "[MainWidget]" << "Map Selection Changed: (layer " << layer->name() << ")";
@@ -312,6 +385,8 @@ void MainWidget::onMapSelectionChanged(QgsVectorLayer *layer)
         rubber->setStrokeColor(QColor(255, 0, 0));
         rubber->setFillColor(QColor(255, 0, 0, 144));
         mapLayerRubberDict[layer] += rubber;
+        qDebug() << "[MainWidget::onMapSelectionChanged]"
+                 << "selected" << geometry.asWkt();
     }
 }
 
@@ -321,7 +396,11 @@ void MainWidget::onMapModelChanged()
     mapCanvas->setLayers(mapLayerList);
     if (mapLayerList.size() == 1)
     {
-        QgsRectangle extent = mapLayerList.first()->extent();
+        QgsMapLayer* firstLayer = mapLayerList.first();
+        QgsRectangle extent = mapCanvas->mapSettings().layerExtentToOutputExtent(firstLayer, firstLayer->extent());
+        qDebug() << "[MainWidget::onMapModelChanged]"
+                 << "origin extent: " << firstLayer->extent()
+                 << "trans extent: " << extent;
         mapCanvas->setExtent(extent);
     }
     mapCanvas->refresh();
@@ -374,6 +453,22 @@ void MainWidget::onShowSymbolSetting(const QModelIndex &index)
     symbolWindow->show();
 }
 
+bool MainWidget::eventFilter(QObject *obj, QEvent *e)
+{
+    if (obj == mapCanvas)
+    {
+        switch (e->type()) {
+        case QEvent::MouseMove:
+            qDebug() << "[MainWidget::eventFilter]"
+                     << "Cur map position: (" << mapCanvas->getCoordinateTransform()->toMapCoordinates(((QMouseEvent*)e)->pos()).asWkt();
+            return true;
+        default:
+            break;
+        }
+    }
+    return false;
+}
+
 void MainWidget::refreshCanvas(){
     mapCanvas->refresh();
 }
@@ -387,3 +482,32 @@ void MainWidget::createSymbolWindow(const QModelIndex &index)
         symbolWindow = new GwmSymbolWindow(layer);
     }
 }
+
+// 投影到坐标系
+void MainWidget::onShowCoordinateTransDlg(const QModelIndex &index)
+{
+    // qDebug() << index;
+    // 获取当前矢量图层
+    GwmLayerItem* item = mapModel->itemFromIndex(index);
+    QgsVectorLayer* currentLayer = mapModel->layerFromItem(item);
+    // 原始图层的投影坐标系
+    if (currentLayer)
+    {
+        GwmCoordTransSettingDialog *mCoordinateTransDlg = new GwmCoordTransSettingDialog(this);
+        // 连接投影坐标系窗口和主窗口
+        mCoordinateTransDlg->setSrcCrs(currentLayer->crs());
+        if (mCoordinateTransDlg->exec() == QDialog::Accepted)
+        {
+            QgsCoordinateReferenceSystem desCrs = mCoordinateTransDlg->desCrs();
+            GwmCoordTransThread* thread = new GwmCoordTransThread(currentLayer, desCrs);
+            GwmProgressDialog* progressDlg = new GwmProgressDialog(thread, this);
+            if (progressDlg->exec() == QDialog::Accepted)
+            {
+                qDebug() << "[MainWidget::onShowCoordinateTransDlg]"
+                         << "Finished";
+                addLayerToModel(thread->getWorkLayer());
+            }
+        }
+    }
+}
+

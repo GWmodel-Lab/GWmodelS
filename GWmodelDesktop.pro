@@ -28,13 +28,17 @@ SOURCES += \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     gwmattributetableview.cpp \
+    gwmcoordtranssettingdialog.cpp \
+    gwmcoordtransthread.cpp \
     gwmdelimitedtextfile.cpp \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
     gwmmaptoolidentifyfeature.cpp \
     gwmopenxyeventlayerdialog.cpp \
+    gwmprogressdialog.cpp \
     gwmpropertypanel.cpp \
+    gwmtaskthread.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
@@ -54,13 +58,17 @@ HEADERS += \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/utils.h \
     gwmattributetableview.h \
+    gwmcoordtranssettingdialog.h \
+    gwmcoordtransthread.h \
     gwmdelimitedtextfile.h \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
     gwmmaptoolidentifyfeature.h \
     gwmopenxyeventlayerdialog.h \
+    gwmprogressdialog.h \
     gwmpropertypanel.h \
+    gwmtaskthread.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
@@ -69,14 +77,18 @@ HEADERS += \
     qgsattributetableviewextend.h
 
 FORMS += \
+    gwmcoordtranssettingdialog.ui \
     gwmfeaturepanel.ui \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
     gwmopenxyeventlayerdialog.ui \
+    gwmprogressdialog.ui \
     gwmpropertypanel.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui \
+    qgscoordinateoperationwidgetbase.ui \
+    qgsdatumtransformdialogbase.ui \
     symbolwindow/qgscategorizedsymbolrendererwidget.ui \
     symbolwindow/qgsgraduatedsymbolrendererwidget.ui \
     symbolwindow/qgsheatmaprendererwidgetbase.ui \

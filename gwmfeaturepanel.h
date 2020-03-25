@@ -21,7 +21,7 @@ signals:
     // 属性表
     void showAttributeTableSignal(const QModelIndex &index);
     // 投影到坐标系
-    void sendDataSigProj(const QModelIndex &index);
+    void showCoordinateTransDlg(const QModelIndex &index);
     // 符号
     void showSymbolSettingSignal(const QModelIndex &index);
     // 导出shp

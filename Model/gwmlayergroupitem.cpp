@@ -30,6 +30,8 @@ QVariant GwmLayerGroupItem::data(int col, int role)
             return QVariant(text());
         case Qt::CheckStateRole:
             return mCheckState;
+        case Qt::DecorationRole:
+            return mOriginChild->data(col, role);
         default:
             break;
         }
