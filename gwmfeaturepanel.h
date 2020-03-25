@@ -87,6 +87,8 @@ private:
     void csv();
     // 发出信号(显示属性)
     void layerProperty();
+
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
 };
 
 #endif // GWMFEATUREPANEL_H
