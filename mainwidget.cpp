@@ -131,6 +131,8 @@ void MainWidget::setupFeaturePanel()
     connect(featurePanel, &GwmFeaturePanel::showCoordinateTransDlg,this,&MainWidget::onShowCoordinateTransDlg);
     connect(featurePanel, &GwmFeaturePanel::currentChanged,this,&MainWidget::onFeaturePanelCurrentChanged);
     connect(ui->featureSortUpBtn, &QAbstractButton::clicked, featurePanel, &GwmFeaturePanel::onSortUpBtnClicked);
+    connect(ui->featureSortDownBtn, &QAbstractButton::clicked, featurePanel, &GwmFeaturePanel::onSortDownBtnClicked);
+    connect(ui->featureRemoveBtn, &QAbstractButton::clicked, featurePanel, &GwmFeaturePanel::removeLayer);
 }
 
 void MainWidget::setupPropertyPanel()

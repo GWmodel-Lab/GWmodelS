@@ -48,12 +48,6 @@ void GwmFeaturePanel::onSortDownBtnClicked()
     mMapModel->moveDown(selected);
 }
 
-void GwmFeaturePanel::onRemoveBtnClicked()
-{
-    QModelIndex selected = this->selectionModel()->selectedIndexes().first();
-    mMapModel->remove(selected);
-}
-
 void GwmFeaturePanel::setupUi()
 {
     //    mMapModel->setHorizontalHeaderLabels(QStringList() << tr("Features"));

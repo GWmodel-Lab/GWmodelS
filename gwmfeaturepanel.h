@@ -57,17 +57,6 @@ public:
 public slots:
     void onSortUpBtnClicked();
     void onSortDownBtnClicked();
-    void onRemoveBtnClicked();
-
-private:
-    GwmLayerItemModel* mMapModel;
-    bool isMapModelSetted;
-
-    /**
-     * @brief 设置界面
-     */
-    void setupUi();
-    void showContextMenu(const QPoint &pos);
     // 发送信号给地图模块(显示图层)
     void showLayer();
 
@@ -93,6 +82,16 @@ private:
     void csv();
     // 发出信号(显示属性)
     void layerProperty();
+
+private:
+    GwmLayerItemModel* mMapModel;
+    bool isMapModelSetted;
+
+    /**
+     * @brief 设置界面
+     */
+    void setupUi();
+    void showContextMenu(const QPoint &pos);
 };
 
 #endif // GWMFEATUREPANEL_H

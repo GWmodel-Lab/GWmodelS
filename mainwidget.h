@@ -78,7 +78,7 @@ private:
 
     bool askUserForDatumTransfrom(const QgsCoordinateReferenceSystem& sourceCrs, const QgsCoordinateReferenceSystem& destinationCrs, const QgsMapLayer* layer = nullptr);
 
-private slots:
+public slots:
     void onMapSelectionChanged(QgsVectorLayer* layer);
 
     /**
