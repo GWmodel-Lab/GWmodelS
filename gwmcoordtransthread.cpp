@@ -88,6 +88,11 @@ QgsVectorLayer *GwmCoordTransThread::getWorkLayer() const
     return workLayer;
 }
 
+QString GwmCoordTransThread::name() const
+{
+    return tr("Coordinate Transfrom");
+}
+
 QgsVectorLayer *GwmCoordTransThread::getHandleLayer() const
 {
     return handleLayer;

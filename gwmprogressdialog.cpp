@@ -3,10 +3,11 @@
 
 GwmProgressDialog::GwmProgressDialog(GwmTaskThread* thread, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::GwmProgressDialog)
+    ui(new Ui::GwmProgressDialog),
+    mTaskThread(thread)
 {
     ui->setupUi(this);
-    mTaskThread = thread;
+    setWindowTitle(thread->name());
     connect(mTaskThread, &GwmTaskThread::tick, this, &GwmProgressDialog::onTick);
     connect(mTaskThread, &GwmTaskThread::message, this, &GwmProgressDialog::onMessage);
     connect(mTaskThread, &GwmTaskThread::success, this, &GwmProgressDialog::onSuccess);

@@ -180,7 +180,11 @@ void MainWidget::onZoomToLayer(const QModelIndex &index)
     QgsVectorLayer* layer = mapModel->layerFromItem(item);
     if (layer)
     {
-        mapCanvas->setExtent(layer->extent());
+        QgsCoordinateTransform transform;
+        transform.setSourceCrs(layer->crs());
+        transform.setDestinationCrs(QgsProject::instance()->crs());
+        QgsRectangle extent = transform.transformBoundingBox(layer->extent());
+        mapCanvas->setExtent(extent);
         mapCanvas->refresh();
     }
 }

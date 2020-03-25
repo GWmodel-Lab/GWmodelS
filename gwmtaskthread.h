@@ -14,6 +14,9 @@ signals:
     void message(QString message);
     void success();
     void error(QString e);
+
+public:
+    virtual QString name() const;
 };
 
 #endif // GWMTASKTHREAD_H

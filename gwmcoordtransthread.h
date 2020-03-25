@@ -26,6 +26,8 @@ public:
 
     QgsVectorLayer *getWorkLayer() const;
 
+    virtual QString name() const override;
+
 protected:
     void run() override; //新线程入口
 
