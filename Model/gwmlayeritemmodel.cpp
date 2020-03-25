@@ -275,13 +275,13 @@ QList<QgsMapLayer *> GwmLayerItemModel::toMapLayerList()
         {
             if (group->originChild()->checkState() == Qt::CheckState::Checked)
             {
-                layerList.push_front(group->originChild()->layer());
+                layerList.push_back(group->originChild()->layer());
             }
             for (GwmLayerVectorItem* analyse : group->analyseChildren())
             {
                 if (group->checkState() == Qt::CheckState::Checked)
                 {
-                    layerList.push_front(analyse->layer());
+                    layerList.push_back(analyse->layer());
                 }
             }
         }
@@ -325,6 +325,20 @@ bool GwmLayerItemModel::canRemove(const QModelIndex &index)
     switch (item->itemType())
     {
     case GwmLayerItem::Group:
+    case GwmLayerItem::GWR:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool GwmLayerItemModel::canSetSymbol(const QModelIndex &index)
+{
+    GwmLayerItem* item = itemFromIndex(index);
+    switch (item->itemType())
+    {
+    case GwmLayerItem::Group:
+    case GwmLayerItem::Origin:
     case GwmLayerItem::GWR:
         return true;
     default:

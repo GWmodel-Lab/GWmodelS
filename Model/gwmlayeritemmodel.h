@@ -59,6 +59,7 @@ public: // 要素区工具栏相关函数
     bool canMoveUp(const QModelIndex& index);
     bool canMoveDown(const QModelIndex& index);
     bool canRemove(const QModelIndex& index);
+    bool canSetSymbol(const QModelIndex& index);
 
     void moveUp(const QModelIndex& index);
     void moveDown(const QModelIndex& index);

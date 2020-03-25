@@ -133,6 +133,7 @@ void MainWidget::setupFeaturePanel()
     connect(ui->featureSortUpBtn, &QAbstractButton::clicked, featurePanel, &GwmFeaturePanel::onSortUpBtnClicked);
     connect(ui->featureSortDownBtn, &QAbstractButton::clicked, featurePanel, &GwmFeaturePanel::onSortDownBtnClicked);
     connect(ui->featureRemoveBtn, &QAbstractButton::clicked, featurePanel, &GwmFeaturePanel::removeLayer);
+    connect(ui->featureSymbolBtn, &QAbstractButton::clicked, featurePanel, &GwmFeaturePanel::symbol);
 }
 
 void MainWidget::setupPropertyPanel()
@@ -206,6 +207,7 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
         ui->featureSortUpBtn->setEnabled(mapModel->canMoveUp(current));
         ui->featureSortDownBtn->setEnabled(mapModel->canMoveDown(current));
         ui->featureRemoveBtn->setEnabled(mapModel->canRemove(current));
+        ui->featureSymbolBtn->setEnabled(mapModel->canSetSymbol(current));
     }
     else{
         toolbar->setBtnEnabled(false);
