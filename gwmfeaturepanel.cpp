@@ -15,6 +15,7 @@ GwmFeaturePanel::GwmFeaturePanel(QWidget *parent)
     , isMapModelSetted(false)
 {
     setupUi();
+    setHeaderHidden(true);
 }
 
 GwmFeaturePanel::~GwmFeaturePanel()
@@ -33,6 +34,18 @@ void GwmFeaturePanel::setMapModel(GwmLayerItemModel *mapModel)
     mMapModel = mapModel;
     isMapModelSetted = true;
     this->setModel(mMapModel);
+}
+
+void GwmFeaturePanel::onSortUpBtnClicked()
+{
+    QModelIndex selected = this->selectionModel()->selectedIndexes().first();
+    mMapModel->moveUp(selected);
+}
+
+void GwmFeaturePanel::onSortDownBtnClicked()
+{
+    QModelIndex selected = this->selectionModel()->selectedIndexes().first();
+    mMapModel->moveDown(selected);
 }
 
 void GwmFeaturePanel::setupUi()
@@ -61,76 +74,92 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
     // qDebug() << index;
     if (index.isValid())
     {
-        QMenu *menu = new QMenu(this);
         GwmLayerItem* item = (mMapModel->itemFromIndex(index));
-        switch (item->itemType()) {
-        case GwmLayerItem::Group:
-        case GwmLayerItem::Vector:
-        case GwmLayerItem::Origin:
-        case GwmLayerItem::GWR:
-        {
-            // 显示/隐藏
-            QAction *pShow = new QAction(tr("Show/Hide"),this);
-            menu->addAction(pShow);
-            pShow->setCheckable(true);
-            pShow->setChecked(item->checkState() == Qt::CheckState::Checked);
-            connect(pShow, &QAction::triggered, this, &GwmFeaturePanel::showLayer);
+        if (item->itemType() == GwmLayerItem::Symbol)
+            return;
 
+        QMenu *menu = new QMenu(this);
+        // 显示/隐藏
+        QAction *pShow = new QAction(tr("Show/Hide"),this);
+        menu->addAction(pShow);
+        pShow->setCheckable(true);
+        pShow->setChecked(item->checkState() == Qt::CheckState::Checked);
+        connect(pShow, &QAction::triggered, this, &GwmFeaturePanel::showLayer);
+
+        if (!(item->itemType() == GwmLayerItem::Origin))
+        {
             QAction *pRemove = new QAction(tr("Remove"), this);
+            pRemove->setIcon(QIcon(QStringLiteral(":/images/themes/default/mActionRemoveLayer.svg")));
+            pRemove->setEnabled(mMapModel->canRemove(index));
             menu->addAction(pRemove);
             connect(pRemove, &QAction::triggered, this, &GwmFeaturePanel::removeLayer);
 
-            // 缩放到图层
-            QAction *pZoom = new QAction(tr("Zoom to this layer"),this);
-            menu->addAction(pZoom);
-            connect(pZoom, &QAction::triggered, this, &GwmFeaturePanel::zoomLayer);
+            // 上下移动
+            QAction *pMoveUp = new QAction(tr("Move Up"), this);
+            pMoveUp->setIcon(QIcon(QStringLiteral(":/images/themes/default/mActionCollapseTree.svg")));
+            pMoveUp->setEnabled(mMapModel->canMoveUp(index));
+            menu->addAction(pMoveUp);
+            connect(pMoveUp, &QAction::triggered, this, &GwmFeaturePanel::onSortUpBtnClicked);
 
-            QAction *pAttribute = new QAction("属性表",this);
-            menu->addAction(pAttribute);
-            connect(pAttribute, &QAction::triggered,this,&GwmFeaturePanel::attributeTable);
+            QAction *pMoveDown = new QAction(tr("Move Down"), this);
+            pMoveDown->setIcon(QIcon(QStringLiteral(":/images/themes/default/mActionExpandTree.svg")));
+            pMoveDown->setEnabled(mMapModel->canMoveDown(index));
+            menu->addAction(pMoveDown);
+            connect(pMoveDown, &QAction::triggered, this, &GwmFeaturePanel::onSortUpBtnClicked);
+        }
 
-            QAction *pProj = new QAction("投影到坐标系",this);
+        // 缩放到图层
+        QAction *pZoom = new QAction(tr("Zoom to this layer"),this);
+        pZoom->setIcon(QIcon(QStringLiteral(":/images/themes/default/mActionZoomToLayer.svg")));
+        menu->addAction(pZoom);
+        connect(pZoom, &QAction::triggered, this, &GwmFeaturePanel::zoomLayer);
+
+        QAction *pAttribute = new QAction(tr("Attribute Table"),this);
+        menu->addAction(pAttribute);
+        connect(pAttribute, &QAction::triggered,this,&GwmFeaturePanel::attributeTable);
+
+        if (item->itemType() == GwmLayerItem::Group || item->itemType() == GwmLayerItem::Origin)
+        {
+            QAction *pProj = new QAction(tr("Reproject"),this);
             menu->addAction(pProj);
             connect(pProj, &QAction::triggered,this,&GwmFeaturePanel::proj);
-
-            QAction *pSymbol = new QAction("符号",this);
-            menu->addAction(pSymbol);
-            connect(pSymbol, &QAction::triggered,this, &GwmFeaturePanel::symbol);
-            // 导出是二级菜单
-            QAction *pExport = new QAction("导出",this);
-            // menu->addAction("导出");
-            // 二级菜单制作
-            QMenu *subMenu = new QMenu(this);
-            QAction *pESRI = new QAction("ESRI Shapefile",subMenu);
-            subMenu->addAction(pESRI);
-            connect(pESRI, &QAction::triggered,this,&GwmFeaturePanel::esrishp);
-
-            QAction *pGeo = new QAction("GeoJSON",subMenu);
-            subMenu->addAction(pGeo);
-            connect(pGeo, &QAction::triggered,this,&GwmFeaturePanel::geojson);
-
-            QAction *pCsv = new QAction("csv",subMenu);
-            subMenu->addAction(pCsv);
-            connect(pCsv, &QAction::triggered,this,&GwmFeaturePanel::csv);
-
-            QAction *pXls = new QAction("Excel",subMenu);
-            subMenu->addAction(pXls);
-            connect(pXls, &QAction::triggered,this,&GwmFeaturePanel::excel);
-            // 设置二级菜单
-            pExport->setMenu(subMenu);
-
-            // 显示属性
-            QAction *pProperty = new QAction(tr("Layer Property"),this);
-            menu->addAction(pProperty);
-            connect(pProperty, &QAction::triggered,this, &GwmFeaturePanel::layerProperty);
-
-            // QCursor::pos()让menu的位置在鼠标点击的的位置
-            menu->addMenu(subMenu);
-            break;
         }
-        default:
-            break;
-        }
+
+        QAction *pSymbol = new QAction(tr("Symbology"),this);
+        pSymbol->setIcon(QIcon(QStringLiteral(":/images/themes/default/propertyicons/symbology.svg")));
+        menu->addAction(pSymbol);
+        connect(pSymbol, &QAction::triggered,this, &GwmFeaturePanel::symbol);
+
+        // 导出是二级菜单
+        QAction *pExport = new QAction(tr("Export"),this);
+        // menu->addAction("导出");
+        // 二级菜单制作
+        QMenu *subMenu = new QMenu(this);
+        QAction *pESRI = new QAction("ESRI Shapefile",subMenu);
+        subMenu->addAction(pESRI);
+        connect(pESRI, &QAction::triggered,this,&GwmFeaturePanel::esrishp);
+
+        QAction *pGeo = new QAction("GeoJSON",subMenu);
+        subMenu->addAction(pGeo);
+        connect(pGeo, &QAction::triggered,this,&GwmFeaturePanel::geojson);
+
+        QAction *pCsv = new QAction("csv",subMenu);
+        subMenu->addAction(pCsv);
+        connect(pCsv, &QAction::triggered,this,&GwmFeaturePanel::csv);
+
+//        QAction *pXls = new QAction("Excel",subMenu);
+//        subMenu->addAction(pXls);
+//        connect(pXls, &QAction::triggered,this,&GwmFeaturePanel::excel);
+        // 设置二级菜单
+        pExport->setMenu(subMenu);
+
+        // 显示属性
+        QAction *pProperty = new QAction(tr("Property"),this);
+        menu->addAction(pProperty);
+        connect(pProperty, &QAction::triggered,this, &GwmFeaturePanel::layerProperty);
+
+        // QCursor::pos()让menu的位置在鼠标点击的的位置
+        menu->addMenu(subMenu);
         menu->exec(QCursor::pos());
     }
 }

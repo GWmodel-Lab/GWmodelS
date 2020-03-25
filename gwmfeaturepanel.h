@@ -53,15 +53,10 @@ public:
     GwmLayerItemModel *mapModel() const;
     void setMapModel(GwmLayerItemModel *mapModel);
 
-private:
-    GwmLayerItemModel* mMapModel;
-    bool isMapModelSetted;
 
-    /**
-     * @brief 设置界面
-     */
-    void setupUi();
-    void showContextMenu(const QPoint &pos);
+public slots:
+    void onSortUpBtnClicked();
+    void onSortDownBtnClicked();
     // 发送信号给地图模块(显示图层)
     void showLayer();
 
@@ -89,6 +84,16 @@ private:
     void layerProperty();
 
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+
+private:
+    GwmLayerItemModel* mMapModel;
+    bool isMapModelSetted;
+
+    /**
+     * @brief 设置界面
+     */
+    void setupUi();
+    void showContextMenu(const QPoint &pos);
 };
 
 #endif // GWMFEATUREPANEL_H

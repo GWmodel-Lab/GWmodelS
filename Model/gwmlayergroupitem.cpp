@@ -142,3 +142,12 @@ QList<GwmLayerItem *> GwmLayerGroupItem::takeChildren(int position, int count)
 
     return takenItems;
 }
+
+bool GwmLayerGroupItem::moveChildren(int position, int count, int destination)
+{
+    position = position - 1;
+    QList<GwmLayerItem*> removedChildren = takeChildren(position, count);
+    if (removedChildren.size() > 0)
+        return insertChildren(destination, removedChildren);
+    else return false;
+}

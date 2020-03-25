@@ -146,6 +146,14 @@ QList<GwmLayerItem*> GwmLayerItem::takeChildren(int position, int count)
     return takenItems;
 }
 
+bool GwmLayerItem::moveChildren(int position, int count, int destination)
+{
+    QList<GwmLayerItem*> removedChildren = takeChildren(position, count);
+    if (removedChildren.size() > 0)
+        return insertChildren(destination, removedChildren);
+    else return false;
+}
+
 Qt::CheckState GwmLayerItem::checkState() const
 {
     return mCheckState;

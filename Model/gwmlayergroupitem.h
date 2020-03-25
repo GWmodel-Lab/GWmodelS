@@ -31,6 +31,7 @@ public:
     virtual bool insertChildren(int position, QList<GwmLayerItem*> items) override;
     virtual bool appendChildren(QList<GwmLayerItem*> items) override;
     virtual QList<GwmLayerItem*> takeChildren(int position, int count) override;
+    virtual bool moveChildren(int position, int count, int destination) override;
 
     inline void setOriginItem(GwmLayerOriginItem* item) { mOriginChild = item; }
 
