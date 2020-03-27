@@ -30,10 +30,25 @@ SOURCES += \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     TaskThread/gwmsavelayerthread.cpp \
+    attributetable/qgsattributetabledelegate.cpp \
+    attributetable/qgsattributetablefiltermodel.cpp \
+    attributetable/qgsattributetablemodel.cpp \
+    attributetable/qgsattributetableview.cpp \
+    attributetable/qgsdualview.cpp \
+    attributetable/qgsfeaturefilterwidget.cpp \
+    attributetable/qgsfeaturelistmodel.cpp \
+    attributetable/qgsfeaturelistview.cpp \
+    attributetable/qgsfeaturelistviewdelegate.cpp \
+    attributetable/qgsfeatureselectionmodel.cpp \
+    attributetable/qgsfieldconditionalformatwidget.cpp \
+    attributetable/qgsgenericfeatureselectionmanager.cpp \
+    attributetable/qgsorganizetablecolumnsdialog.cpp \
+    attributetable/qgsvectorlayerselectionmanager.cpp \
     gwmattributetableview.cpp \
     gwmcoordtranssettingdialog.cpp \
     TaskThread/gwmcoordtransthread.cpp \
     gwmdelimitedtextfile.cpp \
+    gwmdevattrtable.cpp \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
@@ -63,10 +78,27 @@ HEADERS += \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/utils.h \
     TaskThread/gwmsavelayerthread.h \
+    attributetable/qgsattributetabledelegate.h \
+    attributetable/qgsattributetablefiltermodel.h \
+    attributetable/qgsattributetablemodel.h \
+    attributetable/qgsattributetableview.h \
+    attributetable/qgsdualview.h \
+    attributetable/qgsfeaturefilterwidget_p.h \
+    attributetable/qgsfeaturelistmodel.h \
+    attributetable/qgsfeaturelistview.h \
+    attributetable/qgsfeaturelistviewdelegate.h \
+    attributetable/qgsfeaturemodel.h \
+    attributetable/qgsfeatureselectionmodel.h \
+    attributetable/qgsfieldconditionalformatwidget.h \
+    attributetable/qgsgenericfeatureselectionmanager.h \
+    attributetable/qgsifeatureselectionmanager.h \
+    attributetable/qgsorganizetablecolumnsdialog.h \
+    attributetable/qgsvectorlayerselectionmanager.h \
     gwmattributetableview.h \
     gwmcoordtranssettingdialog.h \
     TaskThread/gwmcoordtransthread.h \
     gwmdelimitedtextfile.h \
+    gwmdevattrtable.h \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
@@ -97,8 +129,13 @@ FORMS += \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui \
+    qgsattributetabledialog.ui \
     qgscoordinateoperationwidgetbase.ui \
     qgsdatumtransformdialogbase.ui \
+    qgsdualviewbase.ui \
+    qgseditconditionalformatrulewidget.ui \
+    qgsfieldconditionalformatwidget.ui \
+    qgsorganizetablecolumnsdialog.ui \
     symbolwindow/qgscategorizedsymbolrendererwidget.ui \
     symbolwindow/qgsgraduatedsymbolrendererwidget.ui \
     symbolwindow/qgsheatmaprendererwidgetbase.ui \

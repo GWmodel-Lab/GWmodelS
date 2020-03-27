@@ -33,6 +33,8 @@
 #include <gwmsaveascsvdialog.h>
 #include <qgsvectorfilewriter.h>
 
+#include "gwmdevattrtable.h"
+
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mapModel(new GwmLayerItemModel)
@@ -478,10 +480,12 @@ void MainWidget::onShowAttributeTable(const QModelIndex &index)
     QgsVectorLayer* currentLayer = mapModel->layerFromItem(item);
     if (currentLayer)
     {
-        currentLayer->setProviderEncoding("UTF-8");
-        GwmAttributeTableView* tv = new GwmAttributeTableView(this);
-        tv->setDisplayMapLayer(mapCanvas, currentLayer);
-        tv->show();
+//        currentLayer->setProviderEncoding("UTF-8");
+//        GwmAttributeTableView* tv = new GwmAttributeTableView(this);
+//        tv->setDisplayMapLayer(mapCanvas, currentLayer);
+//        tv->show();
+        GwmDevAttrTable *d = new GwmDevAttrTable(currentLayer,this);
+        d->show();
     }
 }
 
