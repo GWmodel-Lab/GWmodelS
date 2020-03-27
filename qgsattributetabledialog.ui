@@ -71,7 +71,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QgsFieldExpressionWidget" name="mUpdateExpressionText">
+       <widget class="QgsFieldExpressionWidget" name="mUpdateExpressionText" native="true">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -131,7 +131,7 @@
           <string>Form View</string>
          </property>
          <property name="icon">
-          <iconset resource="../../images/images.qrc">
+          <iconset resource="images/images.qrc">
            <normaloff>:/images/themes/default/mActionFormView.svg</normaloff>:/images/themes/default/mActionFormView.svg</iconset>
          </property>
          <property name="checkable">
@@ -154,7 +154,7 @@
           <string>Table View</string>
          </property>
          <property name="icon">
-          <iconset resource="../../images/images.qrc">
+          <iconset resource="images/images.qrc">
            <normaloff>:/images/themes/default/mActionOpenTable.svg</normaloff>:/images/themes/default/mActionOpenTable.svg</iconset>
          </property>
          <property name="checkable">
@@ -221,7 +221,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionFilter2.svg</normaloff>:/images/themes/default/mActionFilter2.svg</iconset>
    </property>
    <property name="text">
@@ -239,7 +239,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionToggleEditing.svg</normaloff>:/images/themes/default/mActionToggleEditing.svg</iconset>
    </property>
    <property name="text">
@@ -257,7 +257,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionMultiEdit.svg</normaloff>:/images/themes/default/mActionMultiEdit.svg</iconset>
    </property>
    <property name="text">
@@ -269,7 +269,7 @@
   </action>
   <action name="mActionSaveEdits">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionSaveAllEdits.svg</normaloff>:/images/themes/default/mActionSaveAllEdits.svg</iconset>
    </property>
    <property name="text">
@@ -281,7 +281,7 @@
   </action>
   <action name="mActionReload">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionRefresh.svg</normaloff>:/images/themes/default/mActionRefresh.svg</iconset>
    </property>
    <property name="text">
@@ -293,7 +293,7 @@
   </action>
   <action name="mActionAddFeature">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionNewTableRow.svg</normaloff>:/images/themes/default/mActionNewTableRow.svg</iconset>
    </property>
    <property name="text">
@@ -302,7 +302,7 @@
   </action>
   <action name="mActionDeleteSelected">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionDeleteSelectedFeatures.svg</normaloff>:/images/themes/default/mActionDeleteSelectedFeatures.svg</iconset>
    </property>
    <property name="text">
@@ -317,7 +317,7 @@
   </action>
   <action name="mActionExpressionSelect">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mIconExpressionSelect.svg</normaloff>:/images/themes/default/mIconExpressionSelect.svg</iconset>
    </property>
    <property name="text">
@@ -329,7 +329,7 @@
   </action>
   <action name="mActionSelectAll">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionSelectAll.svg</normaloff>:/images/themes/default/mActionSelectAll.svg</iconset>
    </property>
    <property name="text">
@@ -344,7 +344,7 @@
   </action>
   <action name="mActionInvertSelection">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionInvertSelection.svg</normaloff>:/images/themes/default/mActionInvertSelection.svg</iconset>
    </property>
    <property name="text">
@@ -359,7 +359,7 @@
   </action>
   <action name="mActionRemoveSelection">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionDeselectAll.svg</normaloff>:/images/themes/default/mActionDeselectAll.svg</iconset>
    </property>
    <property name="text">
@@ -377,7 +377,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionSelectedToTop.svg</normaloff>:/images/themes/default/mActionSelectedToTop.svg</iconset>
    </property>
    <property name="text">
@@ -389,7 +389,7 @@
   </action>
   <action name="mActionPanMapToSelectedRows">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionPanToSelected.svg</normaloff>:/images/themes/default/mActionPanToSelected.svg</iconset>
    </property>
    <property name="text">
@@ -404,7 +404,7 @@
   </action>
   <action name="mActionZoomMapToSelectedRows">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionZoomToSelected.svg</normaloff>:/images/themes/default/mActionZoomToSelected.svg</iconset>
    </property>
    <property name="text">
@@ -419,7 +419,7 @@
   </action>
   <action name="mActionCutSelectedRows">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionEditCut.svg</normaloff>:/images/themes/default/mActionEditCut.svg</iconset>
    </property>
    <property name="text">
@@ -434,7 +434,7 @@
   </action>
   <action name="mActionCopySelectedRows">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionEditCopy.svg</normaloff>:/images/themes/default/mActionEditCopy.svg</iconset>
    </property>
    <property name="text">
@@ -449,7 +449,7 @@
   </action>
   <action name="mActionPasteFeatures">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionEditPaste.svg</normaloff>:/images/themes/default/mActionEditPaste.svg</iconset>
    </property>
    <property name="text">
@@ -464,7 +464,7 @@
   </action>
   <action name="mActionRemoveAttribute">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionDeleteAttribute.svg</normaloff>:/images/themes/default/mActionDeleteAttribute.svg</iconset>
    </property>
    <property name="text">
@@ -476,7 +476,7 @@
   </action>
   <action name="mActionAddAttribute">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionNewAttribute.svg</normaloff>:/images/themes/default/mActionNewAttribute.svg</iconset>
    </property>
    <property name="text">
@@ -491,7 +491,7 @@
   </action>
   <action name="mActionOpenFieldCalculator">
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionCalculateField.svg</normaloff>:/images/themes/default/mActionCalculateField.svg</iconset>
    </property>
    <property name="text">
@@ -509,7 +509,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mActionConditionalFormatting.svg</normaloff>:/images/themes/default/mActionConditionalFormatting.svg</iconset>
    </property>
    <property name="text">
@@ -524,7 +524,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../../images/images.qrc">
+    <iconset resource="images/images.qrc">
      <normaloff>:/images/themes/default/mDockify.svg</normaloff>:/images/themes/default/mDockify.svg</iconset>
    </property>
    <property name="text">
@@ -556,7 +556,7 @@
   <customwidget>
    <class>QgsFeatureFilterWidget</class>
    <extends>QWidget</extends>
-   <header>qgsfeaturefilterwidget_p.h</header>
+   <header>attributetable/qgsfeaturefilterwidget_p.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
@@ -569,7 +569,7 @@
   <tabstop>mTableViewButton</tabstop>
  </tabstops>
  <resources>
-  <include location="../../images/images.qrc"/>
+  <include location="images/images.qrc"/>
  </resources>
  <connections>
   <connection>

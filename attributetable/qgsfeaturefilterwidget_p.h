@@ -28,6 +28,7 @@
 // implementation detail.  This header file may change from version to
 // version without notice, or even be removed.
 //
+#include "prefix.h"
 
 #include "ui_qgsfeaturefilterwidget.h"
 
@@ -45,7 +46,7 @@ class QgsMessageBar;
  * \ingroup gui
  * \class QgsFeatureFilterWidget
  */
-class GUI_EXPORT QgsFeatureFilterWidget : public QWidget, private Ui::QgsFeatureFilterWidget
+class QgsFeatureFilterWidget : public QWidget, private Ui::QgsFeatureFilterWidget
 {
     Q_OBJECT
 

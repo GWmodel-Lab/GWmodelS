@@ -15,6 +15,7 @@
 #ifndef QGSATTRIBUTELISTVIEWDELEGATE_H
 #define QGSATTRIBUTELISTVIEWDELEGATE_H
 
+#include "prefix.h"
 #include <QItemDelegate>
 #include <QItemSelectionModel>
 #include "qgis_gui.h"

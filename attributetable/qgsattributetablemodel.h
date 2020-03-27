@@ -17,6 +17,7 @@
 #ifndef QGSATTRIBUTETABLEMODEL_H
 #define QGSATTRIBUTETABLEMODEL_H
 
+#include "prefix.h"
 #include <QAbstractTableModel>
 #include "qgis_sip.h"
 #include <QModelIndex>

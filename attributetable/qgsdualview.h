@@ -16,6 +16,7 @@
 #ifndef QGSDUALVIEW_H
 #define QGSDUALVIEW_H
 
+#include "prefix.h"
 #include <QStackedWidget>
 
 #include "ui_qgsdualviewbase.h"

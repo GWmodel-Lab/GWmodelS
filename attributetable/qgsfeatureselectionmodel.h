@@ -15,6 +15,7 @@
 #ifndef QGSFEATURESELECTIONMODEL_H
 #define QGSFEATURESELECTIONMODEL_H
 
+#include "prefix.h"
 #include <QItemSelectionModel>
 #include "qgsfeatureid.h"
 

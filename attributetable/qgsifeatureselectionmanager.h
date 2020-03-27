@@ -16,6 +16,7 @@
 #ifndef QGSIFEATURESELECTIONMANAGER_H
 #define QGSIFEATURESELECTIONMANAGER_H
 
+#include "prefix.h"
 #include <QObject>
 #include "qgis_sip.h"
 #include "qgis_gui.h"

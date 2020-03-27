@@ -16,6 +16,7 @@
 #ifndef QGSATTRIBUTETABLEDELEGATE_H
 #define QGSATTRIBUTETABLEDELEGATE_H
 
+#include "prefix.h"
 #include <QItemDelegate>
 #include "qgis_sip.h"
 #include "qgis_gui.h"

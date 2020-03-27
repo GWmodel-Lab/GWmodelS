@@ -16,6 +16,7 @@
 #ifndef QGSGENERICFEATURESELECTIONMANAGER_H
 #define QGSGENERICFEATURESELECTIONMANAGER_H
 
+#include "prefix.h"
 #include "qgsifeatureselectionmanager.h"
 #include "qgis_gui.h"
 #include "qgsfeatureid.h"

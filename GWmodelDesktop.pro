@@ -36,14 +36,14 @@ SOURCES += \
     attributetable/qgsattributetableview.cpp \
     attributetable/qgsdualview.cpp \
     attributetable/qgsfeaturefilterwidget.cpp \
-    attributetable/qgsfeaturelistmodel.cpp \
-    attributetable/qgsfeaturelistview.cpp \
-    attributetable/qgsfeaturelistviewdelegate.cpp \
-    attributetable/qgsfeatureselectionmodel.cpp \
-    attributetable/qgsfieldconditionalformatwidget.cpp \
-    attributetable/qgsgenericfeatureselectionmanager.cpp \
-    attributetable/qgsorganizetablecolumnsdialog.cpp \
-    attributetable/qgsvectorlayerselectionmanager.cpp \
+#    attributetable/qgsfeaturelistmodel.cpp \
+#    attributetable/qgsfeaturelistview.cpp \
+#    attributetable/qgsfeaturelistviewdelegate.cpp \
+#    attributetable/qgsfeatureselectionmodel.cpp \
+#    attributetable/qgsfieldconditionalformatwidget.cpp \
+#    attributetable/qgsgenericfeatureselectionmanager.cpp \
+#    attributetable/qgsorganizetablecolumnsdialog.cpp \
+#    attributetable/qgsvectorlayerselectionmanager.cpp \
     gwmattributetableview.cpp \
     gwmcoordtranssettingdialog.cpp \
     TaskThread/gwmcoordtransthread.cpp \
@@ -84,16 +84,16 @@ HEADERS += \
     attributetable/qgsattributetableview.h \
     attributetable/qgsdualview.h \
     attributetable/qgsfeaturefilterwidget_p.h \
-    attributetable/qgsfeaturelistmodel.h \
-    attributetable/qgsfeaturelistview.h \
-    attributetable/qgsfeaturelistviewdelegate.h \
-    attributetable/qgsfeaturemodel.h \
-    attributetable/qgsfeatureselectionmodel.h \
-    attributetable/qgsfieldconditionalformatwidget.h \
-    attributetable/qgsgenericfeatureselectionmanager.h \
-    attributetable/qgsifeatureselectionmanager.h \
-    attributetable/qgsorganizetablecolumnsdialog.h \
-    attributetable/qgsvectorlayerselectionmanager.h \
+#    attributetable/qgsfeaturelistmodel.h \
+#    attributetable/qgsfeaturelistview.h \
+#    attributetable/qgsfeaturelistviewdelegate.h \
+#    attributetable/qgsfeaturemodel.h \
+#    attributetable/qgsfeatureselectionmodel.h \
+#    attributetable/qgsfieldconditionalformatwidget.h \
+#    attributetable/qgsgenericfeatureselectionmanager.h \
+#    attributetable/qgsifeatureselectionmanager.h \
+#    attributetable/qgsorganizetablecolumnsdialog.h \
+#    attributetable/qgsvectorlayerselectionmanager.h \
     gwmattributetableview.h \
     gwmcoordtranssettingdialog.h \
     TaskThread/gwmcoordtransthread.h \

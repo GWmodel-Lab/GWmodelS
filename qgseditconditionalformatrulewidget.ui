@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>328</width>
+    <width>356</width>
     <height>331</height>
    </rect>
   </property>
@@ -363,7 +363,7 @@
         <string>Delete</string>
        </property>
        <property name="icon">
-        <iconset resource="../../images/images.qrc">
+        <iconset resource="images/images.qrc">
          <normaloff>:/images/themes/default/mActionDeleteSelected.svg</normaloff>:/images/themes/default/mActionDeleteSelected.svg</iconset>
        </property>
        <property name="toolButtonStyle">
@@ -430,7 +430,7 @@
         <string>…</string>
        </property>
        <property name="icon">
-        <iconset resource="../../images/images.qrc">
+        <iconset resource="images/images.qrc">
          <normaloff>:/images/themes/default/mIconExpression.svg</normaloff>:/images/themes/default/mIconExpression.svg</iconset>
        </property>
       </widget>
@@ -453,15 +453,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../images/images.qrc"/>
-  <include location="../../images/images.qrc"/>
+  <include location="images/images.qrc"/>
  </resources>
  <connections/>
- <buttongroups>
-  <buttongroup name="mFontButtons">
-   <property name="exclusive">
-    <bool>false</bool>
-   </property>
-  </buttongroup>
- </buttongroups>
 </ui>

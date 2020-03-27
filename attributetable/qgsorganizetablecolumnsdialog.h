@@ -17,6 +17,7 @@
 #ifndef QGSORGANIZEFILTERTABLESDIALOG_H_
 #define QGSORGANIZEFILTERTABLESDIALOG_H_
 
+#include "prefix.h"
 #include <QDialog>
 
 #include "ui_qgsorganizetablecolumnsdialog.h"

@@ -16,6 +16,7 @@
 #ifndef QGSVECTORLAYERSELECTIONMANAGER_H
 #define QGSVECTORLAYERSELECTIONMANAGER_H
 
+#include "prefix.h"
 #include "qgsifeatureselectionmanager.h"
 #include "qgis_gui.h"
 

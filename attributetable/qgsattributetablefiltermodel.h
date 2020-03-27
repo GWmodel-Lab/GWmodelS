@@ -17,6 +17,7 @@
 #ifndef QGSATTRIBUTETABLEFILTERMODEL_H
 #define QGSATTRIBUTETABLEFILTERMODEL_H
 
+#include "prefix.h"
 #include <QSortFilterProxyModel>
 #include <QModelIndex>
 

@@ -16,6 +16,7 @@
 #ifndef QGSATTRIBUTETABLEVIEW_H
 #define QGSATTRIBUTETABLEVIEW_H
 
+#include "prefix.h"
 #include <QTableView>
 #include <QAction>
 #include "qgsfeatureid.h"

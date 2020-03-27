@@ -40,7 +40,7 @@
         <string>New Rule</string>
        </property>
        <property name="icon">
-        <iconset resource="../../images/images.qrc">
+        <iconset resource="images/images.qrc">
          <normaloff>:/images/themes/default/symbologyAdd.svg</normaloff>:/images/themes/default/symbologyAdd.svg</iconset>
        </property>
       </widget>
@@ -109,14 +109,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../images/images.qrc"/>
+  <include location="images/images.qrc"/>
  </resources>
  <connections/>
- <buttongroups>
-  <buttongroup name="mFontButtons">
-   <property name="exclusive">
-    <bool>false</bool>
-   </property>
-  </buttongroup>
- </buttongroups>
 </ui>

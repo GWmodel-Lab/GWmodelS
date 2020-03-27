@@ -15,6 +15,7 @@
 #ifndef QGSFEATUREMODEL_H
 #define QGSFEATUREMODEL_H
 
+#include "prefix.h"
 #include "qgis_gui.h"
 #include "qgsfeatureid.h"
 #include <QModelIndex>

@@ -15,6 +15,7 @@
 #ifndef QGSFIELDCONDITIONALFORMATWIDGET_H
 #define QGSFIELDCONDITIONALFORMATWIDGET_H
 
+#include "prefix.h"
 #include <QWidget>
 #include <QStandardItemModel>
 #include <QStandardItem>

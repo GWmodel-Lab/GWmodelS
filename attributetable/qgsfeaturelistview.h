@@ -16,6 +16,7 @@
 #ifndef QGSFEATURELISTVIEW_H
 #define QGSFEATURELISTVIEW_H
 
+#include "prefix.h"
 #include <QListView>
 #include "qgis_sip.h"
 #include <qdebug.h>

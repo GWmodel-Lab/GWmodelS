@@ -15,6 +15,7 @@
 #ifndef QGSATTRIBUTEEDITORMODEL_H
 #define QGSATTRIBUTEEDITORMODEL_H
 
+#include "prefix.h"
 #include "qgsexpression.h"
 
 #include <QSortFilterProxyModel>

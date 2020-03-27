@@ -1,6 +1,7 @@
 #ifndef GWMDEVATTRTABLE_H
 #define GWMDEVATTRTABLE_H
 
+#include "prefix.h"
 #include <QDialog>
 #include "ui_qgsattributetabledialog.h"
 
