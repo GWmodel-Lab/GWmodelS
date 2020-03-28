@@ -27,6 +27,7 @@ SOURCES += \
     Model/gwmlayeroriginitem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
+    TaskThread/gwmsavelayerthread.cpp \
     gwmattributetableview.cpp \
     gwmcoordtranssettingdialog.cpp \
     TaskThread/gwmcoordtransthread.cpp \
@@ -34,11 +35,13 @@ SOURCES += \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
+    gwmgwroptionsdialog.cpp \
     gwmmaptoolidentifyfeature.cpp \
     gwmopenxyeventlayerdialog.cpp \
     gwmprogressdialog.cpp \
     gwmpropertypanel.cpp \
     TaskThread/gwmtaskthread.cpp \
+    gwmsaveascsvdialog.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
@@ -57,6 +60,7 @@ HEADERS += \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/utils.h \
+    TaskThread/gwmsavelayerthread.h \
     gwmattributetableview.h \
     gwmcoordtranssettingdialog.h \
     TaskThread/gwmcoordtransthread.h \
@@ -64,11 +68,13 @@ HEADERS += \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
+    gwmgwroptionsdialog.h \
     gwmmaptoolidentifyfeature.h \
     gwmopenxyeventlayerdialog.h \
     gwmprogressdialog.h \
     gwmpropertypanel.h \
     TaskThread/gwmtaskthread.h \
+    gwmsaveascsvdialog.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
@@ -81,9 +87,11 @@ FORMS += \
     gwmfeaturepanel.ui \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
+    gwmgwroptionsdialog.ui \
     gwmopenxyeventlayerdialog.ui \
     gwmprogressdialog.ui \
     gwmpropertypanel.ui \
+    gwmsaveascsvdialog.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui \

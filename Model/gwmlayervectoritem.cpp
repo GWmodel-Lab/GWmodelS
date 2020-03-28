@@ -5,6 +5,8 @@
 #include <qgscategorizedsymbolrenderer.h>
 #include <qgsvectorfilewritertask.h>
 #include <qgsapplication.h>
+#include "TaskThread/gwmsavelayerthread.h"
+#include "gwmprogressdialog.h"
 
 GwmLayerVectorItem::SymbolType GwmLayerVectorItem::renderTypeToSymbolType(QString type)
 {
@@ -208,14 +210,28 @@ void GwmLayerVectorItem::save(QString filePath, QString fileName, QString fileTy
     if (fileType == "shp"){
         options.driverName = "ESRI Shapefile";
     }
+    else if(fileType == "csv"){
+        qDebug() << fileType;
+        const QList< QgsVectorFileWriter::DriverDetails > drivers = QgsVectorFileWriter::ogrDriverList();
+        for ( const QgsVectorFileWriter::DriverDetails &driver : drivers )
+        {
+//          mFormatComboBox->addItem( driver.longName, driver.driverName );
+          if(driver.longName == "Comma Separated Value [CSV]"){
+              qDebug() << driver.driverName;
+              options.driverName = driver.driverName;
+          }
+        }
+    }
     else{
         options.driverName = "ESRI Shapefile";
     }
+    GwmSaveLayerThread* thread = new GwmSaveLayerThread(mLayer,filePath,options);
+    GwmProgressDialog* progressDialog = new GwmProgressDialog(thread);
+    progressDialog->exec();
+//    QgsVectorFileWriterTask *writerTask = new QgsVectorFileWriterTask( mLayer, filePath, options );
+//    // when writer is successful:
 
-    QgsVectorFileWriterTask *writerTask = new QgsVectorFileWriterTask( mLayer, filePath, options );
-    // when writer is successful:
-
-    QgsApplication::taskManager()->addTask( writerTask );
+//    QgsApplication::taskManager()->addTask( writerTask );
 }
 
 
