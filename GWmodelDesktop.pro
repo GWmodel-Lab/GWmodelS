@@ -5,6 +5,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++11
 CONFIG += qwt
 CONFIG += resources_big
+CONFIG += debug_and_release
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -190,9 +191,13 @@ INCLUDEPATH += "$(QT_HOME)/include/qwt"
 ##Qwt END
 
 ## QGIS
-INCLUDEPATH += "$(OSGEO_HOME)/include"
-INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-dev/include"
-LIBS += -L"$(OSGEO_HOME)/apps/qgis-dev/lib" -lqgis_core -lqgis_gui
+INCLUDEPATH += "C:\OSGeo4W64\include"
+INCLUDEPATH += "C:\OSGeo4W64\apps\qgis-dev\include"
+CONFIG(debug, debug|release) {
+    LIBS += -L"C:\OSGeo4W64\apps\qgis-debug\lib" -lqgis_core -lqgis_gui
+} else {
+    LIBS += -L"C:\OSGeo4W64\apps\qgis-dev\lib" -lqgis_core -lqgis_gui
+}
 LIBS += -L"$(OSGEO_HOME)/lib" -lgdal_i
 GDAL_DATA = ".\share\gdal"
 ## QGIS END
