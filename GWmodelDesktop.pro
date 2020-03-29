@@ -7,6 +7,11 @@ CONFIG += qwt
 CONFIG += resources_big
 CONFIG += debug_and_release
 
+QMAKE_CXXFLAGS_RELEASE += /Zi
+QMAKE_CXXFLAGS_RELEASE += /Od
+QMAKE_LFLAGS_RELEASE += /DEBUG
+
+
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -186,16 +191,21 @@ FORMS += \
     symbolwindow/widget_set_dd_value.ui
 ##Qwt
 DEFINES += QT_DLL QWT_DLL
-LIBS += -L"$(QT_HOME)/lib" -lqwt
+CONFIG(debug, debug|release) {
+    LIBS += -L"$(QT_HOME)/lib" -lqwtd
+} else {
+    LIBS += -L"$(QT_HOME)/lib" -lqwt
+}
 INCLUDEPATH += "$(QT_HOME)/include/qwt"
 ##Qwt END
 
 ## QGIS
 INCLUDEPATH += "C:\OSGeo4W64\include"
-INCLUDEPATH += "C:\OSGeo4W64\apps\qgis-dev\include"
 CONFIG(debug, debug|release) {
+    INCLUDEPATH += "C:\OSGeo4W64\apps\qgis-debug\include"
     LIBS += -L"C:\OSGeo4W64\apps\qgis-debug\lib" -lqgis_core -lqgis_gui
 } else {
+    INCLUDEPATH += "C:\OSGeo4W64\apps\qgis-dev\include"
     LIBS += -L"C:\OSGeo4W64\apps\qgis-dev\lib" -lqgis_core -lqgis_gui
 }
 LIBS += -L"$(OSGEO_HOME)/lib" -lgdal_i
