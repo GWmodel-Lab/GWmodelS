@@ -263,10 +263,12 @@ void MainWidget::onSaveLayer()
         if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
             if(layerItem->provider() != "ogr"){
                 QString filePath = QFileDialog::getSaveFileName(this,tr("Save file"),tr(""),tr("ESRI Shapefile (*.shp)"));
-                QFileInfo fileInfo(filePath);
-                QString fileName = fileInfo.baseName();
-                QString file_suffix = fileInfo.suffix();
-                layerItem->save(filePath,fileName,file_suffix);
+                if(filePath != ""){
+                    QFileInfo fileInfo(filePath);
+                    QString fileName = fileInfo.baseName();
+                    QString file_suffix = fileInfo.suffix();
+                    layerItem->save(filePath,fileName,file_suffix);
+                }
             }
             else
             {
@@ -302,16 +304,18 @@ void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
         GwmSaveAsCSVDialog* saveAsCSVDlg = new GwmSaveAsCSVDialog();
         if(saveAsCSVDlg->exec() == QDialog::Accepted){
             QString filePath = saveAsCSVDlg->filepath();
-            QFileInfo fileInfo(filePath);
-            QString fileName = fileInfo.baseName();
-            QString file_suffix = fileInfo.suffix();
-            QgsVectorFileWriter::SaveVectorOptions& options = *(new QgsVectorFileWriter::SaveVectorOptions());
-            if(saveAsCSVDlg->isAddXY()){
-                QStringList layerOptions;
-                layerOptions << QStringLiteral( "%1=%2" ).arg( "GEOMETRY", "AS_XY" );
-                options.layerOptions = layerOptions;
+            if(filePath != ""){
+                QFileInfo fileInfo(filePath);
+                QString fileName = fileInfo.baseName();
+                QString file_suffix = fileInfo.suffix();
+                QgsVectorFileWriter::SaveVectorOptions& options = *(new QgsVectorFileWriter::SaveVectorOptions());
+                if(saveAsCSVDlg->isAddXY()){
+                    QStringList layerOptions;
+                    layerOptions << QStringLiteral( "%1=%2" ).arg( "GEOMETRY", "AS_XY" );
+                    options.layerOptions = layerOptions;
+                }
+                layerItem->save(filePath,fileName,file_suffix,options);
             }
-            layerItem->save(filePath,fileName,file_suffix,options);
         }
     }
 }
@@ -337,10 +341,12 @@ void MainWidget::onExportLayer(QString filetype)
         }
         if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
                 QString filePath = QFileDialog::getSaveFileName(this,tr("Save file"),tr(""),filetype);
-                QFileInfo fileInfo(filePath);
-                QString fileName = fileInfo.baseName();
-                QString file_suffix = fileInfo.suffix();
-                layerItem->save(filePath,fileName,file_suffix);
+                if(filePath != ""){
+                    QFileInfo fileInfo(filePath);
+                    QString fileName = fileInfo.baseName();
+                    QString file_suffix = fileInfo.suffix();
+                    layerItem->save(filePath,fileName,file_suffix);
+                }
         }
     }
 }
