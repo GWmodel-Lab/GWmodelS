@@ -17,22 +17,21 @@ void GwmSaveLayerThread::run()
     this->cancelFlag = 0;
     connect( writerTask, &QgsVectorFileWriterTask::completed, this, [=]( const QString & newFilename, const QString & newLayer )
     {
-        qDebug() << newFilename;
-        emit tick(99,100);
+        qDebug() << "[GwmSaveLayerThread::run] QgsVectorFileWriterTask::completed" << newFilename;
         emit success();
     });
     connect( writerTask, &QgsVectorFileWriterTask::taskCompleted, this, [=]( )
     {
-        qDebug() << "newFilename";
-
-        emit tick(99,100);
+        qDebug() << "[GwmSaveLayerThread::run] QgsVectorFileWriterTask::taskCompleted" << "newFilename";
         emit success();
     });
-//    connect( writerTask, &QgsVectorFileWriterTask::errorOccurred, this, [=](int error, const QString & errorMessage)
-//    {
-//        emit error(errorMessage);
-//    });
+    connect( writerTask, &QgsVectorFileWriterTask::errorOccurred, this, [=](int err, const QString & errorMessage)
+    {
+        qDebug() << "[GwmSaveLayerThread::run] QgsVectorFileWriterTask::errorOccurred" << errorMessage;
+        emit error(errorMessage);
+    });
     QgsApplication::taskManager()->addTask( writerTask );
+    emit tick(0, 0);
 }
 
 void GwmSaveLayerThread::onCancelTrans(int flag){

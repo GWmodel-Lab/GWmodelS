@@ -61,8 +61,8 @@ void GwmCoordTransThread::run()
                 newLayerDataProvider->addFeature(f);
             }
 //            sleep(0.2);
-            emit tick(progress,total);
             progress++;
+            emit tick(progress,total);
         }
     }
     workLayer->commitChanges();
