@@ -30,7 +30,8 @@
 #include "gwmprogressdialog.h"
 #include "gwmcoordtranssettingdialog.h"
 #include "TaskThread/gwmcoordtransthread.h"
-
+#include <gwmsaveascsvdialog.h>
+#include <qgsvectorfilewriter.h>
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -112,9 +113,10 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::moveBtnSignal, this, &MainWidget::onNavigateMode);
     connect(toolbar, &GwmToolbar::editBtnSignal, this, &MainWidget::onEditMode);
     connect(toolbar, &GwmToolbar::saveLayerBtnSignal, this, &MainWidget::onSaveLayer);
-    connect(toolbar, &GwmToolbar::exportLayerBtnSignal, this, &MainWidget::onExportLayer);
+    connect(toolbar, &GwmToolbar::exportLayerBtnSignal, this, &MainWidget::onExportLayerAsShpfile);
     connect(toolbar, &GwmToolbar::zoomToLayerBtnSignal,this,&MainWidget::onZoomToLayerBtn);
     connect(toolbar, &GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
+    connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRBtnClicked);
 
 }
 
@@ -130,6 +132,7 @@ void MainWidget::setupFeaturePanel()
     connect(featurePanel, &GwmFeaturePanel::showSymbolSettingSignal, this, &MainWidget::onShowSymbolSetting);
     connect(featurePanel, &GwmFeaturePanel::showCoordinateTransDlg,this,&MainWidget::onShowCoordinateTransDlg);
     connect(featurePanel, &GwmFeaturePanel::currentChanged,this,&MainWidget::onFeaturePanelCurrentChanged);
+    connect(featurePanel,&GwmFeaturePanel::sendDataSigCsv,this,&MainWidget::onExportLayerAsCsv);
     connect(ui->featureSortUpBtn, &QAbstractButton::clicked, featurePanel, &GwmFeaturePanel::onSortUpBtnClicked);
     connect(ui->featureSortDownBtn, &QAbstractButton::clicked, featurePanel, &GwmFeaturePanel::onSortDownBtnClicked);
     connect(ui->featureRemoveBtn, &QAbstractButton::clicked, featurePanel, &GwmFeaturePanel::removeLayer);
@@ -260,25 +263,64 @@ void MainWidget::onSaveLayer()
         if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
             if(layerItem->provider() != "ogr"){
                 QString filePath = QFileDialog::getSaveFileName(this,tr("Save file"),tr(""),tr("ESRI Shapefile (*.shp)"));
-                QFileInfo fileInfo(filePath);
-                QString fileName = fileInfo.baseName();
-                QString file_suffix = fileInfo.suffix();
-                layerItem->save(filePath,fileName,file_suffix);
-
+                if(filePath != ""){
+                    QFileInfo fileInfo(filePath);
+                    QString fileName = fileInfo.baseName();
+                    QString file_suffix = fileInfo.suffix();
+                    layerItem->save(filePath,fileName,file_suffix);
+                }
             }
             else
             {
-                QString filePath = layerItem->path();
-                QFileInfo fileInfo(filePath);
-                QString fileName = fileInfo.baseName();
-                QString file_suffix = fileInfo.suffix();
-                layerItem->save(filePath,fileName,file_suffix);
+                 mapModel->layerFromItem(item)->commitChanges();
             }
         }
     }
 }
 
-void MainWidget::onExportLayer()
+void MainWidget::onExportLayerAsShpfile()
+{
+    onExportLayer(tr("ESRI Shapefile (*.shp)"));
+}
+
+void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
+{
+//    onExportLayer(tr("CSV (*.csv)"));
+    GwmLayerItem* item = mapModel->itemFromIndex(index);
+    GwmLayerVectorItem* layerItem;
+    switch (item->itemType()) {
+        case GwmLayerItem::GwmLayerItemType::Group:
+            layerItem = ((GwmLayerGroupItem*)item)->originChild();
+        break;
+        case GwmLayerItem::GwmLayerItemType::Vector:
+        case GwmLayerItem::GwmLayerItemType::Origin:
+        case GwmLayerItem::GwmLayerItemType::GWR:
+            layerItem = ((GwmLayerVectorItem*)item);
+        break;
+        default:
+            layerItem = nullptr;
+    }
+    if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
+        GwmSaveAsCSVDialog* saveAsCSVDlg = new GwmSaveAsCSVDialog();
+        if(saveAsCSVDlg->exec() == QDialog::Accepted){
+            QString filePath = saveAsCSVDlg->filepath();
+            if(filePath != ""){
+                QFileInfo fileInfo(filePath);
+                QString fileName = fileInfo.baseName();
+                QString file_suffix = fileInfo.suffix();
+                QgsVectorFileWriter::SaveVectorOptions& options = *(new QgsVectorFileWriter::SaveVectorOptions());
+                if(saveAsCSVDlg->isAddXY()){
+                    QStringList layerOptions;
+                    layerOptions << QStringLiteral( "%1=%2" ).arg( "GEOMETRY", "AS_XY" );
+                    options.layerOptions = layerOptions;
+                }
+                layerItem->save(filePath,fileName,file_suffix,options);
+            }
+        }
+    }
+}
+
+void MainWidget::onExportLayer(QString filetype)
 {
     QModelIndexList selected = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex index : selected)
@@ -298,11 +340,13 @@ void MainWidget::onExportLayer()
                 layerItem = nullptr;
         }
         if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
-                QString filePath = QFileDialog::getSaveFileName(this,tr("Save file"),tr(""),tr("ESRI Shapefile (*.shp)"));
-                QFileInfo fileInfo(filePath);
-                QString fileName = fileInfo.baseName();
-                QString file_suffix = fileInfo.suffix();
-                layerItem->save(filePath,fileName,file_suffix);
+                QString filePath = QFileDialog::getSaveFileName(this,tr("Save file"),tr(""),filetype);
+                if(filePath != ""){
+                    QFileInfo fileInfo(filePath);
+                    QString fileName = fileInfo.baseName();
+                    QString file_suffix = fileInfo.suffix();
+                    layerItem->save(filePath,fileName,file_suffix);
+                }
         }
     }
 }
@@ -322,6 +366,13 @@ void MainWidget::onZoomToSelection(){
         mapCanvas->zoomToSelected(layer);
         mapCanvas->refresh();
     }
+}
+
+void MainWidget::onGWRBtnClicked()
+{
+    QList<QgsMapLayer*> vectorLayerList = mapModel->toMapLayerList();
+    GwmGWROptionsDialog* gwrdialog = new GwmGWROptionsDialog(vectorLayerList);
+    gwrdialog->exec();
 }
 
 bool MainWidget::askUserForDatumTransfrom(const QgsCoordinateReferenceSystem &sourceCrs, const QgsCoordinateReferenceSystem &destinationCrs, const QgsMapLayer *layer)

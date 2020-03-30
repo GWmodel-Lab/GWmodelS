@@ -16,9 +16,10 @@
 #include "symbolwindow/gwmsymbolwindow.h"
 
 #include <gwmcoordtranssettingdialog.h>
+#include <gwmgwroptionsdialog.h>
 
 namespace Ui {
-class MainWidget;
+    class MainWidget;
 }
 
 class MainWidget : public QWidget
@@ -100,7 +101,9 @@ public slots:
     void onNavigateMode();
     void onEditMode();
     void onSaveLayer();
-    void onExportLayer();
+    void onExportLayerAsShpfile();
+    void onExportLayerAsCsv(const QModelIndex &index);
+    void onExportLayer(QString filetype);
     void onZoomToSelection();
     void onZoomToLayerBtn();
 
@@ -108,7 +111,7 @@ public slots:
 
     void refreshCanvas();
     void onShowCoordinateTransDlg(const QModelIndex &index);
-
+    void onGWRBtnClicked();
 
    // void transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index);
 

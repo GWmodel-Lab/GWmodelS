@@ -10,6 +10,8 @@ CONFIG += qwt
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += M_PI=3.14159265358979323846
+DEFINES += M_PI_2=1.57079632679489661923
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -27,6 +29,7 @@ SOURCES += \
     Model/gwmlayeroriginitem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
+    TaskThread/gwmsavelayerthread.cpp \
     gwmattributetableview.cpp \
     gwmcoordtranssettingdialog.cpp \
     TaskThread/gwmcoordtransthread.cpp \
@@ -34,11 +37,13 @@ SOURCES += \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
+    gwmgwroptionsdialog.cpp \
     gwmmaptoolidentifyfeature.cpp \
     gwmopenxyeventlayerdialog.cpp \
     gwmprogressdialog.cpp \
     gwmpropertypanel.cpp \
     TaskThread/gwmtaskthread.cpp \
+    gwmsaveascsvdialog.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
@@ -57,6 +62,7 @@ HEADERS += \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/utils.h \
+    TaskThread/gwmsavelayerthread.h \
     gwmattributetableview.h \
     gwmcoordtranssettingdialog.h \
     TaskThread/gwmcoordtransthread.h \
@@ -64,11 +70,13 @@ HEADERS += \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
+    gwmgwroptionsdialog.h \
     gwmmaptoolidentifyfeature.h \
     gwmopenxyeventlayerdialog.h \
     gwmprogressdialog.h \
     gwmpropertypanel.h \
     TaskThread/gwmtaskthread.h \
+    gwmsaveascsvdialog.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
@@ -81,9 +89,11 @@ FORMS += \
     gwmfeaturepanel.ui \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
+    gwmgwroptionsdialog.ui \
     gwmopenxyeventlayerdialog.ui \
     gwmprogressdialog.ui \
     gwmpropertypanel.ui \
+    gwmsaveascsvdialog.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui \
