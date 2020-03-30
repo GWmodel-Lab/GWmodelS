@@ -9,4 +9,8 @@
 #define M_PI_2 (1.57079632679489661923)
 #endif
 
+#ifndef DOUBLE_EPS
+#define DOUBLE_EPS (1e-8)
+#endif
+
 #endif // PREFIX_H

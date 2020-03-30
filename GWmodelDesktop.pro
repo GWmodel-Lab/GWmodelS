@@ -22,6 +22,7 @@ SOURCES += \
     DelimitedText/qgsdelimitedtextfeatureiterator.cpp \
     DelimitedText/qgsdelimitedtextfile.cpp \
     DelimitedText/qgsdelimitedtextprovider.cpp \
+    GWmodel/GWmodel.cpp \
     Model/gwmlayergroupitem.cpp \
     Model/gwmlayergwritem.cpp \
     Model/gwmlayeritem.cpp \
@@ -78,6 +79,7 @@ HEADERS += \
     DelimitedText/qgsdelimitedtextfeatureiterator.h \
     DelimitedText/qgsdelimitedtextfile.h \
     DelimitedText/qgsdelimitedtextprovider.h \
+    GWmodel/GWmodel.h \
     Model/gwmlayergroupitem.h \
     Model/gwmlayergwritem.h \
     Model/gwmlayeritem.h \
@@ -185,6 +187,11 @@ LIBS += -L"$(OSGEO_HOME)/apps/qgis-dev/lib" -lqgis_core -lqgis_gui
 LIBS += -L"$(OSGEO_HOME)/lib" -lgdal_i
 GDAL_DATA = ".\share\gdal"
 ## QGIS END
+
+## Armadillo
+INCLUDEPATH += "$(QT_HOME)/include/armadillo"
+LIBS += -L"$(QT_HOME)/lib" -larmadillo -lblas_win64_MT -llapack_win64_MT
+## Armadillo END
 
 TRANSLATIONS += \
     GWmodelDesktop_zh_CN.ts
