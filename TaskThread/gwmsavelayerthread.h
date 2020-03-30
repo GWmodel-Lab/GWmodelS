@@ -8,7 +8,7 @@
 class GwmSaveLayerThread: public GwmTaskThread
 {
 public:
-    GwmSaveLayerThread(QgsVectorLayer* layer,QString filepath,QgsVectorFileWriter::SaveVectorOptions& options);
+    GwmSaveLayerThread(QgsVectorLayer* layer,QString filepath,QgsVectorFileWriter::SaveVectorOptions& mOptions);
     int cancelFlag;
     virtual QString name() const override;
 
@@ -19,8 +19,8 @@ public slots:
     void onCancelTrans(int canceledFlag);
 private:
     QgsVectorLayer* mLayer;
-    QString filePath;
-    QgsVectorFileWriter::SaveVectorOptions& options;
+    QString mFilePath;
+    QgsVectorFileWriter::SaveVectorOptions& mOptions;
 };
 
 #endif // GWMSAVELAYERTHREAD_H
