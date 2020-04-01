@@ -31,6 +31,7 @@ SOURCES += \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
+    TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmsavelayerthread.cpp \
 #    attributetable/qgsattributetabledelegate.cpp \
 #    attributetable/qgsattributetablefiltermodel.cpp \
@@ -88,7 +89,6 @@ HEADERS += \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/utils.h \
-    TaskThread/gwmcsvtodatthread.h \
     TaskThread/gwmsavelayerthread.h \
 #    attributetable/qgsattributetabledelegate.h \
 #    attributetable/qgsattributetablefiltermodel.h \

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>GWR Configure</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,1,1,1,1">
    <item>
@@ -152,6 +152,9 @@
           <property name="text">
            <string>Adaptive</string>
           </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item>
@@ -200,24 +203,136 @@
       </item>
       <item row="1" column="1">
        <layout class="QGridLayout" name="gridLayout_4">
+        <item row="1" column="0">
+         <widget class="QRadioButton" name="mBwSizeCustomizeRadio">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Customize</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="0" colspan="2">
          <widget class="QRadioButton" name="mBwSizeAutomaticRadio">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Automatic</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLineEdit" name="mBwSizeValue"/>
-        </item>
-        <item row="1" column="2">
-         <widget class="QComboBox" name="mBwSizeUnit"/>
-        </item>
-        <item row="1" column="0">
-         <widget class="QRadioButton" name="mBwSizeCustomizeRadio">
-          <property name="text">
-           <string>Customize</string>
+         <widget class="QStackedWidget" name="mBwSizeSettingStack">
+          <property name="currentIndex">
+           <number>0</number>
           </property>
+          <widget class="QWidget" name="page_4">
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QSpinBox" name="mBwSizeAdaptiveSize"/>
+            </item>
+            <item>
+             <widget class="QComboBox" name="mBwSizeAdaptiveUnit">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>x1</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>x10</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>x100</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>x1000</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="page_5">
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QDoubleSpinBox" name="mBwSizeFixedSize"/>
+            </item>
+            <item>
+             <widget class="QComboBox" name="mBwSizeFixedUnit">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>m</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>km</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>mile</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </item>
        </layout>
@@ -321,6 +436,9 @@
           <property name="text">
            <string>None</string>
           </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item>
@@ -367,7 +485,7 @@
       <item row="1" column="1">
        <widget class="QStackedWidget" name="stackedWidget">
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="page">
          <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -408,7 +526,11 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QLineEdit" name="mThreadNum"/>
+           <widget class="QSpinBox" name="mThreadNum">
+            <property name="maximum">
+             <number>8</number>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -428,7 +550,11 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QLineEdit" name="mSampleGroupSize"/>
+           <widget class="QSpinBox" name="mSampleGroupSize">
+            <property name="maximum">
+             <number>4096</number>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

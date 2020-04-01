@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
+#include "TaskThread/gwmgwrtaskthread.h"
 
 namespace Ui {
 class GwmGWROptionsDialog;
@@ -12,17 +13,6 @@ class GwmGWROptionsDialog;
 class GwmGWROptionsDialog : public QDialog
 {
     Q_OBJECT
-
-public:
-    enum GwmBandWidthType{
-        Fixed,
-        Variable
-    };
-    enum GwmApproachType{
-        None,
-        Multithreading,
-        GPU
-    };
 
 public:
     explicit GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList,QWidget *parent = nullptr);
@@ -50,14 +40,14 @@ public slots:
 
 
 public:
-    QString thetaValue();
-    QString pValue();
-    GwmBandWidthType bandwidthType();
-    GwmApproachType approachType();
-    QString bandwidthSize();
+    QString crsRotateTheta();
+    QString crsRotateP();
+    GwmGWRTaskThread::BandwidthType bandwidthType();
+    GwmGWRTaskThread::ParallelMethod approachType();
+    QVariant bandwidthSize();
     QString bandWidthUnit();
-    QString sampleGroupSize();
-    QString threadNum();
+    QString parallelGPUBatchSize();
+    QString parallelMultiThreadNum();
 };
 
 #endif // GWMGWROPTIONSDIALOG_H

@@ -45,6 +45,10 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList,QWi
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onGPURadioToggled);
+
+    ui->mBwTypeAdaptiveRadio->setChecked(true);
+    ui->mBwSizeAutomaticRadio->setChecked(true);
+    ui->mCalcParallelNoneRadio->setChecked(true);
 }
 
 GwmGWROptionsDialog::~GwmGWROptionsDialog()
@@ -59,7 +63,7 @@ void GwmGWROptionsDialog::layerChanged(int index)
         mLayer = nullptr;
     }
     mLayer =  (QgsVectorLayer*)mapLayerList[index];
-    QList<int> QgsAttributeList = mLayer->attributeList();
+    QList<int> attributeList = mLayer->attributeList();
     if (mIndepVarModel)
     {
         mIndepVarModel->clear();
@@ -70,7 +74,7 @@ void GwmGWROptionsDialog::layerChanged(int index)
     }
     qDebug() << "layerChanged";
     ui->mDepVarComboBox->clear();
-    for (int index:QgsAttributeList)
+    for (int index : attributeList)
     {
         QString attributeName = static_cast<QString>(mLayer->attributeDisplayName(index));
         ui->mDepVarComboBox->addItem(attributeName);
@@ -85,13 +89,14 @@ void GwmGWROptionsDialog::onDepVarChanged(const int index)
     {
         mIndepVarModel->clear();
     }
-    QList<int> QgsAttributeList = mLayer->attributeList();
-    for(int index:QgsAttributeList)
+    QList<int> attributeList = mLayer->attributeList();
+    for(int index : attributeList)
     {
         QString attributeName = static_cast<QString>(mLayer->attributeDisplayName(index));
         if (attributeName != depVarName)
         {
             QStandardItem *item = new QStandardItem(attributeName);
+            item->setData(index);
             mIndepVarModel->appendRow(item);
         }
     }
@@ -112,13 +117,13 @@ void GwmGWROptionsDialog::onAddIndepVarBtn()
 //        qDebug() << "mSelectedAttributeModel";
     }
     QModelIndexList selected = ui->mIndepVarView->selectionModel()->selectedIndexes();
-    for(QModelIndex index:selected){
+    for(QModelIndex index : selected){
         if(index.isValid()){
             QStandardItem *item = mIndepVarModel->itemFromIndex(index)->clone();
             mSelectedIndepVarModel->appendRow(item);
         }
     }
-    for(QModelIndex index:selected)
+    for(QModelIndex index : selected)
     {
         if(index.isValid()){
             mIndepVarModel->removeRows(index.row(),1);
@@ -145,39 +150,39 @@ void GwmGWROptionsDialog::onDelIndepVarBtn()
     }
 }
 
-QString GwmGWROptionsDialog::thetaValue()
+QString GwmGWROptionsDialog::crsRotateTheta()
 {
     return ui->mThetaValue->text();
 }
 
-QString GwmGWROptionsDialog::pValue()
+QString GwmGWROptionsDialog::crsRotateP()
 {
     return ui->mPValue->text();
 }
 
-GwmGWROptionsDialog::GwmBandWidthType GwmGWROptionsDialog::bandwidthType()
+GwmGWRTaskThread::BandwidthType GwmGWROptionsDialog::bandwidthType()
 {
     if(ui->mBwTypeFixedRadio->isChecked()){
-        return GwmGWROptionsDialog::GwmBandWidthType::Fixed;
+        return GwmGWRTaskThread::BandwidthType::Fixed;
     }
     else if(ui->mBwTypeAdaptiveRadio->isChecked()){
-        return GwmGWROptionsDialog::GwmBandWidthType::Variable;
+        return GwmGWRTaskThread::BandwidthType::Adaptive;
     }
-    return GwmGWROptionsDialog::GwmBandWidthType::Fixed;
+    else return GwmGWRTaskThread::BandwidthType::Fixed;
 }
 
-GwmGWROptionsDialog::GwmApproachType GwmGWROptionsDialog::approachType()
+GwmGWRTaskThread::ParallelMethod GwmGWROptionsDialog::approachType()
 {
     if(ui->mCalcParallelNoneRadio->isChecked()){
-        return GwmGWROptionsDialog::GwmApproachType::None;
+        return GwmGWRTaskThread::ParallelMethod::None;
     }
     else if(ui->mCalcParallelMultithreadRadio->isChecked()){
-        return GwmGWROptionsDialog::GwmApproachType::Multithreading;
+        return GwmGWRTaskThread::ParallelMethod::Multithread;
     }
     else if(ui->mCalcParallelGPURadio->isChecked()){
-        return GwmGWROptionsDialog::GwmApproachType::GPU;
+        return GwmGWRTaskThread::ParallelMethod::GPU;
     }
-    return GwmGWROptionsDialog::GwmApproachType::None;
+    else return GwmGWRTaskThread::ParallelMethod::None;
 }
 
 void GwmGWROptionsDialog::onNoneRadioToggled(bool checked)
@@ -203,44 +208,60 @@ void GwmGWROptionsDialog::onGPURadioToggled(bool checked)
 
 void GwmGWROptionsDialog::onAutomaticRadioToggled(bool checked)
 {
-    if(checked){
-        ui->mBwSizeValue->setEnabled(false);
-        ui->mBwSizeUnit->setEnabled(false);
+    if (checked){
+        ui->mBwSizeAdaptiveSize->setEnabled(false);
+        ui->mBwSizeAdaptiveUnit->setEnabled(false);
+        ui->mBwSizeFixedSize->setEnabled(false);
+        ui->mBwSizeFixedUnit->setEnabled(false);
     }
 }
 
 void GwmGWROptionsDialog::onCustomizeRaidoToggled(bool checked)
 {
-    if(checked){
-        ui->mBwSizeValue->setEnabled(true);
-        ui->mBwSizeUnit->setEnabled(true);
+    if (checked){
+        ui->mBwSizeAdaptiveSize->setEnabled(true);
+        ui->mBwSizeAdaptiveUnit->setEnabled(true);
+        ui->mBwSizeFixedSize->setEnabled(true);
+        ui->mBwSizeFixedUnit->setEnabled(true);
     }
 }
 
-void GwmGWROptionsDialog::onFixedRadioToggled(bool checked){
-    ui->mBwSizeUnit->clear();
-    ui->mBwSizeUnit->addItem("metre");
-    ui->mBwSizeUnit->addItem("kilometre");
-    ui->mBwSizeUnit->addItem("mile");
+void GwmGWROptionsDialog::onFixedRadioToggled(bool checked)
+{
+    ui->mBwSizeSettingStack->setCurrentIndex(1);
 }
 
-void GwmGWROptionsDialog::onVariableRadioToggled(bool checked){
-    ui->mBwSizeUnit->clear();
-    ui->mBwSizeUnit->addItem("one");
-    ui->mBwSizeUnit->addItem("ten");
-    ui->mBwSizeUnit->addItem("hundred");
+void GwmGWROptionsDialog::onVariableRadioToggled(bool checked)
+{
+    ui->mBwSizeSettingStack->setCurrentIndex(0);
 }
 
-QString GwmGWROptionsDialog::bandwidthSize(){
-    return ui->mBwSizeValue->text();
+QVariant GwmGWROptionsDialog::bandwidthSize(){
+    if (ui->mBwTypeAdaptiveRadio->isChecked())
+    {
+        return ui->mBwSizeAdaptiveSize->value();
+    }
+    else
+    {
+        return ui->mBwSizeFixedSize->value();
+    }
 }
 
 QString GwmGWROptionsDialog::bandWidthUnit(){
-    return ui->mBwSizeUnit->currentText();
+    if (ui->mBwTypeAdaptiveRadio->isChecked())
+    {
+        return ui->mBwSizeAdaptiveUnit->currentText();
+    }
+    else
+    {
+        return ui->mBwSizeFixedUnit->currentText();
+    }
 }
-QString GwmGWROptionsDialog::sampleGroupSize() {
+
+QString GwmGWROptionsDialog::parallelGPUBatchSize() {
     return ui->mSampleGroupSize->text();
 }
-QString GwmGWROptionsDialog::threadNum() {
+
+QString GwmGWROptionsDialog::parallelMultiThreadNum() {
     return ui->mThreadNum->text();
 }
