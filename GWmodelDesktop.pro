@@ -59,6 +59,12 @@ SOURCES += \
     gwmpropertypanel.cpp \
     TaskThread/gwmtaskthread.cpp \
     gwmsaveascsvdialog.cpp \
+    qgsaddattrdialog.cpp \
+    qgsattributetabledialog.cpp \
+    qgsclipboard.cpp \
+    qgsdelattrdialog.cpp \
+    qgsfeatureaction.cpp \
+    qgsfieldcalculator.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
@@ -109,6 +115,12 @@ HEADERS += \
     gwmpropertypanel.h \
     TaskThread/gwmtaskthread.h \
     gwmsaveascsvdialog.h \
+    qgsaddattrdialog.h \
+    qgsattributetabledialog.h \
+    qgsclipboard.h \
+    qgsdelattrdialog.h \
+    qgsfeatureaction.h \
+    qgsfieldcalculator.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
@@ -129,11 +141,14 @@ FORMS += \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui \
+    qgsaddattrdialogbase.ui \
     qgsattributetabledialog.ui \
     qgscoordinateoperationwidgetbase.ui \
     qgsdatumtransformdialogbase.ui \
+    qgsdelattrdialogbase.ui \
     qgsdualviewbase.ui \
     qgseditconditionalformatrulewidget.ui \
+    qgsfieldcalculatorbase.ui \
     qgsfieldconditionalformatwidget.ui \
     qgsorganizetablecolumnsdialog.ui \
     symbolwindow/qgscategorizedsymbolrendererwidget.ui \

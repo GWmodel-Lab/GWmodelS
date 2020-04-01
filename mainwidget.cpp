@@ -34,6 +34,7 @@
 #include <qgsvectorfilewriter.h>
 
 #include "gwmdevattrtable.h"
+#include "qgsattributetabledialog.h"
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -484,8 +485,10 @@ void MainWidget::onShowAttributeTable(const QModelIndex &index)
 //        GwmAttributeTableView* tv = new GwmAttributeTableView(this);
 //        tv->setDisplayMapLayer(mapCanvas, currentLayer);
 //        tv->show();
-        GwmDevAttrTable *d = new GwmDevAttrTable(currentLayer,this);
+        GwmDevAttrTable *d = new GwmDevAttrTable(currentLayer,mapCanvas,this,Qt::Dialog);
         d->show();
+//        QgsAttributeTableDialog *d = new QgsAttributeTableDialog(currentLayer,mapCanvas,this,QgsAttributeTableFilterModel::ShowVisible,Qt::Dialog);
+//        d->show();
     }
 }
 
@@ -561,5 +564,3 @@ void MainWidget::onShowCoordinateTransDlg(const QModelIndex &index)
         }
     }
 }
-
-
