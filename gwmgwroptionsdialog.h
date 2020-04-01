@@ -32,13 +32,14 @@ private:
     Ui::GwmGWROptionsDialog *ui;
     QList<QgsMapLayer*> mapLayerList;
     QgsVectorLayer* mLayer = nullptr;
-    QStandardItemModel *mAttributeModel = nullptr;
-    QStandardItemModel *mSelectedAttributeModel = nullptr;
+    QStandardItemModel *mIndepVarModel = nullptr;
+    QStandardItemModel *mSelectedIndepVarModel = nullptr;
 
 public slots:
     void layerChanged(const int index);
-    void onAddAttributeBtn();
-    void onDelAttributeBtn();
+    void onDepVarChanged(const int index);
+    void onAddIndepVarBtn();
+    void onDelIndepVarBtn();
     void onFixedRadioToggled(bool checked);
     void onVariableRadioToggled(bool checked);
     void onNoneRadioToggled(bool checked);
@@ -46,6 +47,7 @@ public slots:
     void onGPURadioToggled(bool checked);
     void onCustomizeRaidoToggled(bool checked);
     void onAutomaticRadioToggled(bool checked);
+
 
 public:
     QString thetaValue();

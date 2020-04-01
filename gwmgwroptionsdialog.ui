@@ -7,368 +7,463 @@
     <x>0</x>
     <y>0</y>
     <width>593</width>
-    <height>601</height>
+    <height>634</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QDialogButtonBox" name="buttonBox">
-   <property name="geometry">
-    <rect>
-     <x>240</x>
-     <y>560</y>
-     <width>341</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>10</y>
-     <width>90</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Layer name</string>
-   </property>
-  </widget>
-  <widget class="QComboBox" name="mLayerComboBox">
-   <property name="geometry">
-    <rect>
-     <x>140</x>
-     <y>10</y>
-     <width>441</width>
-     <height>24</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QGroupBox" name="groupBox">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>40</y>
-     <width>561</width>
-     <height>181</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Attribute selection</string>
-   </property>
-   <widget class="QListView" name="mAttributeView">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>30</y>
-      <width>201</width>
-      <height>141</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QListView" name="mSelectedAttributeView">
-    <property name="geometry">
-     <rect>
-      <x>350</x>
-      <y>30</y>
-      <width>201</width>
-      <height>141</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="mAddAttributeBtn">
-    <property name="geometry">
-     <rect>
-      <x>230</x>
-      <y>70</y>
-      <width>112</width>
-      <height>34</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>选择</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="mDelAttributeBtn">
-    <property name="geometry">
-     <rect>
-      <x>230</x>
-      <y>120</y>
-      <width>112</width>
-      <height>34</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>移除</string>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QGroupBox" name="groupBox_2">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>220</y>
-     <width>561</width>
-     <height>131</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>BandWidth</string>
-   </property>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>30</y>
-      <width>351</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <layout class="QGridLayout" name="gridLayout">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,1,1,1,1">
+   <item>
+    <layout class="QFormLayout" name="formLayout_6">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetDefaultConstraint</enum>
+     </property>
      <item row="0" column="0">
-      <widget class="QLabel" name="label_2">
+      <widget class="QLabel" name="label">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
-        <string>BandWidth Type</string>
+        <string>Layer name</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QRadioButton" name="mFixedRadio">
-       <property name="text">
-        <string>Fixed</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <widget class="QRadioButton" name="mVariableRadio">
-       <property name="text">
-        <string>Variable</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>60</y>
-      <width>491</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <layout class="QGridLayout" name="gridLayout_5">
-     <item row="0" column="1">
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0" colspan="2">
-        <widget class="QRadioButton" name="mAutomaticRadio">
-         <property name="text">
-          <string>Automatic</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="mBandWidthSize"/>
-       </item>
-       <item row="1" column="2">
-        <widget class="QComboBox" name="mBandWidthUnit"/>
-       </item>
-       <item row="1" column="0">
-        <widget class="QRadioButton" name="mCustomizeRadio">
-         <property name="text">
-          <string>Customize</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>BandWidth Size</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QGroupBox" name="groupBox_3">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>350</y>
-     <width>561</width>
-     <height>101</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Coordinate System</string>
-   </property>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>20</y>
-      <width>481</width>
-      <height>71</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Rotation parameter</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>p</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="mPValue"/>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="mThetaValue"/>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>theta</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QGroupBox" name="groupBox_4">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>450</y>
-     <width>561</width>
-     <height>101</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Calculation configuration</string>
-   </property>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>20</y>
-      <width>481</width>
-      <height>81</height>
-     </rect>
-    </property>
-    <layout class="QGridLayout" name="gridLayout_3">
-     <item row="0" column="0">
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <item>
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Approach</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="mNoneRadio">
-         <property name="text">
-          <string>None</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="mMultithreadingRadio">
-         <property name="text">
-          <string>Multithreading</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="mGPURadio">
-         <property name="text">
-          <string>GPU</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QComboBox" name="mLayerComboBox"/>
      </item>
      <item row="1" column="0">
-      <widget class="QStackedWidget" name="stackedWidget">
-       <property name="currentIndex">
-        <number>1</number>
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>Dependent Variable</string>
        </property>
-       <widget class="QWidget" name="page"/>
-       <widget class="QWidget" name="page_3">
-        <widget class="QWidget" name="layoutWidget">
-         <property name="geometry">
-          <rect>
-           <x>70</x>
-           <y>10</y>
-           <width>311</width>
-           <height>27</height>
-          </rect>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="mDepVarComboBox"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Independent Variable Selection</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QListView" name="mIndepVarView"/>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="spacing">
+           <number>16</number>
+          </property>
           <item>
-           <widget class="QLabel" name="label_9">
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="mAddIndepVarBtn">
             <property name="text">
-             <string>并发线程数</string>
+             <string>&gt;&gt;</string>
             </property>
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="mDelIndepVarBtn">
+            <property name="text">
+             <string>&lt;&lt;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QListView" name="mSelectedIndepVarView"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="mVariableAutoSelectionCheck">
+        <property name="text">
+         <string>Enable Autoselection</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Bandwidth Setting</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QRadioButton" name="mBwTypeAdaptiveRadio">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Adaptive</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="mBwTypeFixedRadio">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Fixed</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Size</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="0" colspan="2">
+         <widget class="QRadioButton" name="mBwSizeAutomaticRadio">
+          <property name="text">
+           <string>Automatic</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="mBwSizeValue"/>
+        </item>
+        <item row="1" column="2">
+         <widget class="QComboBox" name="mBwSizeUnit"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QRadioButton" name="mBwSizeCustomizeRadio">
+          <property name="text">
+           <string>Customize</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Coordinate System</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_5">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Rotation parameter</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QFormLayout" name="formLayout_2">
+        <property name="verticalSpacing">
+         <number>6</number>
+        </property>
+        <property name="leftMargin">
+         <number>9</number>
+        </property>
+        <property name="rightMargin">
+         <number>9</number>
+        </property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>theta</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="mThetaValue"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>p</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="mPValue"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Calculation Configuration</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Parallel</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QRadioButton" name="mCalcParallelNoneRadio">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>None</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="mCalcParallelMultithreadRadio">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Multithreading</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="mCalcParallelGPURadio">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>GPU</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="1">
+       <widget class="QStackedWidget" name="stackedWidget">
+        <property name="currentIndex">
+         <number>1</number>
+        </property>
+        <widget class="QWidget" name="page">
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>No parameters</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="page_3">
+         <layout class="QFormLayout" name="formLayout_3">
+          <property name="leftMargin">
+           <number>9</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>9</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Threads</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
            <widget class="QLineEdit" name="mThreadNum"/>
           </item>
          </layout>
         </widget>
-       </widget>
-       <widget class="QWidget" name="page_2">
-        <widget class="QWidget" name="layoutWidget">
-         <property name="geometry">
-          <rect>
-           <x>70</x>
-           <y>10</y>
-           <width>321</width>
-           <height>27</height>
-          </rect>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item>
+        <widget class="QWidget" name="page_2">
+         <layout class="QFormLayout" name="formLayout_4">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item row="0" column="0">
            <widget class="QLabel" name="label_8">
             <property name="text">
-             <string>样本组大小</string>
+             <string>Batch Size</string>
             </property>
            </widget>
           </item>
-          <item>
+          <item row="0" column="1">
            <widget class="QLineEdit" name="mSampleGroupSize"/>
           </item>
          </layout>
         </widget>
        </widget>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Parameters</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections>
