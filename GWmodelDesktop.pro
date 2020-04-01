@@ -190,7 +190,7 @@ GDAL_DATA = ".\share\gdal"
 
 ## Armadillo
 INCLUDEPATH += "$(QT_HOME)/include/armadillo"
-LIBS += -L"$(QT_HOME)/lib" -larmadillo -lblas_win64_MT -llapack_win64_MT
+LIBS += -L"$(QT_HOME)/lib" -larmadillo
 ## Armadillo END
 
 TRANSLATIONS += \
