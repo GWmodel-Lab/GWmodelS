@@ -44,18 +44,22 @@
 #include "qgsguiutils.h"
 #include "qgsproxyprogresstask.h"
 //#include "qgisapp.h"
+#include "attributetable/qgsguivectorlayertools.h"
 
 //GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer, QgsMapCanvas* myMapCanvas,QWidget *parent)
-GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMapCanvas, QWidget *parent, Qt::WindowFlags flags)
+GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMapCanvas, QWidget *parent, Qt::WindowFlags flags,QgsAttributeTableFilterModel::FilterMode initialMode)
 {
     setupUi(this);
-    mMainView->init(theVecLayer,myMapCanvas);
     this->currentLayer = theVecLayer;
     this->mymapCanvas = myMapCanvas;
+    mVectorLayerTools = new QgsGuiVectorLayerTools();
+    mEditorContext.setVectorLayerTools(mVectorLayerTools);
 
+    QgsFeatureRequest r;
+    mMainView->init(theVecLayer,myMapCanvas,r,mEditorContext,true);
     QgsAttributeTableConfig config = this->currentLayer->attributeTableConfig();
     mMainView->setAttributeTableConfig( config );
-
+    mFeatureFilterWidget->init(currentLayer,mEditorContext,mMainView);
     //编辑功能
     connect(mActionToggleEditing,&QAction::toggled,this,&GwmDevAttrTable::mActionToggleEditing_toggled);
     //全选功能
@@ -79,9 +83,11 @@ GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMap
     connect( mActionSaveEdits, &QAction::triggered, this, &GwmDevAttrTable::mActionSaveEdits_triggered );
 
     //添加要素
-    //connect( mActionAddFeature, &QAction::triggered, this, &GwmDevAttrTable::mActionAddFeature_triggered );
+    connect( mActionAddFeature, &QAction::triggered, this, &GwmDevAttrTable::mActionAddFeature_triggered );
     //删除要素
-    //connect( mActionDeleteSelected, &QAction::triggered, this, &GwmDevAttrTable::mActionDeleteSelected_triggered );
+    connect( mActionDeleteSelected, &QAction::triggered, this, &GwmDevAttrTable::mActionDeleteSelected_triggered );
+
+    connect( mActionExpressionSelect, &QAction::triggered, this, &GwmDevAttrTable::mActionExpressionSelect_triggered );
 
     //QGIS源码
     connect( this->currentLayer, &QgsVectorLayer::editingStarted, this, &GwmDevAttrTable::editingToggled );
@@ -91,7 +97,10 @@ GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMap
     connect( currentLayer, &QgsVectorLayer::featureAdded, this, &GwmDevAttrTable::updateTitle );
     connect( currentLayer, &QgsVectorLayer::featuresDeleted, this, &GwmDevAttrTable::updateTitle );
     connect( currentLayer, &QgsVectorLayer::editingStopped, this, &GwmDevAttrTable::updateTitle );
+    // connect table info to window
     connect( mMainView, &QgsDualView::filterChanged, this, &GwmDevAttrTable::updateTitle );
+    connect( mMainView, &QgsDualView::filterExpressionSet, this, &GwmDevAttrTable::formFilterSet );
+    connect( mMainView, &QgsDualView::formModeChanged, this, &GwmDevAttrTable::viewModeChanged );
 
     mActionFeatureActions = new QToolButton();
     mActionFeatureActions->setAutoRaise( false );
@@ -135,21 +144,21 @@ GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMap
     mMainViewButtonGroup->setId( mTableViewButton, QgsDualView::AttributeTable );
     mMainViewButtonGroup->setId( mAttributeViewButton, QgsDualView::AttributeEditor );
 
-//    switch ( initialMode )
-//    {
-//      case QgsAttributeTableFilterModel::ShowVisible:
-//        mFeatureFilterWidget->filterVisible();
-//        break;
+    switch ( initialMode )
+    {
+      case QgsAttributeTableFilterModel::ShowVisible:
+        mFeatureFilterWidget->filterVisible();
+        break;
 
-//      case QgsAttributeTableFilterModel::ShowSelected:
-//        mFeatureFilterWidget->filterSelected();
-//        break;
+      case QgsAttributeTableFilterModel::ShowSelected:
+        mFeatureFilterWidget->filterSelected();
+        break;
 
-//      case QgsAttributeTableFilterModel::ShowAll:
-//      default:
-//        mFeatureFilterWidget->filterShowAll();
-//        break;
-//    }
+      case QgsAttributeTableFilterModel::ShowAll:
+      default:
+        mFeatureFilterWidget->filterShowAll();
+        break;
+    }
     mFieldCombo->setFilters( QgsFieldProxyModel::AllTypes | QgsFieldProxyModel::HideReadOnly );
     mFieldCombo->setLayer( this->currentLayer );
 
@@ -159,13 +168,14 @@ GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMap
     mUpdateExpressionText->setLayer( this->currentLayer );
     mUpdateExpressionText->setLeftHandButtonStyle( true );
 
-//    int initialView = settings.value( QStringLiteral( "qgis/attributeTableView" ), -1 ).toInt();
-//    if ( initialView < 0 )
-//    {
-//      initialView = settings.value( QStringLiteral( "qgis/attributeTableLastView" ), QgsDualView::AttributeTable ).toInt();
-//    }
-//    mMainView->setView( static_cast< QgsDualView::ViewMode >( initialView ) );
-//    mMainViewButtonGroup->button( initialView )->setChecked( true );
+    QgsSettings settings;
+    int initialView = settings.value( QStringLiteral( "qgis/attributeTableView" ), -1 ).toInt();
+    if ( initialView < 0 )
+    {
+      initialView = settings.value( QStringLiteral( "qgis/attributeTableLastView" ), QgsDualView::AttributeTable ).toInt();
+    }
+    mMainView->setView( static_cast< QgsDualView::ViewMode >( initialView ) );
+    mMainViewButtonGroup->button( initialView )->setChecked( true );
 
     connect( mActionToggleMultiEdit, &QAction::toggled, mMainView, &QgsDualView::setMultiEditEnabled );
     connect( mActionSearchForm, &QAction::toggled, mMainView, &QgsDualView::toggleSearchMode );
@@ -374,14 +384,14 @@ void GwmDevAttrTable::runFieldCalculation( QgsVectorLayer *layer, const QString 
   }
 
   QgsTemporaryCursorOverride cursorOverride( Qt::WaitCursor );
-  this->currentLayer->beginEditCommand( QStringLiteral( "Field calculator" ) );
+  currentLayer->beginEditCommand( QStringLiteral( "Field calculator" ) );
 
   bool calculationSuccess = true;
   QString error;
 
   QgsExpression exp( expression );
   QgsDistanceArea da;
-  da.setSourceCrs( this->currentLayer->crs(), QgsProject::instance()->transformContext() );
+  da.setSourceCrs( currentLayer->crs(), QgsProject::instance()->transformContext() );
   da.setEllipsoid( QgsProject::instance()->ellipsoid() );
   exp.setGeomCalculator( &da );
   exp.setDistanceUnits( QgsProject::instance()->distanceUnits() );
@@ -437,7 +447,7 @@ void GwmDevAttrTable::runFieldCalculation( QgsVectorLayer *layer, const QString 
     else
     {
       QVariant oldvalue = feature.attributes().value( fieldindex );
-      this->currentLayer->changeAttributeValue( feature.id(), fieldindex, value, oldvalue );
+      currentLayer->changeAttributeValue( feature.id(), fieldindex, value, oldvalue );
     }
 
     rownum++;
@@ -449,11 +459,11 @@ void GwmDevAttrTable::runFieldCalculation( QgsVectorLayer *layer, const QString 
   if ( !calculationSuccess )
   {
     QMessageBox::critical( nullptr, tr( "Update Attributes" ), tr( "An error occurred while evaluating the calculation string:\n%1" ).arg( error ) );
-    this->currentLayer->destroyEditCommand();
+    currentLayer->destroyEditCommand();
   }
   else
   {
-    this->currentLayer->endEditCommand();
+    currentLayer->endEditCommand();
 
     // refresh table with updated values
     // fixes https://github.com/qgis/QGIS/issues/25210
@@ -702,4 +712,146 @@ void GwmDevAttrTable::saveEdits( QgsMapLayer *layer, bool leaveEditable, bool tr
   {
     vlayer->triggerRepaint();
   }
+}
+
+void GwmDevAttrTable::mActionDeleteSelected_triggered()
+{
+  deleteSelected( currentLayer, this );
+}
+
+void GwmDevAttrTable::deleteSelected( QgsMapLayer *layer, QWidget *parent, bool checkFeaturesVisible )
+{
+//  if ( !layer )
+//  {
+//    layer = mLayerTreeView->currentLayer();
+//  }
+
+  if ( !parent )
+  {
+    parent = this;
+  }
+
+  if ( !layer )
+  {
+//    visibleMessageBar()->pushMessage( tr( "No Layer Selected" ),
+//                                      tr( "To delete features, you must select a vector layer in the legend" ),
+//                                      Qgis::Info, messageTimeout() );
+    return;
+  }
+
+  QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( layer );
+  if ( !vlayer )
+  {
+//    visibleMessageBar()->pushMessage( tr( "No Vector Layer Selected" ),
+//                                      tr( "Deleting features only works on vector layers" ),
+//                                      Qgis::Info, messageTimeout() );
+    return;
+  }
+
+  if ( !( vlayer->dataProvider()->capabilities() & QgsVectorDataProvider::DeleteFeatures ) )
+  {
+//    visibleMessageBar()->pushMessage( tr( "Provider does not support deletion" ),
+//                                      tr( "Data provider does not support deleting features" ),
+//                                      Qgis::Info, messageTimeout() );
+    return;
+  }
+
+  if ( !vlayer->isEditable() )
+  {
+//    visibleMessageBar()->pushMessage( tr( "Layer not editable" ),
+//                                      tr( "The current layer is not editable. Choose 'Start editing' in the digitizing toolbar." ),
+//                                      Qgis::Info, messageTimeout() );
+    return;
+  }
+
+  //validate selection
+  const int numberOfSelectedFeatures = vlayer->selectedFeatureCount();
+  if ( numberOfSelectedFeatures == 0 )
+  {
+//    visibleMessageBar()->pushMessage( tr( "No Features Selected" ),
+//                                      tr( "The current layer has no selected features" ),
+//                                      Qgis::Info, messageTimeout() );
+    return;
+  }
+  //display a warning
+  if ( checkFeaturesVisible )
+  {
+    QgsFeature feat;
+    QgsFeatureIterator it = vlayer->getSelectedFeatures( QgsFeatureRequest().setNoAttributes() );
+    bool allFeaturesInView = true;
+    QgsRectangle viewRect = this->mymapCanvas->mapSettings().mapToLayerCoordinates( vlayer, this->mymapCanvas->extent() );
+
+    while ( it.nextFeature( feat ) )
+    {
+      if ( allFeaturesInView && !viewRect.intersects( feat.geometry().boundingBox() ) )
+      {
+        allFeaturesInView = false;
+        break;
+      }
+    }
+
+    if ( !allFeaturesInView )
+    {
+      // for extra safety to make sure we are not removing geometries by accident
+      int res = QMessageBox::warning( this->mymapCanvas, tr( "Delete %n feature(s) from layer \"%1\"", nullptr, numberOfSelectedFeatures ).arg( vlayer->name() ),
+                                      tr( "Some of the selected features are outside of the current map view. Would you still like to continue?" ),
+                                      QMessageBox::Yes | QMessageBox::No );
+      if ( res != QMessageBox::Yes )
+        return;
+    }
+  }
+
+  vlayer->beginEditCommand( tr( "Features deleted" ) );
+  int deletedCount = 0;
+  if ( !vlayer->deleteSelectedFeatures( &deletedCount ) )
+  {
+//    visibleMessageBar()->pushMessage( tr( "Problem deleting features" ),
+//                                      tr( "A problem occurred during deletion from layer \"%1\". %n feature(s) not deleted.", nullptr, numberOfSelectedFeatures - deletedCount ).arg( vlayer->name() ),
+//                                      Qgis::Warning );
+  }
+  else
+  {
+//    showStatusMessage( tr( "%n feature(s) deleted.", "number of features deleted", numberOfSelectedFeatures ) );
+  }
+
+  vlayer->endEditCommand();
+}
+
+void GwmDevAttrTable::mActionAddFeature_triggered()
+{
+  if ( !currentLayer->isEditable() )
+    return;
+
+  QgsAttributeTableModel *masterModel = mMainView->masterModel();
+
+  QgsFeature f;
+  QgsFeatureAction action( tr( "Geometryless feature added" ), f, currentLayer, QString(), -1, this );
+  action.setForceSuppressFormPopup( true ); // we're already showing the table, allowing users to enter the new feature's attributes directly
+  if ( action.addFeature() )
+  {
+    masterModel->reload( masterModel->index( 0, 0 ), masterModel->index( masterModel->rowCount() - 1, masterModel->columnCount() - 1 ) );
+  }
+}
+
+void GwmDevAttrTable::formFilterSet( const QString &filter, QgsAttributeForm::FilterType type )
+{
+  setFilterExpression( filter, type, true );
+}
+void GwmDevAttrTable::setFilterExpression( const QString &filterString, QgsAttributeForm::FilterType type,
+    bool alwaysShowFilter )
+{
+  mFeatureFilterWidget->setFilterExpression( filterString, type, alwaysShowFilter );
+}
+void GwmDevAttrTable::viewModeChanged( QgsAttributeEditorContext::Mode mode )
+{
+  if ( mode != QgsAttributeEditorContext::SearchMode )
+    mActionSearchForm->setChecked( false );
+}
+
+void GwmDevAttrTable::mActionExpressionSelect_triggered()
+{
+  QgsExpressionSelectionDialog *dlg = new QgsExpressionSelectionDialog( currentLayer );
+  //dlg->setMessageBar( QgisApp::instance()->messageBar() );
+  dlg->setAttribute( Qt::WA_DeleteOnClose );
+  dlg->show();
 }

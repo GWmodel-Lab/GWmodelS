@@ -44,7 +44,7 @@ SOURCES += \
 #    attributetable/qgsgenericfeatureselectionmanager.cpp \
 #    attributetable/qgsorganizetablecolumnsdialog.cpp \
 #    attributetable/qgsvectorlayerselectionmanager.cpp \
-    gwmattributetableview.cpp \
+    attributetable/qgsguivectorlayertools.cpp \
     gwmcoordtranssettingdialog.cpp \
     TaskThread/gwmcoordtransthread.cpp \
     gwmdelimitedtextfile.cpp \
@@ -100,7 +100,7 @@ HEADERS += \
 #    attributetable/qgsifeatureselectionmanager.h \
 #    attributetable/qgsorganizetablecolumnsdialog.h \
 #    attributetable/qgsvectorlayerselectionmanager.h \
-    gwmattributetableview.h \
+    attributetable/qgsguivectorlayertools.h \
     gwmcoordtranssettingdialog.h \
     TaskThread/gwmcoordtransthread.h \
     gwmdelimitedtextfile.h \

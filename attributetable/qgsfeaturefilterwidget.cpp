@@ -78,14 +78,13 @@ QgsFeatureFilterWidget::QgsFeatureFilterWidget( QWidget *parent )
   connect( mFilterQuery, &QLineEdit::textChanged, this, &QgsFeatureFilterWidget::onFilterQueryTextChanged );
 }
 
-void QgsFeatureFilterWidget::init( QgsVectorLayer *layer, const QgsAttributeEditorContext &context, QgsDualView *mainView,
-                                   QgsMessageBar *messageBar, int messageBarTimeout )
+void QgsFeatureFilterWidget::init( QgsVectorLayer *layer, const QgsAttributeEditorContext &context, QgsDualView *mainView)
 {
   mMainView = mainView;
   mLayer = layer;
   mEditorContext = context;
-  mMessageBar = messageBar;
-  mMessageBarTimeout = messageBarTimeout;
+//  mMessageBar = messageBar;
+//  mMessageBarTimeout = messageBarTimeout;
 
   connect( mLayer, &QgsVectorLayer::attributeAdded, this, &QgsFeatureFilterWidget::columnBoxInit );
   connect( mLayer, &QgsVectorLayer::attributeDeleted, this, &QgsFeatureFilterWidget::columnBoxInit );
@@ -197,7 +196,7 @@ void QgsFeatureFilterWidget::columnBoxInit()
   mFilterButton->addAction( mActionEditedFilter );
   mFilterButton->addAction( mActionFilterColumnsMenu );
   mFilterButton->addAction( mActionAdvancedFilter );
-  mFilterButton->addAction( mActionStoredFilterExpressions );
+  //mFilterButton->addAction( mActionStoredFilterExpressions );
 
   const QList<QgsField> fields = mLayer->fields().toList();
 
@@ -456,7 +455,7 @@ void QgsFeatureFilterWidget::setFilterExpression( const QString &filterString, Q
   QgsExpression filterExpression( filter );
   if ( filterExpression.hasParserError() )
   {
-    mMessageBar->pushMessage( tr( "Parsing error" ), filterExpression.parserErrorString(), Qgis::Warning, mMessageBarTimeout );
+  //  mMessageBar->pushMessage( tr( "Parsing error" ), filterExpression.parserErrorString(), Qgis::Warning, mMessageBarTimeout );
     return;
   }
 
@@ -464,7 +463,7 @@ void QgsFeatureFilterWidget::setFilterExpression( const QString &filterString, Q
 
   if ( !filterExpression.prepare( &context ) )
   {
-    mMessageBar->pushMessage( tr( "Evaluation error" ), filterExpression.evalErrorString(), Qgis::Warning, mMessageBarTimeout );
+  //  mMessageBar->pushMessage( tr( "Evaluation error" ), filterExpression.evalErrorString(), Qgis::Warning, mMessageBarTimeout );
   }
 
   bool fetchGeom = filterExpression.needsGeometry();
@@ -508,7 +507,7 @@ void QgsFeatureFilterWidget::setFilterExpression( const QString &filterString, Q
 
   if ( filterExpression.hasEvalError() )
   {
-    mMessageBar->pushMessage( tr( "Error filtering" ), filterExpression.evalErrorString(), Qgis::Warning, mMessageBarTimeout );
+  //  mMessageBar->pushMessage( tr( "Error filtering" ), filterExpression.evalErrorString(), Qgis::Warning, mMessageBarTimeout );
     return;
   }
   mMainView->setFilterMode( QgsAttributeTableFilterModel::ShowFilteredList );

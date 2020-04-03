@@ -28,7 +28,6 @@
 // implementation detail.  This header file may change from version to
 // version without notice, or even be removed.
 //
-#include "prefix.h"
 
 #include "ui_qgsfeaturefilterwidget.h"
 
@@ -55,8 +54,7 @@ class QgsFeatureFilterWidget : public QWidget, private Ui::QgsFeatureFilterWidge
     //! Constructor for QgsFeatureFilterWidget
     explicit QgsFeatureFilterWidget( QWidget *parent SIP_TRANSFERTHIS = nullptr );
 
-    void init( QgsVectorLayer *layer, const QgsAttributeEditorContext &context, QgsDualView *mainView,
-               QgsMessageBar *messageBar, int messagebarTimeout );
+    void init( QgsVectorLayer *layer, const QgsAttributeEditorContext &context, QgsDualView *mainView);
 
     /**
      * Sets the filter expression to filter visible features
@@ -129,8 +127,8 @@ class QgsFeatureFilterWidget : public QWidget, private Ui::QgsFeatureFilterWidge
     QgsDualView *mMainView = nullptr;
     QgsVectorLayer *mLayer = nullptr;
     QgsAttributeEditorContext mEditorContext;
-    QgsMessageBar *mMessageBar = nullptr;
-    int mMessageBarTimeout = 0;
+//    QgsMessageBar *mMessageBar = nullptr;
+//    int mMessageBarTimeout = 0;
 };
 
 #endif // QGSFEATUREFILTERWIDGET_P_H

@@ -12,7 +12,7 @@ class GwmDevAttrTable: public QDialog, public Ui::QgsAttributeTableDialog
     Q_OBJECT
 public:
     //GwmDevAttrTable(QgsVectorLayer* theVecLayer, QgsMapCanvas* map, QWidget *parent = 0);
-    GwmDevAttrTable(QgsVectorLayer* theVecLayer, QgsMapCanvas* myMapCanvas, QWidget *parent = 0, Qt::WindowFlags flags = Qt::Window);
+    GwmDevAttrTable(QgsVectorLayer* theVecLayer, QgsMapCanvas* myMapCanvas, QWidget *parent = 0, Qt::WindowFlags flags = Qt::Window,QgsAttributeTableFilterModel::FilterMode initialMode = QgsAttributeTableFilterModel::ShowAll);
     ~GwmDevAttrTable();
 
     //! starts/stops editing mode of a layer
@@ -24,12 +24,17 @@ public:
      * \param triggerRepaint send layer signal to repaint canvas when done
      */
     void saveEdits( QgsMapLayer *layer, bool leaveEditable = true, bool triggerRepaint = true );
+
+    //! Deletes the selected attributes for the currently selected vector layer
+    void deleteSelected( QgsMapLayer *layer = nullptr, QWidget *parent = nullptr, bool checkFeaturesVisible = false );
 private:
     QgsVectorLayer *currentLayer;
     QgsMapCanvas *mymapCanvas;
     QToolButton *mActionFeatureActions = nullptr;
     void updateMultiEditButtonState();
     //bool toggleEditing2(QgsMapLayer *layer, bool allowCancel);
+    QgsAttributeEditorContext mEditorContext;
+    QgsVectorLayerTools *mVectorLayerTools;
 private slots:
     /**
      * Toggles editing mode
@@ -72,6 +77,8 @@ private slots:
 
     void updateTitle();
 
+    void mActionExpressionSelect_triggered();
+
     /**
      * Opens dialog to add new attribute
      */
@@ -81,6 +88,9 @@ private slots:
      * Opens dialog to remove attribute
      */
     void mActionRemoveAttribute_triggered();
+
+    void viewModeChanged( QgsAttributeEditorContext::Mode mode );
+    void formFilterSet( const QString &filter, QgsAttributeForm::FilterType type );
 public slots:
 
   /**
@@ -91,15 +101,22 @@ public slots:
   /**
    * add feature
    */
-  //void mActionAddFeature_triggered();
+  void mActionAddFeature_triggered();
   /**
    * deletes the selected features
    */
-//  void mActionDeleteSelected_triggered();
+  void mActionDeleteSelected_triggered();
   /**
    * Saves edits
    */
   void mActionSaveEdits_triggered();
+  /**
+   * Sets the filter expression to filter visible features
+   * \param filterString filter query string. QgsExpression compatible.
+   */
+  void setFilterExpression( const QString &filterString,
+                            QgsAttributeForm::FilterType type = QgsAttributeForm::ReplaceFilter,
+                            bool alwaysShowFilter = false );
 };
 
 #endif // GWMDEVATTRTABLE_H
