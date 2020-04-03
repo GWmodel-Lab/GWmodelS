@@ -22,6 +22,7 @@
 #include <QInputDialog>
 #include <QTimer>
 #include <QShortcut>
+#include <QButtonGroup>
 
 #include "qgsapplication.h"
 #include "qgsactionmanager.h"

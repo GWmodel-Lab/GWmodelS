@@ -33,7 +33,7 @@ class QItemSelectionModel;
  * \ingroup gui
  * \class QgsAttributeTableFilterModel
  */
-class GUI_EXPORT QgsAttributeTableFilterModel: public QSortFilterProxyModel, public QgsFeatureModel
+class QgsAttributeTableFilterModel: public QSortFilterProxyModel, public QgsFeatureModel
 {
     Q_OBJECT
 

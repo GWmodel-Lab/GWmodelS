@@ -39,7 +39,7 @@ class QgsFieldConditionalFormatWidget;
  * are shown in a table and the editor layout, where the features are shown as a selectable list
  * and the attributes for the currently selected feature are shown in a form.
  */
-class GUI_EXPORT QgsDualView : public QStackedWidget, private Ui::QgsDualViewBase
+class QgsDualView : public QStackedWidget, private Ui::QgsDualViewBase
 {
     Q_OBJECT
 
@@ -422,7 +422,7 @@ class GUI_EXPORT QgsDualView : public QStackedWidget, private Ui::QgsDualViewBas
  * \ingroup gui
  * \class QgsAttributeTableAction
  */
-class GUI_EXPORT QgsAttributeTableAction : public QAction
+class QgsAttributeTableAction : public QAction
 {
     Q_OBJECT
 
@@ -454,7 +454,7 @@ class GUI_EXPORT QgsAttributeTableAction : public QAction
  * \ingroup gui
  * \class QgsAttributeTableMapLayerAction
  */
-class GUI_EXPORT QgsAttributeTableMapLayerAction : public QAction
+class QgsAttributeTableMapLayerAction : public QAction
 {
     Q_OBJECT
 

@@ -46,7 +46,7 @@ class QgsFeature;
  * Or this can be used within the QgsDualView stacked widget.
  */
 
-class GUI_EXPORT QgsAttributeTableView : public QTableView
+class QgsAttributeTableView : public QTableView
 {
     Q_OBJECT
 

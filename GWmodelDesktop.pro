@@ -30,11 +30,11 @@ SOURCES += \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     TaskThread/gwmsavelayerthread.cpp \
-    attributetable/qgsattributetabledelegate.cpp \
-    attributetable/qgsattributetablefiltermodel.cpp \
-    attributetable/qgsattributetablemodel.cpp \
-    attributetable/qgsattributetableview.cpp \
-    attributetable/qgsdualview.cpp \
+#    attributetable/qgsattributetabledelegate.cpp \
+#    attributetable/qgsattributetablefiltermodel.cpp \
+#    attributetable/qgsattributetablemodel.cpp \
+#    attributetable/qgsattributetableview.cpp \
+#    attributetable/qgsdualview.cpp \
     attributetable/qgsfeaturefilterwidget.cpp \
 #    attributetable/qgsfeaturelistmodel.cpp \
 #    attributetable/qgsfeaturelistview.cpp \
@@ -84,11 +84,11 @@ HEADERS += \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/utils.h \
     TaskThread/gwmsavelayerthread.h \
-    attributetable/qgsattributetabledelegate.h \
-    attributetable/qgsattributetablefiltermodel.h \
-    attributetable/qgsattributetablemodel.h \
-    attributetable/qgsattributetableview.h \
-    attributetable/qgsdualview.h \
+#    attributetable/qgsattributetabledelegate.h \
+#    attributetable/qgsattributetablefiltermodel.h \
+#    attributetable/qgsattributetablemodel.h \
+#    attributetable/qgsattributetableview.h \
+#    attributetable/qgsdualview.h \
     attributetable/qgsfeaturefilterwidget_p.h \
 #    attributetable/qgsfeaturelistmodel.h \
 #    attributetable/qgsfeaturelistview.h \

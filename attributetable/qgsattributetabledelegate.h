@@ -33,7 +33,7 @@ class QToolButton;
  * QItemDelegate).
  */
 
-class GUI_EXPORT QgsAttributeTableDelegate : public QItemDelegate
+class QgsAttributeTableDelegate : public QItemDelegate
 {
     Q_OBJECT
 

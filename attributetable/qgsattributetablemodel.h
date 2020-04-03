@@ -47,7 +47,7 @@ class QgsFieldFormatter;
  *
  * \see <a href="http://doc.qt.digia.com/qt/model-view-programming.html">Qt Model View Programming</a>
  */
-class GUI_EXPORT QgsAttributeTableModel: public QAbstractTableModel
+class QgsAttributeTableModel: public QAbstractTableModel
 {
     Q_OBJECT
 
