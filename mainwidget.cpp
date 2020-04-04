@@ -25,13 +25,14 @@
 #include <qgsproviderregistry.h>
 #include <qgsdatumtransformdialog.h>
 
-#include "gwmattributetableview.h"
 #include "gwmopenxyeventlayerdialog.h"
 #include "gwmprogressdialog.h"
 #include "gwmcoordtranssettingdialog.h"
 #include "TaskThread/gwmcoordtransthread.h"
 #include <gwmsaveascsvdialog.h>
 #include <qgsvectorfilewriter.h>
+
+#include "gwmattributetabledialog.h"
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -45,6 +46,7 @@ MainWidget::MainWidget(QWidget *parent)
     setupPropertyPanel();
     // ！！！重要！！！
     // 将 FeaturePanel, MapCanvas, PropertyPanel 相关的设置代码全部写在对应的 setup函数 中！
+    QgsGui::editorWidgetRegistry()->initEditors(mapCanvas);
 }
 
 MainWidget::~MainWidget()
@@ -478,10 +480,8 @@ void MainWidget::onShowAttributeTable(const QModelIndex &index)
     QgsVectorLayer* currentLayer = mapModel->layerFromItem(item);
     if (currentLayer)
     {
-        currentLayer->setProviderEncoding("UTF-8");
-        GwmAttributeTableView* tv = new GwmAttributeTableView(this);
-        tv->setDisplayMapLayer(mapCanvas, currentLayer);
-        tv->show();
+        GwmAttributeTableDialog *d = new GwmAttributeTableDialog(currentLayer,mapCanvas,this,Qt::Dialog);
+        d->show();
     }
 }
 
@@ -557,5 +557,3 @@ void MainWidget::onShowCoordinateTransDlg(const QModelIndex &index)
         }
     }
 }
-
-
