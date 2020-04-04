@@ -10,8 +10,8 @@ GwmLayerItemModel::GwmLayerItemModel(QObject *parent)
 QVariant GwmLayerItemModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     switch (role) {
-//    case Qt::DisplayRole:
-//        return section == 0 ? QString(tr("Feature")) : QStringLiteral("");
+    case Qt::DisplayRole:
+        return QStringLiteral("");
     case Qt::TextAlignmentRole:
         return Qt::AlignLeft;
     default:
@@ -227,7 +227,7 @@ GwmLayerGroupItem *GwmLayerItemModel::item(int i)
 //}
 
 GwmLayerItem* GwmLayerItemModel::itemFromIndex(const QModelIndex &index) const
-{
+{\
     if (index.isValid())
     {
         GwmLayerItem* item = static_cast<GwmLayerItem*>(index.internalPointer());

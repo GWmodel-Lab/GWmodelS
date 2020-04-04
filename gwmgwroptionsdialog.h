@@ -22,14 +22,10 @@ private:
     Ui::GwmGWROptionsDialog *ui;
     QList<QgsMapLayer*> mapLayerList;
     QgsVectorLayer* mLayer = nullptr;
-    QStandardItemModel *mIndepVarModel = nullptr;
-    QStandardItemModel *mSelectedIndepVarModel = nullptr;
 
 public slots:
     void layerChanged(const int index);
     void onDepVarChanged(const int index);
-    void onAddIndepVarBtn();
-    void onDelIndepVarBtn();
     void onFixedRadioToggled(bool checked);
     void onVariableRadioToggled(bool checked);
     void onNoneRadioToggled(bool checked);

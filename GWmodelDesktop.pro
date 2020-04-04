@@ -23,6 +23,8 @@ SOURCES += \
     DelimitedText/qgsdelimitedtextfile.cpp \
     DelimitedText/qgsdelimitedtextprovider.cpp \
     GWmodel/GWmodel.cpp \
+    Model/gwmlayerattributeitem.cpp \
+    Model/gwmlayerattributeitemmodel.cpp \
     Model/gwmlayergroupitem.cpp \
     Model/gwmlayergwritem.cpp \
     Model/gwmlayeritem.cpp \
@@ -59,6 +61,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
     gwmgwroptionsdialog.cpp \
+    gwmindepvarselectorwidget.cpp \
     gwmmaptoolidentifyfeature.cpp \
     gwmopenxyeventlayerdialog.cpp \
     gwmprogressdialog.cpp \
@@ -81,6 +84,8 @@ HEADERS += \
     DelimitedText/qgsdelimitedtextfile.h \
     DelimitedText/qgsdelimitedtextprovider.h \
     GWmodel/GWmodel.h \
+    Model/gwmlayerattributeitem.h \
+    Model/gwmlayerattributeitemmodel.h \
     Model/gwmlayergroupitem.h \
     Model/gwmlayergwritem.h \
     Model/gwmlayeritem.h \
@@ -118,6 +123,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
     gwmgwroptionsdialog.h \
+    gwmindepvarselectorwidget.h \
     gwmmaptoolidentifyfeature.h \
     gwmopenxyeventlayerdialog.h \
     gwmprogressdialog.h \
@@ -143,6 +149,7 @@ FORMS += \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
     gwmgwroptionsdialog.ui \
+    gwmindepvarselectorwidget.ui \
     gwmopenxyeventlayerdialog.ui \
     gwmprogressdialog.ui \
     gwmpropertypanel.ui \

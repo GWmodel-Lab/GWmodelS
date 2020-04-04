@@ -6,9 +6,7 @@
 GwmGWROptionsDialog::GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmGWROptionsDialog),
-    mapLayerList(vectorLayerList),
-    mIndepVarModel(new QStandardItemModel),
-    mSelectedIndepVarModel(new QStandardItemModel)
+    mapLayerList(vectorLayerList)
 {
     ui->setupUi(this);
     for(QgsMapLayer* layer:mapLayerList){
@@ -16,9 +14,6 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList,QWi
     }
     ui->mLayerComboBox->setCurrentIndex(-1);
     ui->mDepVarComboBox->setCurrentIndex(-1);
-
-    ui->mIndepVarView->setModel(mIndepVarModel);
-    ui->mSelectedIndepVarView->setModel(mSelectedIndepVarModel);
 
     QButtonGroup* bwTypeBtnGroup = new QButtonGroup(this);
     bwTypeBtnGroup->addButton(ui->mBwTypeAdaptiveRadio);
@@ -35,8 +30,6 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList,QWi
 
     connect(ui->mLayerComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(layerChanged(int)));
     connect(ui->mDepVarComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onDepVarChanged(int)));
-    connect(ui->mAddIndepVarBtn,&QPushButton::clicked,this,&GwmGWROptionsDialog::onAddIndepVarBtn);
-    connect(ui->mDelIndepVarBtn,&QPushButton::clicked,this,&GwmGWROptionsDialog::onDelIndepVarBtn);
 
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onFixedRadioToggled);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onVariableRadioToggled);
@@ -58,96 +51,25 @@ GwmGWROptionsDialog::~GwmGWROptionsDialog()
 
 void GwmGWROptionsDialog::layerChanged(int index)
 {
+    ui->mIndepVarSelector->layerChanged((QgsVectorLayer*)mapLayerList[index]);
     if (mLayer)
     {
         mLayer = nullptr;
     }
     mLayer =  (QgsVectorLayer*)mapLayerList[index];
     QList<int> attributeList = mLayer->attributeList();
-    if (mIndepVarModel)
-    {
-        mIndepVarModel->clear();
-    }
-    if (mSelectedIndepVarModel)
-    {
-        mSelectedIndepVarModel->clear();
-    }
-    qDebug() << "layerChanged";
     ui->mDepVarComboBox->clear();
+    qDebug() << "layerChanged";
     for (int index : attributeList)
     {
         QString attributeName = static_cast<QString>(mLayer->attributeDisplayName(index));
         ui->mDepVarComboBox->addItem(attributeName);
     }
-    ui->mIndepVarView->setModel(mIndepVarModel);
 }
 
 void GwmGWROptionsDialog::onDepVarChanged(const int index)
 {
-    QString depVarName = ui->mDepVarComboBox->itemText(index);
-    if (mIndepVarModel)
-    {
-        mIndepVarModel->clear();
-    }
-    QList<int> attributeList = mLayer->attributeList();
-    for(int index : attributeList)
-    {
-        QString attributeName = static_cast<QString>(mLayer->attributeDisplayName(index));
-        if (attributeName != depVarName)
-        {
-            QStandardItem *item = new QStandardItem(attributeName);
-            item->setData(index);
-            mIndepVarModel->appendRow(item);
-        }
-    }
-    if (mSelectedIndepVarModel)
-    {
-        QList<QStandardItem*> removeItems = mSelectedIndepVarModel->findItems(depVarName);
-        for (QStandardItem* item : removeItems)
-        {
-            mSelectedIndepVarModel->removeRow(mSelectedIndepVarModel->indexFromItem(item).row());
-        }
-    }
-}
-
-void GwmGWROptionsDialog::onAddIndepVarBtn()
-{
-    if(!mSelectedIndepVarModel){
-        mSelectedIndepVarModel = new QStandardItemModel(this);
-//        qDebug() << "mSelectedAttributeModel";
-    }
-    QModelIndexList selected = ui->mIndepVarView->selectionModel()->selectedIndexes();
-    for(QModelIndex index : selected){
-        if(index.isValid()){
-            QStandardItem *item = mIndepVarModel->itemFromIndex(index)->clone();
-            mSelectedIndepVarModel->appendRow(item);
-        }
-    }
-    for(QModelIndex index : selected)
-    {
-        if(index.isValid()){
-            mIndepVarModel->removeRows(index.row(),1);
-        }
-    }
-    ui->mSelectedIndepVarView->setModel(mSelectedIndepVarModel);
-//    if()
-}
-
-void GwmGWROptionsDialog::onDelIndepVarBtn()
-{
-    QModelIndexList selected = ui->mSelectedIndepVarView->selectionModel()->selectedIndexes();
-    for(QModelIndex index:selected){
-        if(index.isValid()){
-            QStandardItem *item = mSelectedIndepVarModel->itemFromIndex(index)->clone();
-            mIndepVarModel->appendRow(item);
-        }
-    }
-    for(QModelIndex index:selected)
-    {
-        if(index.isValid()){
-            mSelectedIndepVarModel->removeRows(index.row(),1);
-        }
-    }
+    ui->mIndepVarSelector->onDepVarChanged(ui->mDepVarComboBox->itemText(index));
 }
 
 QString GwmGWROptionsDialog::crsRotateTheta()
