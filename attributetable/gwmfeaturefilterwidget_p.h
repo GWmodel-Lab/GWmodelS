@@ -33,8 +33,6 @@
 
 #include "qgsattributeform.h"
 
-#include "qgis_gui.h"
-
 class QgsVectorLayer;
 class QgsAttributeEditorContext;
 class QgsSearchWidgetWrapper;
@@ -45,14 +43,14 @@ class QgsMessageBar;
  * \ingroup gui
  * \class QgsFeatureFilterWidget
  */
-class QgsFeatureFilterWidget : public QWidget, private Ui::QgsFeatureFilterWidget
+class GwmFeatureFilterWidget : public QWidget, private Ui::QgsFeatureFilterWidget
 {
     Q_OBJECT
 
   public:
 
     //! Constructor for QgsFeatureFilterWidget
-    explicit QgsFeatureFilterWidget( QWidget *parent SIP_TRANSFERTHIS = nullptr );
+    explicit GwmFeatureFilterWidget( QWidget *parent SIP_TRANSFERTHIS = nullptr );
 
     void init( QgsVectorLayer *layer, const QgsAttributeEditorContext &context, QgsDualView *mainView);
 

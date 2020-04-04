@@ -7,13 +7,13 @@
 
 #include <qgsvectorlayer.h>
 
-class GwmDevAttrTable: public QDialog, public Ui::QgsAttributeTableDialog
+class GwmAttributeTableDialog: public QDialog, public Ui::QgsAttributeTableDialog
 {
     Q_OBJECT
 public:
     //GwmDevAttrTable(QgsVectorLayer* theVecLayer, QgsMapCanvas* map, QWidget *parent = 0);
-    GwmDevAttrTable(QgsVectorLayer* theVecLayer, QgsMapCanvas* myMapCanvas, QWidget *parent = 0, Qt::WindowFlags flags = Qt::Window,QgsAttributeTableFilterModel::FilterMode initialMode = QgsAttributeTableFilterModel::ShowAll);
-    ~GwmDevAttrTable();
+    GwmAttributeTableDialog(QgsVectorLayer* theVecLayer, QgsMapCanvas* myMapCanvas, QWidget *parent = 0, Qt::WindowFlags flags = Qt::Window,QgsAttributeTableFilterModel::FilterMode initialMode = QgsAttributeTableFilterModel::ShowAll);
+    ~GwmAttributeTableDialog();
 
     //! starts/stops editing mode of a layer
     bool toggleEditing2( QgsMapLayer *layer, bool allowCancel = true );

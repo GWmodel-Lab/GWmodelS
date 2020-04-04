@@ -1,4 +1,4 @@
-#include "gwmdevattrtable.h"
+#include "gwmattributetabledialog.h"
 
 #include "mainwidget.h"
 
@@ -21,7 +21,7 @@
 #include "qgsexpression.h"
 #include "qgsexpressionbuilderwidget.h"
 #include "qgsaddattrdialog.h"
-#include "qgsdelattrdialog.h"
+#include "attributetable/qgsdelattrdialog.h"
 #include "qgsdockwidget.h"
 #include "qgsfeatureiterator.h"
 #include "qgssearchquerybuilder.h"
@@ -29,7 +29,7 @@
 #include "qgsmapcanvas.h"
 #include "qgsproject.h"
 #include "qgsfieldcalculator.h"
-#include "qgsfeatureaction.h"
+#include "attributetable/qgsfeatureaction.h"
 #include "qgsactionmanager.h"
 #include "qgsmessagebar.h"
 #include "qgsexpressionselectiondialog.h"
@@ -47,7 +47,7 @@
 #include "attributetable/qgsguivectorlayertools.h"
 
 //GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer, QgsMapCanvas* myMapCanvas,QWidget *parent)
-GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMapCanvas, QWidget *parent, Qt::WindowFlags flags,QgsAttributeTableFilterModel::FilterMode initialMode)
+GwmAttributeTableDialog::GwmAttributeTableDialog(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMapCanvas, QWidget *parent, Qt::WindowFlags flags,QgsAttributeTableFilterModel::FilterMode initialMode)
 {
     setupUi(this);
     this->currentLayer = theVecLayer;
@@ -61,46 +61,46 @@ GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMap
     mMainView->setAttributeTableConfig( config );
     mFeatureFilterWidget->init(currentLayer,mEditorContext,mMainView);
     //编辑功能
-    connect(mActionToggleEditing,&QAction::toggled,this,&GwmDevAttrTable::mActionToggleEditing_toggled);
+    connect(mActionToggleEditing,&QAction::toggled,this,&GwmAttributeTableDialog::mActionToggleEditing_toggled);
     //全选功能
-    connect( mActionSelectAll, &QAction::triggered, this, &GwmDevAttrTable::mActionSelectAll_triggered );
+    connect( mActionSelectAll, &QAction::triggered, this, &GwmAttributeTableDialog::mActionSelectAll_triggered );
     //反选功能
-    connect( mActionInvertSelection, &QAction::triggered, this, &GwmDevAttrTable::mActionInvertSelection_triggered );
+    connect( mActionInvertSelection, &QAction::triggered, this, &GwmAttributeTableDialog::mActionInvertSelection_triggered );
     //删除所选
-    connect( mActionRemoveSelection, &QAction::triggered, this, &GwmDevAttrTable::mActionRemoveSelection_triggered );
+    connect( mActionRemoveSelection, &QAction::triggered, this, &GwmAttributeTableDialog::mActionRemoveSelection_triggered );
     //让所选的要素置顶属性表
-    connect( mActionSelectedToTop, &QAction::toggled, this, &GwmDevAttrTable::mActionSelectedToTop_toggled );
+    connect( mActionSelectedToTop, &QAction::toggled, this, &GwmAttributeTableDialog::mActionSelectedToTop_toggled );
     //缩放所选要素
-    connect( mActionPanMapToSelectedRows, &QAction::triggered, this, &GwmDevAttrTable::mActionPanMapToSelectedRows_triggered );
+    connect( mActionPanMapToSelectedRows, &QAction::triggered, this, &GwmAttributeTableDialog::mActionPanMapToSelectedRows_triggered );
     //缩放所选要素(更大)
-    connect( mActionZoomMapToSelectedRows, &QAction::triggered, this, &GwmDevAttrTable::mActionZoomMapToSelectedRows_triggered );
+    connect( mActionZoomMapToSelectedRows, &QAction::triggered, this, &GwmAttributeTableDialog::mActionZoomMapToSelectedRows_triggered );
     //打开要素计算器
-    connect( mActionOpenFieldCalculator, &QAction::triggered, this, &GwmDevAttrTable::mActionOpenFieldCalculator_triggered );
+    connect( mActionOpenFieldCalculator, &QAction::triggered, this, &GwmAttributeTableDialog::mActionOpenFieldCalculator_triggered );
 
-    connect( mActionAddAttribute, &QAction::triggered, this, &GwmDevAttrTable::mActionAddAttribute_triggered );
-    connect( mActionRemoveAttribute, &QAction::triggered, this, &GwmDevAttrTable::mActionRemoveAttribute_triggered );
+    connect( mActionAddAttribute, &QAction::triggered, this, &GwmAttributeTableDialog::mActionAddAttribute_triggered );
+    connect( mActionRemoveAttribute, &QAction::triggered, this, &GwmAttributeTableDialog::mActionRemoveAttribute_triggered );
 
-    connect( mActionSaveEdits, &QAction::triggered, this, &GwmDevAttrTable::mActionSaveEdits_triggered );
+    connect( mActionSaveEdits, &QAction::triggered, this, &GwmAttributeTableDialog::mActionSaveEdits_triggered );
 
     //添加要素
-    connect( mActionAddFeature, &QAction::triggered, this, &GwmDevAttrTable::mActionAddFeature_triggered );
+    connect( mActionAddFeature, &QAction::triggered, this, &GwmAttributeTableDialog::mActionAddFeature_triggered );
     //删除要素
-    connect( mActionDeleteSelected, &QAction::triggered, this, &GwmDevAttrTable::mActionDeleteSelected_triggered );
+    connect( mActionDeleteSelected, &QAction::triggered, this, &GwmAttributeTableDialog::mActionDeleteSelected_triggered );
 
-    connect( mActionExpressionSelect, &QAction::triggered, this, &GwmDevAttrTable::mActionExpressionSelect_triggered );
+    connect( mActionExpressionSelect, &QAction::triggered, this, &GwmAttributeTableDialog::mActionExpressionSelect_triggered );
 
     //QGIS源码
-    connect( this->currentLayer, &QgsVectorLayer::editingStarted, this, &GwmDevAttrTable::editingToggled );
-    connect( this->currentLayer, &QgsVectorLayer::editingStopped, this, &GwmDevAttrTable::editingToggled );
+    connect( this->currentLayer, &QgsVectorLayer::editingStarted, this, &GwmAttributeTableDialog::editingToggled );
+    connect( this->currentLayer, &QgsVectorLayer::editingStopped, this, &GwmAttributeTableDialog::editingToggled );
 
-    connect( currentLayer, &QgsVectorLayer::selectionChanged, this, &GwmDevAttrTable::updateTitle );
-    connect( currentLayer, &QgsVectorLayer::featureAdded, this, &GwmDevAttrTable::updateTitle );
-    connect( currentLayer, &QgsVectorLayer::featuresDeleted, this, &GwmDevAttrTable::updateTitle );
-    connect( currentLayer, &QgsVectorLayer::editingStopped, this, &GwmDevAttrTable::updateTitle );
+    connect( currentLayer, &QgsVectorLayer::selectionChanged, this, &GwmAttributeTableDialog::updateTitle );
+    connect( currentLayer, &QgsVectorLayer::featureAdded, this, &GwmAttributeTableDialog::updateTitle );
+    connect( currentLayer, &QgsVectorLayer::featuresDeleted, this, &GwmAttributeTableDialog::updateTitle );
+    connect( currentLayer, &QgsVectorLayer::editingStopped, this, &GwmAttributeTableDialog::updateTitle );
     // connect table info to window
-    connect( mMainView, &QgsDualView::filterChanged, this, &GwmDevAttrTable::updateTitle );
-    connect( mMainView, &QgsDualView::filterExpressionSet, this, &GwmDevAttrTable::formFilterSet );
-    connect( mMainView, &QgsDualView::formModeChanged, this, &GwmDevAttrTable::viewModeChanged );
+    connect( mMainView, &QgsDualView::filterChanged, this, &GwmAttributeTableDialog::updateTitle );
+    connect( mMainView, &QgsDualView::filterExpressionSet, this, &GwmAttributeTableDialog::formFilterSet );
+    connect( mMainView, &QgsDualView::formModeChanged, this, &GwmAttributeTableDialog::viewModeChanged );
 
     mActionFeatureActions = new QToolButton();
     mActionFeatureActions->setAutoRaise( false );
@@ -162,9 +162,9 @@ GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMap
     mFieldCombo->setFilters( QgsFieldProxyModel::AllTypes | QgsFieldProxyModel::HideReadOnly );
     mFieldCombo->setLayer( this->currentLayer );
 
-    connect( mRunFieldCalc, &QAbstractButton::clicked, this, &GwmDevAttrTable::updateFieldFromExpression );
-    connect( mRunFieldCalcSelected, &QAbstractButton::clicked, this, &GwmDevAttrTable::updateFieldFromExpressionSelected );
-    connect( mUpdateExpressionText, static_cast < void ( QgsFieldExpressionWidget::* )( const QString &, bool ) > ( &QgsFieldExpressionWidget::fieldChanged ), this, &GwmDevAttrTable::updateButtonStatus );
+    connect( mRunFieldCalc, &QAbstractButton::clicked, this, &GwmAttributeTableDialog::updateFieldFromExpression );
+    connect( mRunFieldCalcSelected, &QAbstractButton::clicked, this, &GwmAttributeTableDialog::updateFieldFromExpressionSelected );
+    connect( mUpdateExpressionText, static_cast < void ( QgsFieldExpressionWidget::* )( const QString &, bool ) > ( &QgsFieldExpressionWidget::fieldChanged ), this, &GwmAttributeTableDialog::updateButtonStatus );
     mUpdateExpressionText->setLayer( this->currentLayer );
     mUpdateExpressionText->setLeftHandButtonStyle( true );
 
@@ -183,13 +183,13 @@ GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMap
     editingToggled();
 }
 
-GwmDevAttrTable::~GwmDevAttrTable()
+GwmAttributeTableDialog::~GwmAttributeTableDialog()
 {
 
 }
 
 // 启动编辑
-void GwmDevAttrTable::mActionToggleEditing_toggled(bool)
+void GwmAttributeTableDialog::mActionToggleEditing_toggled(bool)
 {
     //this->currentLayer->startEditing();
     if(!this->currentLayer){
@@ -214,7 +214,7 @@ void GwmDevAttrTable::mActionToggleEditing_toggled(bool)
     //this->currentLayer->commitChanges();
 }
 
-void GwmDevAttrTable::editingToggled()
+void GwmAttributeTableDialog::editingToggled()
 {
     //this->currentLayer->startEditing();
     mActionToggleEditing->blockSignals(true);
@@ -266,32 +266,32 @@ void GwmDevAttrTable::editingToggled()
         QAction *qAction = actionMenu->addAction( action.icon(), action.shortTitle() );
         qAction->setToolTip( action.name() );
         qAction->setData( QVariant::fromValue<QgsAction>( action ) );
-        connect( qAction, &QAction::triggered, this, &GwmDevAttrTable::layerActionTriggered );
+        connect( qAction, &QAction::triggered, this, &GwmAttributeTableDialog::layerActionTriggered );
       }
       mActionFeatureActions->setMenu( actionMenu );
     }
 }
 
 // 全选功能
-void GwmDevAttrTable::mActionSelectAll_triggered()
+void GwmAttributeTableDialog::mActionSelectAll_triggered()
 {
     this->currentLayer->selectAll();
 }
 
 // 反选功能
-void GwmDevAttrTable::mActionInvertSelection_triggered()
+void GwmAttributeTableDialog::mActionInvertSelection_triggered()
 {
   this->currentLayer->invertSelection();
 }
 
 // 删除所选
-void GwmDevAttrTable::mActionRemoveSelection_triggered()
+void GwmAttributeTableDialog::mActionRemoveSelection_triggered()
 {
   this->currentLayer->removeSelection();
 }
 
 // 置顶属性表所选要素
-void GwmDevAttrTable::mActionSelectedToTop_toggled( bool checked )
+void GwmAttributeTableDialog::mActionSelectedToTop_toggled( bool checked )
 {
   if ( checked )
   {
@@ -304,19 +304,19 @@ void GwmDevAttrTable::mActionSelectedToTop_toggled( bool checked )
 }
 
 // 缩放所选要素
-void GwmDevAttrTable::mActionPanMapToSelectedRows_triggered()
+void GwmAttributeTableDialog::mActionPanMapToSelectedRows_triggered()
 {
   this->mymapCanvas->panToSelected( this->currentLayer );
 }
 
 // 缩放所选要素-更大
-void GwmDevAttrTable::mActionZoomMapToSelectedRows_triggered()
+void GwmAttributeTableDialog::mActionZoomMapToSelectedRows_triggered()
 {
   this->mymapCanvas->zoomToSelected( this->currentLayer );
 }
 
 // 打开要素计算器
-void GwmDevAttrTable::mActionOpenFieldCalculator_triggered()
+void GwmAttributeTableDialog::mActionOpenFieldCalculator_triggered()
 {
   QgsAttributeTableModel *masterModel = mMainView->masterModel();
   QgsFieldCalculator calc( this->currentLayer, this );
@@ -332,7 +332,7 @@ void GwmDevAttrTable::mActionOpenFieldCalculator_triggered()
 }
 
 //
-void GwmDevAttrTable::layerActionTriggered()
+void GwmAttributeTableDialog::layerActionTriggered()
 {
     QAction *qAction = qobject_cast<QAction *>( sender() );
     Q_ASSERT( qAction );
@@ -346,7 +346,7 @@ void GwmDevAttrTable::layerActionTriggered()
     action.run( context );
 }
 
-void GwmDevAttrTable::updateMultiEditButtonState()
+void GwmAttributeTableDialog::updateMultiEditButtonState()
 {
   if ( ! this->currentLayer || ( this->currentLayer->editFormConfig().layout() == QgsEditFormConfig::EditorLayout::UiFileLayout ) )
     return;
@@ -359,20 +359,20 @@ void GwmDevAttrTable::updateMultiEditButtonState()
   }
 }
 
-void GwmDevAttrTable::updateFieldFromExpression()
+void GwmAttributeTableDialog::updateFieldFromExpression()
 {
   bool filtered = mMainView->filterMode() != QgsAttributeTableFilterModel::ShowAll;
   QgsFeatureIds filteredIds = filtered ? mMainView->filteredFeatures() : QgsFeatureIds();
   runFieldCalculation( this->currentLayer, mFieldCombo->currentField(), mUpdateExpressionText->asExpression(), filteredIds );
 }
 
-void GwmDevAttrTable::updateFieldFromExpressionSelected()
+void GwmAttributeTableDialog::updateFieldFromExpressionSelected()
 {
   QgsFeatureIds filteredIds = this->currentLayer->selectedFeatureIds();
   runFieldCalculation( this->currentLayer, mFieldCombo->currentField(), mUpdateExpressionText->asExpression(), filteredIds );
 }
 
-void GwmDevAttrTable::runFieldCalculation( QgsVectorLayer *layer, const QString &fieldName, const QString &expression, const QgsFeatureIds &filteredIds )
+void GwmAttributeTableDialog::runFieldCalculation( QgsVectorLayer *layer, const QString &fieldName, const QString &expression, const QgsFeatureIds &filteredIds )
 {
   int fieldindex = layer->fields().indexFromName( fieldName );
   if ( fieldindex < 0 )
@@ -473,13 +473,13 @@ void GwmDevAttrTable::runFieldCalculation( QgsVectorLayer *layer, const QString 
   }
 }
 
-void GwmDevAttrTable::updateButtonStatus( const QString &fieldName, bool isValid )
+void GwmAttributeTableDialog::updateButtonStatus( const QString &fieldName, bool isValid )
 {
   Q_UNUSED( fieldName )
   mRunFieldCalc->setEnabled( isValid );
 }
 
-void GwmDevAttrTable::updateTitle()
+void GwmAttributeTableDialog::updateTitle()
 {
   if ( ! this->currentLayer )
   {
@@ -508,7 +508,7 @@ void GwmDevAttrTable::updateTitle()
   mActionCopySelectedRows->setEnabled( enabled );
 }
 
-void GwmDevAttrTable::mActionAddAttribute_triggered()
+void GwmAttributeTableDialog::mActionAddAttribute_triggered()
 {
   if ( !this->currentLayer )
   {
@@ -537,7 +537,7 @@ void GwmDevAttrTable::mActionAddAttribute_triggered()
   }
 }
 
-void GwmDevAttrTable::mActionRemoveAttribute_triggered()
+void GwmAttributeTableDialog::mActionRemoveAttribute_triggered()
 {
   if ( !this->currentLayer )
   {
@@ -570,7 +570,7 @@ void GwmDevAttrTable::mActionRemoveAttribute_triggered()
   }
 }
 
-bool GwmDevAttrTable::toggleEditing2( QgsMapLayer *layer, bool allowCancel )
+bool GwmAttributeTableDialog::toggleEditing2( QgsMapLayer *layer, bool allowCancel )
 {
   QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( layer );
   if ( !vlayer )
@@ -684,12 +684,12 @@ bool GwmDevAttrTable::toggleEditing2( QgsMapLayer *layer, bool allowCancel )
   return res;
 }
 
-void GwmDevAttrTable::mActionSaveEdits_triggered()
+void GwmAttributeTableDialog::mActionSaveEdits_triggered()
 {
     saveEdits(this->currentLayer,true,true);
 }
 
-void GwmDevAttrTable::saveEdits( QgsMapLayer *layer, bool leaveEditable, bool triggerRepaint )
+void GwmAttributeTableDialog::saveEdits( QgsMapLayer *layer, bool leaveEditable, bool triggerRepaint )
 {
   QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( layer );
   if ( !vlayer || !vlayer->isEditable() || !vlayer->isModified() )
@@ -714,12 +714,12 @@ void GwmDevAttrTable::saveEdits( QgsMapLayer *layer, bool leaveEditable, bool tr
   }
 }
 
-void GwmDevAttrTable::mActionDeleteSelected_triggered()
+void GwmAttributeTableDialog::mActionDeleteSelected_triggered()
 {
   deleteSelected( currentLayer, this );
 }
 
-void GwmDevAttrTable::deleteSelected( QgsMapLayer *layer, QWidget *parent, bool checkFeaturesVisible )
+void GwmAttributeTableDialog::deleteSelected( QgsMapLayer *layer, QWidget *parent, bool checkFeaturesVisible )
 {
 //  if ( !layer )
 //  {
@@ -817,7 +817,7 @@ void GwmDevAttrTable::deleteSelected( QgsMapLayer *layer, QWidget *parent, bool 
   vlayer->endEditCommand();
 }
 
-void GwmDevAttrTable::mActionAddFeature_triggered()
+void GwmAttributeTableDialog::mActionAddFeature_triggered()
 {
   if ( !currentLayer->isEditable() )
     return;
@@ -833,22 +833,22 @@ void GwmDevAttrTable::mActionAddFeature_triggered()
   }
 }
 
-void GwmDevAttrTable::formFilterSet( const QString &filter, QgsAttributeForm::FilterType type )
+void GwmAttributeTableDialog::formFilterSet( const QString &filter, QgsAttributeForm::FilterType type )
 {
   setFilterExpression( filter, type, true );
 }
-void GwmDevAttrTable::setFilterExpression( const QString &filterString, QgsAttributeForm::FilterType type,
+void GwmAttributeTableDialog::setFilterExpression( const QString &filterString, QgsAttributeForm::FilterType type,
     bool alwaysShowFilter )
 {
   mFeatureFilterWidget->setFilterExpression( filterString, type, alwaysShowFilter );
 }
-void GwmDevAttrTable::viewModeChanged( QgsAttributeEditorContext::Mode mode )
+void GwmAttributeTableDialog::viewModeChanged( QgsAttributeEditorContext::Mode mode )
 {
   if ( mode != QgsAttributeEditorContext::SearchMode )
     mActionSearchForm->setChecked( false );
 }
 
-void GwmDevAttrTable::mActionExpressionSelect_triggered()
+void GwmAttributeTableDialog::mActionExpressionSelect_triggered()
 {
   QgsExpressionSelectionDialog *dlg = new QgsExpressionSelectionDialog( currentLayer );
   //dlg->setMessageBar( QgisApp::instance()->messageBar() );

@@ -24,7 +24,7 @@
 // version without notice, or even be removed.
 //
 
-#include "qgsfeaturefilterwidget_p.h"
+#include "gwmfeaturefilterwidget_p.h"
 
 #include "qgsapplication.h"
 #include "qgssearchwidgetwrapper.h"
@@ -40,7 +40,7 @@
 
 #include <QMenu>
 
-QgsFeatureFilterWidget::QgsFeatureFilterWidget( QWidget *parent )
+GwmFeatureFilterWidget::GwmFeatureFilterWidget( QWidget *parent )
   : QWidget( parent )
 {
   setupUi( this );
@@ -62,23 +62,23 @@ QgsFeatureFilterWidget::QgsFeatureFilterWidget( QWidget *parent )
 
   // Set button to store or delete stored filter expressions
   mStoreFilterExpressionButton->setDefaultAction( mActionHandleStoreFilterExpression );
-  connect( mActionSaveAsStoredFilterExpression, &QAction::triggered, this, &QgsFeatureFilterWidget::saveAsStoredFilterExpression );
-  connect( mActionEditStoredFilterExpression, &QAction::triggered, this, &QgsFeatureFilterWidget::editStoredFilterExpression );
-  connect( mActionHandleStoreFilterExpression, &QAction::triggered, this, &QgsFeatureFilterWidget::handleStoreFilterExpression );
+  connect( mActionSaveAsStoredFilterExpression, &QAction::triggered, this, &GwmFeatureFilterWidget::saveAsStoredFilterExpression );
+  connect( mActionEditStoredFilterExpression, &QAction::triggered, this, &GwmFeatureFilterWidget::editStoredFilterExpression );
+  connect( mActionHandleStoreFilterExpression, &QAction::triggered, this, &GwmFeatureFilterWidget::handleStoreFilterExpression );
   mApplyFilterButton->setDefaultAction( mActionApplyFilter );
 
   // Connect filter signals
-  connect( mActionAdvancedFilter, &QAction::triggered, this, &QgsFeatureFilterWidget::filterExpressionBuilder );
-  connect( mActionShowAllFilter, &QAction::triggered, this, &QgsFeatureFilterWidget::filterShowAll );
-  connect( mActionSelectedFilter, &QAction::triggered, this, &QgsFeatureFilterWidget::filterSelected );
-  connect( mActionVisibleFilter, &QAction::triggered, this, &QgsFeatureFilterWidget::filterVisible );
-  connect( mActionEditedFilter, &QAction::triggered, this, &QgsFeatureFilterWidget::filterEdited );
-  connect( mFilterQuery, &QLineEdit::returnPressed, this, &QgsFeatureFilterWidget::filterQueryAccepted );
-  connect( mActionApplyFilter, &QAction::triggered, this, &QgsFeatureFilterWidget::filterQueryAccepted );
-  connect( mFilterQuery, &QLineEdit::textChanged, this, &QgsFeatureFilterWidget::onFilterQueryTextChanged );
+  connect( mActionAdvancedFilter, &QAction::triggered, this, &GwmFeatureFilterWidget::filterExpressionBuilder );
+  connect( mActionShowAllFilter, &QAction::triggered, this, &GwmFeatureFilterWidget::filterShowAll );
+  connect( mActionSelectedFilter, &QAction::triggered, this, &GwmFeatureFilterWidget::filterSelected );
+  connect( mActionVisibleFilter, &QAction::triggered, this, &GwmFeatureFilterWidget::filterVisible );
+  connect( mActionEditedFilter, &QAction::triggered, this, &GwmFeatureFilterWidget::filterEdited );
+  connect( mFilterQuery, &QLineEdit::returnPressed, this, &GwmFeatureFilterWidget::filterQueryAccepted );
+  connect( mActionApplyFilter, &QAction::triggered, this, &GwmFeatureFilterWidget::filterQueryAccepted );
+  connect( mFilterQuery, &QLineEdit::textChanged, this, &GwmFeatureFilterWidget::onFilterQueryTextChanged );
 }
 
-void QgsFeatureFilterWidget::init( QgsVectorLayer *layer, const QgsAttributeEditorContext &context, QgsDualView *mainView)
+void GwmFeatureFilterWidget::init( QgsVectorLayer *layer, const QgsAttributeEditorContext &context, QgsDualView *mainView)
 {
   mMainView = mainView;
   mLayer = layer;
@@ -86,19 +86,19 @@ void QgsFeatureFilterWidget::init( QgsVectorLayer *layer, const QgsAttributeEdit
 //  mMessageBar = messageBar;
 //  mMessageBarTimeout = messageBarTimeout;
 
-  connect( mLayer, &QgsVectorLayer::attributeAdded, this, &QgsFeatureFilterWidget::columnBoxInit );
-  connect( mLayer, &QgsVectorLayer::attributeDeleted, this, &QgsFeatureFilterWidget::columnBoxInit );
+  connect( mLayer, &QgsVectorLayer::attributeAdded, this, &GwmFeatureFilterWidget::columnBoxInit );
+  connect( mLayer, &QgsVectorLayer::attributeDeleted, this, &GwmFeatureFilterWidget::columnBoxInit );
 
   //set delay on entering text
   mFilterQueryTimer.setSingleShot( true );
-  connect( &mFilterQueryTimer, &QTimer::timeout, this, &QgsFeatureFilterWidget::updateCurrentStoredFilterExpression );
+  connect( &mFilterQueryTimer, &QTimer::timeout, this, &GwmFeatureFilterWidget::updateCurrentStoredFilterExpression );
 
   columnBoxInit();
   storedFilterExpressionBoxInit();
   storeExpressionButtonInit();
 }
 
-void QgsFeatureFilterWidget::filterShowAll()
+void GwmFeatureFilterWidget::filterShowAll()
 {
   mFilterButton->setDefaultAction( mActionShowAllFilter );
   mFilterButton->setPopupMode( QToolButton::InstantPopup );
@@ -113,7 +113,7 @@ void QgsFeatureFilterWidget::filterShowAll()
   mMainView->setFilterMode( QgsAttributeTableFilterModel::ShowAll );
 }
 
-void QgsFeatureFilterWidget::filterSelected()
+void GwmFeatureFilterWidget::filterSelected()
 {
   mFilterButton->setDefaultAction( mActionSelectedFilter );
   mFilterButton->setPopupMode( QToolButton::InstantPopup );
@@ -123,7 +123,7 @@ void QgsFeatureFilterWidget::filterSelected()
   mMainView->setFilterMode( QgsAttributeTableFilterModel::ShowSelected );
 }
 
-void QgsFeatureFilterWidget::filterVisible()
+void GwmFeatureFilterWidget::filterVisible()
 {
   if ( !mLayer->isSpatial() )
   {
@@ -139,7 +139,7 @@ void QgsFeatureFilterWidget::filterVisible()
   mMainView->setFilterMode( QgsAttributeTableFilterModel::ShowVisible );
 }
 
-void QgsFeatureFilterWidget::filterEdited()
+void GwmFeatureFilterWidget::filterEdited()
 {
   mFilterButton->setDefaultAction( mActionEditedFilter );
   mFilterButton->setPopupMode( QToolButton::InstantPopup );
@@ -150,7 +150,7 @@ void QgsFeatureFilterWidget::filterEdited()
 }
 
 
-void QgsFeatureFilterWidget::filterQueryAccepted()
+void GwmFeatureFilterWidget::filterQueryAccepted()
 {
   if ( ( mFilterQuery->isVisible() && mFilterQuery->text().isEmpty() ) ||
        ( mCurrentSearchWidgetWrapper && mCurrentSearchWidgetWrapper->widget()->isVisible()
@@ -162,7 +162,7 @@ void QgsFeatureFilterWidget::filterQueryAccepted()
   filterQueryChanged( mFilterQuery->text() );
 }
 
-void QgsFeatureFilterWidget::filterQueryChanged( const QString &query )
+void GwmFeatureFilterWidget::filterQueryChanged( const QString &query )
 {
   QString str;
   if ( mFilterButton->defaultAction() == mActionAdvancedFilter )
@@ -177,7 +177,7 @@ void QgsFeatureFilterWidget::filterQueryChanged( const QString &query )
   setFilterExpression( str );
 }
 
-void QgsFeatureFilterWidget::columnBoxInit()
+void GwmFeatureFilterWidget::columnBoxInit()
 {
   const auto constActions = mFilterColumnsMenu->actions();
   for ( QAction *a : constActions )
@@ -222,7 +222,7 @@ void QgsFeatureFilterWidget::columnBoxInit()
   }
 }
 
-void QgsFeatureFilterWidget::handleStoreFilterExpression()
+void GwmFeatureFilterWidget::handleStoreFilterExpression()
 {
   if ( !mActionHandleStoreFilterExpression->isChecked() )
   {
@@ -237,7 +237,7 @@ void QgsFeatureFilterWidget::handleStoreFilterExpression()
   storedFilterExpressionBoxInit();
 }
 
-void QgsFeatureFilterWidget::storedFilterExpressionBoxInit()
+void GwmFeatureFilterWidget::storedFilterExpressionBoxInit()
 {
   const auto constActions = mStoredFilterExpressionMenu->actions();
   for ( QAction *a : constActions )
@@ -258,7 +258,7 @@ void QgsFeatureFilterWidget::storedFilterExpressionBoxInit()
   }
 }
 
-void QgsFeatureFilterWidget::storeExpressionButtonInit()
+void GwmFeatureFilterWidget::storeExpressionButtonInit()
 {
   if ( mActionHandleStoreFilterExpression->isChecked() )
   {
@@ -279,7 +279,7 @@ void QgsFeatureFilterWidget::storeExpressionButtonInit()
 }
 
 
-void QgsFeatureFilterWidget::filterColumnChanged( QAction *filterAction )
+void GwmFeatureFilterWidget::filterColumnChanged( QAction *filterAction )
 {
   mFilterButton->setDefaultAction( filterAction );
   mFilterButton->setPopupMode( QToolButton::InstantPopup );
@@ -300,13 +300,13 @@ void QgsFeatureFilterWidget::filterColumnChanged( QAction *filterAction )
                                 createSearchWidget( setup.type(), mLayer, fldIdx, setup.config(), mFilterContainer, mEditorContext );
   if ( mCurrentSearchWidgetWrapper->applyDirectly() )
   {
-    connect( mCurrentSearchWidgetWrapper, &QgsSearchWidgetWrapper::expressionChanged, this, &QgsFeatureFilterWidget::filterQueryChanged );
+    connect( mCurrentSearchWidgetWrapper, &QgsSearchWidgetWrapper::expressionChanged, this, &GwmFeatureFilterWidget::filterQueryChanged );
     mApplyFilterButton->setVisible( false );
     mStoreFilterExpressionButton->setVisible( false );
   }
   else
   {
-    connect( mCurrentSearchWidgetWrapper, &QgsSearchWidgetWrapper::expressionChanged, this, &QgsFeatureFilterWidget::filterQueryAccepted );
+    connect( mCurrentSearchWidgetWrapper, &QgsSearchWidgetWrapper::expressionChanged, this, &GwmFeatureFilterWidget::filterQueryAccepted );
     mApplyFilterButton->setVisible( true );
     mStoreFilterExpressionButton->setVisible( true );
   }
@@ -314,7 +314,7 @@ void QgsFeatureFilterWidget::filterColumnChanged( QAction *filterAction )
   replaceSearchWidget( mFilterQuery, mCurrentSearchWidgetWrapper->widget() );
 }
 
-void QgsFeatureFilterWidget::filterExpressionBuilder()
+void GwmFeatureFilterWidget::filterExpressionBuilder()
 {
   // Show expression builder
   QgsExpressionContext context( QgsExpressionContextUtils::globalProjectLayerScopes( mLayer ) );
@@ -333,7 +333,7 @@ void QgsFeatureFilterWidget::filterExpressionBuilder()
   }
 }
 
-void QgsFeatureFilterWidget::saveAsStoredFilterExpression()
+void GwmFeatureFilterWidget::saveAsStoredFilterExpression()
 {
   QgsDialog *dlg = new QgsDialog( this, nullptr, QDialogButtonBox::Save | QDialogButtonBox::Cancel );
   dlg->setWindowTitle( tr( "Save Expression As" ) );
@@ -354,7 +354,7 @@ void QgsFeatureFilterWidget::saveAsStoredFilterExpression()
   }
 }
 
-void QgsFeatureFilterWidget::editStoredFilterExpression()
+void GwmFeatureFilterWidget::editStoredFilterExpression()
 {
   QgsDialog *dlg = new QgsDialog( this, nullptr, QDialogButtonBox::Save | QDialogButtonBox::Cancel );
   dlg->setWindowTitle( tr( "Edit expression" ) );
@@ -384,7 +384,7 @@ void QgsFeatureFilterWidget::editStoredFilterExpression()
   }
 }
 
-void QgsFeatureFilterWidget::updateCurrentStoredFilterExpression()
+void GwmFeatureFilterWidget::updateCurrentStoredFilterExpression()
 {
   QgsStoredExpression currentStoredExpression = mLayer->storedExpressionManager()->findStoredExpressionByExpression( mFilterQuery->value() );
 
@@ -398,7 +398,7 @@ void QgsFeatureFilterWidget::updateCurrentStoredFilterExpression()
   storeExpressionButtonInit();
 }
 
-void QgsFeatureFilterWidget::setFilterExpression( const QString &filterString, QgsAttributeForm::FilterType type, bool alwaysShowFilter )
+void GwmFeatureFilterWidget::setFilterExpression( const QString &filterString, QgsAttributeForm::FilterType type, bool alwaysShowFilter )
 {
   QString filter;
   if ( !mFilterQuery->text().isEmpty() && !filterString.isEmpty() )
@@ -513,7 +513,7 @@ void QgsFeatureFilterWidget::setFilterExpression( const QString &filterString, Q
   mMainView->setFilterMode( QgsAttributeTableFilterModel::ShowFilteredList );
 }
 
-void QgsFeatureFilterWidget::replaceSearchWidget( QWidget *oldw, QWidget *neww )
+void GwmFeatureFilterWidget::replaceSearchWidget( QWidget *oldw, QWidget *neww )
 {
   mFilterLayout->removeWidget( oldw );
   oldw->setVisible( false );
@@ -522,7 +522,7 @@ void QgsFeatureFilterWidget::replaceSearchWidget( QWidget *oldw, QWidget *neww )
   neww->setFocus();
 }
 
-void QgsFeatureFilterWidget::onFilterQueryTextChanged( const QString &value )
+void GwmFeatureFilterWidget::onFilterQueryTextChanged( const QString &value )
 {
   Q_UNUSED( value );
   mFilterQueryTimer.start( 300 );

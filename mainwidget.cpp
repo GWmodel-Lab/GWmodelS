@@ -32,8 +32,7 @@
 #include <gwmsaveascsvdialog.h>
 #include <qgsvectorfilewriter.h>
 
-#include "gwmdevattrtable.h"
-#include "qgsattributetabledialog.h"
+#include "gwmattributetabledialog.h"
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -481,7 +480,7 @@ void MainWidget::onShowAttributeTable(const QModelIndex &index)
     QgsVectorLayer* currentLayer = mapModel->layerFromItem(item);
     if (currentLayer)
     {
-        GwmDevAttrTable *d = new GwmDevAttrTable(currentLayer,mapCanvas,this,Qt::Dialog);
+        GwmAttributeTableDialog *d = new GwmAttributeTableDialog(currentLayer,mapCanvas,this,Qt::Dialog);
         d->show();
     }
 }
