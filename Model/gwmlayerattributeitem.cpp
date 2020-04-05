@@ -16,11 +16,12 @@ QString GwmLayerAttributeItem::text(){
 QVariant GwmLayerAttributeItem::data(int col, int role){
     if (col == 0)
     {
+//        return text();
         switch (role) {
-        case Qt::DisplayRole:
-            return col == 0 ? text() : QString();
-        default:
-            break;
+            case Qt::DisplayRole:
+                return col == 0 ? text() : QString();
+            default:
+                break;
         }
     }
     return QVariant();
@@ -46,7 +47,7 @@ bool GwmLayerAttributeItem::setData(int col, int role, QVariant value){
 
 Qt::ItemFlags GwmLayerAttributeItem::flags()
 {
-    return Qt::ItemIsEnabled;
+    return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
 
 GwmLayerAttributeItem* GwmLayerAttributeItem::clone(){

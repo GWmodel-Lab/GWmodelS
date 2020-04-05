@@ -41,7 +41,7 @@ public:
     void appendRow(GwmLayerAttributeItem* item);
     void appendItem(int index, const QString attributeName, const QString type);
 
-    GwmLayerAttributeItem* item(int i);
+    GwmLayerAttributeItem* item(int i) const;
     GwmLayerAttributeItem* itemFromIndex(const QModelIndex& index) const;
     QModelIndex indexFromItem(GwmLayerAttributeItem* item) const;
 

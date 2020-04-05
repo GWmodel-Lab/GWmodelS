@@ -26,18 +26,6 @@ void GwmIndepVarSelectorWidget::layerChanged(QgsVectorLayer* layer)
     {
         mLayer = nullptr;
     }
-
-//    if( !layer ){
-//        if (mIndepVarModel)
-//        {
-//            mIndepVarModel->clear();
-//        }
-//        if (mSelectedIndepVarModel)
-//        {
-//            mSelectedIndepVarModel->clear();
-//        }
-//        return;
-//    }
     mLayer =  layer;
     QList<int> attributeList = mLayer->attributeList();
     if (mIndepVarModel)
@@ -71,7 +59,7 @@ void GwmIndepVarSelectorWidget::onDepVarChanged(QString depVarName)
             GwmLayerAttributeItem *item = new GwmLayerAttributeItem(index,attributeName,"string");
 //            item->setData(index);
             mIndepVarModel->appendRow(item);
-//            qDebug() << mIndepVarModel->data(mIndepVarModel->indexFromItem(item));
+            qDebug() << mIndepVarModel->indexFromItem(item).internalPointer();
         }
     }
 //    ui->mIndepVarView->setModel(mIndepVarModel);
@@ -97,7 +85,7 @@ void GwmIndepVarSelectorWidget::onAddIndepVarBtn()
         if(index.isValid()){
             GwmLayerAttributeItem *item = mIndepVarModel->itemFromIndex(index)->clone();
             mSelectedIndepVarModel->appendRow(item);
-            qDebug() << mSelectedIndepVarModel->indexFromItem(item).row();
+            qDebug() << index;
         }
     }
     for(QModelIndex index : selected)
