@@ -333,7 +333,12 @@ void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
                 QgsVectorFileWriter::SaveVectorOptions& options = *(new QgsVectorFileWriter::SaveVectorOptions());
                 if(saveAsCSVDlg->isAddXY()){
                     QStringList layerOptions;
-                    layerOptions << QStringLiteral( "%1=%2" ).arg( "GEOMETRY", "AS_XY" );
+                    if(layerItem->layer()->geometryType() == QgsWkbTypes::Type::Point){
+                        layerOptions << QStringLiteral( "%1=%2" ).arg( "GEOMETRY", "AS_XY" );
+                    }
+                    else{
+                        layerOptions << QStringLiteral( "%1=%2" ).arg( "GEOMETRY", "AS_WKT" );
+                    }
                     options.layerOptions = layerOptions;
                 }
                 layerItem->save(filePath,fileName,file_suffix,options);

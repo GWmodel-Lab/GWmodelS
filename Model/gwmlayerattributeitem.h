@@ -3,12 +3,13 @@
 
 #include <QObject>
 #include <QVariant>
+#include <qgsattributetableconfig.h>
 
 class GwmLayerAttributeItem : public QObject
 {
     Q_OBJECT
 public:
-    explicit GwmLayerAttributeItem(int index = 0, const QString attributeName = "", const QString type = "",QObject *parent = nullptr);
+    explicit GwmLayerAttributeItem(int index = 0, const QString attributeName = "", const QgsAttributeTableConfig attributeConfig = *(new QgsAttributeTableConfig()),QObject *parent = nullptr);
 
 public:
     virtual QString text();
@@ -17,12 +18,14 @@ public:
     virtual bool setData(int col, int role, QVariant value);
     int index();
     GwmLayerAttributeItem* clone();
+    QgsAttributeTableConfig::Type type();
 signals:
 
 private:
-    int attributeIndex;
-    QString attributeName;
-    QString dataType;
+    int mAttributeIndex;
+    QString mAttributeName;
+    QgsAttributeTableConfig::Type mColumnType;
+    const QgsAttributeTableConfig mAttributeTableConfig;
 };
 
 #endif // GWMLAYERATTRIBUTEITEM_H

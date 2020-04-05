@@ -1,16 +1,23 @@
 #include "gwmlayerattributeitem.h"
 
-GwmLayerAttributeItem::GwmLayerAttributeItem(int index, const QString attributeName, const QString type,QObject *parent)
+GwmLayerAttributeItem::GwmLayerAttributeItem(int index, const QString mAttributeName,const QgsAttributeTableConfig attributeTableConfig,QObject *parent)
 : QObject(parent),
-  attributeIndex(index),
-  attributeName(attributeName),
-  dataType(type)
+  mAttributeIndex(index),
+  mAttributeName(mAttributeName),
+  mAttributeTableConfig(attributeTableConfig)
 {
-
+     QVector<QgsAttributeTableConfig::ColumnConfig> mColumns = mAttributeTableConfig.columns();
+    for ( int i = mColumns.count() - 1; i >= 0; --i )
+    {
+      const QgsAttributeTableConfig::ColumnConfig &column = mColumns.at( i );
+      if( column.name == mAttributeName){
+          mColumnType = column.type;
+      }
+    }
 }
 
 QString GwmLayerAttributeItem::text(){
-    return attributeName;
+    return mAttributeName;
 }
 
 QVariant GwmLayerAttributeItem::data(int col, int role){
@@ -28,7 +35,7 @@ QVariant GwmLayerAttributeItem::data(int col, int role){
 }
 
 int GwmLayerAttributeItem::index(){
-    return attributeIndex;
+    return mAttributeIndex;
 }
 
 bool GwmLayerAttributeItem::setData(int col, int role, QVariant value){
@@ -36,7 +43,7 @@ bool GwmLayerAttributeItem::setData(int col, int role, QVariant value){
     {
         switch (role) {
         case Qt::DisplayRole:
-            attributeName = value.toString();
+            mAttributeName = value.toString();
             return true;
         default:
             break;
@@ -51,5 +58,9 @@ Qt::ItemFlags GwmLayerAttributeItem::flags()
 }
 
 GwmLayerAttributeItem* GwmLayerAttributeItem::clone(){
-    return new GwmLayerAttributeItem(attributeIndex,attributeName,dataType);
+    return new GwmLayerAttributeItem(mAttributeIndex,mAttributeName,mAttributeTableConfig);
+}
+
+QgsAttributeTableConfig::Type GwmLayerAttributeItem::type(){
+    return mColumnType;
 }

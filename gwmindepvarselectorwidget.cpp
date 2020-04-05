@@ -56,7 +56,7 @@ void GwmIndepVarSelectorWidget::onDepVarChanged(QString depVarName)
         QString attributeName = static_cast<QString>(mLayer->attributeDisplayName(index));
         if (attributeName != depVarName)
         {
-            GwmLayerAttributeItem *item = new GwmLayerAttributeItem(index,attributeName,"string");
+            GwmLayerAttributeItem *item = new GwmLayerAttributeItem(index,attributeName,mLayer->attributeTableConfig());
 //            item->setData(index);
             mIndepVarModel->appendRow(item);
             qDebug() << mIndepVarModel->indexFromItem(item).internalPointer();

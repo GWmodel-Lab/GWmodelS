@@ -5,16 +5,16 @@ GwmLayerAttributeItemModel::GwmLayerAttributeItemModel(QObject *parent)
     : QAbstractItemModel(parent)
 {
 //    attributeItem = new GwmLayerAttributeItem();
-    attributeItemList = QList<GwmLayerAttributeItem*>();
+    mAttributeItemList = QList<GwmLayerAttributeItem*>();
 }
 
 GwmLayerAttributeItemModel::~GwmLayerAttributeItemModel()
 {
-    for (GwmLayerAttributeItem* item : attributeItemList)
+    for (GwmLayerAttributeItem* item : mAttributeItemList)
     {
         delete item;
     }
-    attributeItemList.clear();
+    mAttributeItemList.clear();
 }
 
 QVariant GwmLayerAttributeItemModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -56,7 +56,7 @@ QModelIndex GwmLayerAttributeItemModel::parent(const QModelIndex &index) const
 {
     // FIXME: Implement me!
     if (!index.isValid()) return QModelIndex();
-//    if(index.row() < attributeItemList.count()&&index.column()==0)
+//    if(index.row() < mAttributeItemList.count()&&index.column()==0)
 //        return index;
 //    else
         return QModelIndex();
@@ -66,7 +66,7 @@ int GwmLayerAttributeItemModel::rowCount(const QModelIndex &parent) const
 {
 //    if (parent.isValid())
 //        return 1;
-    return attributeItemList.count() ;
+    return mAttributeItemList.count() ;
     // FIXME: Implement me!
 }
 
@@ -126,7 +126,7 @@ bool GwmLayerAttributeItemModel::insertRows(int row, int count, const QModelInde
     for (int num = row; num <  row + count; num++)
     {
         GwmLayerAttributeItem* item = new GwmLayerAttributeItem();
-        attributeItemList.insert(num, item);
+        mAttributeItemList.insert(num, item);
     }
     endInsertRows();
 
@@ -148,8 +148,8 @@ bool GwmLayerAttributeItemModel::removeRows(int row, int count, const QModelInde
     }
     for (int num = 0; num < count; num++){
          qDebug() << num;
-        GwmLayerAttributeItem* item = attributeItemList[row + num];
-        success = attributeItemList.removeOne(item);
+        GwmLayerAttributeItem* item = mAttributeItemList[row + num];
+        success = mAttributeItemList.removeOne(item);
         delete item;
     }
     endRemoveRows();
@@ -158,17 +158,17 @@ bool GwmLayerAttributeItemModel::removeRows(int row, int count, const QModelInde
 }
 
 bool GwmLayerAttributeItemModel::clear(){
-    for (GwmLayerAttributeItem* item : attributeItemList)
+    for (GwmLayerAttributeItem* item : mAttributeItemList)
     {
         delete item;
     }
-    attributeItemList.clear();
+    mAttributeItemList.clear();
     return true;
 }
 
 QList<GwmLayerAttributeItem*> GwmLayerAttributeItemModel::findItems(QString attributeName){
     QList<GwmLayerAttributeItem*> itemList;
-    for(GwmLayerAttributeItem* item : attributeItemList){
+    for(GwmLayerAttributeItem* item : mAttributeItemList){
         if(item->text() == attributeName){
             itemList.append(item);
         }
@@ -176,19 +176,19 @@ QList<GwmLayerAttributeItem*> GwmLayerAttributeItemModel::findItems(QString attr
     return itemList;
 }
 
-void GwmLayerAttributeItemModel::appendItem(int index, const QString attributeName, const QString type)
+void GwmLayerAttributeItemModel::appendItem(int index, const QString attributeName,const QgsAttributeTableConfig attributeTableConfig)
 {
-    GwmLayerAttributeItem* item = new GwmLayerAttributeItem(index,attributeName,type);
-    int row = attributeItemList.count();
+    GwmLayerAttributeItem* item = new GwmLayerAttributeItem(index,attributeName,attributeTableConfig);
+    int row = mAttributeItemList.count();
     beginInsertRows(QModelIndex(), row, row);
-    attributeItemList.append(item);
+    mAttributeItemList.append(item);
     endInsertRows();
 }
 
 void GwmLayerAttributeItemModel::appendRow(GwmLayerAttributeItem *item){
-    int row = attributeItemList.count();
+    int row = mAttributeItemList.count();
     beginInsertRows(QModelIndex(), row, row);
-    attributeItemList.append(item);
+    mAttributeItemList.append(item);
     endInsertRows();
 }
 
@@ -196,7 +196,7 @@ QModelIndex GwmLayerAttributeItemModel::indexFromItem(GwmLayerAttributeItem* ite
 {
     if (item)
     {
-       return createIndex(attributeItemList.indexOf(item),0);
+       return createIndex(mAttributeItemList.indexOf(item),0);
     }
     else
         return QModelIndex();
@@ -204,7 +204,7 @@ QModelIndex GwmLayerAttributeItemModel::indexFromItem(GwmLayerAttributeItem* ite
 
 GwmLayerAttributeItem* GwmLayerAttributeItemModel::itemFromIndex(const QModelIndex &index) const{
     if(index.isValid()){
-        return attributeItemList[index.row()];
+        return mAttributeItemList[index.row()];
 //        GwmLayerAttributeItem* item = static_cast<GwmLayerAttributeItem*>(index.internalPointer());
 //        if (item) return item;
     }
@@ -212,12 +212,12 @@ GwmLayerAttributeItem* GwmLayerAttributeItemModel::itemFromIndex(const QModelInd
 }
 
 GwmLayerAttributeItem* GwmLayerAttributeItemModel::item(int i) const{
-    return attributeItemList[i]? attributeItemList[i]:nullptr;
+    return mAttributeItemList[i]? mAttributeItemList[i]:nullptr;
 }
 
 QList<QString> GwmLayerAttributeItemModel::toLayerAttributeList(){
     QList<QString> layerAttributeList;
-    for(GwmLayerAttributeItem* item :attributeItemList){
+    for(GwmLayerAttributeItem* item :mAttributeItemList){
         layerAttributeList.append(item->text());
     }
     return  layerAttributeList;

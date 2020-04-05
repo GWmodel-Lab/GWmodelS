@@ -39,7 +39,7 @@ public:
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
     void appendRow(GwmLayerAttributeItem* item);
-    void appendItem(int index, const QString attributeName, const QString type);
+    void appendItem(int index, const QString attributeName,const QgsAttributeTableConfig attributeTableConfig);
 
     GwmLayerAttributeItem* item(int i) const;
     GwmLayerAttributeItem* itemFromIndex(const QModelIndex& index) const;
@@ -48,7 +48,7 @@ public:
     QList<QString> toLayerAttributeList();
 
 private:
-    QList<GwmLayerAttributeItem*> attributeItemList;
+    QList<GwmLayerAttributeItem*> mAttributeItemList;
 };
 
 #endif // GWMLAYERATTRIBUTEITEMMODEL_H
