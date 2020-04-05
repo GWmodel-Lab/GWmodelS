@@ -64,3 +64,38 @@ GwmLayerAttributeItem* GwmLayerAttributeItem::clone(){
 QgsAttributeTableConfig::Type GwmLayerAttributeItem::type(){
     return mColumnType;
 }
+
+int GwmLayerAttributeItem::attributeIndex() const
+{
+    return mAttributeIndex;
+}
+
+void GwmLayerAttributeItem::setAttributeIndex(int attributeIndex)
+{
+    mAttributeIndex = attributeIndex;
+}
+
+QString GwmLayerAttributeItem::attributeName() const
+{
+    return mAttributeName;
+}
+
+void GwmLayerAttributeItem::setAttributeName(const QString &attributeName)
+{
+    mAttributeName = attributeName;
+}
+
+QgsAttributeTableConfig::Type GwmLayerAttributeItem::columnType() const
+{
+    return mColumnType;
+}
+
+void GwmLayerAttributeItem::setColumnType(const QgsAttributeTableConfig::Type &columnType)
+{
+    mColumnType = columnType;
+}
+
+QgsAttributeTableConfig GwmLayerAttributeItem::attributeTableConfig() const
+{
+    return mAttributeTableConfig;
+}

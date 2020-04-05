@@ -4,6 +4,8 @@
 #include "gwmtaskthread.h"
 #include <qgsvectorlayer.h>
 
+#include "Model/gwmlayerattributeitem.h"
+
 class GwmGWRTaskThread : public GwmTaskThread
 {
     Q_OBJECT
@@ -24,12 +26,12 @@ public:
     };
 
 public:
-    GwmGWRTaskThread(QgsVectorLayer* layer, int depVarIndex, QList<int> indepVarIndex);
+    GwmGWRTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem* depVar, QList<GwmLayerAttributeItem*> indepVars);
 
 private:
     QgsVectorLayer* mLayer = nullptr;
-    int mDepVarIndex;
-    QList<int> mIndepVarIndex;
+    GwmLayerAttributeItem* mDepVar;
+    QList<GwmLayerAttributeItem*> mIndepVars;
     bool isEnableIndepVarAutosel = false;
 
     BandwidthType mBandwidthType = BandwidthType::Adaptive;

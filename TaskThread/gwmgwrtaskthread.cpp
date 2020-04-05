@@ -1,10 +1,10 @@
 #include "gwmgwrtaskthread.h"
 
-GwmGWRTaskThread::GwmGWRTaskThread(QgsVectorLayer* layer, int depVarIndex, QList<int> indepVarIndex)
+GwmGWRTaskThread::GwmGWRTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem* depVar, QList<GwmLayerAttributeItem*> indepVars)
     : GwmTaskThread()
     , mLayer(layer)
-    , mDepVarIndex(depVarIndex)
-    , mIndepVarIndex(indepVarIndex)
+    , mDepVar(depVar)
+    , mIndepVars(indepVars)
 {
 
 }

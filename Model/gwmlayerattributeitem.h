@@ -19,6 +19,18 @@ public:
     int index();
     GwmLayerAttributeItem* clone();
     QgsAttributeTableConfig::Type type();
+
+    int attributeIndex() const;
+    void setAttributeIndex(int attributeIndex);
+
+    QString attributeName() const;
+    void setAttributeName(const QString &attributeName);
+
+    QgsAttributeTableConfig::Type columnType() const;
+    void setColumnType(const QgsAttributeTableConfig::Type &columnType);
+
+    QgsAttributeTableConfig attributeTableConfig() const;
+
 signals:
 
 private:
