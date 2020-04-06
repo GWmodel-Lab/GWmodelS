@@ -17,6 +17,7 @@
 
 #include <gwmcoordtranssettingdialog.h>
 #include <gwmgwroptionsdialog.h>
+#include <gwmcsvtodatdialog.h>
 
 namespace Ui {
     class MainWidget;
@@ -53,6 +54,7 @@ public slots:
     void openFileImportJson();
     void openFileImportCsv();
     void onShowSymbolSetting(const QModelIndex &index);
+    void onCsvToDat();
 
 public:
     bool eventFilter(QObject* obj, QEvent* e);

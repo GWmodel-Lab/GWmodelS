@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>21</height>
+     <height>29</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -49,7 +49,14 @@
     <addaction name="separator"/>
     <addaction name="action_Exit"/>
    </widget>
+   <widget class="QMenu" name="menuGWR">
+    <property name="title">
+     <string>GWR</string>
+    </property>
+    <addaction name="action_CsvToDat"/>
+   </widget>
    <addaction name="menu_File"/>
+   <addaction name="menuGWR"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action_Open_Project">
@@ -80,6 +87,11 @@
   <action name="action_Exit">
    <property name="text">
     <string>&amp;Exit</string>
+   </property>
+  </action>
+  <action name="action_CsvToDat">
+   <property name="text">
+    <string>CsvToDat</string>
    </property>
   </action>
  </widget>
