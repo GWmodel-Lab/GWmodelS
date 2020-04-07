@@ -26,5 +26,6 @@ void MainWindow::setupMenus()
     connect(ui->action_ESRI_Shapefile, &QAction::triggered, mainWidget, &MainWidget::openFileImportShapefile);
     connect(ui->actionGeo_Json, &QAction::triggered, mainWidget, &MainWidget::openFileImportJson);
     connect(ui->action_CSV, &QAction::triggered, mainWidget, &MainWidget::openFileImportCsv);
+    connect(ui->action_CsvToDat, &QAction::triggered, mainWidget, &MainWidget::onCsvToDat);
 }
 

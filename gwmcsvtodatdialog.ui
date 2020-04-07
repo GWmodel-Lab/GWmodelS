@@ -29,7 +29,7 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -50,7 +50,7 @@
      <widget class="QLineEdit" name="mCsvFileName"/>
     </item>
     <item row="0" column="2">
-     <widget class="QPushButton" name="mCSvOpenButton">
+     <widget class="QPushButton" name="mCsvOpenButton">
       <property name="text">
        <string>…</string>
       </property>

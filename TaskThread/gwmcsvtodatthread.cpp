@@ -1,4 +1,5 @@
 #include "gwmcsvtodatthread.h"
+#include <qdebug.h>
 
 GwmCsvToDatThread::GwmCsvToDatThread(QString csvFielname,QString datFileName,QString seperator)
     :mCsvFielname(csvFielname),
@@ -44,15 +45,18 @@ void GwmCsvToDatThread::run()
 //      }
       QTextStream stream(&file);
       QByteArray byte;
+      byte.clear();
       memcpy(byte.data(),&mRowCount,sizeof(mRowCount));
-      stream << byte;
+      stream << byte.data();
       memcpy(byte.data(),&mColCount,sizeof(mColCount));
-      stream << byte;
+      qDebug() << byte.data();
+      stream << byte.data();
       for(int col = 0; col < mColCount; col++){
           for(int row = 0; row < mRowCount; row++){
+              byte.clear();
               double data = mCsvLines[row][col].toDouble();
               memcpy(byte.data(),&data,sizeof(data));
-              stream << byte;
+              stream << byte.data();
               progress++;
               emit tick(progress,total);
           }

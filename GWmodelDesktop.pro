@@ -63,11 +63,11 @@ SOURCES += \
     gwmpropertypanel.cpp \
     TaskThread/gwmtaskthread.cpp \
     gwmsaveascsvdialog.cpp \
-#    attributetable/qgsaddattrdialog.cpp \
+    attributetable/qgsaddattrdialog.cpp \
 #    attributetable/qgsclipboard.cpp \
     attributetable/qgsdelattrdialog.cpp \
     attributetable/qgsfeatureaction.cpp \
-#    attributetable/qgsfieldcalculator.cpp \
+    attributetable/qgsfieldcalculator.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
@@ -122,11 +122,11 @@ HEADERS += \
     gwmpropertypanel.h \
     TaskThread/gwmtaskthread.h \
     gwmsaveascsvdialog.h \
-#    attributetable/qgsaddattrdialog.h \
+    attributetable/qgsaddattrdialog.h \
 #    attributetable/qgsclipboard.h \
     attributetable/qgsdelattrdialog.h \
     attributetable/qgsfeatureaction.h \
-#    attributetable/qgsfieldcalculator.h \
+    attributetable/qgsfieldcalculator.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
