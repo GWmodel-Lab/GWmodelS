@@ -158,10 +158,10 @@ void GwmGWROptionsDialog::onVariableRadioToggled(bool checked)
     ui->mBwSizeSettingStack->setCurrentIndex(0);
 }
 
-QVariant GwmGWROptionsDialog::bandwidthSize(){
+double GwmGWROptionsDialog::bandwidthSize(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
-        return ui->mBwSizeAdaptiveSize->value();
+        return (double)ui->mBwSizeAdaptiveSize->value();
     }
     else
     {
@@ -178,6 +178,12 @@ QString GwmGWROptionsDialog::bandWidthUnit(){
     {
         return ui->mBwSizeFixedUnit->currentText();
     }
+}
+
+GwmGWRTaskThread::KernelFunction GwmGWROptionsDialog::bandwidthKernelFunction()
+{
+    int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
+    return GwmGWRTaskThread::KernelFunction(kernelSelected);
 }
 
 QString GwmGWROptionsDialog::parallelGPUBatchSize() {

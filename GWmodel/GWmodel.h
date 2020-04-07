@@ -13,6 +13,13 @@ using namespace arma;
 #define TRICUBE 3
 #define BOXCAR 4
 
+enum RegressionResult
+{
+    Beta,
+    S_ri,
+    Ci
+};
+
 const mat mSum(2, 1, fill::ones);
 
 mat coordinateRotate(mat coords, double theta);
@@ -36,7 +43,7 @@ vec triWtVec(vec distv, double bw);
 mat triWtMatt(mat distm, vec bw);
 vec expWtVec(vec distv, double bw);
 mat expWtMat(mat distm, vec bw);
-QMap<QString, mat> gwReg(const mat &x, const vec &y, const vec &w, bool hatmatrix, int focus);
+QMap<RegressionResult, mat> gwReg(const mat &x, const vec &y, const vec &w, bool hatmatrix, int focus);
 vec trhat2(mat S);
 vec fitted(mat X, mat beta);
 vec ehat(vec y, mat X, mat beta);

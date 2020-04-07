@@ -298,6 +298,42 @@
         </item>
        </layout>
       </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>Kernel</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="mBwKernelFunctionCombo">
+        <item>
+         <property name="text">
+          <string>Gaussion</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Exponential</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Bisquare</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Tricube</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Boxcar</string>
+         </property>
+        </item>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

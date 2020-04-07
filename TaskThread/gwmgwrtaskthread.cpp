@@ -1,5 +1,7 @@
 #include "gwmgwrtaskthread.h"
 
+#include "GWmodel/GWmodel.h"
+
 GwmGWRTaskThread::GwmGWRTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem* depVar, QList<GwmLayerAttributeItem*> indepVars)
     : GwmTaskThread()
     , mLayer(layer)
@@ -10,11 +12,11 @@ GwmGWRTaskThread::GwmGWRTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem*
     QgsFeature feature;
     while (it.nextFeature(feature))
     {
-        mFeatureIds.insert(feature.id());
+        mFeatureIds.append(feature.id());
     }
     mX = mat(mFeatureIds.size(), indepVars.size() + 1);
     mY = vec(mFeatureIds.size());
-    mBetas = mat(mFeatureIds.size(), indepVars.size() + 1);
+    mBetas = mat(indepVars.size() + 1, mFeatureIds.size());
     mDepVarIndex = mDepVar->attributeIndex();
     for (GwmLayerAttributeItem* item : mIndepVars)
     {
@@ -29,7 +31,21 @@ void GwmGWRTaskThread::run()
     {
         return;
     }
+    for (int i = 0; i < mFeatureIds.size(); i++)
+    {
+        QgsFeatureId id = mFeatureIds[i];
+        mat dist = distance(id);
+        mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        auto result = gwReg(mX, mY, weight, false, i);
+        mBetas.col(i) = result[RegressionResult::Beta];
+        emit tick(i, mFeatureIds.size());
+    }
+}
 
+bool GwmGWRTaskThread::isValid(QString &message)
+{
+    // [TODO]: 实现验证 GWR 是否可以进行的代码
+    return true;
 }
 
 bool GwmGWRTaskThread::isNumeric(QVariant::Type type)
@@ -97,4 +113,17 @@ bool GwmGWRTaskThread::setXY()
         }
     }
     return true;
+}
+
+vec GwmGWRTaskThread::distance(const QgsFeatureId &id)
+{
+    QgsFeature fSrc = mLayer->getFeature(id);
+    QgsGeometry gSrc = fSrc.geometry();
+    vec dist(mFeatureIds.size(), fill::zeros);
+    for (int i = 0; i < mFeatureIds.size(); i++)
+    {
+        QgsFeature fDes = mLayer->getFeature(mFeatureIds[i]);
+        dist.at(i) = fDes.geometry().distance(gSrc);
+    }
+    return dist;
 }

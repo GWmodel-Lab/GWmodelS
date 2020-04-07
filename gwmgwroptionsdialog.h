@@ -40,8 +40,9 @@ public:
     QString crsRotateP();
     GwmGWRTaskThread::BandwidthType bandwidthType();
     GwmGWRTaskThread::ParallelMethod approachType();
-    QVariant bandwidthSize();
+    double bandwidthSize();
     QString bandWidthUnit();
+    GwmGWRTaskThread::KernelFunction bandwidthKernelFunction();
     QString parallelGPUBatchSize();
     QString parallelMultiThreadNum();
 };

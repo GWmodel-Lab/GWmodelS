@@ -28,11 +28,23 @@ public:
         GPU
     };
 
+    enum KernelFunction
+    {
+        Gaussian,
+        Exponential,
+        Bisquare,
+        Tricube,
+        Boxcar
+    };
+
 public:
     GwmGWRTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem* depVar, QList<GwmLayerAttributeItem*> indepVars);
 
 protected:
     void run() override;
+
+public:
+    bool isValid(QString& message);
 
 private:
     QgsVectorLayer* mLayer = nullptr;
@@ -43,8 +55,9 @@ private:
     bool isEnableIndepVarAutosel = false;
 
     BandwidthType mBandwidthType = BandwidthType::Adaptive;
-    QVariant mBandwidthSize = 0.0;
+    double mBandwidthSize = 0.0;
     bool isBandwidthSizeAutoSel = true;
+    KernelFunction mBandwidthKernelFunction = KernelFunction::Gaussian;
 
     double mCRSRotateTheta = 0.0;
     double mCRSRotateP = 0.0;
@@ -52,7 +65,7 @@ private:
     ParallelMethod mParallelMethodType = ParallelMethod::None;
     QVariant mParallelParameter = 0;
 
-    QgsFeatureIds mFeatureIds;
+    QList<QgsFeatureId> mFeatureIds;
 
     mat mX;
     mat mY;
@@ -61,6 +74,8 @@ private:
 private:
     bool isNumeric(QVariant::Type type);
     bool setXY();
+
+    vec distance(const QgsFeatureId& id);
 };
 
 #endif // GWMGWRTASKTHREAD_H

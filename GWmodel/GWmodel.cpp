@@ -304,9 +304,9 @@ mat expWtMat(mat distm, vec bw)
 	return wtm;
 }
 //GWR clalibration
-QMap<QString, mat> gwReg(const mat &x, const vec &y, const vec &w, bool hatmatrix, int focus)
+QMap<RegressionResult, mat> gwReg(const mat &x, const vec &y, const vec &w, bool hatmatrix, int focus)
 {
-    QMap<QString, mat> result;
+    QMap<RegressionResult, mat> result;
 	mat wspan(1, x.n_cols, fill::ones);
 	mat xtw = trans(x % (w * wspan));
 	mat xtwx = xtw * x;
@@ -317,14 +317,14 @@ QMap<QString, mat> gwReg(const mat &x, const vec &y, const vec &w, bool hatmatri
 	{
 		mat ci = xtwx_inv * xtw;
         mat s_ri = x.row(focus - 1) * ci;
-        result["beta"] = beta;
-        result["S_ri"] = s_ri;
-        result["Ci"] = ci;
+        result[RegressionResult::Beta] = beta;
+        result[RegressionResult::S_ri] = s_ri;
+        result[RegressionResult::Ci] = ci;
         return result;
 	}
 	else
 	{
-        result["beta"] = beta;
+        result[RegressionResult::Beta] = beta;
         return result;
 	}
 }
