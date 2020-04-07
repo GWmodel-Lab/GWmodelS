@@ -37,6 +37,13 @@ public:
         Boxcar
     };
 
+    enum DistanceSourceType
+    {
+        CRS,
+        Minkowski,
+        DMatFile
+    };
+
 public:
     GwmGWRTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem* depVar, QList<GwmLayerAttributeItem*> indepVars);
 
@@ -59,6 +66,9 @@ private:
     bool isBandwidthSizeAutoSel = true;
     KernelFunction mBandwidthKernelFunction = KernelFunction::Gaussian;
 
+    DistanceSourceType mDistSrcType = DistanceSourceType::CRS;
+    QVariant mDistSrcParameters = QVariant();
+
     double mCRSRotateTheta = 0.0;
     double mCRSRotateP = 0.0;
 
@@ -70,12 +80,15 @@ private:
     mat mX;
     mat mY;
     mat mBetas;
+    mat mDataPoints;
 
 private:
     bool isNumeric(QVariant::Type type);
     bool setXY();
 
     vec distance(const QgsFeatureId& id);
+    vec distanceCRS(const QgsFeatureId& id);
+    vec distanceMinkowski(const QgsFeatureId& id);
 };
 
 #endif // GWMGWRTASKTHREAD_H
