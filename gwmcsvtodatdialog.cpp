@@ -7,7 +7,9 @@ GwmCsvToDatDialog::GwmCsvToDatDialog(QWidget *parent) :
     ui(new Ui::GwmCsvToDatDialog)
 {
     ui->setupUi(this);
+
     this->setWindowTitle(tr("Csv To Dmat"));
+
     connect(ui->mCsvOpenButton,&QPushButton::clicked,this,&GwmCsvToDatDialog::onCsvOpenButton);
     connect(ui->mDatOpenButton,&QPushButton::clicked,this,&GwmCsvToDatDialog::onDatOpenButton);
 }
