@@ -68,7 +68,7 @@ void GwmCsvToDatThread::run()
 
 QString GwmCsvToDatThread::name() const
 {
-    return tr("Csv To Dat");
+    return tr("Csv To Dmat");
 }
 
 

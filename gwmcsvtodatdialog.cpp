@@ -7,7 +7,7 @@ GwmCsvToDatDialog::GwmCsvToDatDialog(QWidget *parent) :
     ui(new Ui::GwmCsvToDatDialog)
 {
     ui->setupUi(this);
-    this->setWindowTitle(tr("Csv To Dat"));
+    this->setWindowTitle(tr("Csv To Dmat"));
     connect(ui->mCsvOpenButton,&QPushButton::clicked,this,&GwmCsvToDatDialog::onCsvOpenButton);
     connect(ui->mDatOpenButton,&QPushButton::clicked,this,&GwmCsvToDatDialog::onDatOpenButton);
 }
@@ -35,7 +35,7 @@ void GwmCsvToDatDialog::onCsvOpenButton()
 
 void GwmCsvToDatDialog::onDatOpenButton()
 {
-    QString filePath = QFileDialog::getSaveFileName(this,tr("Open Dat File"),tr(""),tr("Dat (*.dat)"));
+    QString filePath = QFileDialog::getSaveFileName(this,tr("Save As Dmat File"),tr(""),tr("Dmat (*.dmat)"));
     ui->mDatFileName->setText(filePath);
 }
 
