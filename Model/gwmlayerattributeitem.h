@@ -3,13 +3,13 @@
 
 #include <QObject>
 #include <QVariant>
-#include <qgsattributetableconfig.h>
+//#include <qgsattributetableconfig.h>
 
 class GwmLayerAttributeItem : public QObject
 {
     Q_OBJECT
 public:
-    explicit GwmLayerAttributeItem(int index = 0, const QString attributeName = "", const QgsAttributeTableConfig attributeConfig = *(new QgsAttributeTableConfig()),QObject *parent = nullptr);
+    explicit GwmLayerAttributeItem(int index = 0, const QString attributeName = "",const QVariant::Type type = QVariant::Type::String,QObject *parent = nullptr);
 
 public:
     virtual QString text();
@@ -18,7 +18,6 @@ public:
     virtual bool setData(int col, int role, QVariant value);
     int index();
     GwmLayerAttributeItem* clone();
-    QgsAttributeTableConfig::Type type();
 
     int attributeIndex() const;
     void setAttributeIndex(int attributeIndex);
@@ -26,18 +25,16 @@ public:
     QString attributeName() const;
     void setAttributeName(const QString &attributeName);
 
-    QgsAttributeTableConfig::Type columnType() const;
-    void setColumnType(const QgsAttributeTableConfig::Type &columnType);
+    QVariant::Type attributeType() const;
+    void setAttributeType(const QVariant::Type &columnType);
 
-    QgsAttributeTableConfig attributeTableConfig() const;
-
+    QVariant::Type type();
 signals:
 
 private:
     int mAttributeIndex;
     QString mAttributeName;
-    QgsAttributeTableConfig::Type mColumnType;
-    const QgsAttributeTableConfig mAttributeTableConfig;
+    QVariant::Type mAttributeType;
 };
 
 #endif // GWMLAYERATTRIBUTEITEM_H

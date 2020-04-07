@@ -39,7 +39,7 @@ public:
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
     void appendRow(GwmLayerAttributeItem* item);
-    void appendItem(int index, const QString attributeName,const QgsAttributeTableConfig attributeTableConfig);
+    void appendItem(int index, const QString attributeName,const QVariant::Type type);
 
     GwmLayerAttributeItem* item(int i) const;
     GwmLayerAttributeItem* itemFromIndex(const QModelIndex& index) const;

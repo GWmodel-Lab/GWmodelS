@@ -1,19 +1,12 @@
 #include "gwmlayerattributeitem.h"
 
-GwmLayerAttributeItem::GwmLayerAttributeItem(int index, const QString mAttributeName,const QgsAttributeTableConfig attributeTableConfig,QObject *parent)
+GwmLayerAttributeItem::GwmLayerAttributeItem(int index, const QString mAttributeName,const QVariant::Type type,QObject *parent)
 : QObject(parent),
   mAttributeIndex(index),
   mAttributeName(mAttributeName),
-  mAttributeTableConfig(attributeTableConfig)
+  mAttributeType(type)
 {
-     QVector<QgsAttributeTableConfig::ColumnConfig> mColumns = mAttributeTableConfig.columns();
-    for ( int i = mColumns.count() - 1; i >= 0; --i )
-    {
-      const QgsAttributeTableConfig::ColumnConfig &column = mColumns.at( i );
-      if( column.name == mAttributeName){
-          mColumnType = column.type;
-      }
-    }
+
 }
 
 QString GwmLayerAttributeItem::text(){
@@ -58,11 +51,11 @@ Qt::ItemFlags GwmLayerAttributeItem::flags()
 }
 
 GwmLayerAttributeItem* GwmLayerAttributeItem::clone(){
-    return new GwmLayerAttributeItem(mAttributeIndex,mAttributeName,mAttributeTableConfig);
+    return new GwmLayerAttributeItem(mAttributeIndex,mAttributeName,mAttributeType);
 }
 
-QgsAttributeTableConfig::Type GwmLayerAttributeItem::type(){
-    return mColumnType;
+QVariant::Type GwmLayerAttributeItem::type(){
+    return mAttributeType;
 }
 
 int GwmLayerAttributeItem::attributeIndex() const
@@ -85,17 +78,12 @@ void GwmLayerAttributeItem::setAttributeName(const QString &attributeName)
     mAttributeName = attributeName;
 }
 
-QgsAttributeTableConfig::Type GwmLayerAttributeItem::columnType() const
+QVariant::Type GwmLayerAttributeItem::attributeType() const
 {
-    return mColumnType;
+    return mAttributeType;
 }
 
-void GwmLayerAttributeItem::setColumnType(const QgsAttributeTableConfig::Type &columnType)
+void GwmLayerAttributeItem::setAttributeType(const QVariant::Type &columnType)
 {
-    mColumnType = columnType;
-}
-
-QgsAttributeTableConfig GwmLayerAttributeItem::attributeTableConfig() const
-{
-    return mAttributeTableConfig;
+    mAttributeType = columnType;
 }

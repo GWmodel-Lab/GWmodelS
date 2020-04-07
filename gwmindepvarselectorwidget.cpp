@@ -1,5 +1,6 @@
 #include "gwmindepvarselectorwidget.h"
 #include "ui_gwmindepvarselectorwidget.h"
+#include "qgsfields.h"
 
 GwmIndepVarSelectorWidget::GwmIndepVarSelectorWidget(QWidget *parent) :
     QWidget(parent),
@@ -27,7 +28,8 @@ void GwmIndepVarSelectorWidget::layerChanged(QgsVectorLayer* layer)
         mLayer = nullptr;
     }
     mLayer =  layer;
-    QList<int> attributeList = mLayer->attributeList();
+//    QList<int> attributeList = mLayer->attributeList();
+    QgsFields fields = mLayer->fields();
     if (mIndepVarModel)
     {
         mIndepVarModel->clear();
@@ -50,26 +52,29 @@ void GwmIndepVarSelectorWidget::onDepVarChanged(QString depVarName)
     else{
         mIndepVarModel = new GwmLayerAttributeItemModel(this);
     }
-    QList<int> attributeList = mLayer->attributeList();
-    for(int index : attributeList)
+//    QList<int> attributeList = mLayer->attributeList();
+    QgsFields fields = mLayer->fields();
+    QList<QString> fieldNameList = fields.names();
+    for(QString fieldName : fieldNameList)
     {
-        QString attributeName = static_cast<QString>(mLayer->attributeDisplayName(index));
-        if (attributeName != depVarName)
+        if (fieldName != depVarName)
         {
-            GwmLayerAttributeItem *item = new GwmLayerAttributeItem(index,attributeName,mLayer->attributeTableConfig());
+            int index = fields.indexFromName(fieldName);
+            GwmLayerAttributeItem *item = new GwmLayerAttributeItem(index,fieldName,fields.field(index).type());
 //            item->setData(index);
             mIndepVarModel->appendRow(item);
-            qDebug() << mIndepVarModel->indexFromItem(item).internalPointer();
+//            qDebug() << mIndepVarModel->indexFromItem(item).internalPointer();
         }
     }
 //    ui->mIndepVarView->setModel(mIndepVarModel);
     if (mSelectedIndepVarModel)
     {
-        QList<GwmLayerAttributeItem*> removeItems = mSelectedIndepVarModel->findItems(depVarName);
-        for (GwmLayerAttributeItem* item : removeItems)
-        {
-            mSelectedIndepVarModel->removeRows(mSelectedIndepVarModel->indexFromItem(item).row(),1);
-        }
+//        QList<GwmLayerAttributeItem*> removeItems = mSelectedIndepVarModel->findItems(depVarName);
+//        for (GwmLayerAttributeItem* item : removeItems)
+//        {
+//            mSelectedIndepVarModel->removeRows(mSelectedIndepVarModel->indexFromItem(item).row(),1);
+//        }
+        mSelectedIndepVarModel->clear();
     }
 
 }
@@ -85,7 +90,7 @@ void GwmIndepVarSelectorWidget::onAddIndepVarBtn()
         if(index.isValid()){
             GwmLayerAttributeItem *item = mIndepVarModel->itemFromIndex(index)->clone();
             mSelectedIndepVarModel->appendRow(item);
-            qDebug() << index;
+//            qDebug() << index;
         }
     }
     for(QModelIndex index : selected)

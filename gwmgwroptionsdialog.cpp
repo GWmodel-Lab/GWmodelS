@@ -57,13 +57,13 @@ void GwmGWROptionsDialog::layerChanged(int index)
         mLayer = nullptr;
     }
     mLayer =  (QgsVectorLayer*)mapLayerList[index];
-    QList<int> attributeList = mLayer->attributeList();
+    QList<QString> fieldNameList = mLayer->fields().names();
     ui->mDepVarComboBox->clear();
-    qDebug() << "layerChanged";
-    for (int index : attributeList)
+//    qDebug() << "layerChanged";
+    for (QString fieldName : fieldNameList)
     {
-        QString attributeName = static_cast<QString>(mLayer->attributeDisplayName(index));
-        ui->mDepVarComboBox->addItem(attributeName);
+//        QString attributeName = static_cast<QString>(mLayer->attributeDisplayName(index));
+        ui->mDepVarComboBox->addItem(fieldName);
     }
 }
 

@@ -138,8 +138,8 @@ bool GwmLayerAttributeItemModel::removeRows(int row, int count, const QModelInde
 {
 //    GwmLayerAttributeItem* parentItem = itemFromIndex(parent);
     bool success = false;
-    qDebug() << rowCount();
-    qDebug() << count;
+//    qDebug() << rowCount();
+//    qDebug() << count;
     if (rowCount() == row + count){
         beginRemoveRows(QModelIndex(), row - 1, row + count - 2);
     }
@@ -147,7 +147,7 @@ bool GwmLayerAttributeItemModel::removeRows(int row, int count, const QModelInde
         beginRemoveRows(QModelIndex(), row, row + count - 1);
     }
     for (int num = 0; num < count; num++){
-         qDebug() << num;
+//         qDebug() << num;
         GwmLayerAttributeItem* item = mAttributeItemList[row + num];
         success = mAttributeItemList.removeOne(item);
         delete item;
@@ -158,11 +158,13 @@ bool GwmLayerAttributeItemModel::removeRows(int row, int count, const QModelInde
 }
 
 bool GwmLayerAttributeItemModel::clear(){
+    beginRemoveRows(QModelIndex(),0,rowCount()-1);
     for (GwmLayerAttributeItem* item : mAttributeItemList)
     {
         delete item;
     }
     mAttributeItemList.clear();
+    endRemoveRows();
     return true;
 }
 
@@ -176,9 +178,9 @@ QList<GwmLayerAttributeItem*> GwmLayerAttributeItemModel::findItems(QString attr
     return itemList;
 }
 
-void GwmLayerAttributeItemModel::appendItem(int index, const QString attributeName,const QgsAttributeTableConfig attributeTableConfig)
+void GwmLayerAttributeItemModel::appendItem(int index, const QString attributeName,const QVariant::Type type)
 {
-    GwmLayerAttributeItem* item = new GwmLayerAttributeItem(index,attributeName,attributeTableConfig);
+    GwmLayerAttributeItem* item = new GwmLayerAttributeItem(index,attributeName,type);
     int row = mAttributeItemList.count();
     beginInsertRows(QModelIndex(), row, row);
     mAttributeItemList.append(item);
