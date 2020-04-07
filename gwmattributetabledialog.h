@@ -91,6 +91,19 @@ private slots:
 
     void viewModeChanged( QgsAttributeEditorContext::Mode mode );
     void formFilterSet( const QString &filter, QgsAttributeForm::FilterType type );
+
+    /**
+     * Reload the data
+     */
+    void mActionReload_triggered();
+    /**
+     * Copies selected rows to the clipboard
+     */
+    void mActionCopySelectedRows_triggered();
+    /**
+     * Paste features from the clipboard
+     */
+    void mActionPasteFeatures_triggered();
 public slots:
 
   /**

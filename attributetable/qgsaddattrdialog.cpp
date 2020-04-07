@@ -123,6 +123,13 @@ QgsField QgsAddAttrDialog::field() const
                .arg( mPrec->value() )
                .arg( mCommentEdit->text() ) );
 
+//  qDebug() << ( QVariant::Type ) mTypeBox->currentData( Qt::UserRole ).toInt();
+//  qDebug() << mTypeBox->currentData( Qt::UserRole + 1 ).toString();
+//  qDebug() << mLength->value();
+//  qDebug() << mPrec->value();
+//  qDebug() << mCommentEdit->text();
+//  qDebug() << mTypeBox->currentData( Qt::UserRole ).toInt();
+
   return QgsField(
            mNameEdit->text(),
            ( QVariant::Type ) mTypeBox->currentData( Qt::UserRole ).toInt(),

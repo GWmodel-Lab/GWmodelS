@@ -35,6 +35,7 @@ SOURCES += \
 #    attributetable/qgsattributetablemodel.cpp \
 #    attributetable/qgsattributetableview.cpp \
 #    attributetable/qgsdualview.cpp \
+    attributetable/qgsaddattrdialog.cpp \
     attributetable/qgsfeaturefilterwidget.cpp \
 #    attributetable/qgsfeaturelistmodel.cpp \
 #    attributetable/qgsfeaturelistview.cpp \
@@ -44,6 +45,7 @@ SOURCES += \
 #    attributetable/qgsgenericfeatureselectionmanager.cpp \
 #    attributetable/qgsorganizetablecolumnsdialog.cpp \
 #    attributetable/qgsvectorlayerselectionmanager.cpp \
+    attributetable/qgsfieldcalculator.cpp \
     attributetable/qgsguivectorlayertools.cpp \
     gwmattributetabledialog.cpp \
     gwmcoordtranssettingdialog.cpp \
@@ -99,6 +101,8 @@ HEADERS += \
 #    attributetable/qgsorganizetablecolumnsdialog.h \
 #    attributetable/qgsvectorlayerselectionmanager.h \
     attributetable/gwmfeaturefilterwidget_p.h \
+    attributetable/qgsaddattrdialog.h \
+    attributetable/qgsfieldcalculator.h \
     attributetable/qgsguivectorlayertools.h \
     gwmattributetabledialog.h \
     gwmcoordtranssettingdialog.h \
