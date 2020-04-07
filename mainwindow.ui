@@ -91,7 +91,7 @@
   </action>
   <action name="action_CsvToDat">
    <property name="text">
-    <string>CsvToDat</string>
+    <string>CsvToDmat</string>
    </property>
   </action>
  </widget>

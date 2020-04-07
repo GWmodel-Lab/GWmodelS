@@ -16,6 +16,8 @@ public:
 
     QList<QStringList> read();
     virtual QString name() const override;
+    void setIsColumnStore(bool flag);
+    void readSize();
 
 protected:
     void run() override; //新线程入口
@@ -27,6 +29,7 @@ private:
     QList<QStringList> mCsvLines;
     int mRowCount;
     int mColCount;
+    bool mIsColumnStore;
 
 };
 

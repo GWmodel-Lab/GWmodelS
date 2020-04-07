@@ -41,3 +41,12 @@ void GwmCsvToDatDialog::onDatOpenButton()
     ui->mDatFileName->setText(filePath);
 }
 
+bool GwmCsvToDatDialog::isColumnStore()
+{
+    if(ui->mIsColumnStore->checkState() == Qt::Checked)
+    {
+        return true;
+    }
+    return false;
+}
+

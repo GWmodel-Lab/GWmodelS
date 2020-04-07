@@ -25,6 +25,7 @@ private:
 public:
     QString csvFileName();
     QString datFileName();
+    bool isColumnStore();
 };
 
 #endif // GWMCSVTODATDIALOG_H

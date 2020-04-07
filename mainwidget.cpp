@@ -85,6 +85,7 @@ void MainWidget::onCsvToDat()
         QString datFileName = csvtodatDlg->datFileName();
         if(csvFileName != "" && datFileName != ""){
             GwmCsvToDatThread* thread = new GwmCsvToDatThread(csvFileName,datFileName);
+            thread->setIsColumnStore(csvtodatDlg->isColumnStore());
             GwmProgressDialog* progressDlg = new GwmProgressDialog(thread, this);
             if (progressDlg->exec() == QDialog::Accepted)
             {
