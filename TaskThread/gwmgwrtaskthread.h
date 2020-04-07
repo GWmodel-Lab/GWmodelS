@@ -3,8 +3,11 @@
 
 #include "gwmtaskthread.h"
 #include <qgsvectorlayer.h>
+#include <armadillo>
 
 #include "Model/gwmlayerattributeitem.h"
+
+using namespace arma;
 
 class GwmGWRTaskThread : public GwmTaskThread
 {
@@ -28,10 +31,15 @@ public:
 public:
     GwmGWRTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem* depVar, QList<GwmLayerAttributeItem*> indepVars);
 
+protected:
+    void run() override;
+
 private:
     QgsVectorLayer* mLayer = nullptr;
     GwmLayerAttributeItem* mDepVar;
     QList<GwmLayerAttributeItem*> mIndepVars;
+    int mDepVarIndex;
+    QList<int> mIndepVarsIndex;
     bool isEnableIndepVarAutosel = false;
 
     BandwidthType mBandwidthType = BandwidthType::Adaptive;
@@ -43,6 +51,16 @@ private:
 
     ParallelMethod mParallelMethodType = ParallelMethod::None;
     QVariant mParallelParameter = 0;
+
+    QgsFeatureIds mFeatureIds;
+
+    mat mX;
+    mat mY;
+    mat mBetas;
+
+private:
+    bool isNumeric(QVariant::Type type);
+    bool setXY();
 };
 
 #endif // GWMGWRTASKTHREAD_H
