@@ -2,6 +2,18 @@
 
 #include "GWmodel/GWmodel.h"
 
+void GwmGWRTaskThread::initUnitDict()
+{
+    // 设置静态变量
+    fixedBwUnitDict["m"] = 1.0;
+    fixedBwUnitDict["km"] = 1000.0;
+    fixedBwUnitDict["mile"] = 1609.344;
+    adaptiveBwUnitDict["x1"] = 1;
+    adaptiveBwUnitDict["x1"] = 10;
+    adaptiveBwUnitDict["x1"] = 100;
+    adaptiveBwUnitDict["x1"] = 1000;
+}
+
 GwmGWRTaskThread::GwmGWRTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem* depVar, QList<GwmLayerAttributeItem*> indepVars)
     : GwmTaskThread()
     , mLayer(layer)
@@ -45,12 +57,26 @@ void GwmGWRTaskThread::run()
         mBetas.col(i) = result[RegressionResult::Beta];
         emit tick(i, mFeatureIds.size());
     }
+    createResultLayer();
 }
 
 bool GwmGWRTaskThread::isValid(QString &message)
 {
     // [TODO]: 实现验证 GWR 是否可以进行的代码
     return true;
+}
+
+bool GwmGWRTaskThread::setBandwidth(GwmGWRTaskThread::BandwidthType type, double size, QString unit)
+{
+    mBandwidthSizeOrigin = size;
+    if (type == BandwidthType::Fixed)
+    {
+        mBandwidthSize = size * fixedBwUnitDict[unit];
+    }
+    else
+    {
+        mBandwidthSize = size * adaptiveBwUnitDict[unit];
+    }
 }
 
 bool GwmGWRTaskThread::isNumeric(QVariant::Type type)
@@ -165,4 +191,44 @@ vec GwmGWRTaskThread::distanceMinkowski(const QgsFeatureId &id)
     QgsPointXY gSrc = fSrc.geometry().centroid().asPoint();
     vec srcLoc(gSrc.x(), gSrc.y());
     return mkDistVec(mDataPoints, srcLoc, p);
+}
+
+void GwmGWRTaskThread::createResultLayer()
+{
+    QString layerName = mLayer->name();
+    if (mBandwidthType == BandwidthType::Fixed)
+    {
+        layerName += QString(" B:%1%2").arg(mBandwidthSizeOrigin, 0, 'f', 3).arg(mBandwidthSize);
+    }
+    else
+    {
+        layerName += QString(" B:%1").arg(int(mBandwidthSize));
+    }
+    mResultLayer = new QgsVectorLayer(QStringLiteral("?"), layerName, QStringLiteral("memory"));
+    mResultLayer->setCrs(mLayer->crs());
+
+    QgsFields fields;
+    fields.append(QgsField(QStringLiteral("Intercept"), QVariant::Double, QStringLiteral("double")));
+    for (GwmLayerAttributeItem* item : mIndepVars)
+    {
+        QString srcName = item->attributeName();
+        QString name = QString("Beta_") + srcName;
+        fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
+    }
+    mResultLayer->dataProvider()->addAttributes(fields.toList());
+    mResultLayer->updateFields();
+
+    for (int f = 0; f < mFeatureIds.size(); f++)
+    {
+        QgsFeatureId id = mFeatureIds[f];
+        QgsFeature srcFeature = mLayer->getFeature(id);
+        QgsFeature feature(fields);
+        feature.setGeometry(srcFeature.geometry());
+        for (int a = 0; a < fields.size(); a++)
+        {
+            QString attributeName = fields[a].name();
+            double attributeValue = mBetas(f, a);
+            feature.setAttribute(attributeName, attributeValue);
+        }
+    }
 }
