@@ -213,6 +213,7 @@
      <addaction name="mActionSetStyles"/>
      <addaction name="separator"/>
      <addaction name="mActionDockUndock"/>
+     <addaction name="actionDummy"/>
     </widget>
    </item>
   </layout>
@@ -534,6 +535,27 @@
     <string>Dock Attribute Table</string>
    </property>
   </action>
+  <action name="actionDummy">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icon/res/icon/csv.png</normaloff>:/icon/res/icon/csv.png</iconset>
+   </property>
+   <property name="text">
+    <string>Dummy</string>
+   </property>
+   <property name="toolTip">
+    <string>Generate Dummy</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -570,6 +592,7 @@
  </tabstops>
  <resources>
   <include location="images/images.qrc"/>
+  <include location="res.qrc"/>
  </resources>
  <connections>
   <connection>
