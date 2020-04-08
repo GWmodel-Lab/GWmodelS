@@ -104,6 +104,8 @@ private slots:
      * Paste features from the clipboard
      */
     void mActionPasteFeatures_triggered();
+    void on_actionDummy_triggered();
+
 public slots:
 
   /**

@@ -47,6 +47,7 @@
 #include "attributetable/qgsguivectorlayertools.h"
 
 #include <algorithm>
+#include <sstream>
 
 //GwmDevAttrTable::GwmDevAttrTable(QgsVectorLayer *theVecLayer, QgsMapCanvas* myMapCanvas,QWidget *parent)
 GwmAttributeTableDialog::GwmAttributeTableDialog(QgsVectorLayer *theVecLayer,QgsMapCanvas* myMapCanvas, QWidget *parent, Qt::WindowFlags flags,QgsAttributeTableFilterModel::FilterMode initialMode)
@@ -229,6 +230,11 @@ void GwmAttributeTableDialog::editingToggled()
     mActionToggleEditing->setChecked(this->currentLayer->isEditable());
     mActionSaveEdits->setEnabled(this->currentLayer->isEditable());
     mActionReload->setEnabled( ! this->currentLayer->isEditable() );
+
+    //
+    actionDummy->setEnabled(this->currentLayer->isEditable());
+    //
+
     updateMultiEditButtonState();
     if ( this->currentLayer->isEditable() )
     {
@@ -874,102 +880,195 @@ void GwmAttributeTableDialog::mActionCopySelectedRows_triggered()
 }
 void GwmAttributeTableDialog::mActionPasteFeatures_triggered()
 {
-        int fieldindex = 0;
-        QgsDelAttrDialog dialog( currentLayer );
-        if ( dialog.exec() == QDialog::Accepted )
-        {
-          QList<int> attributes = dialog.selectedAttributes();
-          if ( attributes.empty() )
-          {
-            return;
-          }
-          //qDebug() << attributes[0];
-          fieldindex = attributes[0];
-          //判断类型是否是字符串
-          //if(currentLayer->fields()[fieldindex].)
-          if(currentLayer->fields()[fieldindex].typeName() != "String"){
-              QMessageBox::warning(NULL,"warning","非字符串类型不能生成dommy!",QMessageBox::Ok | QMessageBox::Cancel,QMessageBox::Ok);
-              return;
-          }else{
-              QgsFeatureIterator featureIt = currentLayer->getFeatures();
-              QgsFeatureIterator featureIt2 = currentLayer->getFeatures();
-              QgsFeatureIterator featureIt3 = currentLayer->getFeatures();
-              QgsFeature feature;
-              QgsFeature feature2;
-              QgsFeature feature3;
-              QString fieldName = currentLayer->fields().names()[fieldindex];
-              //int fieldindex = currentLayer->fields().indexFromName(fieldName);
-
-              int Arrlength = 0;
-              int Arrlength2 = 0;
-              //第一次循环
-              while(featureIt2.nextFeature(feature2)){
-                  Arrlength++;
-              }
-              //qDebug() << i;
-              //动态生成数组
-              QString *a = new QString[Arrlength];
-              //第二次循环
-              while(featureIt.nextFeature(feature)){
-                  //qDebug() << (feature.attributes().value(fieldindex));
-                  a[Arrlength2] = (feature.attributes().value(fieldindex)).toString();
-                  Arrlength2++;
-              }
-              QString *tmp = new QString[Arrlength];
-              //m记录当前tmp到底存了多少个元素
-              int m = 0;
-              for (int i = 0; i < Arrlength; i++)
-                 {
-                     int j = 0;
-                     for (; j < m; j++)
-                     {
-                         if (a[i] == tmp[j])//拿a[i]依次与tmp里的元素对比
-                             break; // 找到相同的了
-                     }
-
-                     if (j == m)
-                     { // 没有找到一个相同的，把a中此元素放入tmp里
-                         tmp[m] = a[i];
-                         m++;
-                     }
-                 }
-              qDebug() << m;
-              // 结果数组
-              //原始图层属性长度
-              int OldLen = currentLayer->fields().size();
-              // m为数组长度
-              QString *result = new QString[m];
-              for (int i = 0; i < m; i++)
-              {
-                  result[i] = tmp[i];
-              }
-              //添加属性
-              QString *newfield = new QString[m];
-            //  currentLayer->startEditing();
-              currentLayer->beginEditCommand( tr( "Attribute added" ) );
-              for(int i=0;i<m;i++){
-                  newfield[i] = "";
-                  newfield[i].append(fieldName).append("_").append(result[i]);
-          //        qDebug() << newfield[i];
-          //        qDebug() << QgsField(newfield[i]);
-                  currentLayer->addAttribute(QgsField(newfield[i],QVariant::Int,"integer",1,0,""));
-              }
-              //qDebug() << currentLayer->fields().names();
-              //循环赋值
-              while(featureIt3.nextFeature(feature3))
-              {
-                  for(int i=0;i<m;i++){
-                      QVariant oldvalue = feature3.attributes().value( OldLen+i );
-                      //判断是添加1还是0
-                      if(newfield[i].contains(feature3.attributes().value(fieldindex).toString())){
-                          currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 1, oldvalue );
-                      }else{
-                          currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 0, oldvalue );
-                      }
-                  }
-              }
-              currentLayer->endEditCommand();
-          }
-        }
+//    qDebug()<< currentLayer->fields()[0].typeName();
+//    qDebug()<< currentLayer->fields()[1].typeName();
+//    qDebug()<< currentLayer->fields()[2].typeName();
+//    qDebug()<< currentLayer->fields()[3].typeName();
+    //qDebug()<< currentLayer->fields()[4].typeName();
 }
 
+
+void GwmAttributeTableDialog::on_actionDummy_triggered()
+{
+    int fieldindex = 0;
+    QgsDelAttrDialog dialog( currentLayer );
+    if ( dialog.exec() == QDialog::Accepted )
+    {
+      QList<int> attributes = dialog.selectedAttributes();
+      if ( attributes.empty() )
+      {
+        return;
+      }
+      //qDebug() << attributes[0];
+      fieldindex = attributes[0];
+      //判断类型是否是字符串或是浮点数
+      //if(currentLayer->fields()[fieldindex].)
+      if(currentLayer->fields()[fieldindex].typeName() != "String" && currentLayer->fields()[fieldindex].typeName()!="Integer"){
+          QMessageBox::warning(NULL,"warning","该属性列不能生成dommy!",QMessageBox::Ok | QMessageBox::Cancel,QMessageBox::Ok);
+          return;
+      }else if(currentLayer->fields()[fieldindex].typeName() == "String"){
+          //字符串类型
+          QgsFeatureIterator featureIt = currentLayer->getFeatures();
+          QgsFeatureIterator featureIt2 = currentLayer->getFeatures();
+          QgsFeatureIterator featureIt3 = currentLayer->getFeatures();
+          QgsFeature feature;
+          QgsFeature feature2;
+          QgsFeature feature3;
+          QString fieldName = currentLayer->fields().names()[fieldindex];
+          //int fieldindex = currentLayer->fields().indexFromName(fieldName);
+
+          int Arrlength = 0;
+          int Arrlength2 = 0;
+          //第一次循环
+          while(featureIt2.nextFeature(feature2)){
+              Arrlength++;
+          }
+          //qDebug() << i;
+          //动态生成数组
+          QString *a = new QString[Arrlength];
+          //第二次循环
+          while(featureIt.nextFeature(feature)){
+              //qDebug() << (feature.attributes().value(fieldindex));
+              a[Arrlength2] = (feature.attributes().value(fieldindex)).toString();
+              Arrlength2++;
+          }
+          QString *tmp = new QString[Arrlength];
+          //m记录当前tmp到底存了多少个元素
+          int m = 0;
+          for (int i = 0; i < Arrlength; i++)
+             {
+                 int j = 0;
+                 for (; j < m; j++)
+                 {
+                     if (a[i] == tmp[j])//拿a[i]依次与tmp里的元素对比
+                         break; // 找到相同的了
+                 }
+
+                 if (j == m)
+                 { // 没有找到一个相同的，把a中此元素放入tmp里
+                     tmp[m] = a[i];
+                     m++;
+                 }
+             }
+          qDebug() << m;
+          // 结果数组
+          //原始图层属性长度
+          int OldLen = currentLayer->fields().size();
+          // m为数组长度
+          QString *result = new QString[m];
+          for (int i = 0; i < m; i++)
+          {
+              result[i] = tmp[i];
+          }
+          //添加属性
+          QString *newfield = new QString[m];
+        //  currentLayer->startEditing();
+          currentLayer->beginEditCommand( tr( "Attribute added" ) );
+          for(int i=0;i<m;i++){
+              newfield[i] = "";
+              newfield[i].append(fieldName).append("_").append(result[i]);
+      //        qDebug() << newfield[i];
+      //        qDebug() << QgsField(newfield[i]);
+              currentLayer->addAttribute(QgsField(newfield[i],QVariant::Int,"integer",1,0,""));
+          }
+          //qDebug() << currentLayer->fields().names();
+          //循环赋值
+          while(featureIt3.nextFeature(feature3))
+          {
+              for(int i=0;i<m;i++){
+                  QVariant oldvalue = feature3.attributes().value( OldLen+i );
+                  //判断是添加1还是0
+                  if(newfield[i].contains(feature3.attributes().value(fieldindex).toString()) && feature3.attributes().value(fieldindex).toString()!=""){
+                      currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 1, oldvalue );
+                  }else{
+                      currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 0, oldvalue );
+                  }
+              }
+          }
+          currentLayer->endEditCommand();
+      }else if(currentLayer->fields()[fieldindex].typeName() == "Integer"){
+          //字符串类型
+          QgsFeatureIterator featureIt = currentLayer->getFeatures();
+          QgsFeatureIterator featureIt2 = currentLayer->getFeatures();
+          QgsFeatureIterator featureIt3 = currentLayer->getFeatures();
+          QgsFeature feature;
+          QgsFeature feature2;
+          QgsFeature feature3;
+          QString fieldName = currentLayer->fields().names()[fieldindex];
+          //int fieldindex = currentLayer->fields().indexFromName(fieldName);
+
+          int Arrlength = 0;
+          int Arrlength2 = 0;
+          //第一次循环
+          while(featureIt2.nextFeature(feature2)){
+              Arrlength++;
+          }
+          //qDebug() << i;
+          //动态生成数组
+          int *a = new int[Arrlength];
+          //第二次循环
+          while(featureIt.nextFeature(feature)){
+              //qDebug() << (feature.attributes().value(fieldindex));
+              a[Arrlength2] = (feature.attributes().value(fieldindex)).toInt();
+              Arrlength2++;
+          }
+          int *tmp = new int[Arrlength];
+          //m记录当前tmp到底存了多少个元素
+          int m = 0;
+          for (int i = 0; i < Arrlength; i++)
+             {
+                 int j = 0;
+                 for (; j < m; j++)
+                 {
+                     if (a[i] == tmp[j])//拿a[i]依次与tmp里的元素对比
+                         break; // 找到相同的了
+                 }
+
+                 if (j == m)
+                 { // 没有找到一个相同的，把a中此元素放入tmp里
+                     tmp[m] = a[i];
+                     m++;
+                 }
+             }
+          qDebug() << m;
+          // 结果数组
+          //原始图层属性长度
+          int OldLen = currentLayer->fields().size();
+          // m为数组长度
+          int *result = new int[m];
+          for (int i = 0; i < m; i++)
+          {
+              result[i] = tmp[i];
+          }
+          //添加属性
+          QString *newfield = new QString[m];
+        //  currentLayer->startEditing();
+          currentLayer->beginEditCommand( tr( "Attribute added" ) );
+          for(int i=0;i<m;i++){
+              newfield[i] = "";
+              std::stringstream ss;
+              ss<<result[i];
+              newfield[i].append(fieldName).append("_").append(QString::fromStdString(ss.str()));
+      //        qDebug() << newfield[i];
+      //        qDebug() << QgsField(newfield[i]);
+              currentLayer->addAttribute(QgsField(newfield[i],QVariant::Int,"integer",1,0,""));
+          }
+          //qDebug() << currentLayer->fields().names();
+          //循环赋值
+          while(featureIt3.nextFeature(feature3))
+          {
+              for(int i=0;i<m;i++){
+                  QVariant oldvalue = feature3.attributes().value( OldLen+i );
+                  //qDebug() << feature3.attributes().value(fieldindex).toString();
+                  //判断是添加1还是0
+                  if(newfield[i].contains(feature3.attributes().value(fieldindex).toString()) && feature3.attributes().value(fieldindex).toString()!=""){
+                      currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 1, oldvalue );
+                  }else{
+                      currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 0, oldvalue );
+                  }
+              }
+          }
+          currentLayer->endEditCommand();
+      }
+    }
+}
