@@ -94,6 +94,7 @@ HEADERS += \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/utils.h \
+    TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmsavelayerthread.h \
 #    attributetable/qgsattributetabledelegate.h \
 #    attributetable/qgsattributetablefiltermodel.h \
