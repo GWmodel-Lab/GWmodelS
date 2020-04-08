@@ -29,6 +29,7 @@ SOURCES += \
     Model/gwmlayeroriginitem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
+    TaskThread/gwmcsvtodatthread.cpp \
     TaskThread/gwmsavelayerthread.cpp \
 #    attributetable/qgsattributetabledelegate.cpp \
 #    attributetable/qgsattributetablefiltermodel.cpp \
@@ -50,6 +51,7 @@ SOURCES += \
     gwmattributetabledialog.cpp \
     gwmcoordtranssettingdialog.cpp \
     TaskThread/gwmcoordtransthread.cpp \
+    gwmcsvtodatdialog.cpp \
     gwmdelimitedtextfile.cpp \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
@@ -61,11 +63,11 @@ SOURCES += \
     gwmpropertypanel.cpp \
     TaskThread/gwmtaskthread.cpp \
     gwmsaveascsvdialog.cpp \
-#    attributetable/qgsaddattrdialog.cpp \
+    attributetable/qgsaddattrdialog.cpp \
 #    attributetable/qgsclipboard.cpp \
     attributetable/qgsdelattrdialog.cpp \
     attributetable/qgsfeatureaction.cpp \
-#    attributetable/qgsfieldcalculator.cpp \
+    attributetable/qgsfieldcalculator.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
@@ -84,6 +86,7 @@ HEADERS += \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/utils.h \
+    TaskThread/gwmcsvtodatthread.h \
     TaskThread/gwmsavelayerthread.h \
 #    attributetable/qgsattributetabledelegate.h \
 #    attributetable/qgsattributetablefiltermodel.h \
@@ -107,6 +110,7 @@ HEADERS += \
     gwmattributetabledialog.h \
     gwmcoordtranssettingdialog.h \
     TaskThread/gwmcoordtransthread.h \
+    gwmcsvtodatdialog.h \
     gwmdelimitedtextfile.h \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
@@ -118,11 +122,11 @@ HEADERS += \
     gwmpropertypanel.h \
     TaskThread/gwmtaskthread.h \
     gwmsaveascsvdialog.h \
-#    attributetable/qgsaddattrdialog.h \
+    attributetable/qgsaddattrdialog.h \
 #    attributetable/qgsclipboard.h \
     attributetable/qgsdelattrdialog.h \
     attributetable/qgsfeatureaction.h \
-#    attributetable/qgsfieldcalculator.h \
+    attributetable/qgsfieldcalculator.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
@@ -132,6 +136,7 @@ HEADERS += \
 
 FORMS += \
     gwmcoordtranssettingdialog.ui \
+    gwmcsvtodatdialog.ui \
     gwmfeaturepanel.ui \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \

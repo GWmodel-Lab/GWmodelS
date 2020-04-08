@@ -31,6 +31,7 @@
 #include "TaskThread/gwmcoordtransthread.h"
 #include <gwmsaveascsvdialog.h>
 #include <qgsvectorfilewriter.h>
+#include <TaskThread/gwmcsvtodatthread.h>
 
 #include "gwmattributetabledialog.h"
 
@@ -74,6 +75,25 @@ void MainWidget::openFileImportCsv()
     GwmOpenXYEventLayerDialog* dialog = new GwmOpenXYEventLayerDialog(this);
     connect(dialog, &GwmOpenXYEventLayerDialog::addVectorLayerSignal, this, &MainWidget::createLayerToModel);
     dialog->show();
+}
+
+void MainWidget::onCsvToDat()
+{
+    GwmCsvToDatDialog* csvtodatDlg = new GwmCsvToDatDialog();
+    if(csvtodatDlg->exec() == QDialog::Accepted){
+        QString csvFileName = csvtodatDlg->csvFileName();
+        QString datFileName = csvtodatDlg->datFileName();
+        if(csvFileName != "" && datFileName != ""){
+            GwmCsvToDatThread* thread = new GwmCsvToDatThread(csvFileName,datFileName);
+            thread->setIsColumnStore(csvtodatDlg->isColumnStore());
+            GwmProgressDialog* progressDlg = new GwmProgressDialog(thread, this);
+            if (progressDlg->exec() == QDialog::Accepted)
+            {
+                qDebug() << "[MainWidget::onCsvToDat]"
+                         << "Finished";
+            }
+        }
+    }
 }
 
 void MainWidget::onSelectMode()
