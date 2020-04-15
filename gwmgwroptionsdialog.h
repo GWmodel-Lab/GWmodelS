@@ -5,6 +5,7 @@
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
 #include "TaskThread/gwmgwrtaskthread.h"
+#include "Model/gwmlayerattributeitemmodel.h"
 
 namespace Ui {
 class GwmGWROptionsDialog;
@@ -20,8 +21,10 @@ public:
 
 private:
     Ui::GwmGWROptionsDialog *ui;
-    QList<QgsMapLayer*> mapLayerList;
+    QList<QgsMapLayer*> mMapLayerList;
     QgsVectorLayer* mLayer = nullptr;
+    GwmGWRTaskThread* mTaskThread = nullptr;
+    GwmLayerAttributeItemModel* mDepVarModel;
 
 public slots:
     void layerChanged(const int index);
@@ -33,6 +36,7 @@ public slots:
     void onGPURadioToggled(bool checked);
     void onCustomizeRaidoToggled(bool checked);
     void onAutomaticRadioToggled(bool checked);
+    void onDistTypeDmatToggled(bool checked);
 
 
 public:
@@ -43,8 +47,15 @@ public:
     double bandwidthSize();
     QString bandWidthUnit();
     GwmGWRTaskThread::KernelFunction bandwidthKernelFunction();
-    QString parallelGPUBatchSize();
-    QString parallelMultiThreadNum();
+    GwmGWRTaskThread::DistanceSourceType distanceSourceType();
+    QVariant distanceSourceParameters();
+    GwmGWRTaskThread::ParallelMethod parallelMethod();
+    QVariant parallelParameters();
+
+    void setTaskThread(GwmGWRTaskThread* taskThread);
+    void updateFieldsAndEnable();
+    void updateFields();
+    void enableAccept();
 };
 
 #endif // GWMGWROPTIONSDIALOG_H

@@ -16,8 +16,7 @@ class GwmGWRTaskThread : public GwmTaskThread
 public:
     static QMap<QString, double> fixedBwUnitDict;
     static QMap<QString, double> adaptiveBwUnitDict;
-
-    static void setUnitDict();
+    static void initUnitDict();
 
 public:
 
@@ -51,15 +50,50 @@ public:
     };
 
 public:
-    GwmGWRTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem* depVar, QList<GwmLayerAttributeItem*> indepVars);
+    GwmGWRTaskThread();
 
 protected:
     void run() override;
+    QString name() const override;
 
 public:
     bool isValid(QString& message);
+    void setBandwidth(BandwidthType type, double size, QString unit);
 
-    bool setBandwidth(BandwidthType type, double size, QString unit);
+    QgsVectorLayer *layer() const;
+    void setLayer(QgsVectorLayer *layer);
+
+    QList<GwmLayerAttributeItem *> indepVars() const;
+    void setIndepVars(const QList<GwmLayerAttributeItem *> &indepVars);
+
+    GwmLayerAttributeItem *depVar() const;
+    void setDepVar(GwmLayerAttributeItem *depVar);
+
+    BandwidthType bandwidthType() const;
+    void setBandwidthType(const BandwidthType &bandwidthType);
+
+    bool getIsBandwidthSizeAutoSel() const;
+    void setIsBandwidthSizeAutoSel(bool value);
+
+    KernelFunction getBandwidthKernelFunction() const;
+    void setBandwidthKernelFunction(const KernelFunction &bandwidthKernelFunction);
+
+    DistanceSourceType getDistSrcType() const;
+    void setDistSrcType(const DistanceSourceType &distSrcType);
+
+    QVariant getDistSrcParameters() const;
+    void setDistSrcParameters(const QVariant &distSrcParameters);
+
+    ParallelMethod getParallelMethodType() const;
+    void setParallelMethodType(const ParallelMethod &parallelMethodType);
+
+    QVariant getParallelParameter() const;
+    void setParallelParameter(const QVariant &parallelParameter);
+
+    QgsVectorLayer *getResultLayer() const;
+
+    bool enableIndepVarAutosel() const;
+    void setEnableIndepVarAutosel(bool value);
 
 private:
     // 图层和 X Y 属性列

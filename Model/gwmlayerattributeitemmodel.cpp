@@ -224,3 +224,8 @@ QList<QString> GwmLayerAttributeItemModel::toLayerAttributeList(){
     }
     return  layerAttributeList;
 }
+
+QList<GwmLayerAttributeItem *> GwmLayerAttributeItemModel::attributeItemList() const
+{
+    return mAttributeItemList;
+}

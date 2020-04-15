@@ -2,6 +2,9 @@
 
 #include "GWmodel/GWmodel.h"
 
+QMap<QString, double> GwmGWRTaskThread::fixedBwUnitDict = QMap<QString, double>();
+QMap<QString, double> GwmGWRTaskThread::adaptiveBwUnitDict = QMap<QString, double>();
+
 void GwmGWRTaskThread::initUnitDict()
 {
     // 设置静态变量
@@ -14,32 +17,10 @@ void GwmGWRTaskThread::initUnitDict()
     adaptiveBwUnitDict["x1"] = 1000;
 }
 
-GwmGWRTaskThread::GwmGWRTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem* depVar, QList<GwmLayerAttributeItem*> indepVars)
+GwmGWRTaskThread::GwmGWRTaskThread()
     : GwmTaskThread()
-    , mLayer(layer)
-    , mDepVar(depVar)
-    , mIndepVars(indepVars)
 {
-    QgsFeatureIterator it = mLayer->getFeatures();
-    QgsFeature feature;
-    while (it.nextFeature(feature))
-    {
-        mFeatureIds.append(feature.id());
-    }
 
-    // 计算所需的矩阵
-    mX = mat(mFeatureIds.size(), indepVars.size() + 1);
-    mY = vec(mFeatureIds.size());
-    mBetas = mat(indepVars.size() + 1, mFeatureIds.size());
-    mDataPoints = mat(mFeatureIds.size(), 2);
-
-    // 获取自变量和因变量所属的属性列索引
-    mDepVarIndex = mDepVar->attributeIndex();
-    for (GwmLayerAttributeItem* item : mIndepVars)
-    {
-        int iIndepVar = item->attributeIndex();
-        mIndepVarsIndex.append(iIndepVar);
-    }
 }
 
 void GwmGWRTaskThread::run()
@@ -60,13 +41,159 @@ void GwmGWRTaskThread::run()
     createResultLayer();
 }
 
+QString GwmGWRTaskThread::name() const
+{
+    return tr("GWR");
+}
+
 bool GwmGWRTaskThread::isValid(QString &message)
 {
-    // [TODO]: 实现验证 GWR 是否可以进行的代码
+    QgsField depField = mLayer->fields()[mDepVarIndex];
+    if (!isNumeric(depField.type()))
+    {
+        message = (tr("Dependent variable is not numeric."));
+        return false;
+    }
+    for (int iIndepVar : mIndepVarsIndex)
+    {
+        QgsField indepField = mLayer->fields()[iIndepVar];
+        if (!isNumeric(indepField.type()))
+        {
+            message = (tr("Independent variable \"") + indepField.name() + tr("\" is not numeric."));
+            return false;
+        }
+    }
     return true;
 }
 
-bool GwmGWRTaskThread::setBandwidth(GwmGWRTaskThread::BandwidthType type, double size, QString unit)
+QgsVectorLayer *GwmGWRTaskThread::layer() const
+{
+    return mLayer;
+}
+
+void GwmGWRTaskThread::setLayer(QgsVectorLayer *layer)
+{
+    mLayer = layer;
+    QgsFeatureIterator it = mLayer->getFeatures();
+    QgsFeature feature;
+    while (it.nextFeature(feature))
+    {
+        mFeatureIds.append(feature.id());
+    }
+}
+
+QList<GwmLayerAttributeItem *> GwmGWRTaskThread::indepVars() const
+{
+    return mIndepVars;
+}
+
+void GwmGWRTaskThread::setIndepVars(const QList<GwmLayerAttributeItem *> &indepVars)
+{
+    mIndepVars = indepVars;
+    for (GwmLayerAttributeItem* item : mIndepVars)
+    {
+        int iIndepVar = item->attributeIndex();
+        mIndepVarsIndex.append(iIndepVar);
+    }
+}
+
+GwmGWRTaskThread::BandwidthType GwmGWRTaskThread::bandwidthType() const
+{
+    return mBandwidthType;
+}
+
+void GwmGWRTaskThread::setBandwidthType(const BandwidthType &bandwidthType)
+{
+    mBandwidthType = bandwidthType;
+}
+
+bool GwmGWRTaskThread::getIsBandwidthSizeAutoSel() const
+{
+    return isBandwidthSizeAutoSel;
+}
+
+void GwmGWRTaskThread::setIsBandwidthSizeAutoSel(bool value)
+{
+    isBandwidthSizeAutoSel = value;
+}
+
+GwmGWRTaskThread::KernelFunction GwmGWRTaskThread::getBandwidthKernelFunction() const
+{
+    return mBandwidthKernelFunction;
+}
+
+void GwmGWRTaskThread::setBandwidthKernelFunction(const KernelFunction &bandwidthKernelFunction)
+{
+    mBandwidthKernelFunction = bandwidthKernelFunction;
+}
+
+GwmGWRTaskThread::DistanceSourceType GwmGWRTaskThread::getDistSrcType() const
+{
+    return mDistSrcType;
+}
+
+void GwmGWRTaskThread::setDistSrcType(const DistanceSourceType &distSrcType)
+{
+    mDistSrcType = distSrcType;
+}
+
+QVariant GwmGWRTaskThread::getDistSrcParameters() const
+{
+    return mDistSrcParameters;
+}
+
+void GwmGWRTaskThread::setDistSrcParameters(const QVariant &distSrcParameters)
+{
+    mDistSrcParameters = distSrcParameters;
+}
+
+GwmGWRTaskThread::ParallelMethod GwmGWRTaskThread::getParallelMethodType() const
+{
+    return mParallelMethodType;
+}
+
+void GwmGWRTaskThread::setParallelMethodType(const ParallelMethod &parallelMethodType)
+{
+    mParallelMethodType = parallelMethodType;
+}
+
+QVariant GwmGWRTaskThread::getParallelParameter() const
+{
+    return mParallelParameter;
+}
+
+void GwmGWRTaskThread::setParallelParameter(const QVariant &parallelParameter)
+{
+    mParallelParameter = parallelParameter;
+}
+
+QgsVectorLayer *GwmGWRTaskThread::getResultLayer() const
+{
+    return mResultLayer;
+}
+
+bool GwmGWRTaskThread::enableIndepVarAutosel() const
+{
+    return isEnableIndepVarAutosel;
+}
+
+void GwmGWRTaskThread::setEnableIndepVarAutosel(bool value)
+{
+    isEnableIndepVarAutosel = value;
+}
+
+GwmLayerAttributeItem *GwmGWRTaskThread::depVar() const
+{
+    return mDepVar;
+}
+
+void GwmGWRTaskThread::setDepVar(GwmLayerAttributeItem *depVar)
+{
+    mDepVar = depVar;
+    mDepVarIndex = mDepVar->attributeIndex();
+}
+
+void GwmGWRTaskThread::setBandwidth(GwmGWRTaskThread::BandwidthType type, double size, QString unit)
 {
     mBandwidthSizeOrigin = size;
     if (type == BandwidthType::Fixed)
@@ -96,21 +223,11 @@ bool GwmGWRTaskThread::isNumeric(QVariant::Type type)
 
 bool GwmGWRTaskThread::setXY()
 {
-    QgsField depField = mLayer->fields()[mDepVarIndex];
-    if (!isNumeric(depField.type()))
-    {
-        emit error(tr("Dependent variable is not numeric."));
-        return false;
-    }
-    for (int iIndepVar : mIndepVarsIndex)
-    {
-        QgsField indepField = mLayer->fields()[iIndepVar];
-        if (!isNumeric(indepField.type()))
-        {
-            emit error(tr("Independent variable \"") + indepField.name() + tr("\" is not numeric."));
-            return false;
-        }
-    }
+    // 初始化所需矩阵
+    mX = mat(mFeatureIds.size(), mIndepVars.size() + 1);
+    mY = vec(mFeatureIds.size());
+    mBetas = mat(mIndepVars.size() + 1, mFeatureIds.size());
+    mDataPoints = mat(mFeatureIds.size(), 2);
 
     int row = 0;
     bool* ok = nullptr;

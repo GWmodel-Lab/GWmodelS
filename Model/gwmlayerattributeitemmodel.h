@@ -47,6 +47,8 @@ public:
 
     QList<QString> toLayerAttributeList();
 
+    QList<GwmLayerAttributeItem *> attributeItemList() const;
+
 private:
     QList<GwmLayerAttributeItem*> mAttributeItemList;
 };

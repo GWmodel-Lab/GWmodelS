@@ -30,6 +30,8 @@ public:
     void onDepVarChanged(QString depVarName);
     void onAddIndepVarBtn();
     void onDelIndepVarBtn();
+    GwmLayerAttributeItemModel *indepVarModel() const;
+    GwmLayerAttributeItemModel *selectedIndepVarModel() const;
 };
 
 #endif // GWMINDEPVARSELECTORWIDGET_H

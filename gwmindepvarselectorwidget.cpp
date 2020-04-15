@@ -21,6 +21,16 @@ GwmIndepVarSelectorWidget::~GwmIndepVarSelectorWidget()
     delete ui;
 }
 
+GwmLayerAttributeItemModel *GwmIndepVarSelectorWidget::selectedIndepVarModel() const
+{
+    return mSelectedIndepVarModel;
+}
+
+GwmLayerAttributeItemModel *GwmIndepVarSelectorWidget::indepVarModel() const
+{
+    return mIndepVarModel;
+}
+
 void GwmIndepVarSelectorWidget::layerChanged(QgsVectorLayer* layer)
 {
     if (mLayer)
