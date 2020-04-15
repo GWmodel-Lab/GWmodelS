@@ -16,7 +16,7 @@ class GwmGWROptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList,QWidget *parent = nullptr);
+    explicit GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList, GwmGWRTaskThread* thread,QWidget *parent = nullptr);
     ~GwmGWROptionsDialog();
 
 private:
@@ -36,6 +36,8 @@ public slots:
     void onGPURadioToggled(bool checked);
     void onCustomizeRaidoToggled(bool checked);
     void onAutomaticRadioToggled(bool checked);
+    void onDistTypeCRSToggled(bool checked);
+    void onDistTypeMinkowskiToggled(bool checked);
     void onDistTypeDmatToggled(bool checked);
 
 

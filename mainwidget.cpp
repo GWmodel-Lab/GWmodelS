@@ -395,13 +395,6 @@ void MainWidget::onZoomToSelection(){
     }
 }
 
-void MainWidget::onGWRBtnClicked()
-{
-    QList<QgsMapLayer*> vectorLayerList = mapModel->toMapLayerList();
-    GwmGWROptionsDialog* gwrdialog = new GwmGWROptionsDialog(vectorLayerList);
-    gwrdialog->exec();
-}
-
 bool MainWidget::askUserForDatumTransfrom(const QgsCoordinateReferenceSystem &sourceCrs, const QgsCoordinateReferenceSystem &destinationCrs, const QgsMapLayer *layer)
 {
     Q_ASSERT( qApp->thread() == QThread::currentThread() );
@@ -579,6 +572,22 @@ void MainWidget::onShowCoordinateTransDlg(const QModelIndex &index)
                          << "Finished";
                 addLayerToModel(thread->getWorkLayer());
             }
+        }
+    }
+}
+
+
+void MainWidget::onGWRBtnClicked()
+{
+    QList<QgsMapLayer*> vectorLayerList = mapModel->toMapLayerList();
+    GwmGWRTaskThread* gwrTaskThread = new GwmGWRTaskThread();
+    GwmGWROptionsDialog* gwrdialog = new GwmGWROptionsDialog(vectorLayerList, gwrTaskThread);
+    if (gwrdialog->exec() == QDialog::Accepted)
+    {
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            addLayerToModel(gwrTaskThread->getResultLayer());
         }
     }
 }

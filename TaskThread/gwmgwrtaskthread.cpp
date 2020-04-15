@@ -48,6 +48,16 @@ QString GwmGWRTaskThread::name() const
 
 bool GwmGWRTaskThread::isValid(QString &message)
 {
+    if (!mLayer)
+    {
+        message = (tr("Layer is not selected."));
+        return false;
+    }
+    if (!mDepVar)
+    {
+        message = (tr("Dependent variable is not selected."));
+        return false;
+    }
     QgsField depField = mLayer->fields()[mDepVarIndex];
     if (!isNumeric(depField.type()))
     {
@@ -63,6 +73,7 @@ bool GwmGWRTaskThread::isValid(QString &message)
             return false;
         }
     }
+
     return true;
 }
 

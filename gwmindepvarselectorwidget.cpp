@@ -110,6 +110,7 @@ void GwmIndepVarSelectorWidget::onAddIndepVarBtn()
         }
     }
     ui->mSelectedIndepVarView->setModel(mSelectedIndepVarModel);
+    emit selectedIndepVarChangedSignal();
 }
 
 void GwmIndepVarSelectorWidget::onDelIndepVarBtn()
@@ -127,5 +128,6 @@ void GwmIndepVarSelectorWidget::onDelIndepVarBtn()
             mSelectedIndepVarModel->removeRows(index.row(),1);
         }
     }
+    emit selectedIndepVarChangedSignal();
 }
 

@@ -3,11 +3,12 @@
 #include <QComboBox>
 #include <QButtonGroup>
 
-GwmGWROptionsDialog::GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList,QWidget *parent) :
+GwmGWROptionsDialog::GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList, GwmGWRTaskThread* thread,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmGWROptionsDialog),
     mMapLayerList(vectorLayerList),
-    mDepVarModel(new GwmLayerAttributeItemModel)
+    mDepVarModel(new GwmLayerAttributeItemModel),
+    mTaskThread(thread)
 {
     ui->setupUi(this);
 
@@ -15,33 +16,35 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList,QWi
         ui->mLayerComboBox->addItem(layer->name());
     }
     ui->mLayerComboBox->setCurrentIndex(-1);
+    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::layerChanged);
+
     ui->mDepVarComboBox->setCurrentIndex(-1);
+    connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::onDepVarChanged);
 
     QButtonGroup* bwTypeBtnGroup = new QButtonGroup(this);
     bwTypeBtnGroup->addButton(ui->mBwTypeAdaptiveRadio);
     bwTypeBtnGroup->addButton(ui->mBwTypeFixedRadio);
+    connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onFixedRadioToggled);
+    connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onVariableRadioToggled);
 
     QButtonGroup* bwSizeTypeBtnGroup = new QButtonGroup(this);
     bwSizeTypeBtnGroup->addButton(ui->mBwSizeAutomaticRadio);
     bwSizeTypeBtnGroup->addButton(ui->mBwSizeCustomizeRadio);
+    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onAutomaticRadioToggled);
+    connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onCustomizeRaidoToggled);
 
     QButtonGroup* distanceSettingBtnGroup = new QButtonGroup(this);
     distanceSettingBtnGroup->addButton(ui->mDistTypeCRSRadio);
     distanceSettingBtnGroup->addButton(ui->mDistTypeDmatRadio);
     distanceSettingBtnGroup->addButton(ui->mDistTypeMinkowskiRadio);
+    connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onDistTypeCRSToggled);
+    connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onDistTypeMinkowskiToggled);
+    connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onDistTypeDmatToggled);
 
     QButtonGroup* calcParallelTypeBtnGroup = new QButtonGroup(this);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
-
-    connect(ui->mLayerComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(layerChanged(int)));
-    connect(ui->mDepVarComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onDepVarChanged(int)));
-
-    connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onFixedRadioToggled);
-    connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onVariableRadioToggled);
-    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onAutomaticRadioToggled);
-    connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onCustomizeRaidoToggled);
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onGPURadioToggled);
@@ -49,6 +52,33 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList,QWi
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);
     ui->mCalcParallelNoneRadio->setChecked(true);
+    ui->mDistTypeCRSRadio->setChecked(true);
+
+    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mThetaValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mPValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistMatrixFileNameEdit, &QLineEdit::textChanged, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
 }
 
 GwmGWROptionsDialog::~GwmGWROptionsDialog()
@@ -64,25 +94,24 @@ void GwmGWROptionsDialog::layerChanged(int index)
         mLayer = nullptr;
     }
     mLayer =  (QgsVectorLayer*)mMapLayerList[index];
-    auto fieldList = mLayer->fields();
+    QgsFields fieldList = mLayer->fields();
     ui->mDepVarComboBox->clear();
     mDepVarModel->clear();
     for (int i = 0; i < fieldList.size(); i++)
     {
         QgsField field = fieldList[i];
-        ui->mDepVarComboBox->addItem(field.name());
         GwmLayerAttributeItem* item = new GwmLayerAttributeItem();
         item->setAttributeName(field.name());
         item->setAttributeType(field.type());
         item->setAttributeIndex(i);
         mDepVarModel->appendRow(item);
+        ui->mDepVarComboBox->addItem(field.name());
     }
 }
 
 void GwmGWROptionsDialog::onDepVarChanged(const int index)
 {
     ui->mIndepVarSelector->onDepVarChanged(ui->mDepVarComboBox->itemText(index));
-    updateFieldsAndEnable();
 }
 
 QString GwmGWROptionsDialog::crsRotateTheta()
@@ -151,8 +180,22 @@ void GwmGWROptionsDialog::onAutomaticRadioToggled(bool checked)
     }
 }
 
+void GwmGWROptionsDialog::onDistTypeCRSToggled(bool checked)
+{
+    if (checked)
+        ui->mDistParamSettingStack->setCurrentIndex(0);
+}
+
+void GwmGWROptionsDialog::onDistTypeMinkowskiToggled(bool checked)
+{
+    if (checked)
+        ui->mDistParamSettingStack->setCurrentIndex(1);
+}
+
 void GwmGWROptionsDialog::onDistTypeDmatToggled(bool checked)
 {
+    if (checked)
+        ui->mDistParamSettingStack->setCurrentIndex(2);
     ui->mCalcParallelGroup->setEnabled(!checked);
 }
 
@@ -275,6 +318,10 @@ void GwmGWROptionsDialog::updateFieldsAndEnable()
     {
         this->updateFields();
         this->enableAccept();
+    }
+    else
+    {
+        ui->mCheckMessage->setText(tr("Task thread is missing."));
     }
 }
 

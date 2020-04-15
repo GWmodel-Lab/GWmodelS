@@ -19,6 +19,9 @@ public:
     explicit GwmIndepVarSelectorWidget(QWidget *parent = nullptr);
     ~GwmIndepVarSelectorWidget();
 
+signals:
+    void selectedIndepVarChangedSignal();
+
 private:
     Ui::GwmIndepVarSelectorWidget *ui;
     QgsVectorLayer* mLayer = nullptr;

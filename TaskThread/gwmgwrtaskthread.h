@@ -98,7 +98,7 @@ public:
 private:
     // 图层和 X Y 属性列
     QgsVectorLayer* mLayer = nullptr;
-    GwmLayerAttributeItem* mDepVar;
+    GwmLayerAttributeItem* mDepVar = nullptr;
     QList<GwmLayerAttributeItem*> mIndepVars;
     int mDepVarIndex;
     QList<int> mIndepVarsIndex;
