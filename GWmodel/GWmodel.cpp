@@ -602,3 +602,22 @@ vec gwLocalR2(const mat& dp, const vec& dybar2, const vec& dyhat2, bool dm_given
   }
   return localR2;
 }
+
+/*zhangtongyao*/
+// 给出回归点，计算在给定带宽情况下的CV值
+double gw_cv(const mat &x, const vec &y, vec &w, int focus, mat dp,double p, double theta, bool longlat,double bw, int kernel, bool adaptive)
+{
+    double cv =0.0;
+    QMap<RegressionResult, mat> result;
+    mat wspan(1, x.n_cols, fill::ones);
+    //
+    w[focus]=0;
+    //
+    mat xtw = trans(x % (w * wspan));
+    mat xtwx = xtw * x;
+    mat xtwy = trans(x) * (w % y);
+    mat xtwx_inv = inv(xtwx);
+    vec beta = xtwx_inv * xtwy;
+
+    return y(focus)-det(x.row(focus)*beta);
+}
