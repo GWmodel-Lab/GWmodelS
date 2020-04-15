@@ -42,6 +42,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
+    TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmsavelayerthread.cpp \
 #    attributetable/qgsattributetabledelegate.cpp \
@@ -105,6 +106,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertygwrtab.h \
     PropertyPanelTabs/utils.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
+    TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmsavelayerthread.h \
 #    attributetable/qgsattributetabledelegate.h \
