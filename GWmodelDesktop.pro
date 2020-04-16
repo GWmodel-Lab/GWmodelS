@@ -213,6 +213,9 @@ GDAL_DATA = ".\share\gdal"
 ## QGIS END
 
 ## Armadillo
+DEFINES += ARMA_USE_LAPACK
+DEFINES += ARMA_USE_BLAS
+DEFINES += ARMA_DONT_USE_WRAPPER
 INCLUDEPATH += "$(QT_HOME)/include/armadillo"
 CONFIG(debug, debug|release) {
     LIBS += -L"$(QT_HOME)/lib" -larmadillod -lopenblas
