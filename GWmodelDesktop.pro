@@ -214,7 +214,11 @@ GDAL_DATA = ".\share\gdal"
 
 ## Armadillo
 INCLUDEPATH += "$(QT_HOME)/include/armadillo"
-LIBS += -L"$(QT_HOME)/lib" -larmadillo -lopenblas
+CONFIG(debug, debug|release) {
+    LIBS += -L"$(QT_HOME)/lib" -larmadillod -lopenblas
+} else {
+    LIBS += -L"$(QT_HOME)/lib" -larmadillo -lopenblas
+}
 ## Armadillo END
 
 TRANSLATIONS += \

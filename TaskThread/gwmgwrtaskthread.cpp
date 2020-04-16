@@ -25,10 +25,12 @@ GwmGWRTaskThread::GwmGWRTaskThread()
 
 void GwmGWRTaskThread::run()
 {
-    if (setXY())
+    if (!setXY())
     {
         return;
     }
+    emit message(tr("Calibrate GWR model."));
+    emit tick(0, mFeatureIds.size());
     for (int i = 0; i < mFeatureIds.size(); i++)
     {
         QgsFeatureId id = mFeatureIds[i];
@@ -36,7 +38,7 @@ void GwmGWRTaskThread::run()
         mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
         auto result = gwReg(mX, mY, weight, false, i);
         mBetas.col(i) = result[RegressionResult::Beta];
-        emit tick(i, mFeatureIds.size());
+        emit tick(i + 1, mFeatureIds.size());
     }
     createResultLayer();
 }
@@ -85,12 +87,7 @@ QgsVectorLayer *GwmGWRTaskThread::layer() const
 void GwmGWRTaskThread::setLayer(QgsVectorLayer *layer)
 {
     mLayer = layer;
-    QgsFeatureIterator it = mLayer->getFeatures();
-    QgsFeature feature;
-    while (it.nextFeature(feature))
-    {
-        mFeatureIds.append(feature.id());
-    }
+    mFeatureIds.clear();
 }
 
 QList<GwmLayerAttributeItem *> GwmGWRTaskThread::indepVars() const
@@ -101,6 +98,7 @@ QList<GwmLayerAttributeItem *> GwmGWRTaskThread::indepVars() const
 void GwmGWRTaskThread::setIndepVars(const QList<GwmLayerAttributeItem *> &indepVars)
 {
     mIndepVars = indepVars;
+    mIndepVarsIndex.clear();
     for (GwmLayerAttributeItem* item : mIndepVars)
     {
         int iIndepVar = item->attributeIndex();
@@ -207,6 +205,8 @@ void GwmGWRTaskThread::setDepVar(GwmLayerAttributeItem *depVar)
 void GwmGWRTaskThread::setBandwidth(GwmGWRTaskThread::BandwidthType type, double size, QString unit)
 {
     mBandwidthSizeOrigin = size;
+    mBandwidthSize = size;
+    mBandwidthType = type;
     if (type == BandwidthType::Fixed)
     {
         mBandwidthSize = size * fixedBwUnitDict[unit];
@@ -215,6 +215,10 @@ void GwmGWRTaskThread::setBandwidth(GwmGWRTaskThread::BandwidthType type, double
     {
         mBandwidthSize = size * adaptiveBwUnitDict[unit];
     }
+    qDebug() << "[GwmGWRTaskThread::setBandwidth]"
+             << "mBandwidthSizeOrigin" << mBandwidthSizeOrigin
+             << "mBandwidthSize" << mBandwidthSize
+             << "mBandwidthType" << mBandwidthType;
 }
 
 bool GwmGWRTaskThread::isNumeric(QVariant::Type type)
@@ -234,33 +238,39 @@ bool GwmGWRTaskThread::isNumeric(QVariant::Type type)
 
 bool GwmGWRTaskThread::setXY()
 {
+    // 提取 FeatureID
+    emit message("Set matrix.");
+    QgsFeatureIterator it = mLayer->getFeatures();
+    QgsFeature feature;
+    while (it.nextFeature(feature))
+    {
+        mFeatureIds.append(feature.id());
+    }
     // 初始化所需矩阵
-    mX = mat(mFeatureIds.size(), mIndepVars.size() + 1);
+    mX = mat(mFeatureIds.size(), mIndepVarsIndex.size() + 1);
     mY = vec(mFeatureIds.size());
-    mBetas = mat(mIndepVars.size() + 1, mFeatureIds.size());
+    mBetas = mat(mIndepVarsIndex.size() + 1, mFeatureIds.size());
     mDataPoints = mat(mFeatureIds.size(), 2);
 
-    int row = 0;
-    bool* ok = nullptr;
-    for (QgsFeatureId featureId : mFeatureIds)
+    bool ok = false;
+    emit tick(0, mFeatureIds.size());
+    for (int row = 0; row < mFeatureIds.size(); row++)
     {
+        QgsFeatureId featureId = mFeatureIds[row];
         QgsFeature feature = mLayer->getFeature(featureId);
-        double vY = feature.attribute(mDepVarIndex).toDouble(ok);
+        double vY = feature.attribute(mDepVarIndex).toDouble(&ok);
         if (ok)
         {
             mY.at(row, 0) = vY;
-            delete ok;
-            ok = nullptr;
 
             // 设置 X 矩阵
-            for (int index : mIndepVarsIndex)
+            for (int i = 0; i < mIndepVarsIndex.size(); i++)
             {
-                double vX = feature.attribute(index).toDouble(ok);
+                int index = mIndepVarsIndex[i];
+                double vX = feature.attribute(index).toDouble(&ok);
                 if (ok)
                 {
-                    mX.at(row, index + 1) = vX;
-                    delete ok;
-                    ok = nullptr;
+                    mX.at(row, i + 1) = vX;
                 }
                 else
                 {
@@ -272,18 +282,16 @@ bool GwmGWRTaskThread::setXY()
             mDataPoints.at(row, 0) = centroPoint.x();
             mDataPoints.at(row, 1) = centroPoint.y();
         }
-        else
-        {
-            emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
-        }
+        else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
+        emit tick(row + 1, mFeatureIds.size());
     }
     // 坐标旋转
-    if (mDistSrcType == DistanceSourceType::Minkowski)
-    {
-        QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
-        double theta = parameters["theta"].toDouble();
-        mDataPoints = coordinateRotate(mDataPoints, theta);
-    }
+//    if (mDistSrcType == DistanceSourceType::Minkowski)
+//    {
+//        QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
+//        double theta = parameters["theta"].toDouble();
+//        mDataPoints = coordinateRotate(mDataPoints, theta);
+//    }
     return true;
 }
 
