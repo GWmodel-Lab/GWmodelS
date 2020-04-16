@@ -332,16 +332,17 @@ vec GwmGWRTaskThread::distanceMinkowski(int focus)
 void GwmGWRTaskThread::createResultLayer()
 {
     emit message("Creating result layer...");
+    QString layerFileName = QgsWkbTypes::displayString(mLayer->wkbType()) + QStringLiteral("?");
     QString layerName = mLayer->name();
     if (mBandwidthType == BandwidthType::Fixed)
     {
-        layerName += QString(" B:%1%2").arg(mBandwidthSizeOrigin, 0, 'f', 3).arg(mBandwidthSize);
+        layerName += QString("_B%1%2").arg(mBandwidthSizeOrigin, 0, 'f', 3).arg(mBandwidthSize);
     }
     else
     {
-        layerName += QString(" B:%1").arg(int(mBandwidthSize));
+        layerName += QString("_B%1").arg(int(mBandwidthSize));
     }
-    mResultLayer = new QgsVectorLayer(QStringLiteral("?"), layerName, QStringLiteral("memory"));
+    mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(mLayer->crs());
 
     QgsFields fields;
@@ -355,6 +356,7 @@ void GwmGWRTaskThread::createResultLayer()
     mResultLayer->dataProvider()->addAttributes(fields.toList());
     mResultLayer->updateFields();
 
+    mResultLayer->startEditing();
     for (int f = 0; f < mFeatureList.size(); f++)
     {
         QgsFeature srcFeature = mFeatureList[f];
@@ -366,5 +368,7 @@ void GwmGWRTaskThread::createResultLayer()
             double attributeValue = mBetas(f, a);
             feature.setAttribute(attributeName, attributeValue);
         }
+        mResultLayer->addFeature(feature);
     }
+    mResultLayer->commitChanges();
 }
