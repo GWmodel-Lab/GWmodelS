@@ -12,9 +12,9 @@ void GwmGWRTaskThread::initUnitDict()
     fixedBwUnitDict["km"] = 1000.0;
     fixedBwUnitDict["mile"] = 1609.344;
     adaptiveBwUnitDict["x1"] = 1;
-    adaptiveBwUnitDict["x1"] = 10;
-    adaptiveBwUnitDict["x1"] = 100;
-    adaptiveBwUnitDict["x1"] = 1000;
+    adaptiveBwUnitDict["x10"] = 10;
+    adaptiveBwUnitDict["x100"] = 100;
+    adaptiveBwUnitDict["x1000"] = 1000;
 }
 
 GwmGWRTaskThread::GwmGWRTaskThread()
@@ -30,15 +30,16 @@ void GwmGWRTaskThread::run()
         return;
     }
     emit message(tr("Calibrate GWR model."));
-    emit tick(0, mFeatureIds.size());
-    for (int i = 0; i < mFeatureIds.size(); i++)
+    emit tick(0, mFeatureList.size());
+    for (int i = 0; i < mFeatureList.size(); i++)
     {
-        QgsFeatureId id = mFeatureIds[i];
-        mat dist = distance(id);
+        QgsFeature feature = mFeatureList[i];
+        QgsFeatureId id = feature.id();
+        mat dist = distance(feature);
         mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
         auto result = gwReg(mX, mY, weight, false, i);
         mBetas.col(i) = result[RegressionResult::Beta];
-        emit tick(i + 1, mFeatureIds.size());
+        emit tick(i + 1, mFeatureList.size());
     }
     createResultLayer();
 }
@@ -87,7 +88,7 @@ QgsVectorLayer *GwmGWRTaskThread::layer() const
 void GwmGWRTaskThread::setLayer(QgsVectorLayer *layer)
 {
     mLayer = layer;
-    mFeatureIds.clear();
+    mFeatureList.clear();
 }
 
 QList<GwmLayerAttributeItem *> GwmGWRTaskThread::indepVars() const
@@ -207,6 +208,7 @@ void GwmGWRTaskThread::setBandwidth(GwmGWRTaskThread::BandwidthType type, double
     mBandwidthSizeOrigin = size;
     mBandwidthSize = size;
     mBandwidthType = type;
+    mBandwidthUnit = unit;
     if (type == BandwidthType::Fixed)
     {
         mBandwidthSize = size * fixedBwUnitDict[unit];
@@ -217,6 +219,7 @@ void GwmGWRTaskThread::setBandwidth(GwmGWRTaskThread::BandwidthType type, double
     }
     qDebug() << "[GwmGWRTaskThread::setBandwidth]"
              << "mBandwidthSizeOrigin" << mBandwidthSizeOrigin
+             << "mBandwidthUnit" << unit
              << "mBandwidthSize" << mBandwidthSize
              << "mBandwidthType" << mBandwidthType;
 }
@@ -241,23 +244,25 @@ bool GwmGWRTaskThread::setXY()
     // 提取 FeatureID
     emit message("Set matrix.");
     QgsFeatureIterator it = mLayer->getFeatures();
-    QgsFeature feature;
-    while (it.nextFeature(feature))
+    QgsFeature f;
+    while (it.nextFeature(f))
     {
-        mFeatureIds.append(feature.id());
+        mFeatureList.append(f);
     }
     // 初始化所需矩阵
-    mX = mat(mFeatureIds.size(), mIndepVarsIndex.size() + 1);
-    mY = vec(mFeatureIds.size());
-    mBetas = mat(mIndepVarsIndex.size() + 1, mFeatureIds.size());
-    mDataPoints = mat(mFeatureIds.size(), 2);
+    mX = mat(mFeatureList.size(), mIndepVarsIndex.size() + 1);
+    mY = vec(mFeatureList.size());
+    mBetas = mat(mIndepVarsIndex.size() + 1, mFeatureList.size());
+    mDataPoints = mat(mFeatureList.size(), 2);
 
     bool ok = false;
-    emit tick(0, mFeatureIds.size());
-    for (int row = 0; row < mFeatureIds.size(); row++)
+    int row = 0, total = mFeatureList.size();
+    it.rewind();
+//    while (it.nextFeature(feature))
+//    {
+    for (row = 0; row < total; row++)
     {
-        QgsFeatureId featureId = mFeatureIds[row];
-        QgsFeature feature = mLayer->getFeature(featureId);
+        QgsFeature feature = mFeatureList[row];
         double vY = feature.attribute(mDepVarIndex).toDouble(&ok);
         if (ok)
         {
@@ -283,7 +288,7 @@ bool GwmGWRTaskThread::setXY()
             mDataPoints.at(row, 1) = centroPoint.y();
         }
         else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
-        emit tick(row + 1, mFeatureIds.size());
+//        row++;
     }
     // 坐标旋转
 //    if (mDistSrcType == DistanceSourceType::Minkowski)
@@ -292,39 +297,44 @@ bool GwmGWRTaskThread::setXY()
 //        double theta = parameters["theta"].toDouble();
 //        mDataPoints = coordinateRotate(mDataPoints, theta);
 //    }
+    emit tick(total, total);
     return true;
 }
 
-vec GwmGWRTaskThread::distance(const QgsFeatureId &id)
+vec GwmGWRTaskThread::distance(const QgsFeature& feature)
 {
     switch (mDistSrcType)
     {
     case DistanceSourceType::Minkowski:
-        return distanceMinkowski(id);
+        return distanceMinkowski(feature);
     default:
-        return distanceCRS(id);
+        return distanceCRS(feature);
     }
 }
 
-vec GwmGWRTaskThread::distanceCRS(const QgsFeatureId &id)
+vec GwmGWRTaskThread::distanceCRS(const QgsFeature& feature)
 {
-    QgsFeature fSrc = mLayer->getFeature(id);
-    QgsGeometry gSrc = fSrc.geometry();
-    vec dist(mFeatureIds.size(), fill::zeros);
-    for (int i = 0; i < mFeatureIds.size(); i++)
+    vec dist(mFeatureList.size(), fill::zeros);
+    QgsGeometry gSrc = feature.geometry();
+    for (int i = 0; i < mFeatureList.size(); i++)
     {
-        QgsFeature fDes = mLayer->getFeature(mFeatureIds[i]);
-        dist.at(i) = fDes.geometry().distance(gSrc);
+        QgsGeometry gDes = mFeatureList[i].geometry();
+        double d = gDes.distance(gSrc);
+        if (i < 5)
+            qDebug() << "[GwmGWRTaskThread::distanceCRS]"
+                     << "gSrc" << !(gSrc.isNull() || gSrc.isEmpty())
+                     << "gDes" << !(gDes.isNull() || gDes.isEmpty())
+                     << "dist" << d;
+        dist(i) = d;
     }
     return dist;
 }
 
-vec GwmGWRTaskThread::distanceMinkowski(const QgsFeatureId &id)
+vec GwmGWRTaskThread::distanceMinkowski(const QgsFeature& feature)
 {
     QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
     double p = parameters["p"].toDouble();
-    QgsFeature fSrc = mLayer->getFeature(id);
-    QgsPointXY gSrc = fSrc.geometry().centroid().asPoint();
+    QgsPointXY gSrc = feature.geometry().centroid().asPoint();
     vec srcLoc(gSrc.x(), gSrc.y());
     return mkDistVec(mDataPoints, srcLoc, p);
 }
@@ -354,10 +364,9 @@ void GwmGWRTaskThread::createResultLayer()
     mResultLayer->dataProvider()->addAttributes(fields.toList());
     mResultLayer->updateFields();
 
-    for (int f = 0; f < mFeatureIds.size(); f++)
+    for (int f = 0; f < mFeatureList.size(); f++)
     {
-        QgsFeatureId id = mFeatureIds[f];
-        QgsFeature srcFeature = mLayer->getFeature(id);
+        QgsFeature srcFeature = mFeatureList[f];
         QgsFeature feature(fields);
         feature.setGeometry(srcFeature.geometry());
         for (int a = 0; a < fields.size(); a++)

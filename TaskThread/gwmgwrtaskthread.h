@@ -103,7 +103,8 @@ private:
     int mDepVarIndex;
     QList<int> mIndepVarsIndex;
     bool isEnableIndepVarAutosel = false;
-    QList<QgsFeatureId> mFeatureIds;  // 要素ID
+    QgsFeatureList mFeatureList;  // 预收集的要素列表
+//    QList<QgsFeatureId> mFeatureIds;  // 要素ID
 
     // 带宽配置
     BandwidthType mBandwidthType = BandwidthType::Adaptive;
@@ -138,9 +139,9 @@ private:
     bool isNumeric(QVariant::Type type);
     bool setXY();
 
-    vec distance(const QgsFeatureId& id);
-    vec distanceCRS(const QgsFeatureId& id);
-    vec distanceMinkowski(const QgsFeatureId& id);
+    vec distance(const QgsFeature& feature);
+    vec distanceCRS(const QgsFeature& feature);
+    vec distanceMinkowski(const QgsFeature& feature);
 
     void createResultLayer();
 };
