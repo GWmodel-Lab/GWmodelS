@@ -49,8 +49,8 @@ void GwmProgressDialog::reject()
 
 void GwmProgressDialog::onTick(int current, int total)
 {
-    qDebug() << "[GwmProgressDialog::onTick]"
-             << "current" << current << "total" << total;
+//    qDebug() << "[GwmProgressDialog::onTick]"
+//             << "current" << current << "total" << total;
     ui->progressBar->setRange(0, total);
     ui->progressBar->setValue(current);
 }

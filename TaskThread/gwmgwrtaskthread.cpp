@@ -1,6 +1,9 @@
 #include "gwmgwrtaskthread.h"
 
+#include <exception>
 #include "GWmodel/GWmodel.h"
+
+using namespace std;
 
 QMap<QString, double> GwmGWRTaskThread::fixedBwUnitDict = QMap<QString, double>();
 QMap<QString, double> GwmGWRTaskThread::adaptiveBwUnitDict = QMap<QString, double>();
@@ -29,19 +32,23 @@ void GwmGWRTaskThread::run()
     {
         return;
     }
-    emit message(tr("Calibrate GWR model."));
+    emit message(tr("Calibrating GWR model..."));
     emit tick(0, mFeatureList.size());
     for (int i = 0; i < mFeatureList.size(); i++)
     {
-        QgsFeature feature = mFeatureList[i];
-        QgsFeatureId id = feature.id();
-        mat dist = distance(feature);
+        mat dist = distance(i);
         mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-        auto result = gwReg(mX, mY, weight, false, i);
-        mBetas.col(i) = result[RegressionResult::Beta];
-        emit tick(i + 1, mFeatureList.size());
+        try {
+            auto result = gwReg(mX, mY, weight, false, i);
+            mBetas.col(i) = result[RegressionResult::Beta];
+            emit tick(i + 1, mFeatureList.size());
+        } catch (exception e) {
+            emit error(e.what());
+        }
     }
+    mBetas = trans(mBetas);
     createResultLayer();
+    emit success();
 }
 
 QString GwmGWRTaskThread::name() const
@@ -242,7 +249,7 @@ bool GwmGWRTaskThread::isNumeric(QVariant::Type type)
 bool GwmGWRTaskThread::setXY()
 {
     // 提取 FeatureID
-    emit message("Set matrix.");
+    emit message("Setting matrices.");
     QgsFeatureIterator it = mLayer->getFeatures();
     QgsFeature f;
     while (it.nextFeature(f))
@@ -258,8 +265,6 @@ bool GwmGWRTaskThread::setXY()
     bool ok = false;
     int row = 0, total = mFeatureList.size();
     it.rewind();
-//    while (it.nextFeature(feature))
-//    {
     for (row = 0; row < total; row++)
     {
         QgsFeature feature = mFeatureList[row];
@@ -288,59 +293,45 @@ bool GwmGWRTaskThread::setXY()
             mDataPoints.at(row, 1) = centroPoint.y();
         }
         else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
-//        row++;
     }
     // 坐标旋转
-//    if (mDistSrcType == DistanceSourceType::Minkowski)
-//    {
-//        QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
-//        double theta = parameters["theta"].toDouble();
-//        mDataPoints = coordinateRotate(mDataPoints, theta);
-//    }
+    if (mDistSrcType == DistanceSourceType::Minkowski)
+    {
+        QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
+        double theta = parameters["theta"].toDouble();
+        mDataPoints = coordinateRotate(mDataPoints, theta);
+    }
     emit tick(total, total);
     return true;
 }
 
-vec GwmGWRTaskThread::distance(const QgsFeature& feature)
+vec GwmGWRTaskThread::distance(int focus)
 {
     switch (mDistSrcType)
     {
     case DistanceSourceType::Minkowski:
-        return distanceMinkowski(feature);
+        return distanceMinkowski(focus);
     default:
-        return distanceCRS(feature);
+        return distanceCRS(focus);
     }
 }
 
-vec GwmGWRTaskThread::distanceCRS(const QgsFeature& feature)
+vec GwmGWRTaskThread::distanceCRS(int focus)
 {
-    vec dist(mFeatureList.size(), fill::zeros);
-    QgsGeometry gSrc = feature.geometry();
-    for (int i = 0; i < mFeatureList.size(); i++)
-    {
-        QgsGeometry gDes = mFeatureList[i].geometry();
-        double d = gDes.distance(gSrc);
-        if (i < 5)
-            qDebug() << "[GwmGWRTaskThread::distanceCRS]"
-                     << "gSrc" << !(gSrc.isNull() || gSrc.isEmpty())
-                     << "gDes" << !(gDes.isNull() || gDes.isEmpty())
-                     << "dist" << d;
-        dist(i) = d;
-    }
-    return dist;
+    bool longlat = mLayer->crs().isGeographic();
+    return gwDist(mDataPoints, mDataPoints, focus, 2.0, 0.0, longlat, false);
 }
 
-vec GwmGWRTaskThread::distanceMinkowski(const QgsFeature& feature)
+vec GwmGWRTaskThread::distanceMinkowski(int focus)
 {
     QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
     double p = parameters["p"].toDouble();
-    QgsPointXY gSrc = feature.geometry().centroid().asPoint();
-    vec srcLoc(gSrc.x(), gSrc.y());
-    return mkDistVec(mDataPoints, srcLoc, p);
+    return gwDist(mDataPoints, mDataPoints, focus, p, 0.0, false, false);
 }
 
 void GwmGWRTaskThread::createResultLayer()
 {
+    emit message("Creating result layer...");
     QString layerName = mLayer->name();
     if (mBandwidthType == BandwidthType::Fixed)
     {

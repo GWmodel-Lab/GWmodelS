@@ -139,9 +139,9 @@ private:
     bool isNumeric(QVariant::Type type);
     bool setXY();
 
-    vec distance(const QgsFeature& feature);
-    vec distanceCRS(const QgsFeature& feature);
-    vec distanceMinkowski(const QgsFeature& feature);
+    vec distance(int focus);
+    vec distanceCRS(int focus);
+    vec distanceMinkowski(int focus);
 
     void createResultLayer();
 };
