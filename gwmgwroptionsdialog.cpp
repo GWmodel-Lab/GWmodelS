@@ -11,6 +11,8 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList, Gw
     mTaskThread(thread)
 {
     ui->setupUi(this);
+    ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
+    ui->mBwSizeFixedSize->setMaximum(DBL_MAX);
 
     for(QgsMapLayer* layer:mMapLayerList){
         ui->mLayerComboBox->addItem(layer->name());
