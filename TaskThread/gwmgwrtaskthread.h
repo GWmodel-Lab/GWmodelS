@@ -135,7 +135,7 @@ private:
     // 结果图层
     QgsVectorLayer* mResultLayer;
 
-private:
+protected:
     bool isNumeric(QVariant::Type type);
     bool setXY();
 
