@@ -158,6 +158,7 @@ bool GwmLayerAttributeItemModel::removeRows(int row, int count, const QModelInde
 }
 
 bool GwmLayerAttributeItemModel::clear(){
+    if (rowCount() <= 0) return true;
     beginRemoveRows(QModelIndex(),0,rowCount()-1);
     for (GwmLayerAttributeItem* item : mAttributeItemList)
     {
