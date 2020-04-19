@@ -39,6 +39,7 @@ SOURCES += \
     Model/gwmlayeroriginitem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
+    PropertyPanelTabs/gwmpropertygwrtab.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmsavelayerthread.cpp \
@@ -100,6 +101,7 @@ HEADERS += \
     Model/gwmlayeroriginitem.h \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
+    PropertyPanelTabs/gwmpropertygwrtab.h \
     PropertyPanelTabs/utils.h \
     TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmsavelayerthread.h \
@@ -151,6 +153,7 @@ HEADERS += \
     qgsattributetableviewextend.h
 
 FORMS += \
+    PropertyPanelTabs/gwmpropertygwrtab.ui \
     gwmcoordtranssettingdialog.ui \
     gwmcsvtodatdialog.ui \
     gwmfeaturepanel.ui \

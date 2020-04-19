@@ -242,6 +242,31 @@ void GwmGWRTaskThread::setEnableIndepVarAutosel(bool value)
     isEnableIndepVarAutosel = value;
 }
 
+QgsFeatureList GwmGWRTaskThread::getFeatureList() const
+{
+    return mFeatureList;
+}
+
+GwmGWRDiagnostic GwmGWRTaskThread::getDiagnostic() const
+{
+    return mDiagnostic;
+}
+
+double GwmGWRTaskThread::getBandwidthSize() const
+{
+    return mBandwidthSize;
+}
+
+double GwmGWRTaskThread::getBandwidthSizeOrigin() const
+{
+    return mBandwidthSizeOrigin;
+}
+
+QString GwmGWRTaskThread::getBandwidthUnit() const
+{
+    return mBandwidthUnit;
+}
+
 GwmLayerAttributeItem *GwmGWRTaskThread::depVar() const
 {
     return mDepVar;

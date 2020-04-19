@@ -105,6 +105,12 @@ public:
     BandwidthType bandwidthType() const;
     void setBandwidthType(const BandwidthType &bandwidthType);
 
+    double getBandwidthSize() const;
+
+    double getBandwidthSizeOrigin() const;
+
+    QString getBandwidthUnit() const;
+
     bool getIsBandwidthSizeAutoSel() const;
     void setIsBandwidthSizeAutoSel(bool value);
 
@@ -127,6 +133,10 @@ public:
 
     bool enableIndepVarAutosel() const;
     void setEnableIndepVarAutosel(bool value);
+
+    QgsFeatureList getFeatureList() const;
+
+    GwmGWRDiagnostic getDiagnostic() const;
 
 protected:
     // 图层和 X Y 属性列
