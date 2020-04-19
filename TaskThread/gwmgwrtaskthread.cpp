@@ -54,10 +54,8 @@ void GwmGWRTaskThread::run()
             try {
                 mat dist = distance(i);
                 mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                auto result = gwReg(mX, mY, weight, hasHatMatrix, i);
-                mBetas.col(i) = result[RegressionResult::Beta];
-                mat ci = result[RegressionResult::Ci];
-                mat si = result[RegressionResult::S_ri];
+                mat ci, si;
+                mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
                 mBetasSE.col(i) = (ci % ci) * mRowSumBetasSE;
                 mSHat(0) += si(0, i);
                 mSHat(1) += det(si * trans(si));
@@ -80,8 +78,7 @@ void GwmGWRTaskThread::run()
             mat dist = distance(i);
             mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
             try {
-                auto result = gwReg(mX, mY, weight, hasHatMatrix, i);
-                mBetas.col(i) = result[RegressionResult::Beta];
+                mBetas.col(i) = gwReg(mX, mY, weight, i);
                 emit tick(i + 1, mFeatureList.size());
             } catch (exception e) {
                 emit error(e.what());

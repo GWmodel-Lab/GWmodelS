@@ -304,7 +304,7 @@ mat expWtMat(const mat& distm, const vec& bw)
 	return wtm;
 }
 //GWR clalibration
-QMap<RegressionResult, mat> gwReg(const mat& x, const vec &y, const vec &w, bool hatmatrix, int focus)
+vec gwReg(const mat& x, const vec &y, const vec &w, int focus)
 {
     QMap<RegressionResult, mat> result;
 	mat wspan(1, x.n_cols, fill::ones);
@@ -313,20 +313,21 @@ QMap<RegressionResult, mat> gwReg(const mat& x, const vec &y, const vec &w, bool
 	mat xtwy = trans(x) * (w % y);
 	mat xtwx_inv = inv(xtwx);
 	vec beta = xtwx_inv * xtwy;
-	if (hatmatrix)
-	{
-		mat ci = xtwx_inv * xtw;
-        mat s_ri = x.row(focus) * ci;
-        result[RegressionResult::Beta] = beta;
-        result[RegressionResult::S_ri] = s_ri;
-        result[RegressionResult::Ci] = ci;
-        return result;
-	}
-	else
-	{
-        result[RegressionResult::Beta] = beta;
-        return result;
-	}
+    return beta;
+}
+
+vec gwRegHatmatrix(const mat &x, const vec &y, const vec &w, int focus, mat& ci, mat& s_ri)
+{
+    QMap<RegressionResult, mat> result;
+    mat wspan(1, x.n_cols, fill::ones);
+    mat xtw = trans(x % (w * wspan));
+    mat xtwx = xtw * x;
+    mat xtwy = trans(x) * (w % y);
+    mat xtwx_inv = inv(xtwx);
+    vec beta = xtwx_inv * xtwy;
+    ci = xtwx_inv * xtw;
+    s_ri = x.row(focus) * ci;
+    return beta;
 }
 // Trace of hat matrix + trace of HH' in one function. Used in beta_se
 
