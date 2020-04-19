@@ -23,7 +23,19 @@ void GwmGWRTaskThread::initUnitDict()
 GwmGWRTaskThread::GwmGWRTaskThread()
     : GwmTaskThread()
 {
-
+    mX = mat(uword(0), uword(0));
+    mY = vec(uword(0));
+    mBetas = mat(uword(0), uword(0));
+    mRowSumBetasSE = mat(uword(0), uword(0));
+    mBetasSE = mat(uword(0), uword(0));
+    mBetasTV = mat(uword(0), uword(0));
+    mDataPoints = mat(uword(0), 2);
+    mSHat = vec(uword(0));
+    mQDiag = vec(uword(0));
+    mYHat = vec(uword(0));
+    mResidual = vec(uword(0));
+    mStudentizedResidual = vec(uword(0));
+    mLocalRSquare = vec(uword(0));
 }
 
 void GwmGWRTaskThread::run()
@@ -34,21 +46,55 @@ void GwmGWRTaskThread::run()
     }
     emit message(tr("Calibrating GWR model..."));
     emit tick(0, mFeatureList.size());
-    for (int i = 0; i < mFeatureList.size(); i++)
+    bool isAllCorrect = true;
+    if (hasHatMatrix)
     {
-        mat dist = distance(i);
-        mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-        try {
-            auto result = gwReg(mX, mY, weight, false, i);
-            mBetas.col(i) = result[RegressionResult::Beta];
-            emit tick(i + 1, mFeatureList.size());
-        } catch (exception e) {
-            emit error(e.what());
+        for (int i = 0; i < mFeatureList.size(); i++)
+        {
+            try {
+                mat dist = distance(i);
+                mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                auto result = gwReg(mX, mY, weight, hasHatMatrix, i);
+                mBetas.col(i) = result[RegressionResult::Beta];
+                mat ci = result[RegressionResult::Ci];
+                mat si = result[RegressionResult::S_ri];
+                mBetasSE.col(i) = (ci % ci) * mRowSumBetasSE;
+                mSHat(0) += si(0, i);
+                mSHat(1) += det(si * trans(si));
+                vec p = -trans(si);
+                p(i) += 1.0;
+                mQDiag += p % p;
+                emit tick(i + 1, mFeatureList.size());
+            } catch (exception e) {
+                isAllCorrect = false;
+                emit error(e.what());
+            }
         }
+        mBetas = trans(mBetas);
+        mBetasSE = trans(mBetasSE);
     }
-    mBetas = trans(mBetas);
-    createResultLayer();
-    emit success();
+    else
+    {
+        for (int i = 0; i < mFeatureList.size(); i++)
+        {
+            mat dist = distance(i);
+            mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+            try {
+                auto result = gwReg(mX, mY, weight, hasHatMatrix, i);
+                mBetas.col(i) = result[RegressionResult::Beta];
+                emit tick(i + 1, mFeatureList.size());
+            } catch (exception e) {
+                emit error(e.what());
+            }
+        }
+        mBetas = trans(mBetas);
+    }
+    if (isAllCorrect)
+    {
+        diagnostic();
+        createResultLayer();
+        emit success();
+    }
 }
 
 QString GwmGWRTaskThread::name() const
@@ -257,9 +303,16 @@ bool GwmGWRTaskThread::setXY()
         mFeatureList.append(f);
     }
     // 初始化所需矩阵
-    mX = mat(mFeatureList.size(), mIndepVarsIndex.size() + 1);
-    mY = vec(mFeatureList.size());
-    mBetas = mat(mIndepVarsIndex.size() + 1, mFeatureList.size());
+    mX = mat(mFeatureList.size(), mIndepVarsIndex.size() + 1, fill::zeros);
+    mY = vec(mFeatureList.size(), fill::zeros);
+    mBetas = mat(mIndepVarsIndex.size() + 1, mFeatureList.size(), fill::zeros);
+    if (hasHatMatrix)
+    {
+        mBetasSE = mat(mIndepVarsIndex.size() + 1, mFeatureList.size(), fill::zeros);
+        mSHat = vec(2, fill::zeros);
+        mQDiag = vec(mFeatureList.size(), fill::zeros);
+        mRowSumBetasSE = mat(mFeatureList.size(), 1, fill::ones);
+    }
     mDataPoints = mat(mFeatureList.size(), 2);
 
     bool ok = false;
@@ -271,8 +324,8 @@ bool GwmGWRTaskThread::setXY()
         double vY = feature.attribute(mDepVarIndex).toDouble(&ok);
         if (ok)
         {
-            mY.at(row, 0) = vY;
-
+            mY(row, 0) = vY;
+            mX(row, 0) = 1.0;
             // 设置 X 矩阵
             for (int i = 0; i < mIndepVarsIndex.size(); i++)
             {
@@ -280,7 +333,7 @@ bool GwmGWRTaskThread::setXY()
                 double vX = feature.attribute(index).toDouble(&ok);
                 if (ok)
                 {
-                    mX.at(row, i + 1) = vX;
+                    mX(row, i + 1) = vX;
                 }
                 else
                 {
@@ -289,8 +342,8 @@ bool GwmGWRTaskThread::setXY()
             }
             // 设置坐标
             QgsPointXY centroPoint = feature.geometry().centroid().asPoint();
-            mDataPoints.at(row, 0) = centroPoint.x();
-            mDataPoints.at(row, 1) = centroPoint.y();
+            mDataPoints(row, 0) = centroPoint.x();
+            mDataPoints(row, 1) = centroPoint.y();
         }
         else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
     }
@@ -329,6 +382,32 @@ vec GwmGWRTaskThread::distanceMinkowski(int focus)
     return gwDist(mDataPoints, mDataPoints, focus, p, 0.0, false, false);
 }
 
+void GwmGWRTaskThread::diagnostic()
+{
+    vec vDiags = gwrDiag(mY, mX, mBetas, mSHat);
+    mDiagnostic = GwmGWRDiagnostic(vDiags);
+    mYHat = fitted(mX, mBetas);
+    mResidual = mY - mYHat;
+    double trS = mSHat(0), trStS = mSHat(1);
+    double nDp = mFeatureList.size();
+    double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+    mStudentizedResidual = mResidual / sqrt(sigmaHat * mQDiag);
+    mBetasSE = sqrt(sigmaHat * mBetasSE);
+    mBetasTV = mBetas / mBetasSE;
+    vec dybar2 = (mY - sum(mY) / nDp) % (mY - sum(mY) / nDp);
+    vec dyhat2 = (mY - mYHat) % (mY - mYHat);
+    // Local RSquare
+    mLocalRSquare = vec(mFeatureList.size(), fill::zeros);
+    for (int i = 0; i < mFeatureList.size(); i++)
+    {
+        vec dist = distance(i);
+        mat w = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        double tss = sum(dybar2 % w);
+        double rss = sum(dyhat2 % w);
+        mLocalRSquare(i) = (tss - rss) / tss;
+    }
+}
+
 void GwmGWRTaskThread::createResultLayer()
 {
     emit message("Creating result layer...");
@@ -350,25 +429,91 @@ void GwmGWRTaskThread::createResultLayer()
     for (GwmLayerAttributeItem* item : mIndepVars)
     {
         QString srcName = item->attributeName();
-        QString name = QString("Beta_") + srcName;
+        QString name = srcName;
         fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
+    }
+    if (hasHatMatrix)
+    {
+        fields.append(QgsField(QStringLiteral("y"), QVariant::Double, QStringLiteral("double")));
+        fields.append(QgsField(QStringLiteral("yhat"), QVariant::Double, QStringLiteral("double")));
+        fields.append(QgsField(QStringLiteral("residual"), QVariant::Double, QStringLiteral("double")));
+        fields.append(QgsField(QStringLiteral("Stud_residual"), QVariant::Double, QStringLiteral("double")));
+        fields.append(QgsField(QStringLiteral("Intercept_SE"), QVariant::Double, QStringLiteral("double")));
+        for (GwmLayerAttributeItem* item : mIndepVars)
+        {
+            QString srcName = item->attributeName();
+            QString name = srcName + QStringLiteral("_SE");
+            fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
+        }
+        fields.append(QgsField(QStringLiteral("Intercept_TV"), QVariant::Double, QStringLiteral("double")));
+        for (GwmLayerAttributeItem* item : mIndepVars)
+        {
+            QString srcName = item->attributeName();
+            QString name = srcName + QStringLiteral("_TV");
+            fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
+        }
+        fields.append(QgsField(QStringLiteral("Local_R2"), QVariant::Double, QStringLiteral("double")));
     }
     mResultLayer->dataProvider()->addAttributes(fields.toList());
     mResultLayer->updateFields();
 
     mResultLayer->startEditing();
-    for (int f = 0; f < mFeatureList.size(); f++)
+    if (hasHatMatrix)
     {
-        QgsFeature srcFeature = mFeatureList[f];
-        QgsFeature feature(fields);
-        feature.setGeometry(srcFeature.geometry());
-        for (int a = 0; a < fields.size(); a++)
+        int indepSize = mIndepVars.size() + 1;
+        for (int f = 0; f < mFeatureList.size(); f++)
         {
-            QString attributeName = fields[a].name();
-            double attributeValue = mBetas(f, a);
-            feature.setAttribute(attributeName, attributeValue);
+            int curCol = 0;
+            QgsFeature srcFeature = mFeatureList[f];
+            QgsFeature feature(fields);
+            feature.setGeometry(srcFeature.geometry());
+            for (int a = 0; a < indepSize; a++)
+            {
+                int fieldIndex = a + curCol;
+                QString attributeName = fields[fieldIndex].name();
+                double attributeValue = mBetas(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            curCol += indepSize;
+            feature.setAttribute(fields[curCol++].name(), mY(f));
+            feature.setAttribute(fields[curCol++].name(), mYHat(f));
+            feature.setAttribute(fields[curCol++].name(), mResidual(f));
+            feature.setAttribute(fields[curCol++].name(), mStudentizedResidual(f));
+            for (int a = 0; a < indepSize; a++)
+            {
+                int fieldIndex = a + curCol;
+                QString attributeName = fields[fieldIndex].name();
+                double attributeValue = mBetasSE(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            curCol += indepSize;
+            for (int a = 0; a < indepSize; a++)
+            {
+                int fieldIndex = a + curCol;
+                QString attributeName = fields[fieldIndex].name();
+                double attributeValue = mBetasTV(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            curCol += indepSize;
+            feature.setAttribute(fields[curCol++].name(), mLocalRSquare(f));
+            mResultLayer->addFeature(feature);
         }
-        mResultLayer->addFeature(feature);
+    }
+    else
+    {
+        for (int f = 0; f < mFeatureList.size(); f++)
+        {
+            QgsFeature srcFeature = mFeatureList[f];
+            QgsFeature feature(fields);
+            feature.setGeometry(srcFeature.geometry());
+            for (int a = 0; a < fields.size(); a++)
+            {
+                QString attributeName = fields[a].name();
+                double attributeValue = mBetas(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            mResultLayer->addFeature(feature);
+        }
     }
     mResultLayer->commitChanges();
 }

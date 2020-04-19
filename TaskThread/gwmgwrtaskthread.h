@@ -9,6 +9,39 @@
 
 using namespace arma;
 
+struct GwmGWRDiagnostic
+{
+    double RSS;
+    double AIC;
+    double AICc;
+    double ENP;
+    double EDF;
+    double RSquare;
+    double RSquareAdjust;
+
+    GwmGWRDiagnostic()
+    {
+        RSS = 0.0;
+        AIC = 0.0;
+        AICc = 0.0;
+        ENP = 0.0;
+        EDF = 0.0;
+        RSquare = 0.0;
+        RSquareAdjust = 0.0;
+    }
+
+    GwmGWRDiagnostic(const vec& diag)
+    {
+        AIC = diag(0);
+        AICc = diag(1);
+        EDF = diag(2);
+        ENP = diag(3);
+        RSS = diag(4);
+        RSquare = diag(5);
+        RSquareAdjust = diag(6);
+    }
+};
+
 class GwmGWRTaskThread : public GwmTaskThread
 {
     Q_OBJECT
@@ -104,7 +137,8 @@ private:
     QList<int> mIndepVarsIndex;
     bool isEnableIndepVarAutosel = false;
     QgsFeatureList mFeatureList;  // 预收集的要素列表
-//    QList<QgsFeatureId> mFeatureIds;  // 要素ID
+
+    bool hasHatMatrix = true;
 
     // 带宽配置
     BandwidthType mBandwidthType = BandwidthType::Adaptive;
@@ -128,11 +162,21 @@ private:
 
     // 计算用的矩阵
     mat mX;
-    mat mY;
+    vec mY;
     mat mBetas;
+    mat mRowSumBetasSE;
+    mat mBetasSE;
+    mat mBetasTV;
     mat mDataPoints;
+    vec mSHat;
+    vec mQDiag;
+    vec mYHat;
+    vec mResidual;
+    vec mStudentizedResidual;
+    vec mLocalRSquare;
 
-    // 结果图层
+    // 结果
+    GwmGWRDiagnostic mDiagnostic;
     QgsVectorLayer* mResultLayer;
 
 protected:
@@ -142,6 +186,8 @@ protected:
     vec distance(int focus);
     vec distanceCRS(int focus);
     vec distanceMinkowski(int focus);
+
+    void diagnostic();
 
     void createResultLayer();
 };

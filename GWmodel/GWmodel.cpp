@@ -6,7 +6,7 @@ using namespace arma;
 
 //distance matrix calculation
 //coords must be a matrix with 2 columns
-mat coordinateRotate(mat coords, double theta)
+mat coordinateRotate(const mat& coords, double theta)
 {
 	int n = coords.n_rows;
 	mat rotated_coords(n, 2);
@@ -16,7 +16,7 @@ mat coordinateRotate(mat coords, double theta)
 }
 
 //Eudclidean distance matrix
-mat euDistMat(mat in_locs, mat out_locs)
+mat euDistMat(const mat& in_locs, const mat& out_locs)
 {
 	int n_in = in_locs.n_rows;
 	int n_out = out_locs.n_rows;
@@ -32,7 +32,7 @@ mat euDistMat(mat in_locs, mat out_locs)
 	return sqrt(eu_dist);
 }
 //symmetrical distance matrix
-mat euDistSmat(mat in_locs)
+mat euDistSmat(const mat& in_locs)
 {
 	int n = in_locs.n_rows;
 	mat eu_dist(n, n);
@@ -45,7 +45,7 @@ mat euDistSmat(mat in_locs)
 	return sqrt(eu_dist);
 }
 
-vec euDistVec(mat in_locs, vec out_loc)
+vec euDistVec(const mat& in_locs, const vec& out_loc)
 {
 	int n_in = in_locs.n_rows;
 	vec eu_dist(n_in);
@@ -60,7 +60,7 @@ vec euDistVec(mat in_locs, vec out_loc)
 }
 
 //Manhattan distance matrix
-mat mdDistMat(mat in_locs, mat out_locs)
+mat mdDistMat(const mat& in_locs, const mat& out_locs)
 {
 	int n_in = in_locs.n_rows;
 	int n_out = out_locs.n_rows;
@@ -76,7 +76,7 @@ mat mdDistMat(mat in_locs, mat out_locs)
 }
 
 //symmetrical distance matrix
-mat mdDistSmat(mat in_locs)
+mat mdDistSmat(const mat& in_locs)
 {
 	int n = in_locs.n_rows;
 	mat md_dist(n, n);
@@ -90,7 +90,7 @@ mat mdDistSmat(mat in_locs)
 	}
 	return md_dist;
 }
-vec mdDistVec(mat in_locs, vec out_loc)
+vec mdDistVec(const mat& in_locs, const vec& out_loc)
 {
 	int n_in = in_locs.n_rows;
 	vec md_dist(n_in);
@@ -102,7 +102,7 @@ vec mdDistVec(mat in_locs, vec out_loc)
 }
 
 //Chebyshev distance matrix
-mat cdDistMat(mat in_locs, mat out_locs)
+mat cdDistMat(const mat& in_locs, const mat& out_locs)
 {
 	int n_in = in_locs.n_rows;
 	int n_out = out_locs.n_rows;
@@ -119,7 +119,7 @@ mat cdDistMat(mat in_locs, mat out_locs)
 }
 
 //symmetrical distance matrix
-mat cdDistSmat(mat in_locs)
+mat cdDistSmat(const mat& in_locs)
 {
 	int n = in_locs.n_rows;
 	mat cd_dist(n, n);
@@ -133,7 +133,7 @@ mat cdDistSmat(mat in_locs)
 	}
 	return cd_dist;
 }
-vec cdDistVec(mat in_locs, vec out_loc)
+vec cdDistVec(const mat& in_locs, const vec& out_loc)
 {
 	int n_in = in_locs.n_rows;
 	vec cd_dist(n_in);
@@ -145,7 +145,7 @@ vec cdDistVec(mat in_locs, vec out_loc)
 }
 
 //Minkowski distance matrix
-mat mkDistMat(mat in_locs, mat out_locs, double p)
+mat mkDistMat(const mat& in_locs, const mat& out_locs, double p)
 {
 	int n_in = in_locs.n_rows;
 	int n_out = out_locs.n_rows;
@@ -161,7 +161,7 @@ mat mkDistMat(mat in_locs, mat out_locs, double p)
 }
 //sqrt(sum(pow(in_locs.row(i) - trans(out_loc),2)))
 //symmetrical distance matrix
-mat mkDistSmat(mat in_locs, double p)
+mat mkDistSmat(const mat& in_locs, double p)
 {
 	int n = in_locs.n_rows;
 	mat mk_dist(n, n);
@@ -176,7 +176,7 @@ mat mkDistSmat(mat in_locs, double p)
 	return mk_dist;
 }
 
-vec mkDistVec(mat in_locs, vec out_loc, double p)
+vec mkDistVec(const mat& in_locs, const vec& out_loc, double p)
 {
 	int n_in = in_locs.n_rows;
 	vec mk_dist(n_in);
@@ -188,7 +188,7 @@ vec mkDistVec(mat in_locs, vec out_loc, double p)
 }
 //Weight matrix
 //Bisuqare weight
-vec bisqWtVec(vec distv, double bw)
+vec bisqWtVec(const vec& distv, double bw)
 {
 	int n = distv.n_elem;
 	vec wtv;
@@ -202,7 +202,7 @@ vec bisqWtVec(vec distv, double bw)
 	return wtv;
 }
 //Calculated by column, the length of bw must be the same the number of columns of distm
-mat bisqWtMat(mat distm, vec bw)
+mat bisqWtMat(const mat& distm, const vec& bw)
 {
 	int m = distm.n_cols;
 	int n = distm.n_rows;
@@ -219,7 +219,7 @@ mat bisqWtMat(mat distm, vec bw)
 }
 
 //Gaussian weight
-vec gaussWtVec(vec distv, double bw)
+vec gaussWtVec(const vec& distv, double bw)
 {
 	int n = distv.n_elem;
 	vec wtv;
@@ -231,7 +231,7 @@ vec gaussWtVec(vec distv, double bw)
 	}
 	return wtv;
 }
-mat gaussWtMat(mat distm, vec bw)
+mat gaussWtMat(const mat& distm, const vec& bw)
 {
 	int m = distm.n_cols;
 	int n = distm.n_rows;
@@ -248,7 +248,7 @@ mat gaussWtMat(mat distm, vec bw)
 }
 
 //Tricube weight
-vec triWtVec(vec distv, double bw)
+vec triWtVec(const vec& distv, double bw)
 {
 	int n = distv.n_elem;
 	vec wtv;
@@ -260,7 +260,7 @@ vec triWtVec(vec distv, double bw)
 	}
 	return wtv;
 }
-mat triWtMatt(mat distm, vec bw)
+mat triWtMatt(const mat& distm, const vec& bw)
 {
 	int m = distm.n_cols;
 	int n = distm.n_rows;
@@ -277,7 +277,7 @@ mat triWtMatt(mat distm, vec bw)
 	return wtm;
 }
 //exponential kernel weight
-vec expWtVec(vec distv, double bw)
+vec expWtVec(const vec& distv, double bw)
 {
 	int n = distv.n_elem;
 	vec wtv;
@@ -288,7 +288,7 @@ vec expWtVec(vec distv, double bw)
 	}
 	return wtv;
 }
-mat expWtMat(mat distm, vec bw)
+mat expWtMat(const mat& distm, const vec& bw)
 {
 	int m = distm.n_cols;
 	int n = distm.n_rows;
@@ -304,7 +304,7 @@ mat expWtMat(mat distm, vec bw)
 	return wtm;
 }
 //GWR clalibration
-QMap<RegressionResult, mat> gwReg(const mat &x, const vec &y, const vec &w, bool hatmatrix, int focus)
+QMap<RegressionResult, mat> gwReg(const mat& x, const vec &y, const vec &w, bool hatmatrix, int focus)
 {
     QMap<RegressionResult, mat> result;
 	mat wspan(1, x.n_cols, fill::ones);
@@ -316,7 +316,7 @@ QMap<RegressionResult, mat> gwReg(const mat &x, const vec &y, const vec &w, bool
 	if (hatmatrix)
 	{
 		mat ci = xtwx_inv * xtw;
-        mat s_ri = x.row(focus - 1) * ci;
+        mat s_ri = x.row(focus) * ci;
         result[RegressionResult::Beta] = beta;
         result[RegressionResult::S_ri] = s_ri;
         result[RegressionResult::Ci] = ci;
@@ -330,7 +330,7 @@ QMap<RegressionResult, mat> gwReg(const mat &x, const vec &y, const vec &w, bool
 }
 // Trace of hat matrix + trace of HH' in one function. Used in beta_se
 
-vec trhat2(mat S)
+vec trhat2(const mat& S)
 {
 	int n_obs = S.n_rows;
 	double htr = 0.0;
@@ -347,7 +347,7 @@ vec trhat2(mat S)
 }
 // Fited values
 
-vec fitted(mat X, mat beta)
+vec fitted(const mat& X, const mat& beta)
 {
 	vec fitted = sum(beta % X, 1);
 	return fitted;
@@ -355,20 +355,20 @@ vec fitted(mat X, mat beta)
 
 // Residuals
 
-vec ehat(vec y, mat X, mat beta)
+vec ehat(const vec& y, const mat& X, const mat& beta)
 {
 	vec fitted = sum(beta % X, 1);
 	return y - fitted;
 }
 
 // Residual sum-of squares
-double rss(vec y, mat X, mat beta)
+double rss(const vec& y, const mat& X, const mat& beta)
 {
 	vec r = ehat(y, X, beta);
 	return sum(r % r);
 }
 
-vec gwrDiag(vec y, mat x, mat beta, vec s_hat)
+vec gwrDiag(const vec& y, const mat& x, const mat& beta, const vec& s_hat)
 {
 	double ss = rss(y, x, beta);
 	// vec s_hat = trhat2(S);
@@ -396,7 +396,7 @@ vec gwrDiag(vec y, mat x, mat beta, vec s_hat)
 }
 
 // return the AICc - nice tool to give to 'optimise' to find 'best' bandwidth
-double AICc(vec y, mat x, mat beta, vec s_hat)
+double AICc(const vec& y, const mat& x, const mat& beta, const vec& s_hat)
 {
   double ss = rss(y, x, beta);
   // vec s_hat = trhat2(S);
@@ -407,7 +407,7 @@ double AICc(vec y, mat x, mat beta, vec s_hat)
 }
 
 // return the AICc and RSS , used for function model.selection
-vec AICcRss(vec y, mat x, mat beta, vec s_hat)
+vec AICcRss(const vec& y, const mat& x, const mat& beta, const vec& s_hat)
 {
   vec result(3);
   double ss = rss(y, x, beta);
@@ -422,7 +422,7 @@ vec AICcRss(vec y, mat x, mat beta, vec s_hat)
 }
 
 //Caculate the i row of
-mat CiMat(mat x, vec w)
+mat CiMat(const mat& x, vec w)
 {
 	return inv(trans(x) * diagmat(w) * x) * trans(x) * diagmat(w);
 }
@@ -478,7 +478,7 @@ double spGcdist(double lon1, double lon2, double lat1, double lat2) {
     return D*( 1 + f*H1*sinF2*cosG2 - f*H2*cosF2*sinG2 ); 
 }
 
-vec spDists(mat dp, vec loc) {
+vec spDists(const mat& dp, const vec& loc) {
   int N = dp.n_rows, j;
   vec dists(N, fill::zeros);
   double uout = loc(0), vout = loc(1);
@@ -489,13 +489,14 @@ vec spDists(mat dp, vec loc) {
   return dists;
 }
 
-mat gwDist(mat dp, mat rp, int focus, double p, double theta, bool longlat, bool rp_given) {
-  int ndp = dp.n_rows, nrp = rp.n_rows;
+mat gwDist(const mat& dp0, const mat& rp0, int focus, double p, double theta, bool longlat, bool rp_given) {
+  int ndp = dp0.n_rows, nrp = rp0.n_rows;
   int isFocus = focus > -1;
   mat dists;
+  mat dp(dp0), rp(rp0);
   if (p != 2 && theta != 0 && !longlat) {
-    dp = coordinateRotate(dp, theta);
-    rp = coordinateRotate(rp, theta);
+    dp = coordinateRotate(dp0, theta);
+    rp = coordinateRotate(rp0, theta);
   }
   if (isFocus) {
     mat prp = trans(rp.row(focus));
@@ -560,36 +561,35 @@ const KERNEL GWRKernel[5] = {
   gwWeightBoxcar
 };
 
-mat gwWeight(mat dist, double bw, int kernel, bool adaptive) {
-  dist = trans(dist);
+mat gwWeight(const mat& dist, double bw, int kernel, bool adaptive) {
   const KERNEL *kerf = GWRKernel + kernel;
   int nc = dist.n_cols, nr = dist.n_rows;
   mat w(nr, nc, fill::zeros);
   if (adaptive) {
-    for (int r = 0; r < nr; r++) {
-      double dn = bw / nc, fixbw = 0;
+    for (int c = 0; c < nc; c++) {
+      double dn = bw / nr, fixbw = 0;
       if (dn <= 1) {
-        mat vdist = sort(dist.row(r));
-        fixbw = vdist(0, int(bw) - 1);
+        vec vdist = sort(dist.col(c));
+        fixbw = vdist(int(bw) - 1);
       } else {
-        fixbw = dn * max(dist.row(r));
+        fixbw = dn * max(dist.col(c));
       }
-      for (int c = 0; c < nc; c++) {
+      for (int r = 0; r < nr; r++) {
         w(r, c) = (*kerf)(dist(r, c), fixbw);
       }
     }
   } else {
-    for (int r = 0; r < nr; r++) {
-      for (int c = 0; c < nc; c++) {
+    for (int c = 0; c < nc; c++) {
+      for (int r = 0; r < nr; r++) {
         w(r, c) = (*kerf)(dist(r, c), bw);
       }
     }
   }
-  return trans(w);
+  return w;
 }
 
 
-vec gwLocalR2(mat dp, vec dybar2, vec dyhat2, bool dm_given, mat dmat, double p, double theta, bool longlat, double bw, int kernel, bool adaptive) {
+vec gwLocalR2(const mat& dp, const vec& dybar2, const vec& dyhat2, bool dm_given, const mat& dmat, double p, double theta, bool longlat, double bw, int kernel, bool adaptive) {
   int n = dp.n_rows;
   vec localR2(n, fill::zeros);
   for (int i = 0; i < n; i++) {
