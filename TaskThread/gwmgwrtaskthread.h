@@ -128,7 +128,7 @@ public:
     bool enableIndepVarAutosel() const;
     void setEnableIndepVarAutosel(bool value);
 
-private:
+protected:
     // 图层和 X Y 属性列
     QgsVectorLayer* mLayer = nullptr;
     GwmLayerAttributeItem* mDepVar = nullptr;
