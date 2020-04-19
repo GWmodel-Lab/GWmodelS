@@ -75,9 +75,9 @@ void GwmGWRTaskThread::run()
     {
         for (int i = 0; i < mFeatureList.size(); i++)
         {
-            mat dist = distance(i);
-            mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
             try {
+                mat dist = distance(i);
+                mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
                 mBetas.col(i) = gwReg(mX, mY, weight, i);
                 emit tick(i + 1, mFeatureList.size());
             } catch (exception e) {

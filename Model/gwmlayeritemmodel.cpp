@@ -176,6 +176,20 @@ GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
 
 }
 
+bool GwmLayerItemModel::appentItem(GwmLayerItem *item, const QModelIndex &parent)
+{
+    GwmLayerItem* parentItem = itemFromIndex(parent);
+    int row = parentItem->childCount();
+    bool success = false;
+
+    beginInsertRows(parent, row, row + 1);
+    success = parentItem->appendChildren(QList<GwmLayerItem*>() << item);
+    endInsertRows();
+
+    emit layerAddedSignal();
+    return success;
+}
+
 QList<GwmLayerItem *> GwmLayerItemModel::takeRows(int row, int count, const QModelIndex &parent)
 {
     GwmLayerItem* parentItem = itemFromIndex(parent);
@@ -244,7 +258,7 @@ QModelIndex GwmLayerItemModel::indexFromItem(GwmLayerItem* item) const
                  << item->itemType() << item->text();
         GwmLayerItem* parentItem = item->parentItem();
         if (parentItem)
-            return createIndex(item->childNumber(), 0, parentItem);
+            return createIndex(item->childNumber(), 0, item);
         else
             return QModelIndex();
     }
@@ -264,6 +278,11 @@ QgsVectorLayer *GwmLayerItemModel::layerFromItem(GwmLayerItem* item) const
     default:
         return nullptr;
     }
+}
+
+QList<GwmLayerGroupItem *> GwmLayerItemModel::rootChildren()
+{
+    return mRootItem->children();
 }
 
 QList<QgsMapLayer *> GwmLayerItemModel::toMapLayerList()

@@ -3,10 +3,10 @@
 #include <QComboBox>
 #include <QButtonGroup>
 
-GwmGWROptionsDialog::GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList, GwmGWRTaskThread* thread,QWidget *parent) :
+GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGWRTaskThread* thread,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmGWROptionsDialog),
-    mMapLayerList(vectorLayerList),
+    mMapLayerList(originItemList),
     mDepVarModel(new GwmLayerAttributeItemModel),
     mTaskThread(thread)
 {
@@ -14,8 +14,8 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<QgsMapLayer*> vectorLayerList, Gw
     ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
     ui->mBwSizeFixedSize->setMaximum(DBL_MAX);
 
-    for(QgsMapLayer* layer:mMapLayerList){
-        ui->mLayerComboBox->addItem(layer->name());
+    for (GwmLayerGroupItem* item : mMapLayerList){
+        ui->mLayerComboBox->addItem(item->originChild()->layer()->name());
     }
     ui->mLayerComboBox->setCurrentIndex(-1);
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::layerChanged);
@@ -88,15 +88,25 @@ GwmGWROptionsDialog::~GwmGWROptionsDialog()
     delete ui;
 }
 
+GwmLayerGroupItem *GwmGWROptionsDialog::selectedLayer() const
+{
+    return mSelectedLayer;
+}
+
+void GwmGWROptionsDialog::setSelectedLayer(GwmLayerGroupItem *selectedLayer)
+{
+    mSelectedLayer = selectedLayer;
+}
+
 void GwmGWROptionsDialog::layerChanged(int index)
 {
-    ui->mIndepVarSelector->layerChanged((QgsVectorLayer*)mMapLayerList[index]);
-    if (mLayer)
+    ui->mIndepVarSelector->layerChanged(mMapLayerList[index]->originChild()->layer());
+    if (mSelectedLayer)
     {
-        mLayer = nullptr;
+        mSelectedLayer = nullptr;
     }
-    mLayer =  (QgsVectorLayer*)mMapLayerList[index];
-    QgsFields fieldList = mLayer->fields();
+    mSelectedLayer =  mMapLayerList[index];
+    QgsFields fieldList = mSelectedLayer->originChild()->layer()->fields();
     ui->mDepVarComboBox->clear();
     mDepVarModel->clear();
     for (int i = 0; i < fieldList.size(); i++)
@@ -332,7 +342,7 @@ void GwmGWROptionsDialog::updateFields()
     // 图层设置
     if (ui->mLayerComboBox->currentIndex() > -1)
     {
-        mTaskThread->setLayer(static_cast<QgsVectorLayer*>(mMapLayerList[ui->mLayerComboBox->currentIndex()]));
+        mTaskThread->setLayer(mSelectedLayer->originChild()->layer());
     }
     // 因变量设置
     if (ui->mDepVarComboBox->currentIndex() > -1)

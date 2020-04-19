@@ -26,7 +26,7 @@ GwmLayerItem* GwmLayerItem::parentItem() const
 
 GwmLayerItem* GwmLayerItem::child(int row)
 {
-    if (mChildren.size() > 0)
+    if (row >= 0 && row < mChildren.size())
         return mChildren.at(row);
     else return nullptr;
 }

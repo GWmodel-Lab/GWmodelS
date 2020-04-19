@@ -34,6 +34,7 @@
 #include <TaskThread/gwmcsvtodatthread.h>
 
 #include "gwmattributetabledialog.h"
+#include "Model/gwmlayergwritem.h"
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -579,15 +580,31 @@ void MainWidget::onShowCoordinateTransDlg(const QModelIndex &index)
 
 void MainWidget::onGWRBtnClicked()
 {
-    QList<QgsMapLayer*> vectorLayerList = mapModel->toMapLayerList();
     GwmGWRTaskThread* gwrTaskThread = new GwmGWRTaskThread();
-    GwmGWROptionsDialog* gwrdialog = new GwmGWROptionsDialog(vectorLayerList, gwrTaskThread);
-    if (gwrdialog->exec() == QDialog::Accepted)
+    GwmGWROptionsDialog* gwrOptionDialog = new GwmGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
     {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwrOptionDialog->exec() == QDialog::Accepted)
+    {
+        GwmLayerGroupItem* selectedItem = gwrOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            addLayerToModel(gwrTaskThread->getResultLayer());
+            QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
+            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer);
+            mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
 }

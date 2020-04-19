@@ -52,7 +52,9 @@ QString GwmLayerGroupItem::text()
 GwmLayerItem* GwmLayerGroupItem::child(int row)
 {
     if (row == 0) return mOriginChild;
-    else return mAnalyseChildren.at(row - 1);
+    else if (row > 0 && row < childCount())
+        return mAnalyseChildren.at(row - 1);
+    else return nullptr;
 }
 
 int GwmLayerGroupItem::childCount()
@@ -121,9 +123,14 @@ bool GwmLayerGroupItem::appendChildren(QList<GwmLayerItem *> items)
     for (int row = 0; row < items.size(); row ++)
     {
         GwmLayerItem* item = items.at(row);
-        if (item->itemType() == GwmLayerItemType::Group)
+        switch (item->itemType())
+        {
+        case GwmLayerItemType::GWR:
             mAnalyseChildren.append((GwmLayerVectorItem*)item);
-        else return false;
+            return true;
+        default:
+            return false;
+        }
     }
     return true;
 }
