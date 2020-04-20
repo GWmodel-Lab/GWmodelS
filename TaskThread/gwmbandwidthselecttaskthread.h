@@ -14,42 +14,11 @@ class GwmBandwidthSelectTaskThread:public GwmGWRTaskThread
 public:
     GwmBandwidthSelectTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem* depVar, QList<GwmLayerAttributeItem*> indepVars);
 public:
-
-    enum BandwidthType
-    {
-        Adaptive,
-        Fixed
-    };
-
-    enum ParallelMethod
-    {
-        None,
-        Multithread,
-        GPU
-    };
-
-    enum KernelFunction
-    {
-        Gaussian,
-        Exponential,
-        Bisquare,
-        Tricube,
-        Boxcar
-    };
-
-    enum DistanceSourceType
-    {
-        CRS,
-        Minkowski,
-        DMatFile
-    };
-
     enum Approach
     {
         CV,
         AICc
     };
-
 protected:
     void run() override;
 private:

@@ -9,7 +9,7 @@
 //typedef double (*pf2)(mat , vec , mat , double , int , bool );
 
 GwmBandwidthSelectTaskThread::GwmBandwidthSelectTaskThread(QgsVectorLayer* layer, GwmLayerAttributeItem* depVar, QList<GwmLayerAttributeItem*> indepVars)
-    : GwmGWRTaskThread(layer, depVar, indepVars)
+    : GwmGWRTaskThread()
     , mLayer(layer)
     , mDepVar(depVar)
     , mIndepVars(indepVars)
