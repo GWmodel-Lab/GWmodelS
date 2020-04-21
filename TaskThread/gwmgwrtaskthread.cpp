@@ -55,6 +55,7 @@ GwmGWRTaskThread::GwmGWRTaskThread(const GwmGWRTaskThread &taskThread)
     mBandwidthSizeOrigin = taskThread.mBandwidthSizeOrigin;
     mBandwidthUnit = taskThread.mBandwidthUnit;
     isBandwidthSizeAutoSel = taskThread.isBandwidthSizeAutoSel;
+    mBandwidthSelectionApproach = taskThread.mBandwidthSelectionApproach;
     mBandwidthKernelFunction = taskThread.mBandwidthKernelFunction;
     mDistSrcType = taskThread.mDistSrcType;
     mDistSrcParameters = taskThread.mDistSrcParameters;
@@ -313,6 +314,16 @@ GwmGWRDiagnostic GwmGWRTaskThread::getDiagnostic() const
 mat GwmGWRTaskThread::getBetas() const
 {
     return mBetas;
+}
+
+GwmGWRTaskThread::BandwidthSelectionApproach GwmGWRTaskThread::getBandwidthSelectionApproach() const
+{
+    return mBandwidthSelectionApproach;
+}
+
+void GwmGWRTaskThread::setBandwidthSelectionApproach(const BandwidthSelectionApproach &bandwidthSelectionApproach)
+{
+    mBandwidthSelectionApproach = bandwidthSelectionApproach;
 }
 
 double GwmGWRTaskThread::getBandwidthSize() const

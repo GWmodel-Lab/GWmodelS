@@ -36,7 +36,7 @@ void GwmBandwidthSelectTaskThread::run()
     //如果是cv,gold(gwr.cv....)
     //如果是Aic,gold(gwr.aic....)
     //默认是cv
-    if (mApproach == CV)
+    if (GwmGWRTaskThread::mBandwidthSelectionApproach == CV)
     {
         mBandwidthSize = gold(&GwmBandwidthSelectTaskThread::cvAll,lower,upper,adaptive,mX,mY,mDataPoints,mBandwidthKernelFunction,adaptive);
     }
@@ -65,8 +65,8 @@ double GwmBandwidthSelectTaskThread::cvAll(const mat& x, const vec& y, const mat
 double GwmBandwidthSelectTaskThread::aicAll(const mat& x, const vec& y, const mat& dp, double bw, int kernel, bool adaptive)
 {
     int n = dp.n_rows, k = x.n_cols;
-    mat betas(k,n,fill::zeros);
-    mat s_hat(1, 2, fill::zeros);
+    mat betas(k, n, fill::zeros);
+    vec s_hat(2, fill::zeros);
     mat ci, si;
 
     for (int i = 0; i < n;i++)
@@ -87,7 +87,7 @@ double GwmBandwidthSelectTaskThread::gold(pfApproach p,double xL, double xU, boo
 {
     const double eps = 1e-4;
     const double R = (sqrt(5)-1)/2;
-    int iter = 1;
+    int iter = 0;
     double d = R * (xU - xL);
     double x1 = adaptBw ? floor(xL + d) : (xL + d);
     double x2 = adaptBw ? round(xU - d) : (xU - d);
@@ -95,7 +95,7 @@ double GwmBandwidthSelectTaskThread::gold(pfApproach p,double xL, double xU, boo
     double f2 = (this->*p)(x, y, dp, x2, kernel, adaptive);
     double d1 = f2 - f1;
     double xopt = f1 < f2 ? x1 : x2;
-    double ea=100;
+    double ea = 100;
     while ((fabs(d) > eps) && (fabs(d1) > eps) && iter < ea)
     {
         d = R * d;
@@ -106,18 +106,17 @@ double GwmBandwidthSelectTaskThread::gold(pfApproach p,double xL, double xU, boo
             x1 = adaptBw ? round(xL + d) : (xL + d);
             f2 = f1;
             f1 = (this->*p)(x, y, dp, x1, kernel, adaptive);
-            xopt = x1;
         }
         else
         {
             xU = x1;
             x1 = x2;
-            x2 = adaptBw ? floor(xU -d) : (xU - d);
+            x2 = adaptBw ? floor(xU - d) : (xU - d);
             f1 = f2;
             f2 = (this->*p)(x, y, dp, x2, kernel, adaptive);
-            xopt = x2;
         }
         iter = iter + 1;
+        xopt = (f1 < f2) ? x1 : x2;
         d1 = f2 - f1;
     }
     return xopt;
@@ -143,14 +142,14 @@ QString GwmBandwidthSelectTaskThread::createOutputMessage(double bw, double scor
     {
         return m.arg(tr("Adaptive bandwidth"))
                 .arg((int)bw)
-                .arg(mApproach == Approach::CV ? tr("CV score") : tr("AIC score"))
+                .arg(GwmGWRTaskThread::mBandwidthSelectionApproach == BandwidthSelectionApproach::CV ? tr("CV score") : tr("AIC score"))
                 .arg(score, 0, 'f', 6);
     }
     else
     {
         return m.arg(tr("Fixed bandwidth"))
                 .arg(bw, 0, 'f', 3)
-                .arg(mApproach == Approach::CV ? tr("CV score") : tr("AIC score"))
+                .arg(GwmGWRTaskThread::mBandwidthSelectionApproach == BandwidthSelectionApproach::CV ? tr("CV score") : tr("AIC score"))
                 .arg(score, 0, 'f', 6);
     }
 }

@@ -16,20 +16,11 @@ public:
 
     GwmBandwidthSelectTaskThread(const GwmGWRTaskThread& gwrTaskThread);
 
-public:
-    enum Approach
-    {
-        CV,
-        AIC
-    };
-
 protected:
     void run() override;
 
 private:
     bool createdFromGWRTaskThread = false;
-
-    Approach mApproach = Approach::CV;
 
     double cvAll(const mat& x, const vec& y,const mat& dp,double bw, int kernel, bool adaptive);
     double aicAll(const mat& x, const vec& y, const mat& dp,double bw,int kernel,bool adaptive);

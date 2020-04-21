@@ -82,6 +82,12 @@ public:
         DMatFile
     };
 
+    enum BandwidthSelectionApproach
+    {
+        CV,
+        AIC
+    };
+
 public:
     GwmGWRTaskThread();
     GwmGWRTaskThread(const GwmGWRTaskThread& taskThread);
@@ -141,6 +147,9 @@ public:
 
     mat getBetas() const;
 
+    BandwidthSelectionApproach getBandwidthSelectionApproach() const;
+    void setBandwidthSelectionApproach(const BandwidthSelectionApproach &bandwidthSelectionApproach);
+
 protected:
     // 图层和 X Y 属性列
     QgsVectorLayer* mLayer = nullptr;
@@ -159,6 +168,7 @@ protected:
     double mBandwidthSizeOrigin = 0.0;
     QString mBandwidthUnit = QStringLiteral("x1");
     bool isBandwidthSizeAutoSel = true;
+    BandwidthSelectionApproach mBandwidthSelectionApproach = BandwidthSelectionApproach::CV;
     KernelFunction mBandwidthKernelFunction = KernelFunction::Gaussian;
 
     // 距离配置

@@ -63,6 +63,7 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAutomaticApprochCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
@@ -242,6 +243,17 @@ double GwmGWROptionsDialog::bandwidthSize(){
     }
 }
 
+GwmGWRTaskThread::BandwidthSelectionApproach GwmGWROptionsDialog::bandwidthSelectionApproach()
+{
+    switch (ui->mBwSizeAutomaticApprochCombo->currentIndex())
+    {
+    case 0:
+        return GwmGWRTaskThread::CV;
+    default:
+        return GwmGWRTaskThread::AIC;
+    }
+}
+
 QString GwmGWROptionsDialog::bandWidthUnit(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
@@ -368,7 +380,16 @@ void GwmGWROptionsDialog::updateFields()
         mTaskThread->setEnableIndepVarAutosel(ui->mVariableAutoSelectionCheck->isChecked());
     }
     // 带宽设置
-    mTaskThread->setBandwidth(this->bandwidthType(), this->bandwidthSize(), this->bandWidthUnit());
+    if (ui->mBwSizeAutomaticRadio->isChecked())
+    {
+        mTaskThread->setIsBandwidthSizeAutoSel(true);
+        mTaskThread->setBandwidthSelectionApproach(bandwidthSelectionApproach());
+    }
+    else if (ui->mBwSizeCustomizeRadio->isChecked())
+    {
+        mTaskThread->setIsBandwidthSizeAutoSel(false);
+        mTaskThread->setBandwidth(this->bandwidthType(), this->bandwidthSize(), this->bandWidthUnit());
+    }
     mTaskThread->setBandwidthKernelFunction(this->bandwidthKernelFunction());
     // 距离设置
     auto distSrcType = this->distanceSourceType();
