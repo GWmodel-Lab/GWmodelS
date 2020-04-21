@@ -2,11 +2,21 @@
 #define GWMPROPERTYGWRTAB_H
 
 #include <QWidget>
+#include <QTableWidgetItem>
 #include "Model/gwmlayergwritem.h"
 
 namespace Ui {
 class GwmPropertyGWRTab;
 }
+
+struct GwmQuartiles
+{
+    double min = 0.0;
+    double first = 0.0;
+    double median = 0.0;
+    double third = 0.0;
+    double max = 0.0;
+};
 
 class GwmPropertyGWRTab : public QWidget
 {
@@ -24,8 +34,34 @@ private:
     Ui::GwmPropertyGWRTab *ui;
     GwmLayerGWRItem* mLayerItem;
 
-private:
+public:
     void updateUI();
+
+private:
+    void setQuartiles(const int row, QString name, const GwmQuartiles& quartiles);
+};
+
+
+class GwmPropertyGWRTabCalcTread : public QThread
+{
+    Q_OBJECT
+
+public:
+    explicit GwmPropertyGWRTabCalcTread(GwmLayerGWRItem* item);
+
+    void run() override;
+
+    inline double median(vec column)
+    {
+        int nrow = column.n_rows;
+        return (column[nrow / 2] + column[(nrow - 1) / 2]) / 2;
+    }
+
+    QList<GwmQuartiles> quartiles() const;
+
+private:
+    GwmLayerGWRItem* mLayerItem;
+    QList<GwmQuartiles> mQuartiles;
 };
 
 #endif // GWMPROPERTYGWRTAB_H

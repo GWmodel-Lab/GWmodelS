@@ -16,6 +16,7 @@ GwmLayerGWRItem::GwmLayerGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, c
         mBandwidthUnit = taskThread->getBandwidthUnit();
         mBandwidthKernelFunction = taskThread->getBandwidthKernelFunction();
         mDiagnostic = taskThread->getDiagnostic();
+        mBetas = mat(taskThread->getBetas());
     }
 }
 
@@ -59,6 +60,11 @@ GwmGWRTaskThread::BandwidthType GwmLayerGWRItem::bandwidthType() const
 GwmGWRDiagnostic GwmLayerGWRItem::diagnostic() const
 {
     return mDiagnostic;
+}
+
+arma::mat GwmLayerGWRItem::betas() const
+{
+    return mBetas;
 }
 
 GwmGWRTaskThread::KernelFunction GwmLayerGWRItem::bandwidthKernelFunction() const

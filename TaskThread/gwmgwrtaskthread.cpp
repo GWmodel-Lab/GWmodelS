@@ -252,6 +252,11 @@ GwmGWRDiagnostic GwmGWRTaskThread::getDiagnostic() const
     return mDiagnostic;
 }
 
+mat GwmGWRTaskThread::getBetas() const
+{
+    return mBetas;
+}
+
 double GwmGWRTaskThread::getBandwidthSize() const
 {
     return mBandwidthSize;

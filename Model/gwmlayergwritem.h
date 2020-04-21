@@ -5,6 +5,7 @@
 
 #include <QObject>
 #include <qgsvectorlayer.h>
+#include <armadillo>
 #include "gwmlayervectoritem.h"
 #include "Model/gwmlayerattributeitem.h"
 #include "TaskThread/gwmgwrtaskthread.h"
@@ -35,6 +36,8 @@ public:
 
     GwmGWRDiagnostic diagnostic() const;
 
+    arma::mat betas() const;
+
 private:
     int mDataPointsSize;
     GwmLayerAttributeItem* mDepVar;
@@ -44,6 +47,7 @@ private:
     GwmGWRTaskThread::BandwidthType mBandwidthType;
     GwmGWRTaskThread::KernelFunction mBandwidthKernelFunction;
     GwmGWRDiagnostic mDiagnostic;
+    arma::mat mBetas;
 };
 
 #endif // GWMLAYERGWRITEM_H

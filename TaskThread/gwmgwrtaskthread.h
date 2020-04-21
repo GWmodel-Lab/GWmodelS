@@ -138,6 +138,8 @@ public:
 
     GwmGWRDiagnostic getDiagnostic() const;
 
+    mat getBetas() const;
+
 protected:
     // 图层和 X Y 属性列
     QgsVectorLayer* mLayer = nullptr;

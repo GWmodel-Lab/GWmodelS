@@ -1,5 +1,6 @@
 #include "gwmpropertypanel.h"
 #include "PropertyPanelTabs/gwmpropertystatisticstab.h"
+#include "PropertyPanelTabs/gwmpropertygwrtab.h"
 
 GwmPropertyPanel::GwmPropertyPanel(QWidget *parent) :
     QTabWidget(parent),
@@ -65,11 +66,15 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
             switch (item->itemType())
             {
             case GwmLayerItem::Origin:
-                tabWidget = new GwmPropertyStatisticsTab(this, (GwmLayerOriginItem*)item);
+                tabWidget = new GwmPropertyStatisticsTab(this, static_cast<GwmLayerOriginItem*>(item));
                 tabName = ((GwmLayerOriginItem*)item)->parentItem()->text();
                 break;
             case GwmLayerItem::Group:
-                tabWidget = new GwmPropertyStatisticsTab(this, ((GwmLayerGroupItem*)item)->originChild());
+                tabWidget = new GwmPropertyStatisticsTab(this, (static_cast<GwmLayerGroupItem*>(item))->originChild());
+                break;
+            case GwmLayerItem::GWR:
+                tabWidget = new GwmPropertyGWRTab(this, static_cast<GwmLayerGWRItem*>(item));
+                (static_cast<GwmPropertyGWRTab*>(tabWidget))->updateUI();
             default:
                 break;
             }
