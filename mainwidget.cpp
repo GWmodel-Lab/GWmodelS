@@ -603,7 +603,7 @@ void MainWidget::onGWRBtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
-            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer);
+            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
