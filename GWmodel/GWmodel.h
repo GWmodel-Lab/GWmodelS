@@ -45,6 +45,7 @@ vec expWtVec(const vec& distv, double bw);
 mat expWtMat(const mat& distm, const vec& bw);
 vec gwReg(const mat &x, const vec &y, const vec &w, int focus);
 vec gwRegHatmatrix(const mat &x, const vec &y, const vec &w, int focus, mat& ci, mat& s_ri);
+double gwCV(const mat &x, const vec &y, vec &w, int focus);
 vec fitted(const mat& X, const mat& beta);
 vec ehat(const vec& y, const mat& X, const mat& beta);
 double rss(const vec& y, const mat& X, const mat& beta);
@@ -55,7 +56,7 @@ mat CiMat(const mat& x, const vec& w);
 double spGcdist(double lon1, double lon2, double lat1, double lat2);
 vec spDists(const mat& dp, const vec& loc);
 mat gwDist(const mat& dp, const mat& rp, int focus, double p, double theta, bool longlat, bool rp_given);
-mat gwWeight(const mat& dist, double bw, int kernel, bool adaptive);
+vec gwWeight(const vec& dist, double bw, int kernel, bool adaptive);
 vec gwLocalR2(const mat& dp, const vec& dybar2, const vec& dyhat2, bool dm_given, const mat& dmat, double p, double theta, bool longlat, double bw, int kernel, bool adaptive);
 
 #endif // GWMODEL_H

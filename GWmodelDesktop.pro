@@ -40,6 +40,7 @@ SOURCES += \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
+    TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmsavelayerthread.cpp \
@@ -103,6 +104,7 @@ HEADERS += \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
     PropertyPanelTabs/utils.h \
+    TaskThread/gwmbandwidthselecttaskthread.h \
     TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmsavelayerthread.h \
 #    attributetable/qgsattributetabledelegate.h \
@@ -203,13 +205,13 @@ INCLUDEPATH += "$(QT_HOME)/include/qwt"
 ##Qwt END
 
 ## QGIS
-INCLUDEPATH += "C:\OSGeo4W64\include"
+INCLUDEPATH += "$(OSGEO_HOME)/include"
 CONFIG(debug, debug|release) {
-    INCLUDEPATH += "C:\OSGeo4W64\apps\qgis-debug\include"
-    LIBS += -L"C:\OSGeo4W64\apps\qgis-debug\lib" -lqgis_core -lqgis_gui
+    INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-debug/include"
+    LIBS += -L"$(OSGEO_HOME)/apps/qgis-debug/lib" -lqgis_core -lqgis_gui
 } else {
-    INCLUDEPATH += "C:\OSGeo4W64\apps\qgis-dev\include"
-    LIBS += -L"C:\OSGeo4W64\apps\qgis-dev\lib" -lqgis_core -lqgis_gui
+    INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-dev/include"
+    LIBS += -L"$(OSGEO_HOME)/apps/qgis-dev/lib" -lqgis_core -lqgis_gui
 }
 LIBS += -L"$(OSGEO_HOME)/lib" -lgdal_i
 GDAL_DATA = ".\share\gdal"

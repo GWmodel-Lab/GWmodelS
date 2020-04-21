@@ -310,7 +310,7 @@ vec gwReg(const mat& x, const vec &y, const vec &w, int focus)
 	mat wspan(1, x.n_cols, fill::ones);
 	mat xtw = trans(x % (w * wspan));
 	mat xtwx = xtw * x;
-	mat xtwy = trans(x) * (w % y);
+    mat xtwy = xtw * y;
 	mat xtwx_inv = inv(xtwx);
 	vec beta = xtwx_inv * xtwy;
     return beta;
@@ -322,7 +322,7 @@ vec gwRegHatmatrix(const mat &x, const vec &y, const vec &w, int focus, mat& ci,
     mat wspan(1, x.n_cols, fill::ones);
     mat xtw = trans(x % (w * wspan));
     mat xtwx = xtw * x;
-    mat xtwy = trans(x) * (w % y);
+    mat xtwy = xtw * y;
     mat xtwx_inv = inv(xtwx);
     vec beta = xtwx_inv * xtwy;
     ci = xtwx_inv * xtw;
@@ -562,28 +562,24 @@ const KERNEL GWRKernel[5] = {
   gwWeightBoxcar
 };
 
-mat gwWeight(const mat& dist, double bw, int kernel, bool adaptive) {
+vec gwWeight(const vec& dist, double bw, int kernel, bool adaptive) {
   const KERNEL *kerf = GWRKernel + kernel;
-  int nc = dist.n_cols, nr = dist.n_rows;
-  mat w(nr, nc, fill::zeros);
+  int nr = dist.n_elem;
+  vec w(nr, fill::zeros);
   if (adaptive) {
-    for (int c = 0; c < nc; c++) {
-      double dn = bw / nr, fixbw = 0;
-      if (dn <= 1) {
-        vec vdist = sort(dist.col(c));
-        fixbw = vdist(int(bw) - 1);
-      } else {
-        fixbw = dn * max(dist.col(c));
-      }
-      for (int r = 0; r < nr; r++) {
-        w(r, c) = (*kerf)(dist(r, c), fixbw);
-      }
+    double dn = bw / nr, fixbw = 0;
+    if (dn <= 1) {
+      vec vdist = sort(dist);
+      fixbw = vdist(int(bw) - 1);
+    } else {
+      fixbw = dn * max(dist);
+    }
+    for (int r = 0; r < nr; r++) {
+      w(r) = (*kerf)(dist(r), fixbw);
     }
   } else {
-    for (int c = 0; c < nc; c++) {
-      for (int r = 0; r < nr; r++) {
-        w(r, c) = (*kerf)(dist(r, c), bw);
-      }
+    for (int r = 0; r < nr; r++) {
+      w(r) = (*kerf)(dist(r), bw);
     }
   }
   return w;
@@ -601,4 +597,19 @@ vec gwLocalR2(const mat& dp, const vec& dybar2, const vec& dyhat2, bool dm_given
     localR2(i) = (tss - rss) / tss;
   }
   return localR2;
+}
+
+/*zhangtongyao*/
+// 给出回归点，计算在给定带宽情况下的CV值
+double gwCV(const mat &x, const vec &y, vec &w, int focus)
+{
+    QMap<RegressionResult, mat> result;
+    mat wspan(1, x.n_cols, fill::ones);
+    w(focus) = 0.0;
+    mat xtw = trans(x % (w * wspan));
+    mat xtwx = xtw * x;
+    mat xtwy = xtw * y;
+    mat xtwx_inv = inv(xtwx);
+    vec beta = xtwx_inv * xtwy;
+    return y(focus) - det(x.row(focus) * beta);
 }
