@@ -84,6 +84,7 @@ public:
 
 public:
     GwmGWRTaskThread();
+    GwmGWRTaskThread(const GwmGWRTaskThread& taskThread);
 
 protected:
     void run() override;

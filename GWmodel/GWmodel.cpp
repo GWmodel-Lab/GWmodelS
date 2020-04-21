@@ -601,7 +601,7 @@ vec gwLocalR2(const mat& dp, const vec& dybar2, const vec& dyhat2, bool dm_given
 
 /*zhangtongyao*/
 // 给出回归点，计算在给定带宽情况下的CV值
-double gwCV(const mat &x, const vec &y, const vec &w, int focus)
+double gwCV(const mat &x, const vec &y, vec &w, int focus)
 {
     double cv =0.0;
     QMap<RegressionResult, mat> result;

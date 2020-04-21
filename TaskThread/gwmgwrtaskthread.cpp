@@ -3,6 +3,8 @@
 #include <exception>
 #include "GWmodel/GWmodel.h"
 
+#include "TaskThread/gwmbandwidthselecttaskthread.h"
+
 using namespace std;
 
 QMap<QString, double> GwmGWRTaskThread::fixedBwUnitDict = QMap<QString, double>();
@@ -25,11 +27,48 @@ GwmGWRTaskThread::GwmGWRTaskThread()
 {
     mX = mat(uword(0), uword(0));
     mY = vec(uword(0));
+    mDataPoints = mat(uword(0), 2);
     mBetas = mat(uword(0), uword(0));
     mRowSumBetasSE = mat(uword(0), uword(0));
     mBetasSE = mat(uword(0), uword(0));
     mBetasTV = mat(uword(0), uword(0));
-    mDataPoints = mat(uword(0), 2);
+    mSHat = vec(uword(0));
+    mQDiag = vec(uword(0));
+    mYHat = vec(uword(0));
+    mResidual = vec(uword(0));
+    mStudentizedResidual = vec(uword(0));
+    mLocalRSquare = vec(uword(0));
+}
+
+GwmGWRTaskThread::GwmGWRTaskThread(const GwmGWRTaskThread &taskThread)
+{
+    mLayer = taskThread.mLayer;
+    mDepVar = taskThread.mDepVar;
+    mIndepVars = taskThread.mIndepVars;
+    mDepVarIndex = taskThread.mDepVarIndex;
+    mIndepVarsIndex = taskThread.mIndepVarsIndex;
+    isEnableIndepVarAutosel = taskThread.isEnableIndepVarAutosel;
+    mFeatureList = taskThread.mFeatureList;
+    hasHatMatrix = taskThread.hasHatMatrix;
+    mBandwidthType = taskThread.mBandwidthType;
+    mBandwidthSize = taskThread.mBandwidthSize;
+    mBandwidthSizeOrigin = taskThread.mBandwidthSizeOrigin;
+    mBandwidthUnit = taskThread.mBandwidthUnit;
+    isBandwidthSizeAutoSel = taskThread.isBandwidthSizeAutoSel;
+    mBandwidthKernelFunction = taskThread.mBandwidthKernelFunction;
+    mDistSrcType = taskThread.mDistSrcType;
+    mDistSrcParameters = taskThread.mDistSrcParameters;
+    mCRSRotateTheta = taskThread.mCRSRotateTheta;
+    mCRSRotateP = taskThread.mCRSRotateP;
+    mParallelMethodType = taskThread.mParallelMethodType;
+    mParallelParameter = taskThread.mParallelParameter;
+    mX = mat(taskThread.mX);
+    mY = vec(taskThread.mY);
+    mDataPoints = mat(taskThread.mDataPoints);
+    mBetas = mat(uword(0), uword(0));
+    mRowSumBetasSE = mat(uword(0), uword(0));
+    mBetasSE = mat(uword(0), uword(0));
+    mBetasTV = mat(uword(0), uword(0));
     mSHat = vec(uword(0));
     mQDiag = vec(uword(0));
     mYHat = vec(uword(0));
@@ -44,6 +83,24 @@ void GwmGWRTaskThread::run()
     {
         return;
     }
+
+    // 优选带宽
+    emit message(tr("Selecting optimized bandwidth..."));
+    if (isBandwidthSizeAutoSel)
+    {
+        GwmBandwidthSelectTaskThread bwSelThread(*this);
+        connect(&bwSelThread, &GwmTaskThread::message, this, &GwmTaskThread::message);
+        connect(&bwSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
+        connect(&bwSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
+        bwSelThread.start();
+        bwSelThread.wait();
+        disconnect(&bwSelThread, &GwmTaskThread::message, this, &GwmTaskThread::message);
+        disconnect(&bwSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
+        disconnect(&bwSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
+        mBandwidthSize = bwSelThread.getBandwidthSize();
+    }
+
+    // 解算模型
     emit message(tr("Calibrating GWR model..."));
     emit tick(0, mFeatureList.size());
     bool isAllCorrect = true;
@@ -51,7 +108,8 @@ void GwmGWRTaskThread::run()
     {
         for (int i = 0; i < mFeatureList.size(); i++)
         {
-            try {
+            try
+            {
                 vec dist = distance(i);
                 vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
                 mat ci, si;
@@ -411,6 +469,9 @@ vec GwmGWRTaskThread::distanceMinkowski(int focus)
 
 void GwmGWRTaskThread::diagnostic()
 {
+    emit message(tr("Calculating diagnostic informations..."));
+
+    // 诊断信息
     vec vDiags = gwrDiag(mY, mX, mBetas, mSHat);
     mDiagnostic = GwmGWRDiagnostic(vDiags);
     mYHat = fitted(mX, mBetas);
@@ -423,6 +484,7 @@ void GwmGWRTaskThread::diagnostic()
     mBetasTV = mBetas / mBetasSE;
     vec dybar2 = (mY - sum(mY) / nDp) % (mY - sum(mY) / nDp);
     vec dyhat2 = (mY - mYHat) % (mY - mYHat);
+
     // Local RSquare
     mLocalRSquare = vec(mFeatureList.size(), fill::zeros);
     for (int i = 0; i < mFeatureList.size(); i++)

@@ -11,28 +11,28 @@
 GwmBandwidthSelectTaskThread::GwmBandwidthSelectTaskThread()
     : GwmGWRTaskThread()
 {
+    GwmGWRTaskThread::hasHatMatrix = false;
+}
+
+GwmBandwidthSelectTaskThread::GwmBandwidthSelectTaskThread(const GwmGWRTaskThread& gwrTaskThread)
+    : GwmGWRTaskThread(gwrTaskThread)
+    , createdFromGWRTaskThread(true)
+{
+    GwmGWRTaskThread::hasHatMatrix = false;
 }
 
 void GwmBandwidthSelectTaskThread::run()
 {
+    emit tick(0, 0);
     //获得数据点
-    if (setXY())
+    if (!createdFromGWRTaskThread && !setXY())
     {
         return;
     }
     //计算lower\upper
-    double lower,upper;
     bool adaptive = mBandwidthType == BandwidthType::Adaptive;
-    if (adaptive)
-    {
-        upper = this->mX.n_rows;
-        lower = this->mX.n_cols;
-    }
-    else
-    {
-        upper = sqrt(pow(this->mLayer->extent().width(),2)+pow(this->mLayer->extent().height(),2));
-        lower = 0;
-    }
+    double upper = adaptive ? mX.n_rows : getFixedBwUpper();
+    double lower = adaptive ? mX.n_cols : 0.0;
     //如果是cv,gold(gwr.cv....)
     //如果是Aic,gold(gwr.aic....)
     //默认是cv
@@ -44,6 +44,7 @@ void GwmBandwidthSelectTaskThread::run()
     {
         mBandwidthSize = gold(&GwmBandwidthSelectTaskThread::aicAll,lower,upper,adaptive,mX,mY,mDataPoints,mBandwidthKernelFunction,adaptive);
     }
+    qDebug() << "[GwmBandwidthSelectTaskThread::run]" << "bandwidth size" << mBandwidthSize;
 }
 
 double GwmBandwidthSelectTaskThread::cvAll(const mat& x, const vec& y, const mat& dp,double bw, int kernel, bool adaptive)
@@ -52,11 +53,12 @@ double GwmBandwidthSelectTaskThread::cvAll(const mat& x, const vec& y, const mat
     double cv = 0.0;
     for (int i = 0; i < n; i++)
     {
-      vec d = distance(i);
-      vec w = gwWeight(d, bw, kernel, adaptive);
-      double res = gwCV(x, y, w, i);
-      cv += res * res;
+        vec d = distance(i);
+        vec w = gwWeight(d, bw, kernel, adaptive);
+        double res = gwCV(x, y, w, i);
+        cv += res * res;
     }
+    emit message(createOutputMessage(bw, cv));
     return cv;
 }
 
@@ -76,7 +78,9 @@ double GwmBandwidthSelectTaskThread::aicAll(const mat& x, const vec& y, const ma
         s_hat(1) += det(si * trans(si));
     }
     betas = trans(betas);
-    return AICc(y,x,betas,s_hat);
+    double score = AICc(y,x,betas,s_hat);
+    emit message(createOutputMessage(bw, score));
+    return score;
 }
 
 double GwmBandwidthSelectTaskThread::gold(pfApproach p,double xL, double xU, bool adaptBw,const mat& x, const vec& y, const mat& dp, int kernel, bool adaptive)
@@ -117,4 +121,36 @@ double GwmBandwidthSelectTaskThread::gold(pfApproach p,double xL, double xU, boo
         d1 = f2 - f1;
     }
     return xopt;
+}
+
+double GwmBandwidthSelectTaskThread::getFixedBwUpper()
+{
+    QgsRectangle extent = this->mLayer->extent();
+    bool longlat = mLayer->crs().isGeographic();
+    mat extentDp(2, 2, fill::zeros);
+    extentDp(0, 0) = extent.xMinimum();
+    extentDp(0, 1) = extent.yMinimum();
+    extentDp(1, 0) = extent.xMaximum();
+    extentDp(1, 1) = extent.yMaximum();
+    vec dist = gwDist(extentDp, extentDp, 0, 2.0, 0.0, longlat, false);
+    return dist(1);
+}
+
+QString GwmBandwidthSelectTaskThread::createOutputMessage(double bw, double score)
+{
+    QString m("%1: %2 (%3: %4)");
+    if (mBandwidthType == BandwidthType::Adaptive)
+    {
+        return m.arg(tr("Adaptive bandwidth"))
+                .arg((int)bw)
+                .arg(mApproach == Approach::CV ? tr("CV score") : tr("AIC score"))
+                .arg(score, 0, 'f', 6);
+    }
+    else
+    {
+        return m.arg(tr("Fixed bandwidth"))
+                .arg(bw, 0, 'f', 3)
+                .arg(mApproach == Approach::CV ? tr("CV score") : tr("AIC score"))
+                .arg(score, 0, 'f', 6);
+    }
 }

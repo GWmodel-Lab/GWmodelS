@@ -45,7 +45,7 @@ vec expWtVec(const vec& distv, double bw);
 mat expWtMat(const mat& distm, const vec& bw);
 vec gwReg(const mat &x, const vec &y, const vec &w, int focus);
 vec gwRegHatmatrix(const mat &x, const vec &y, const vec &w, int focus, mat& ci, mat& s_ri);
-double gwCV(const mat &x, const vec &y, const vec &w, int focus);
+double gwCV(const mat &x, const vec &y, vec &w, int focus);
 vec fitted(const mat& X, const mat& beta);
 vec ehat(const vec& y, const mat& X, const mat& beta);
 double rss(const vec& y, const mat& X, const mat& beta);
