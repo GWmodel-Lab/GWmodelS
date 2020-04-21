@@ -52,8 +52,8 @@ void GwmGWRTaskThread::run()
         for (int i = 0; i < mFeatureList.size(); i++)
         {
             try {
-                mat dist = distance(i);
-                mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                vec dist = distance(i);
+                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
                 mat ci, si;
                 mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
                 mBetasSE.col(i) = (ci % ci) * mRowSumBetasSE;
@@ -76,8 +76,8 @@ void GwmGWRTaskThread::run()
         for (int i = 0; i < mFeatureList.size(); i++)
         {
             try {
-                mat dist = distance(i);
-                mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                vec dist = distance(i);
+                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
                 mBetas.col(i) = gwReg(mX, mY, weight, i);
                 emit tick(i + 1, mFeatureList.size());
             } catch (exception e) {
