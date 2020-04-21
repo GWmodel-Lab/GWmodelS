@@ -132,69 +132,12 @@ QList<mat> GwmGWRModelSelectionThread::setXY(int depVarIndex,QList<int> inDepVar
     return QList<mat>() << X << Y;
 }
 
-//bool GwmGWRModelSelectionThread::isNumeric(QVariant::Type type)
-//{
-//    switch (type)
-//    {
-//    case QVariant::Int:
-//    case QVariant::LongLong:
-//    case QVariant::ULongLong:
-//    case QVariant::UInt:
-//    case QVariant::Double:
-//        return true;
-//    default:
-//        return false;
-//    }
-//}
-//QgsVectorLayer *GwmGWRModelSelectionThread::layer() const
-//{
-//    return mLayer;
-//}
-
-//void GwmGWRModelSelectionThread::setLayer(QgsVectorLayer *layer)
-//{
-//    mLayer = layer;
-//    mFeatureList.clear();
-//}
-
-//QList<GwmLayerAttributeItem *> GwmGWRModelSelectionThread::indepVars() const
-//{
-//    return mIndepVars;
-//}
-
-//void GwmGWRModelSelectionThread::setIndepVars(const QList<GwmLayerAttributeItem *> &indepVars)
-//{
-//    mIndepVars = indepVars;
-//    mIndepVarsIndex.clear();
-//    for (GwmLayerAttributeItem* item : mIndepVars)
-//    {
-//        int iIndepVar = item->attributeIndex();
-//        mIndepVarsIndex.append(iIndepVar);
-//    }
-//}
-
-//GwmLayerAttributeItem *GwmGWRModelSelectionThread::depVar() const
-//{
-//    return mDepVar;
-//}
-
-//void GwmGWRModelSelectionThread::setDepVar(GwmLayerAttributeItem *depVar)
-//{
-//    mDepVar = depVar;
-//    mDepVarIndex = mDepVar->attributeIndex();
-//}
 
 bool GwmGWRModelSelectionThread::calDmat(){
     mDmat = mat(mFeatureList.size(),mFeatureList.size());
     for (int i = 0; i < mFeatureList.size(); i++){
-//        QgsFeature feature = mFeatureList[i];
         mat dist = distance(i);
         mDmat.col(i) = dist;
-//        double max = dist.max();
-//        if(mBandwidthSize < max)
-//        {
-//            mBandwidthSize = max;
-//        }
     }
     return true;
 }
@@ -216,8 +159,8 @@ mat GwmGWRModelSelectionThread::gw_reg_all(mat X, mat Y)
 //        QgsFeature feature = mFeatureList[i];
         mat dist = distance(i);
         mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-        auto result = gwReg(X, Y, weight, false, i);
-        mat buff = result[RegressionResult::Beta];
+        auto result = gwReg(X, Y, weight, i);
+        mat buff = result;
         buff.reshape(1,X.n_cols);
         Betas.row(i) = buff;
 //        emit tick(i, mFeatureList.size());
@@ -273,33 +216,9 @@ QMap<QStringList,double> GwmGWRModelSelectionThread::modelSelection(){
     return QMap<QStringList,double>();
 }
 
-
-//vec GwmGWRModelSelectionThread::distance(int focus)
-//{
-//    switch (mDistSrcType)
-//    {
-//    case DistanceSourceType::Minkowski:
-//        return distanceMinkowski(focus);
-//    default:
-//        return distanceCRS(focus);
-//    }
-//}
-
-//vec GwmGWRModelSelectionThread::distanceCRS(int focus)
-//{
-//    bool longlat = mLayer->crs().isGeographic();
-//    return gwDist(mDataPoints, mDataPoints, focus, 2.0, 0.0, longlat, false);
-//}
-
-//vec GwmGWRModelSelectionThread::distanceMinkowski(int focus)
-//{
-//    QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
-//    double p = parameters["p"].toDouble();
-//    return gwDist(mDataPoints, mDataPoints, focus, p, 0.0, false, false);
-//}
-
 void GwmGWRModelSelectionThread::model_View()
 {
+    //根据mIndepVars mModelAICcs mModelInDepVars绘图
     int n = mIndepVars.size();
     double cex;
     if( n > 10){
@@ -409,6 +328,3 @@ void GwmGWRModelSelectionThread::model_View()
 //    plot->setAutoReplot( true );//设置自动重画，相当于更新
 }
 
-//QwtPlot* GwmGWRModelSelectionThread::resultPlot(){
-//    return plot;
-//}
