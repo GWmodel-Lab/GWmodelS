@@ -23,9 +23,10 @@ class GwmGWRModelSelectionThread : public GwmGWRTaskThread
 
 public:
     GwmGWRModelSelectionThread();
+    GwmGWRModelSelectionThread(const GwmGWRTaskThread& gwrTaskThread);
 
 public:
-    mat gw_reg_all(mat X,mat Y);
+    mat gwRegAll();
 
     QList<mat> setXY(int depVarIndex,QList<int> inDepVarsIndex);
 
@@ -34,18 +35,22 @@ public:
     QList<QStringList> modelSort(QList<QStringList> modelList,QList<double> modelAICcs);
     QMap<QStringList,double> modelSelection();
 
-    void model_View();
+    void viewModels();
 
 
 protected:
     void run() override;
 
 private:
+    bool createdFromGWRTaskThread = false;
 
     QList<QStringList> mModelInDepVars;
     QList<double> mModelAICcs;
 
     mat mDmat;
+
+private:
+    double getFixedBwUpper();
 };
 
 #endif // GWMGWRMODELSELECTIONTHREAD_H

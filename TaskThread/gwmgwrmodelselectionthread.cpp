@@ -8,7 +8,14 @@
 
 GwmGWRModelSelectionThread::GwmGWRModelSelectionThread()
 {
+    hasHatMatrix = false;
+}
 
+GwmGWRModelSelectionThread::GwmGWRModelSelectionThread(const GwmGWRTaskThread &gwrTaskThread)
+    : GwmGWRTaskThread(gwrTaskThread)
+    , createdFromGWRTaskThread(true)
+{
+    hasHatMatrix = false;
 }
 
 void GwmGWRModelSelectionThread::run()
@@ -34,18 +41,20 @@ void GwmGWRModelSelectionThread::run()
     }
     qDebug() << mFeatureList.size();
     QList<int> inDepVarsIndex = QList<int>();
-    for(int i = 0; i < mIndepVars.size(); i++){
+    for (int i = 0; i < mIndepVars.size(); i++)
+    {
         vec AICcs = vec(mIndepVars.size() - i);
-        for(int j = 0; j < mIndepVars.size() - i; j++)
+        for (int j = 0; j < mIndepVars.size() - i; j++)
         {
             inDepVarsIndex.append(mIndepVarsIndex[j]);
             QList<mat> XY = setXY(mDepVarIndex,inDepVarsIndex);
-            if(XY.size() == 0){
+            if (XY.size() == 0)
+            {
                 return;
             }
             mX = XY[0];
             mY = XY[1];
-            mBetas = gw_reg_all(mX,mY);
+            mBetas = gwRegAll();
             vec s_hat = vec(1);
             for(int n = 0; n < 1; n++){
                 s_hat.at(n) = 2;
@@ -76,7 +85,7 @@ void GwmGWRModelSelectionThread::run()
     emit success();
 }
 
-QList<mat> GwmGWRModelSelectionThread::setXY(int depVarIndex,QList<int> inDepVarsIndex)
+QList<mat> GwmGWRModelSelectionThread::setXY(int depVarIndex, QList<int> inDepVarsIndex)
 {
     mat X = mat(mFeatureList.size(), inDepVarsIndex.size() + 1);
     mat Y = vec(mFeatureList.size());
@@ -142,30 +151,26 @@ bool GwmGWRModelSelectionThread::calDmat(){
     return true;
 }
 
-mat GwmGWRModelSelectionThread::gw_reg_all(mat X, mat Y)
+mat GwmGWRModelSelectionThread::gwRegAll()
 {
-    mat Betas = mat(mFeatureList.size(),X.n_cols);
+    mat betas = mat(mX.n_cols, mFeatureList.size());
 //    calDmat();
-    if(mBandwidthType == BandwidthType::Adaptive){
+    if (mBandwidthType == BandwidthType::Adaptive)
+    {
         mBandwidthSize = mFeatureList.size();
     }
-    else{
-        double height = mLayer->extent().height();
-        double width = mLayer->extent().width();
-        mBandwidthSize = sqrt(height*height+width*width);
+    else
+    {
+        mBandwidthSize = getFixedBwUpper();
     }
     for (int i = 0; i < mFeatureList.size(); i++)
     {
-//        QgsFeature feature = mFeatureList[i];
-        mat dist = distance(i);
-        mat weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-        auto result = gwReg(X, Y, weight, i);
-        mat buff = result;
-        buff.reshape(1,X.n_cols);
-        Betas.row(i) = buff;
-//        emit tick(i, mFeatureList.size());
+        vec dist = distance(i);
+        vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        vec beta = gwReg(mX, mY, weight, i);
+        betas.col(i) = beta;
     }
-    return Betas;
+    return trans(betas);
 }
 
 
@@ -216,7 +221,7 @@ QMap<QStringList,double> GwmGWRModelSelectionThread::modelSelection(){
     return QMap<QStringList,double>();
 }
 
-void GwmGWRModelSelectionThread::model_View()
+void GwmGWRModelSelectionThread::viewModels()
 {
     //根据mIndepVars mModelAICcs mModelInDepVars绘图
     int n = mIndepVars.size();
@@ -328,3 +333,17 @@ void GwmGWRModelSelectionThread::model_View()
 //    plot->setAutoReplot( true );//设置自动重画，相当于更新
 }
 
+
+
+double GwmGWRModelSelectionThread::getFixedBwUpper()
+{
+    QgsRectangle extent = this->mLayer->extent();
+    bool longlat = mLayer->crs().isGeographic();
+    mat extentDp(2, 2, fill::zeros);
+    extentDp(0, 0) = extent.xMinimum();
+    extentDp(0, 1) = extent.yMinimum();
+    extentDp(1, 0) = extent.xMaximum();
+    extentDp(1, 1) = extent.yMaximum();
+    vec dist = gwDist(extentDp, extentDp, 0, 2.0, 0.0, longlat, false);
+    return dist(1);
+}
