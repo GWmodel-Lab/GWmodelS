@@ -32,13 +32,9 @@ private:
     mat mDataPoints;
     int mDepVarIndex;
     QList<int> mIndepVarsIndex;
-    vec distance(const QgsFeatureId& id);
-    vec distanceCRS(const QgsFeatureId& id);
-    vec distanceMinkowski(const QgsFeatureId& id);
+
     DistanceSourceType mDistSrcType = DistanceSourceType::CRS;
     QVariant mDistSrcParameters = QVariant();
-    bool setXY();
-    bool isNumeric(QVariant::Type type);
 
     BandwidthType mBandwidthType = BandwidthType::Adaptive;
     double mBandwidthSize = 0.0;
