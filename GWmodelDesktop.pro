@@ -205,13 +205,13 @@ INCLUDEPATH += "$(QT_HOME)/include/qwt"
 ##Qwt END
 
 ## QGIS
-INCLUDEPATH += "D:\OSGeo4W64\include"
+INCLUDEPATH += "$(OSGEO_HOME)/include"
 CONFIG(debug, debug|release) {
-    INCLUDEPATH += "D:\OSGeo4W64\apps\qgis-debug\include"
-    LIBS += -L"D:\OSGeo4W64\apps\qgis-debug\lib" -lqgis_core -lqgis_gui
+    INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-debug/include"
+    LIBS += -L"$(OSGEO_HOME)/apps/qgis-debug/lib" -lqgis_core -lqgis_gui
 } else {
-    INCLUDEPATH += "D:\OSGeo4W64\apps\qgis-dev\include"
-    LIBS += -L"D:\OSGeo4W64\apps\qgis-dev\lib" -lqgis_core -lqgis_gui
+    INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-dev/include"
+    LIBS += -L"$(OSGEO_HOME)/apps/qgis-dev/lib" -lqgis_core -lqgis_gui
 }
 LIBS += -L"$(OSGEO_HOME)/lib" -lgdal_i
 GDAL_DATA = ".\share\gdal"
