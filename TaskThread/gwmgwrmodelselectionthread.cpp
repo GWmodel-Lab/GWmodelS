@@ -207,12 +207,12 @@ QList<QStringList> GwmGWRModelSelectionThread::modelSort(QList<QStringList> mode
     return res;
 }
 
-QPair<QStringList,double> GwmGWRModelSelectionThread::modelSelection(){
+QPair<QList<int>,double> GwmGWRModelSelectionThread::modelSelection(){
     for (int i = mModelInDepVars.size() - 1; i >= 0; i--)
     {
         if (mModelAICcs[i-1] - mModelAICcs[i] >= 3)
         {
-            QPair<QStringList,double> res = qMakePair(mModelInDepVars[i],mModelAICcs[i]);
+            QPair<QList<int>,double> res = qMakePair(mModelInDepVarsIndex[i],mModelAICcs[i]);
             QString message1 = "";
             for(QString inDepVar:mModelInDepVars[i]){
                 message1 = message1 + " " + inDepVar;

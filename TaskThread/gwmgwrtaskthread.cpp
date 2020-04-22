@@ -95,12 +95,12 @@ void GwmGWRTaskThread::run()
         disconnect(&modelSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
         disconnect(&modelSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
         QList<GwmLayerAttributeItem*> indepVarsNew;
-        QStringList selectedVars = modelSelThread.modelSelection().first;
-        for (QString varName : selectedVars)
+        QList<int> selectedVars = modelSelThread.modelSelection().first;
+        for (int varIndex : selectedVars)
         {
             for (GwmLayerAttributeItem* item : mIndepVars)
             {
-                if (item->attributeName() == varName)
+                if (item->attributeIndex() == varIndex)
                     indepVarsNew.append(item);
             }
         }
