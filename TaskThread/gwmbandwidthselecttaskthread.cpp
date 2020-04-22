@@ -32,7 +32,7 @@ void GwmBandwidthSelectTaskThread::run()
     //计算lower\upper
     bool adaptive = mBandwidthType == BandwidthType::Adaptive;
     double upper = adaptive ? mX.n_rows : getFixedBwUpper();
-    double lower = adaptive ? mX.n_cols : 0.0;
+    double lower = adaptive ? 20 : 0.0;
     //如果是cv,gold(gwr.cv....)
     //如果是Aic,gold(gwr.aic....)
     //默认是cv
