@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QTableWidgetItem>
+#include <qwt_plot_canvas.h>
+
 #include "Model/gwmlayergwritem.h"
 
 namespace Ui {
@@ -33,6 +35,9 @@ public:
 private:
     Ui::GwmPropertyGWRTab *ui;
     GwmLayerGWRItem* mLayerItem;
+
+    QwtPlot* mModelSelVarsPlot;
+    QwtPlot* mModelSelAICsPlot;
 
 public:
     void updateUI();

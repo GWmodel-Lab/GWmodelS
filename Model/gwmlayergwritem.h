@@ -22,10 +22,6 @@ public:
 
     int dataPointsSize() const;
 
-    GwmLayerAttributeItem *depVar() const;
-
-    QList<GwmLayerAttributeItem *> indepVars() const;
-
     double bandwidthSize() const;
 
     QString bandwidthUnit() const;
@@ -38,16 +34,36 @@ public:
 
     arma::mat betas() const;
 
+    QList<QStringList> modelSelModels() const;
+
+    QList<double> modelSelAICcs() const;
+
+    bool getIsModelOptimized() const;
+
+    bool getIsBandwidthOptimized() const;
+
+    int getDepVarIndex() const;
+
+    QList<int> getIndepVarIndex() const;
+
+    QList<GwmLayerAttributeItem *> getIndepVarsOrigin() const;
+
 private:
     int mDataPointsSize;
-    GwmLayerAttributeItem* mDepVar;
-    QList<GwmLayerAttributeItem*> mIndepVars;
+    int mDepVarIndex;
+    QList<int> mIndepVarsIndex;
+    QList<GwmLayerAttributeItem*> mIndepVarsOrigin;
     double mBandwidthSize;
     QString mBandwidthUnit;
     GwmGWRTaskThread::BandwidthType mBandwidthType;
     GwmGWRTaskThread::KernelFunction mBandwidthKernelFunction;
     GwmGWRDiagnostic mDiagnostic;
     arma::mat mBetas;
+    QList<QStringList> mModelSelModels;
+    QList<double> mModelSelAICcs;
+
+    bool isModelOptimized;
+    bool isBandwidthOptimized;
 };
 
 #endif // GWMLAYERGWRITEM_H

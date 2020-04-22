@@ -150,6 +150,14 @@ public:
     BandwidthSelectionApproach getBandwidthSelectionApproach() const;
     void setBandwidthSelectionApproach(const BandwidthSelectionApproach &bandwidthSelectionApproach);
 
+    QList<QStringList> getModelSelModels() const;
+
+    QList<double> getModelSelAICcs() const;
+
+    int getDepVarIndex() const;
+
+    QList<int> getIndepVarsIndex() const;
+
 protected:
     // 图层和 X Y 属性列
     QgsVectorLayer* mLayer = nullptr;
@@ -161,6 +169,10 @@ protected:
     QgsFeatureList mFeatureList;  // 预收集的要素列表
 
     bool hasHatMatrix = true;
+
+    // 优选模型的结果
+    QList<QStringList> mModelSelModels;
+    QList<double> mModelSelAICcs;
 
     // 带宽配置
     BandwidthType mBandwidthType = BandwidthType::Adaptive;

@@ -7,8 +7,9 @@ GwmLayerGWRItem::GwmLayerGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, c
     if (taskThread)
     {
         mDataPointsSize = taskThread->getFeatureList().size();
-        mDepVar = taskThread->depVar();
-        mIndepVars = taskThread->indepVars();
+        mDepVarIndex = taskThread->getDepVarIndex();
+        mIndepVarsIndex = taskThread->getIndepVarsIndex();
+        mIndepVarsOrigin = taskThread->indepVars();
         mBandwidthType = taskThread->bandwidthType();
         mBandwidthSize = (mBandwidthType == GwmGWRTaskThread::BandwidthType::Fixed ?
                               taskThread->getBandwidthSizeOrigin() :
@@ -17,6 +18,10 @@ GwmLayerGWRItem::GwmLayerGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, c
         mBandwidthKernelFunction = taskThread->getBandwidthKernelFunction();
         mDiagnostic = taskThread->getDiagnostic();
         mBetas = mat(taskThread->getBetas());
+        mModelSelModels = taskThread->getModelSelModels();
+        mModelSelAICcs = taskThread->getModelSelAICcs();
+        isBandwidthOptimized = taskThread->getIsBandwidthSizeAutoSel();
+        isModelOptimized = taskThread->enableIndepVarAutosel();
     }
 }
 
@@ -30,16 +35,6 @@ int GwmLayerGWRItem::childNumber()
 int GwmLayerGWRItem::dataPointsSize() const
 {
     return mDataPointsSize;
-}
-
-GwmLayerAttributeItem *GwmLayerGWRItem::depVar() const
-{
-    return mDepVar;
-}
-
-QList<GwmLayerAttributeItem *> GwmLayerGWRItem::indepVars() const
-{
-    return mIndepVars;
 }
 
 double GwmLayerGWRItem::bandwidthSize() const
@@ -65,6 +60,41 @@ GwmGWRDiagnostic GwmLayerGWRItem::diagnostic() const
 arma::mat GwmLayerGWRItem::betas() const
 {
     return mBetas;
+}
+
+QList<QStringList> GwmLayerGWRItem::modelSelModels() const
+{
+    return mModelSelModels;
+}
+
+QList<double> GwmLayerGWRItem::modelSelAICcs() const
+{
+    return mModelSelAICcs;
+}
+
+bool GwmLayerGWRItem::getIsModelOptimized() const
+{
+    return isModelOptimized;
+}
+
+bool GwmLayerGWRItem::getIsBandwidthOptimized() const
+{
+    return isBandwidthOptimized;
+}
+
+int GwmLayerGWRItem::getDepVarIndex() const
+{
+    return mDepVarIndex;
+}
+
+QList<int> GwmLayerGWRItem::getIndepVarIndex() const
+{
+    return mIndepVarsIndex;
+}
+
+QList<GwmLayerAttributeItem *> GwmLayerGWRItem::getIndepVarsOrigin() const
+{
+    return mIndepVarsOrigin;
 }
 
 GwmGWRTaskThread::KernelFunction GwmLayerGWRItem::bandwidthKernelFunction() const
