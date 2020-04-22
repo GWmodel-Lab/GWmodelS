@@ -71,6 +71,7 @@ void GwmGWRModelSelectionThread::run()
             emit message(message1);
             inDepVarsIndex.removeOne(mIndepVarsIndex[j]);
             emit tick(process,total);
+            emit message(QString("Model: %1 (AIC: %2").arg(inDepVarsName.join(",")).arg(AICcs[j], 0, 'f', 3));
             process++;
         }
         int index = AICcs.index_min();
@@ -78,8 +79,8 @@ void GwmGWRModelSelectionThread::run()
         mIndepVarsIndex.removeOne(mIndepVarsIndex[index]);
     }
     mModelInDepVars = modelSort(mModelInDepVars,mModelAICcs,mModelInDepVarsIndex);
-    modelSelection();
-    emit success();
+    if (!createdFromGWRTaskThread)
+        emit success();
 }
 
 QList<mat> GwmGWRModelSelectionThread::setXY(int depVarIndex, QList<int> inDepVarsIndex)
@@ -206,11 +207,12 @@ QList<QStringList> GwmGWRModelSelectionThread::modelSort(QList<QStringList> mode
     return res;
 }
 
-QMap<QStringList,double> GwmGWRModelSelectionThread::modelSelection(){
-    for(int i = mModelInDepVars.size() - 1; i >= 0; i--){
-        if(mModelAICcs[i-1] - mModelAICcs[i] >= 3){
-            QMap<QStringList,double> res;
-            res.insert(mModelInDepVars[i],mModelAICcs[i]);
+QPair<QStringList,double> GwmGWRModelSelectionThread::modelSelection(){
+    for (int i = mModelInDepVars.size() - 1; i >= 0; i--)
+    {
+        if (mModelAICcs[i-1] - mModelAICcs[i] >= 3)
+        {
+            QPair<QStringList,double> res = qMakePair(mModelInDepVars[i],mModelAICcs[i]);
             QString message1 = "";
             for(QString inDepVar:mModelInDepVars[i]){
                 message1 = message1 + " " + inDepVar;
@@ -220,7 +222,7 @@ QMap<QStringList,double> GwmGWRModelSelectionThread::modelSelection(){
             return res;
         }
     }
-    return QMap<QStringList,double>();
+    return QPair<QStringList,double>();
 }
 
 void GwmGWRModelSelectionThread::viewModels()

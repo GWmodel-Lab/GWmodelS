@@ -32,8 +32,8 @@ public:
 
     bool calDmat();
 
+    QPair<QStringList,double> modelSelection();
     QList<QStringList> modelSort(QList<QStringList> modelList,QList<double> modelAICcs,QList<QList<int>> modelIndexList);
-    QMap<QStringList,double> modelSelection();
 
     void viewModels();
 

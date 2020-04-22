@@ -4,6 +4,7 @@
 #include "GWmodel/GWmodel.h"
 
 #include "TaskThread/gwmbandwidthselecttaskthread.h"
+#include "TaskThread/gwmgwrmodelselectionthread.h"
 
 using namespace std;
 
@@ -80,15 +81,42 @@ GwmGWRTaskThread::GwmGWRTaskThread(const GwmGWRTaskThread &taskThread)
 
 void GwmGWRTaskThread::run()
 {
+    // 优选模型
+    if (isEnableIndepVarAutosel)
+    {
+        emit message(tr("Selecting optimized model..."));
+        GwmGWRModelSelectionThread modelSelThread(*this);
+        connect(&modelSelThread, &GwmTaskThread::message, this, &GwmTaskThread::message);
+        connect(&modelSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
+        connect(&modelSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
+        modelSelThread.start();
+        modelSelThread.wait();
+        disconnect(&modelSelThread, &GwmTaskThread::message, this, &GwmTaskThread::message);
+        disconnect(&modelSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
+        disconnect(&modelSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
+        QList<GwmLayerAttributeItem*> indepVarsNew;
+        QStringList selectedVars = modelSelThread.modelSelection().first;
+        for (QString varName : selectedVars)
+        {
+            for (GwmLayerAttributeItem* item : mIndepVars)
+            {
+                if (item->attributeName() == varName)
+                    indepVarsNew.append(item);
+            }
+        }
+        setIndepVars(indepVarsNew);
+    }
+
+    // 设置矩阵
     if (!setXY())
     {
         return;
     }
 
     // 优选带宽
-    emit message(tr("Selecting optimized bandwidth..."));
     if (isBandwidthSizeAutoSel)
     {
+        emit message(tr("Selecting optimized bandwidth..."));
         GwmBandwidthSelectTaskThread bwSelThread(*this);
         connect(&bwSelThread, &GwmTaskThread::message, this, &GwmTaskThread::message);
         connect(&bwSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
@@ -526,9 +554,9 @@ void GwmGWRTaskThread::createResultLayer()
 
     QgsFields fields;
     fields.append(QgsField(QStringLiteral("Intercept"), QVariant::Double, QStringLiteral("double")));
-    for (GwmLayerAttributeItem* item : mIndepVars)
+    for (int index : mIndepVarsIndex)
     {
-        QString srcName = item->attributeName();
+        QString srcName = mLayer->fields().field(index).name();
         QString name = srcName;
         fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
     }
@@ -539,16 +567,16 @@ void GwmGWRTaskThread::createResultLayer()
         fields.append(QgsField(QStringLiteral("residual"), QVariant::Double, QStringLiteral("double")));
         fields.append(QgsField(QStringLiteral("Stud_residual"), QVariant::Double, QStringLiteral("double")));
         fields.append(QgsField(QStringLiteral("Intercept_SE"), QVariant::Double, QStringLiteral("double")));
-        for (GwmLayerAttributeItem* item : mIndepVars)
+        for (int index : mIndepVarsIndex)
         {
-            QString srcName = item->attributeName();
+            QString srcName = mLayer->fields().field(index).name();
             QString name = srcName + QStringLiteral("_SE");
             fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
         }
         fields.append(QgsField(QStringLiteral("Intercept_TV"), QVariant::Double, QStringLiteral("double")));
-        for (GwmLayerAttributeItem* item : mIndepVars)
+        for (int index : mIndepVarsIndex)
         {
-            QString srcName = item->attributeName();
+            QString srcName = mLayer->fields().field(index).name();
             QString name = srcName + QStringLiteral("_TV");
             fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
         }
@@ -560,7 +588,7 @@ void GwmGWRTaskThread::createResultLayer()
     mResultLayer->startEditing();
     if (hasHatMatrix)
     {
-        int indepSize = mIndepVars.size() + 1;
+        int indepSize = mIndepVarsIndex.size() + 1;
         for (int f = 0; f < mFeatureList.size(); f++)
         {
             int curCol = 0;
