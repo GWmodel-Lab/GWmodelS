@@ -26,17 +26,22 @@ public:
     GwmGWRModelSelectionThread(const GwmGWRTaskThread& gwrTaskThread);
 
 public:
-    mat gwRegAll();
+    double gwRegAll();
 
     QList<mat> setXY(int depVarIndex,QList<int> inDepVarsIndex);
 
     bool calDmat();
 
-    QList<QStringList> modelSort(QList<QStringList> modelList,QList<double> modelAICcs);
+    QList<QStringList> modelSort(QList<QStringList> modelList,QList<double> modelAICcs,QList<QList<int>> modelIndexList);
     QMap<QStringList,double> modelSelection();
 
     void viewModels();
 
+    static void viewModels(QList<GwmLayerAttributeItem*> indepVars,QList<QStringList> modelInDepVars,QList<double> modelAICcs,
+                    QwtPlotCanvas *canvas1,QwtPlotCanvas *canvas2);
+    QList<QStringList> getModelInDepVars();
+    QList<double> getModelAICcs();
+    QList<QList<int>> getModelInDepVarsIndex();
 
 protected:
     void run() override;
@@ -46,6 +51,8 @@ private:
 
     QList<QStringList> mModelInDepVars;
     QList<double> mModelAICcs;
+
+    QList<QList<int>> mModelInDepVarsIndex;
 
     mat mDmat;
 

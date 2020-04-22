@@ -54,21 +54,17 @@ void GwmGWRModelSelectionThread::run()
             }
             mX = XY[0];
             mY = XY[1];
-            mBetas = gwRegAll();
-            vec s_hat = vec(1);
-            for(int n = 0; n < 1; n++){
-                s_hat.at(n) = 2;
-                qDebug() << s_hat(n);
-            }
-            vec aic_rss = AICcRss(mY,mX,mBetas,s_hat);
-            AICcs[j] = aic_rss[2];
+            AICcs[j] = gwRegAll();
             QStringList inDepVarsName;
+            QList<int> inDepVarsIndexList;
             for(int inDepVarIndex : inDepVarsIndex){
                inDepVarsName.append( mLayer->fields().field(inDepVarIndex).name());
+               inDepVarsIndexList.append(inDepVarIndex);
             }
             qDebug() << inDepVarsName;
             qDebug() << AICcs[j];
             mModelInDepVars.append(inDepVarsName);
+            mModelInDepVarsIndex.append(inDepVarsIndexList);
             mModelAICcs.append(AICcs[j]);
             inDepVarsIndex.removeOne(mIndepVarsIndex[j]);
             emit tick(process,total);
@@ -78,10 +74,8 @@ void GwmGWRModelSelectionThread::run()
         inDepVarsIndex.append(mIndepVarsIndex[index]);
         mIndepVarsIndex.removeOne(mIndepVarsIndex[index]);
     }
-    mModelInDepVars = modelSort(mModelInDepVars,mModelAICcs);
+    mModelInDepVars = modelSort(mModelInDepVars,mModelAICcs,mModelInDepVarsIndex);
     modelSelection();
-//    model_View(mDepVarIndex,mModelInDepVars,mModelAICcs);
-//    plot->show();
     emit success();
 }
 
@@ -151,9 +145,10 @@ bool GwmGWRModelSelectionThread::calDmat(){
     return true;
 }
 
-mat GwmGWRModelSelectionThread::gwRegAll()
+double GwmGWRModelSelectionThread::gwRegAll()
 {
     mat betas = mat(mX.n_cols, mFeatureList.size());
+    vec s_hat(2, fill::zeros);
 //    calDmat();
     if (mBandwidthType == BandwidthType::Adaptive)
     {
@@ -163,18 +158,21 @@ mat GwmGWRModelSelectionThread::gwRegAll()
     {
         mBandwidthSize = getFixedBwUpper();
     }
+    mat ci, si;
     for (int i = 0; i < mFeatureList.size(); i++)
     {
         vec dist = distance(i);
         vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-        vec beta = gwReg(mX, mY, weight, i);
+        vec beta = gwRegHatmatrix(mX, mY, weight, i, ci, si);
         betas.col(i) = beta;
+        s_hat(0) += si(0, i);
+        s_hat(1) += det(si * trans(si));
     }
-    return trans(betas);
+    return AICc(mY,mX,betas,s_hat);
 }
 
 
-QList<QStringList> GwmGWRModelSelectionThread::modelSort(QList<QStringList> modelList, QList<double> modelAICcs)
+QList<QStringList> GwmGWRModelSelectionThread::modelSort(QList<QStringList> modelList, QList<double> modelAICcs,QList<QList<int>> modelIndexList)
 {
     int tag = 0;
     QList<int> sortIndex;
@@ -192,8 +190,10 @@ QList<QStringList> GwmGWRModelSelectionThread::modelSort(QList<QStringList> mode
     }
     QList<QStringList> res;
     mModelAICcs.clear();
+    mModelInDepVarsIndex.clear();
     for(int i : sortIndex){
         res.append(modelList[i]);
+        mModelInDepVarsIndex.append(modelIndexList[i]);
         mModelAICcs.append(modelAICcs[i]);
         for(QString inDepVar:modelList[i]){
             emit message(inDepVar);
@@ -333,7 +333,112 @@ void GwmGWRModelSelectionThread::viewModels()
 //    plot->setAutoReplot( true );//设置自动重画，相当于更新
 }
 
+void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indepVars, QList<QStringList> modelInDepVars, QList<double> modelAICcs, QwtPlotCanvas *canvas1, QwtPlotCanvas *canvas2){
+    int n = indepVars.size();
+    double cex;
+    if( n > 10){
+        cex = 10/n;
+    }
+    else{
+        cex = 1;
+    }
+    int numModels = modelInDepVars.size();
+    double alpha = 2 * M_PI / numModels;
+    QStringList IndepVarNameList;
+    for (GwmLayerAttributeItem* item : indepVars)
+    {
+        QString IndepVarName = item->attributeName();
+        IndepVarNameList.append(IndepVarName);
+    }
 
+    canvas1->setPalette(Qt::white);
+    canvas1->setBorderRadius(10);
+    QwtPlot* plot = new QwtPlot();
+    plot->setCanvas( canvas1 );
+    plot->plotLayout()->setAlignCanvasToScales( true );
+    QPolygonF points1;
+    int lastnVars = 1;
+    for(int i = 0; i < numModels; i++){
+        QStringList vars = modelInDepVars[i];
+        int nVars = vars.size();
+        points1 << QPointF(i+1,modelAICcs[i]);
+        if(nVars != lastnVars){
+            QwtPlotMarker *mX = new QwtPlotMarker();
+            mX->setXValue(i);
+            mX->setLineStyle(QwtPlotMarker::VLine);
+            mX->setLinePen(QPen(Qt::lightGray, 1, Qt::DashDotDotLine));
+            mX->attach(plot);
+        }
+        lastnVars = nVars;
+    }
+    QwtPlotCurve *curve=new QwtPlotCurve("curve");
+    curve->setPen(Qt::blue,cex,Qt::DashLine);//设置曲线颜色 粗细
+    curve->setRenderHint(QwtPlotItem::RenderAntialiased,true);//线条光滑化
+    QwtSymbol *symbol = new QwtSymbol( QwtSymbol::Ellipse,
+    QBrush( Qt::yellow ), QPen( Qt::red, 0.5 ), QSize( 5, 5) );//设置样本点的颜色、大小
+    curve->setSymbol( symbol );//添加样本点形状
+    curve->setSamples(points1);
+    curve->attach( plot );
+    curve->setLegendAttribute(curve->LegendShowLine);
+    plot->resize(600,400);
+    plot->replot();
+    plot->show();
+
+    QwtPlot* plot2 = new QwtPlot();
+    canvas2->setPalette(Qt::white);
+    canvas2->setBorderRadius(10);
+    plot2->setCanvas( canvas2 );
+    plot2->setAxisScale(QwtPlot::yLeft,-n-1, n+1);
+    plot2->setAxisScale(QwtPlot::xBottom,-3*n/4,n+6);
+    QList<Qt::GlobalColor> colors;
+    colors << Qt::red << Qt::cyan << Qt::yellow << Qt::green << Qt::blue << Qt::black << Qt::lightGray << Qt::white;
+    QList<QwtSymbol::Style> pointStyles;
+    pointStyles << QwtSymbol::Rect << QwtSymbol::Ellipse << QwtSymbol::Diamond << QwtSymbol::Triangle << QwtSymbol::DTriangle;
+    int i = 1;
+    QList<Qt::GlobalColor> legendColors;
+    QList<QwtSymbol::Style> legendStyles;
+    for(QString var: IndepVarNameList){
+        legendColors.append(colors[IndepVarNameList.indexOf(var)%8]);
+        legendStyles.append(pointStyles[IndepVarNameList.indexOf(var)%5]);
+    }
+    for(QStringList vars:modelInDepVars){
+        QwtPlotCurve *curve2=new QwtPlotCurve("curve2");
+        curve2->setPen(Qt::gray,cex,Qt::DashLine);//设置曲线颜色 粗细
+        QPolygonF points2;
+        int j = 1;
+        for(QString var:vars){
+            double radius = sqrt(n) * sqrt(j);
+            points2 << QPointF(radius*cos((i-1)*alpha),radius*sin((i-1)*alpha));
+            QwtPlotMarker *mX = new QwtPlotMarker(var);
+            mX->setValue(QPointF(radius*cos((i-1)*alpha),radius*sin((i-1)*alpha)));
+            int k = IndepVarNameList.indexOf(var)%5;
+            mX->setSymbol(new QwtSymbol( pointStyles[IndepVarNameList.indexOf(var)%5],
+                                         QBrush( colors[IndepVarNameList.indexOf(var)%8] ), QPen( Qt::red, 0.5 ), QSize( 5, 5 )));
+            mX->attach(plot2);
+//            mX->setLegendIconSize(QSize( 6, 6));
+            j++;
+        }
+        curve2->setSamples(points2);
+        curve2->attach(plot2);
+        i++;
+    }
+
+    QwtLegend *legend = new QwtLegend();
+    QwtPlotItemList items = plot2->itemList( QwtPlotItem::Rtti_PlotMarker );
+    for ( int i = 0; i < indepVars.size(); i++ ){
+        items[i]->setItemAttribute(QwtPlotItem::Legend,true);
+    }
+    items = plot2->itemList( QwtPlotItem::Rtti_PlotCurve );
+    for ( int i = 0; i < items.size(); i++ ){
+        const QVariant itemInfo = plot2->itemToInfo( items[i] );
+        items[i]->setItemAttribute(QwtPlotItem::Legend,false);
+    }
+    plot2->insertLegend( legend, QwtPlot::RightLegend );
+    plot2->plotLayout()->setAlignCanvasToScales( true );
+    plot2->resize(600,400);
+    plot2->replot();
+    plot2->show();
+}
 
 double GwmGWRModelSelectionThread::getFixedBwUpper()
 {
@@ -346,4 +451,18 @@ double GwmGWRModelSelectionThread::getFixedBwUpper()
     extentDp(1, 1) = extent.yMaximum();
     vec dist = gwDist(extentDp, extentDp, 0, 2.0, 0.0, longlat, false);
     return dist(1);
+}
+
+QList<QStringList> GwmGWRModelSelectionThread::getModelInDepVars(){
+    return mModelInDepVars;
+}
+
+QList<double> GwmGWRModelSelectionThread::getModelAICcs()
+{
+    return mModelAICcs;
+}
+
+QList<QList<int>> GwmGWRModelSelectionThread::getModelInDepVarsIndex()
+{
+    return mModelInDepVarsIndex;
 }
