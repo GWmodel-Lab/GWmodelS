@@ -57,15 +57,18 @@ void GwmGWRModelSelectionThread::run()
             AICcs[j] = gwRegAll();
             QStringList inDepVarsName;
             QList<int> inDepVarsIndexList;
+            QString message1 = "";
             for(int inDepVarIndex : inDepVarsIndex){
-               inDepVarsName.append( mLayer->fields().field(inDepVarIndex).name());
+               QString name = mLayer->fields().field(inDepVarIndex).name();
+               inDepVarsName.append(name);
                inDepVarsIndexList.append(inDepVarIndex);
+               message1 = message1 +  " " + name;
             }
-            qDebug() << inDepVarsName;
-            qDebug() << AICcs[j];
             mModelInDepVars.append(inDepVarsName);
             mModelInDepVarsIndex.append(inDepVarsIndexList);
             mModelAICcs.append(AICcs[j]);
+            message1 = message1 + ":" + (QString::number(AICcs[j],10,5));
+            emit message(message1);
             inDepVarsIndex.removeOne(mIndepVarsIndex[j]);
             emit tick(process,total);
             process++;
@@ -168,7 +171,7 @@ double GwmGWRModelSelectionThread::gwRegAll()
         s_hat(0) += si(0, i);
         s_hat(1) += det(si * trans(si));
     }
-    return AICc(mY,mX,betas,s_hat);
+    return AICc(mY,mX,trans(betas),s_hat);
 }
 
 
@@ -195,12 +198,10 @@ QList<QStringList> GwmGWRModelSelectionThread::modelSort(QList<QStringList> mode
         res.append(modelList[i]);
         mModelInDepVarsIndex.append(modelIndexList[i]);
         mModelAICcs.append(modelAICcs[i]);
-        for(QString inDepVar:modelList[i]){
-            emit message(inDepVar);
-        }
-        emit message(QString::number(modelAICcs[i],10,5));
-        qDebug() << modelList[i];
-        qDebug() << modelAICcs[i];
+//        for(QString inDepVar:modelList[i]){
+//            emit message(inDepVar);
+//        }
+//        emit message(QString::number(modelAICcs[i],10,5));
     }
     return res;
 }
@@ -210,11 +211,12 @@ QMap<QStringList,double> GwmGWRModelSelectionThread::modelSelection(){
         if(mModelAICcs[i-1] - mModelAICcs[i] >= 3){
             QMap<QStringList,double> res;
             res.insert(mModelInDepVars[i],mModelAICcs[i]);
+            QString message1 = "";
             for(QString inDepVar:mModelInDepVars[i]){
-                emit message(inDepVar);
+                message1 = message1 + " " + inDepVar;
             }
-            emit message(QString::number(mModelAICcs[i],10,5));
-            qDebug() << res;
+            message1 = message1 + ":" + QString::number(mModelAICcs[i],10,5);
+            emit message(message1);
             return res;
         }
     }
