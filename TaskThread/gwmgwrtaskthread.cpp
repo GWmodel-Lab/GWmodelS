@@ -94,17 +94,29 @@ void GwmGWRTaskThread::run()
         disconnect(&modelSelThread, &GwmTaskThread::message, this, &GwmTaskThread::message);
         disconnect(&modelSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
         disconnect(&modelSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
-        QList<GwmLayerAttributeItem*> indepVarsNew;
-        QList<int> selectedVars = modelSelThread.modelSelection().first;
-        for (int varIndex : selectedVars)
+//        QList<GwmLayerAttributeItem*> indepVarsNew;
+//        QStringList selectedVars = modelSelThread.modelSelection().first;
+//        for (QString varName : selectedVars)
+//        {
+//            for (GwmLayerAttributeItem* item : mIndepVars)
+//            {
+//                if (item->attributeName() == varName)
+//                    indepVarsNew.append(item);
+//            }
+//        }
+//        setIndepVars(indepVarsNew);
+        QPair<QList<int>, double> optimizedModel = modelSelThread.modelSelection();
+        if (optimizedModel.second != DBL_MAX)
         {
-            for (GwmLayerAttributeItem* item : mIndepVars)
-            {
-                if (item->attributeIndex() == varIndex)
-                    indepVarsNew.append(item);
-            }
+            mIndepVarsIndex = optimizedModel.first;
+            mModelSelModels = modelSelThread.getModelInDepVars();
+            mModelSelAICcs = modelSelThread.getModelAICcs();
         }
-        setIndepVars(indepVarsNew);
+        else
+        {
+            emit error(tr("Cannot select optimized model."));
+            return;
+        }
     }
 
     // 设置矩阵
@@ -352,6 +364,26 @@ GwmGWRTaskThread::BandwidthSelectionApproach GwmGWRTaskThread::getBandwidthSelec
 void GwmGWRTaskThread::setBandwidthSelectionApproach(const BandwidthSelectionApproach &bandwidthSelectionApproach)
 {
     mBandwidthSelectionApproach = bandwidthSelectionApproach;
+}
+
+QList<QStringList> GwmGWRTaskThread::getModelSelModels() const
+{
+    return mModelSelModels;
+}
+
+QList<double> GwmGWRTaskThread::getModelSelAICcs() const
+{
+    return mModelSelAICcs;
+}
+
+int GwmGWRTaskThread::getDepVarIndex() const
+{
+    return mDepVarIndex;
+}
+
+QList<int> GwmGWRTaskThread::getIndepVarsIndex() const
+{
+    return mIndepVarsIndex;
 }
 
 double GwmGWRTaskThread::getBandwidthSize() const

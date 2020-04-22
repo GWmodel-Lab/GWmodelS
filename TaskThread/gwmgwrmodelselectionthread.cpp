@@ -207,7 +207,7 @@ QList<QStringList> GwmGWRModelSelectionThread::modelSort(QList<QStringList> mode
     return res;
 }
 
-QPair<QList<int>,double> GwmGWRModelSelectionThread::modelSelection(){
+QPair<QList<int>, double> GwmGWRModelSelectionThread::modelSelection(){
     for (int i = mModelInDepVars.size() - 1; i >= 0; i--)
     {
         if (mModelAICcs[i-1] - mModelAICcs[i] >= 3)
@@ -222,7 +222,7 @@ QPair<QList<int>,double> GwmGWRModelSelectionThread::modelSelection(){
             return res;
         }
     }
-    return QPair<QStringList,double>();
+    return qMakePair(QList<int>(), DBL_MAX);
 }
 
 void GwmGWRModelSelectionThread::viewModels()
@@ -337,7 +337,7 @@ void GwmGWRModelSelectionThread::viewModels()
 //    plot->setAutoReplot( true );//设置自动重画，相当于更新
 }
 
-void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indepVars, QList<QStringList> modelInDepVars, QList<double> modelAICcs, QwtPlotCanvas *canvas1, QwtPlotCanvas *canvas2){
+void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indepVars, QList<QStringList> modelInDepVars, QList<double> modelAICcs, QwtPlot *plot, QwtPlot *plot2){
     int n = indepVars.size();
     double cex;
     if( n > 10){
@@ -355,10 +355,10 @@ void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indep
         IndepVarNameList.append(IndepVarName);
     }
 
-    canvas1->setPalette(Qt::white);
-    canvas1->setBorderRadius(10);
-    QwtPlot* plot = new QwtPlot();
-    plot->setCanvas( canvas1 );
+//    canvas1->setPalette(Qt::white);
+//    canvas1->setBorderRadius(10);
+//    QwtPlot* plot = new QwtPlot();
+//    plot->setCanvas( canvas1 );
     plot->plotLayout()->setAlignCanvasToScales( true );
     QPolygonF points1;
     int lastnVars = 1;
@@ -388,10 +388,10 @@ void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indep
     plot->replot();
     plot->show();
 
-    QwtPlot* plot2 = new QwtPlot();
-    canvas2->setPalette(Qt::white);
-    canvas2->setBorderRadius(10);
-    plot2->setCanvas( canvas2 );
+//    QwtPlot* plot2 = new QwtPlot();
+//    canvas2->setPalette(Qt::white);
+//    canvas2->setBorderRadius(10);
+//    plot2->setCanvas( canvas2 );
     plot2->setAxisScale(QwtPlot::yLeft,-n-1, n+1);
     plot2->setAxisScale(QwtPlot::xBottom,-3*n/4,n+6);
     QList<Qt::GlobalColor> colors;

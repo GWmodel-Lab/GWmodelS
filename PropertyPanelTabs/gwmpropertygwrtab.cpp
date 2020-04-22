@@ -3,6 +3,8 @@
 
 #include <armadillo>
 
+#include "TaskThread/gwmgwrmodelselectionthread.h"
+
 using namespace arma;
 
 QMap<GwmGWRTaskThread::KernelFunction, QString> GwmPropertyGWRTab::kernelFunctionNameDict = {
@@ -21,9 +23,33 @@ QMap<GwmGWRTaskThread::BandwidthType, QString> GwmPropertyGWRTab::bandwidthTypeN
 GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerGWRItem* item) :
     QWidget(parent),
     ui(new Ui::GwmPropertyGWRTab),
-    mLayerItem(item)
+    mLayerItem(item),
+    mModelSelVarsPlot(nullptr),
+    mModelSelAICsPlot(nullptr)
 {
     ui->setupUi(this);
+    if (item)
+    {
+        if (item->getIsModelOptimized())
+        {
+            mModelSelVarsPlot = new QwtPlot();
+            mModelSelAICsPlot = new QwtPlot();
+            ui->grpModelSelView->layout()->addWidget(mModelSelVarsPlot);
+            ui->grpModelSelView->layout()->addWidget(mModelSelAICsPlot);
+        }
+        else
+        {
+            ui->grpModelSelView->hide();
+        }
+        if (item->getIsBandwidthOptimized())
+        {
+            ui->grpBwSelView->hide();
+        }
+        else
+        {
+            ui->grpBwSelView->hide();
+        }
+    }
 }
 
 GwmPropertyGWRTab::~GwmPropertyGWRTab()
@@ -68,8 +94,17 @@ void GwmPropertyGWRTab::updateUI()
     ui->lblRSquareAdjusted->setText(QString("%1").arg(diagnostic.RSquareAdjust, 0, 'f', 6));
 
     // 计算四分位数
-    QList<GwmLayerAttributeItem*> indepVars = mLayerItem->indepVars();
-    ui->tbwCoefficient->setRowCount(indepVars.size() + 1);
+    QList<int> indepVarsIndex = mLayerItem->getIndepVarIndex();
+    QList<GwmLayerAttributeItem*> indepVars, originIndepVars = mLayerItem->getIndepVarsOrigin();
+    for (int index : indepVarsIndex)
+    {
+        for (GwmLayerAttributeItem* item : originIndepVars)
+        {
+            if (item->attributeIndex() == index)
+                indepVars.append(item);
+        }
+    }
+    ui->tbwCoefficient->setRowCount(indepVarsIndex.size() + 1);
     ui->tbwCoefficient->setColumnCount(6);
     ui->tbwCoefficient->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     QStringList headers = QStringList() << tr("Name") << tr("Min") << tr("1st Qu") << tr("Median") << tr("3rd Qu") << tr("Max");
@@ -78,7 +113,8 @@ void GwmPropertyGWRTab::updateUI()
     connect(thread, &QThread::finished, this, [=]() {
         QList<GwmQuartiles> quartiles = thread->quartiles();
         setQuartiles(0, QStringLiteral("Intercept"), quartiles[0]);
-        for (int i = 0; i < indepVars.size(); i++)
+        QgsVectorLayer* layer = mLayerItem->layer();
+        for (int i = 0; i < indepVarsIndex.size(); i++)
         {
             int r = i + 1;
             setQuartiles(r, indepVars[i]->attributeName(), quartiles[r]);
@@ -86,6 +122,15 @@ void GwmPropertyGWRTab::updateUI()
         delete thread;
     });
     thread->start();
+
+    // 绘制可视化图标
+    if (mLayerItem->getIsModelOptimized())
+    {
+        QList<GwmLayerAttributeItem*> indepVarsOrigin = mLayerItem->getIndepVarsOrigin();
+        QList<QStringList> modelSelModels = mLayerItem->modelSelModels();
+        QList<double> modelSelAICcs = mLayerItem->modelSelAICcs();
+        GwmGWRModelSelectionThread::viewModels(indepVarsOrigin, modelSelModels, modelSelAICcs, mModelSelAICsPlot, mModelSelVarsPlot);
+    }
 }
 
 void GwmPropertyGWRTab::setQuartiles(const int row, QString name, const GwmQuartiles &quartiles)

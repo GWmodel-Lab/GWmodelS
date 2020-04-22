@@ -38,7 +38,7 @@ public:
     void viewModels();
 
     static void viewModels(QList<GwmLayerAttributeItem*> indepVars,QList<QStringList> modelInDepVars,QList<double> modelAICcs,
-                    QwtPlotCanvas *canvas1,QwtPlotCanvas *canvas2);
+                    QwtPlot *plot,QwtPlot *plot2);
     QList<QStringList> getModelInDepVars();
     QList<double> getModelAICcs();
     QList<QList<int>> getModelInDepVarsIndex();
