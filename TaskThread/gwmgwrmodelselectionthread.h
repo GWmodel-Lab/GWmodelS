@@ -16,6 +16,7 @@
 #include <qwt_legend.h>
 #include <qwt_legend_label.h>
 #include <qwt_column_symbol.h>
+#include <qwt_plot_textlabel.h>
 
 class GwmGWRModelSelectionThread : public GwmGWRTaskThread
 {

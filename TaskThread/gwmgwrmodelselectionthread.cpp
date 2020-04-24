@@ -379,7 +379,7 @@ void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indep
     curve->setPen(Qt::blue,cex,Qt::DashLine);//设置曲线颜色 粗细
     curve->setRenderHint(QwtPlotItem::RenderAntialiased,true);//线条光滑化
     QwtSymbol *symbol = new QwtSymbol( QwtSymbol::Ellipse,
-    QBrush( Qt::yellow ), QPen( Qt::red, 0.5 ), QSize( 5, 5) );//设置样本点的颜色、大小
+    QBrush( Qt::yellow ), QPen( Qt::red, 0.5 ), QSize( 3, 3));//设置样本点的颜色、大小
     curve->setSymbol( symbol );//添加样本点形状
     curve->setSamples(points1);
     curve->attach( plot );
@@ -388,12 +388,9 @@ void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indep
     plot->replot();
     plot->show();
 
-//    QwtPlot* plot2 = new QwtPlot();
-//    canvas2->setPalette(Qt::white);
-//    canvas2->setBorderRadius(10);
-//    plot2->setCanvas( canvas2 );
+
     plot2->setAxisScale(QwtPlot::yLeft,-n-1, n+1);
-    plot2->setAxisScale(QwtPlot::xBottom,-3*n/4,n+6);
+    plot2->setAxisScale(QwtPlot::xBottom,-n,n+6);
     QList<Qt::GlobalColor> colors;
     colors << Qt::red << Qt::cyan << Qt::yellow << Qt::green << Qt::blue << Qt::black << Qt::lightGray << Qt::white;
     QList<QwtSymbol::Style> pointStyles;
@@ -410,8 +407,9 @@ void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indep
         curve2->setPen(Qt::gray,cex,Qt::DashLine);//设置曲线颜色 粗细
         QPolygonF points2;
         int j = 1;
+        double radius;
         for(QString var:vars){
-            double radius = sqrt(n) * sqrt(j);
+            radius = sqrt(n) * sqrt(j);
             points2 << QPointF(radius*cos((i-1)*alpha),radius*sin((i-1)*alpha));
             QwtPlotMarker *mX = new QwtPlotMarker(var);
             mX->setValue(QPointF(radius*cos((i-1)*alpha),radius*sin((i-1)*alpha)));
@@ -426,7 +424,17 @@ void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indep
         curve2->attach(plot2);
         i++;
     }
-
+    for(i = 1; i <= modelInDepVars.size(); i++){
+        int j = modelInDepVars[i-1].size();
+        double radius;
+        radius = sqrt(n) * sqrt(j+1.5);
+        QwtPlotMarker *mX = new QwtPlotMarker();
+        mX->setValue(QPointF(radius*cos((i-1)*alpha),radius*sin((i-1)*alpha)));
+        QwtText* text = new QwtText(QString::number(i,10));
+        text->setFont(QFont("MS Shell Dlg 2",int(10-numModels/15+i*3/numModels)));
+        mX->setLabel(*text);
+        mX->attach(plot2);
+    }
     QwtLegend *legend = new QwtLegend();
     QwtPlotItemList items = plot2->itemList( QwtPlotItem::Rtti_PlotMarker );
     for ( int i = 0; i < indepVars.size(); i++ ){
