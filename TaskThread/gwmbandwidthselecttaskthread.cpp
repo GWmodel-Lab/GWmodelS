@@ -23,6 +23,8 @@ GwmBandwidthSelectTaskThread::GwmBandwidthSelectTaskThread(const GwmGWRTaskThrea
 
 void GwmBandwidthSelectTaskThread::run()
 {
+    //初始化BW score容器
+    this->BandSelectResult.clear();
     emit tick(0, 0);
     //获得数据点
     if (!createdFromGWRTaskThread && !setXY())
@@ -44,6 +46,10 @@ void GwmBandwidthSelectTaskThread::run()
     {
         mBandwidthSize = gold(&GwmBandwidthSelectTaskThread::aicAll,lower,upper,adaptive,mX,mY,mDataPoints,mBandwidthKernelFunction,adaptive);
     }
+    //返回计算之后的BW Score
+    QMap<double,double> BW_Score = getBwScore();
+    //调用绘图函数
+    GwmBandwidthSelectTaskThread::viewBandwidthResult(BW_Score,mPlot);
     qDebug() << "[GwmBandwidthSelectTaskThread::run]" << "bandwidth size" << mBandwidthSize;
 }
 
@@ -59,6 +65,8 @@ double GwmBandwidthSelectTaskThread::cvAll(const mat& x, const vec& y, const mat
         cv += res * res;
     }
     emit message(createOutputMessage(bw, cv));
+    //this->BandSelectResult.clear();
+    this->BandSelectResult.insert(bw,cv);
     return cv;
 }
 
@@ -80,6 +88,8 @@ double GwmBandwidthSelectTaskThread::aicAll(const mat& x, const vec& y, const ma
     betas = trans(betas);
     double score = AICc(y,x,betas,s_hat);
     emit message(createOutputMessage(bw, score));
+    //this->BandSelectResult.clear();
+    this->BandSelectResult.insert(bw,score);
     return score;
 }
 
@@ -152,4 +162,58 @@ QString GwmBandwidthSelectTaskThread::createOutputMessage(double bw, double scor
                 .arg(GwmGWRTaskThread::mBandwidthSelectionApproach == BandwidthSelectionApproach::CV ? tr("CV score") : tr("AIC score"))
                 .arg(score, 0, 'f', 6);
     }
+}
+
+QMap<double,double> GwmBandwidthSelectTaskThread::getBwScore(){
+    return this->BandSelectResult;
+}
+
+void GwmBandwidthSelectTaskThread::viewBandwidthResult(QMap<double,double> result ,QwtPlot* plot)
+{
+    qDebug() << 123;
+    QwtPlotCanvas *canvas=new QwtPlotCanvas();
+    canvas->setPalette(Qt::white);
+    canvas->setBorderRadius(10);
+    plot = new QwtPlot();
+    plot->setCanvas(canvas);
+    //设置窗口属性
+    plot->plotLayout()->setAlignCanvasToScales(true);
+    //新建一个曲线对象
+    QwtPlotCurve *curve = new QwtPlotCurve("curve");
+    //设置曲线颜色 粗细
+    curve->setPen(Qt::blue,1.0,Qt::DashLine);
+    //线条光滑化
+    curve->setRenderHint(QwtPlotItem::RenderAntialiased,true);
+    //设置样本点的颜色、大小
+    QwtSymbol *symbol = new QwtSymbol( QwtSymbol::Ellipse, QBrush( Qt::yellow ), QPen( Qt::red, 0.5 ), QSize( 5, 5) );
+    //添加样本点形状
+    curve->setSymbol( symbol );
+    //输入数据
+    QVector<double> xData;
+    QVector<double> yData;
+    QMap<double, double>::const_iterator i;
+    for(i=result.constBegin();i!=result.constEnd();++i){
+        xData.push_back(i.key());
+        yData.push_back(i.value());
+    }
+    //设置X与Y坐标范围
+    //返回xData与yData最大最小值
+    //拷贝xData与yData并返回sort
+    QVector<double> xData_2(xData);
+    QVector<double> yData_2(yData);
+    //从小到大排序
+    qSort(xData_2.begin(),xData_2.end());
+    qSort(yData_2.begin(),yData_2.end());
+    plot->setAxisScale(QwtPlot::xBottom,xData_2[0],xData_2[xData.length()-1]);
+    plot->setAxisScale(QwtPlot::yLeft, yData_2[0], yData_2[yData.length()-1]);
+    //设置数据
+    curve->setSamples(xData,yData);
+    curve->attach(plot);
+    curve->setLegendAttribute(curve->LegendShowLine);
+    plot->resize(600,400);
+    plot->replot();
+    plot->show();
+    //这个地方plot会一闪而过，使用debug模式打断点在下面一行调试可以看到输出的图形
+    //具体原因不是很清楚
+    qDebug() << 123456;
 }
