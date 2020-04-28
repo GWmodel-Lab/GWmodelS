@@ -47,7 +47,7 @@ GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerGWRItem* item) :
         {
             mBandwidthSelPlot = new QwtPlot();
             ui->grpBwSelView->layout()->addWidget(mBandwidthSelPlot);
-            ui->grpBwSelView->hide();
+//            ui->grpBwSelView->hide();
         }
         else
         {
@@ -138,7 +138,8 @@ void GwmPropertyGWRTab::updateUI()
 
     if(mLayerItem->getIsBandwidthOptimized())
     {
-
+        QMap<double, double> bwScores = mLayerItem->getBandwidthSelScores();
+        GwmBandwidthSelectTaskThread::viewBandwidthResult(bwScores, mBandwidthSelPlot);
     }
 }
 

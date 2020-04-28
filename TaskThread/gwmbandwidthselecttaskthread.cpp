@@ -24,7 +24,7 @@ GwmBandwidthSelectTaskThread::GwmBandwidthSelectTaskThread(const GwmGWRTaskThrea
 void GwmBandwidthSelectTaskThread::run()
 {
     //初始化BW score容器
-    this->BandSelectResult.clear();
+    this->mBwScore.clear();
     emit tick(0, 0);
     //获得数据点
     if (!createdFromGWRTaskThread && !setXY())
@@ -47,9 +47,9 @@ void GwmBandwidthSelectTaskThread::run()
         mBandwidthSize = gold(&GwmBandwidthSelectTaskThread::aicAll,lower,upper,adaptive,mX,mY,mDataPoints,mBandwidthKernelFunction,adaptive);
     }
     //返回计算之后的BW Score
-    QMap<double,double> BW_Score = getBwScore();
+//    QMap<double,double> BW_Score = getBwScore();
     //调用绘图函数
-    GwmBandwidthSelectTaskThread::viewBandwidthResult(BW_Score,mPlot);
+//    GwmBandwidthSelectTaskThread::viewBandwidthResult(BW_Score,mPlot);
     qDebug() << "[GwmBandwidthSelectTaskThread::run]" << "bandwidth size" << mBandwidthSize;
 }
 
@@ -66,7 +66,7 @@ double GwmBandwidthSelectTaskThread::cvAll(const mat& x, const vec& y, const mat
     }
     emit message(createOutputMessage(bw, cv));
     //this->BandSelectResult.clear();
-    this->BandSelectResult.insert(bw,cv);
+    this->mBwScore.insert(bw,cv);
     return cv;
 }
 
@@ -89,7 +89,7 @@ double GwmBandwidthSelectTaskThread::aicAll(const mat& x, const vec& y, const ma
     double score = AICc(y,x,betas,s_hat);
     emit message(createOutputMessage(bw, score));
     //this->BandSelectResult.clear();
-    this->BandSelectResult.insert(bw,score);
+    this->mBwScore.insert(bw,score);
     return score;
 }
 
@@ -165,17 +165,17 @@ QString GwmBandwidthSelectTaskThread::createOutputMessage(double bw, double scor
 }
 
 QMap<double,double> GwmBandwidthSelectTaskThread::getBwScore(){
-    return this->BandSelectResult;
+    return this->mBwScore;
 }
 
 void GwmBandwidthSelectTaskThread::viewBandwidthResult(QMap<double,double> result ,QwtPlot* plot)
 {
     qDebug() << 123;
-    QwtPlotCanvas *canvas=new QwtPlotCanvas();
-    canvas->setPalette(Qt::white);
-    canvas->setBorderRadius(10);
-    plot = new QwtPlot();
-    plot->setCanvas(canvas);
+//    QwtPlotCanvas *canvas=new QwtPlotCanvas();
+//    canvas->setPalette(Qt::white);
+//    canvas->setBorderRadius(10);
+//    plot = new QwtPlot();
+//    plot->setCanvas(canvas);
     //设置窗口属性
     plot->plotLayout()->setAlignCanvasToScales(true);
     //新建一个曲线对象
@@ -212,7 +212,7 @@ void GwmBandwidthSelectTaskThread::viewBandwidthResult(QMap<double,double> resul
     curve->setLegendAttribute(curve->LegendShowLine);
     plot->resize(600,400);
     plot->replot();
-    plot->show();
+//    plot->show();
     //这个地方plot会一闪而过，使用debug模式打断点在下面一行调试可以看到输出的图形
     //具体原因不是很清楚
     qDebug() << 123456;

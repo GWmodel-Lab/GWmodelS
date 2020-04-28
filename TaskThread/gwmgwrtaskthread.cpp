@@ -139,6 +139,7 @@ void GwmGWRTaskThread::run()
         disconnect(&bwSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
         disconnect(&bwSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
         mBandwidthSize = bwSelThread.getBandwidthSize();
+        mBandwidthSelScore = bwSelThread.getBwScore();
     }
 
     // 解算模型
@@ -384,6 +385,11 @@ int GwmGWRTaskThread::getDepVarIndex() const
 QList<int> GwmGWRTaskThread::getIndepVarsIndex() const
 {
     return mIndepVarsIndex;
+}
+
+QMap<double, double> GwmGWRTaskThread::getBwScore() const
+{
+    return mBandwidthSelScore;
 }
 
 double GwmGWRTaskThread::getBandwidthSize() const

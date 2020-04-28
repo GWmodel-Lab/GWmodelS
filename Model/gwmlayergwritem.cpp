@@ -22,6 +22,7 @@ GwmLayerGWRItem::GwmLayerGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, c
         mModelSelAICcs = taskThread->getModelSelAICcs();
         isBandwidthOptimized = taskThread->getIsBandwidthSizeAutoSel();
         isModelOptimized = taskThread->enableIndepVarAutosel();
+        mBandwidthSelScores = taskThread->getBwScore();
     }
 }
 
@@ -95,6 +96,11 @@ QList<int> GwmLayerGWRItem::getIndepVarIndex() const
 QList<GwmLayerAttributeItem *> GwmLayerGWRItem::getIndepVarsOrigin() const
 {
     return mIndepVarsOrigin;
+}
+
+QMap<double, double> GwmLayerGWRItem::getBandwidthSelScores() const
+{
+    return mBandwidthSelScores;
 }
 
 GwmGWRTaskThread::KernelFunction GwmLayerGWRItem::bandwidthKernelFunction() const

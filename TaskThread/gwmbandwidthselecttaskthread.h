@@ -46,7 +46,7 @@ private:
 
     QString createOutputMessage(double bw, double score);
 
-    QMap<double,double> BandSelectResult;
+    QMap<double,double> mBwScore;
 
     QwtPlot* mPlot=nullptr;
 };

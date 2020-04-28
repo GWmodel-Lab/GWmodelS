@@ -48,6 +48,8 @@ public:
 
     QList<GwmLayerAttributeItem *> getIndepVarsOrigin() const;
 
+    QMap<double, double> getBandwidthSelScores() const;
+
 private:
     int mDataPointsSize;
     int mDepVarIndex;
@@ -61,6 +63,7 @@ private:
     arma::mat mBetas;
     QList<QStringList> mModelSelModels;
     QList<double> mModelSelAICcs;
+    QMap<double, double> mBandwidthSelScores;
 
     bool isModelOptimized;
     bool isBandwidthOptimized;
