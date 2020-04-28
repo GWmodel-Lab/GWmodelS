@@ -158,6 +158,8 @@ public:
 
     QList<int> getIndepVarsIndex() const;
 
+    QMap<double, double> getBwScore() const;
+
 protected:
     // 图层和 X Y 属性列
     QgsVectorLayer* mLayer = nullptr;
@@ -182,6 +184,9 @@ protected:
     bool isBandwidthSizeAutoSel = true;
     BandwidthSelectionApproach mBandwidthSelectionApproach = BandwidthSelectionApproach::CV;
     KernelFunction mBandwidthKernelFunction = KernelFunction::Gaussian;
+
+    // 优选带宽的结果
+    QMap<double, double> mBandwidthSelScore = QMap<double, double>();
 
     // 距离配置
     DistanceSourceType mDistSrcType = DistanceSourceType::CRS;

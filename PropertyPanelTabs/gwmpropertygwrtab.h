@@ -39,6 +39,8 @@ private:
     QwtPlot* mModelSelVarsPlot;
     QwtPlot* mModelSelAICsPlot;
 
+    QwtPlot* mBandwidthSelPlot;
+
 public:
     void updateUI();
 

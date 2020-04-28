@@ -4,6 +4,7 @@
 #include <armadillo>
 
 #include "TaskThread/gwmgwrmodelselectionthread.h"
+#include "TaskThread/gwmbandwidthselecttaskthread.h"
 
 using namespace arma;
 
@@ -25,7 +26,8 @@ GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerGWRItem* item) :
     ui(new Ui::GwmPropertyGWRTab),
     mLayerItem(item),
     mModelSelVarsPlot(nullptr),
-    mModelSelAICsPlot(nullptr)
+    mModelSelAICsPlot(nullptr),
+    mBandwidthSelPlot(nullptr)
 {
     ui->setupUi(this);
     if (item)
@@ -43,7 +45,9 @@ GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerGWRItem* item) :
         }
         if (item->getIsBandwidthOptimized())
         {
-            ui->grpBwSelView->hide();
+            mBandwidthSelPlot = new QwtPlot();
+            ui->grpBwSelView->layout()->addWidget(mBandwidthSelPlot);
+//            ui->grpBwSelView->hide();
         }
         else
         {
@@ -130,6 +134,12 @@ void GwmPropertyGWRTab::updateUI()
         QList<QStringList> modelSelModels = mLayerItem->modelSelModels();
         QList<double> modelSelAICcs = mLayerItem->modelSelAICcs();
         GwmGWRModelSelectionThread::viewModels(indepVarsOrigin, modelSelModels, modelSelAICcs, mModelSelAICsPlot, mModelSelVarsPlot);
+    }
+
+    if(mLayerItem->getIsBandwidthOptimized())
+    {
+        QMap<double, double> bwScores = mLayerItem->getBandwidthSelScores();
+        GwmBandwidthSelectTaskThread::viewBandwidthResult(bwScores, mBandwidthSelPlot);
     }
 }
 
