@@ -160,6 +160,9 @@ public:
 
     QMap<double, double> getBwScore() const;
 
+    double getModelSelThreshold() const;
+    void setModelSelThreshold(double modelSelThreshold);
+
 protected:
     // 图层和 X Y 属性列
     QgsVectorLayer* mLayer = nullptr;
@@ -173,6 +176,7 @@ protected:
     bool hasHatMatrix = true;
 
     // 优选模型的结果
+    double mModelSelThreshold;
     QList<QStringList> mModelSelModels;
     QList<double> mModelSelAICcs;
 

@@ -210,7 +210,7 @@ QList<QStringList> GwmGWRModelSelectionThread::modelSort(QList<QStringList> mode
 QPair<QList<int>, double> GwmGWRModelSelectionThread::modelSelection(){
     for (int i = mModelInDepVars.size() - 1; i >= 0; i--)
     {
-        if (mModelAICcs[i-1] - mModelAICcs[i] >= 3)
+        if (mModelAICcs[i-1] - mModelAICcs[i] >= mModelSelThreshold)
         {
             QPair<QList<int>,double> res = qMakePair(mModelInDepVarsIndex[i],mModelAICcs[i]);
             QString message1 = "";

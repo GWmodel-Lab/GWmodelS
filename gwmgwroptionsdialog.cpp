@@ -23,6 +23,9 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     ui->mDepVarComboBox->setCurrentIndex(-1);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::onDepVarChanged);
 
+    ui->mModelSelAICThreshold->setMaximum(DBL_MAX);
+    connect(ui->mVariableAutoSelectionCheck, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onVariableAutoSelectionToggled);
+
     QButtonGroup* bwTypeBtnGroup = new QButtonGroup(this);
     bwTypeBtnGroup->addButton(ui->mBwTypeAdaptiveRadio);
     bwTypeBtnGroup->addButton(ui->mBwTypeFixedRadio);
@@ -60,6 +63,7 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mVariableAutoSelectionCheck, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mModelSelAICThreshold, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
@@ -211,6 +215,11 @@ void GwmGWROptionsDialog::onDistTypeDmatToggled(bool checked)
     if (checked)
         ui->mDistParamSettingStack->setCurrentIndex(2);
     ui->mCalcParallelGroup->setEnabled(!checked);
+}
+
+void GwmGWROptionsDialog::onVariableAutoSelectionToggled(bool checked)
+{
+    ui->mModelSelAICThreshold->setEnabled(checked);
 }
 
 void GwmGWROptionsDialog::onCustomizeRaidoToggled(bool checked)
@@ -379,6 +388,7 @@ void GwmGWROptionsDialog::updateFields()
             }
         }
         mTaskThread->setEnableIndepVarAutosel(ui->mVariableAutoSelectionCheck->isChecked());
+        mTaskThread->setModelSelThreshold(ui->mModelSelAICThreshold->value());
     }
     // 带宽设置
     if (ui->mBwSizeAutomaticRadio->isChecked())

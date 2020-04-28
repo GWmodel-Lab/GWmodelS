@@ -48,6 +48,7 @@ GwmGWRTaskThread::GwmGWRTaskThread(const GwmGWRTaskThread &taskThread)
     mIndepVars = taskThread.mIndepVars;
     mDepVarIndex = taskThread.mDepVarIndex;
     mIndepVarsIndex = taskThread.mIndepVarsIndex;
+    mModelSelThreshold = taskThread.mModelSelThreshold;
     isEnableIndepVarAutosel = taskThread.isEnableIndepVarAutosel;
     mFeatureList = taskThread.mFeatureList;
     hasHatMatrix = taskThread.hasHatMatrix;
@@ -390,6 +391,16 @@ QList<int> GwmGWRTaskThread::getIndepVarsIndex() const
 QMap<double, double> GwmGWRTaskThread::getBwScore() const
 {
     return mBandwidthSelScore;
+}
+
+double GwmGWRTaskThread::getModelSelThreshold() const
+{
+    return mModelSelThreshold;
+}
+
+void GwmGWRTaskThread::setModelSelThreshold(double modelSelThreshold)
+{
+    mModelSelThreshold = modelSelThreshold;
 }
 
 double GwmGWRTaskThread::getBandwidthSize() const

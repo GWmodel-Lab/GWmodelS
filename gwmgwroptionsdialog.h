@@ -40,6 +40,7 @@ public slots:
     void onDistTypeCRSToggled(bool checked);
     void onDistTypeMinkowskiToggled(bool checked);
     void onDistTypeDmatToggled(bool checked);
+    void onVariableAutoSelectionToggled(bool checked);
 
 
 public:
