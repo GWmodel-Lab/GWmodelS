@@ -49,16 +49,50 @@
      <property name="title">
       <string>Independent Variable Selection</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_4">
+     <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,0">
       <item>
        <widget class="GwmIndepVarSelectorWidget" name="mIndepVarSelector" native="true"/>
       </item>
       <item>
-       <widget class="QCheckBox" name="mVariableAutoSelectionCheck">
-        <property name="text">
-         <string>Enable Autoselection</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QCheckBox" name="mVariableAutoSelectionCheck">
+          <property name="text">
+           <string>Enable automatic variable-selection</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Line" name="line_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_10">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Threshold</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="mModelSelAICThreshold">
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="value">
+           <double>3.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
@@ -173,7 +207,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Customize</string>
+           <string>User-defined</string>
           </property>
           <property name="checked">
            <bool>true</bool>
@@ -293,7 +327,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Automatic</string>
+           <string>Auto-selection</string>
           </property>
           <property name="checked">
            <bool>false</bool>
