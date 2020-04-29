@@ -26,6 +26,21 @@ GwmLayerAttributeItemModel *GwmIndepVarSelectorWidget::selectedIndepVarModel() c
     return mSelectedIndepVarModel;
 }
 
+bool GwmIndepVarSelectorWidget::isNumeric(QVariant::Type type)
+{
+    switch (type)
+    {
+    case QVariant::Int:
+    case QVariant::LongLong:
+    case QVariant::ULongLong:
+    case QVariant::UInt:
+    case QVariant::Double:
+        return true;
+    default:
+        return false;
+    }
+}
+
 GwmLayerAttributeItemModel *GwmIndepVarSelectorWidget::indepVarModel() const
 {
     return mIndepVarModel;
@@ -70,10 +85,14 @@ void GwmIndepVarSelectorWidget::onDepVarChanged(QString depVarName)
         if (fieldName != depVarName)
         {
             int index = fields.indexFromName(fieldName);
-            GwmLayerAttributeItem *item = new GwmLayerAttributeItem(index,fieldName,fields.field(index).type());
-//            item->setData(index);
-            mIndepVarModel->appendRow(item);
-//            qDebug() << mIndepVarModel->indexFromItem(item).internalPointer();
+            QgsField field = fields.at(index);
+            if (isNumeric(field.type()))
+            {
+                GwmLayerAttributeItem *item = new GwmLayerAttributeItem(index,fieldName,fields.field(index).type());
+    //            item->setData(index);
+                mIndepVarModel->appendRow(item);
+    //            qDebug() << mIndepVarModel->indexFromItem(item).internalPointer();
+            }
         }
     }
 //    ui->mIndepVarView->setModel(mIndepVarModel);

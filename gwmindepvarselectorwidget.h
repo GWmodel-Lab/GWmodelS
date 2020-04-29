@@ -35,6 +35,9 @@ public:
     void onDelIndepVarBtn();
     GwmLayerAttributeItemModel *indepVarModel() const;
     GwmLayerAttributeItemModel *selectedIndepVarModel() const;
+
+private:
+    bool isNumeric(QVariant::Type type);
 };
 
 #endif // GWMINDEPVARSELECTORWIDGET_H

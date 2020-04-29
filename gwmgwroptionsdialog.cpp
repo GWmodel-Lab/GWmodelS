@@ -94,6 +94,21 @@ GwmGWROptionsDialog::~GwmGWROptionsDialog()
     delete ui;
 }
 
+bool GwmGWROptionsDialog::isNumeric(QVariant::Type type)
+{
+    switch (type)
+    {
+    case QVariant::Int:
+    case QVariant::LongLong:
+    case QVariant::ULongLong:
+    case QVariant::UInt:
+    case QVariant::Double:
+        return true;
+    default:
+        return false;
+    }
+}
+
 GwmLayerGroupItem *GwmGWROptionsDialog::selectedLayer() const
 {
     return mSelectedLayer;
@@ -118,12 +133,15 @@ void GwmGWROptionsDialog::layerChanged(int index)
     for (int i = 0; i < fieldList.size(); i++)
     {
         QgsField field = fieldList[i];
-        GwmLayerAttributeItem* item = new GwmLayerAttributeItem();
-        item->setAttributeName(field.name());
-        item->setAttributeType(field.type());
-        item->setAttributeIndex(i);
-        mDepVarModel->appendRow(item);
-        ui->mDepVarComboBox->addItem(field.name());
+        if (isNumeric(field.type()))
+        {
+            GwmLayerAttributeItem* item = new GwmLayerAttributeItem();
+            item->setAttributeName(field.name());
+            item->setAttributeType(field.type());
+            item->setAttributeIndex(i);
+            mDepVarModel->appendRow(item);
+            ui->mDepVarComboBox->addItem(field.name());
+        }
     }
 }
 

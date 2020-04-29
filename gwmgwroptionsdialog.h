@@ -26,6 +26,7 @@ private:
     GwmLayerGroupItem* mSelectedLayer = nullptr;
     GwmGWRTaskThread* mTaskThread = nullptr;
     GwmLayerAttributeItemModel* mDepVarModel;
+    bool isNumeric(QVariant::Type type);
 
 public slots:
     void layerChanged(const int index);
