@@ -30,6 +30,7 @@ public slots:
     void onMessage(QString message);
     void onSuccess();
     void onError(QString e);
+    void onPlot(QVariant data, PlotFunction func);
 
 private:
     Ui::GwmProgressDialog *ui;

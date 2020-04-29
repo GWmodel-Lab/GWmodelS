@@ -141,6 +141,13 @@ void GwmGWRTaskThread::run()
         disconnect(&bwSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
         mBandwidthSize = bwSelThread.getBandwidthSize();
         mBandwidthSelScore = bwSelThread.getBwScore();
+        // 绘图
+        QList<QVariant> plotData;
+        for (auto i = mBandwidthSelScore.constBegin(); i != mBandwidthSelScore.constEnd(); i++)
+        {
+            plotData.append(QVariant(QPointF(i.key(), i.value())));
+        }
+        emit plot(QVariant(plotData), &GwmBandwidthSelectTaskThread::viewBandwidthResult);
     }
 
     // 解算模型

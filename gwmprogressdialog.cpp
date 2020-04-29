@@ -17,6 +17,7 @@ GwmProgressDialog::GwmProgressDialog(GwmTaskThread* thread, QWidget *parent) :
     connect(mTaskThread, &GwmTaskThread::message, this, &GwmProgressDialog::onMessage);
     connect(mTaskThread, &GwmTaskThread::success, this, &GwmProgressDialog::onSuccess);
     connect(mTaskThread, &GwmTaskThread::error, this, &GwmProgressDialog::onError);
+    connect(mTaskThread, &GwmTaskThread::plot, this, &GwmProgressDialog::onPlot);
 }
 
 GwmProgressDialog::~GwmProgressDialog()
@@ -91,6 +92,14 @@ void GwmProgressDialog::onError(QString e)
     logItem->setPalette(QPalette(QPalette::WindowText, Qt::red));
     ui->logScrollAreaContents->layout()->addWidget(logItem);
     ui->progressMessage->setText(QStringLiteral("Error: ") + e);
+}
+
+void GwmProgressDialog::onPlot(QVariant data, PlotFunction func)
+{
+    qDebug() << "[GwmProgressDialog::onPlot]";
+    QwtPlot* plot = new QwtPlot();
+    (*func)(data, plot);
+    ui->logScrollAreaContents->layout()->addWidget(plot);
 }
 
 void GwmProgressDialog::onAutoCloseToggled(bool checked)

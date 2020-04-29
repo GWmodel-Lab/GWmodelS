@@ -28,7 +28,7 @@ public:
 
     GwmBandwidthSelectTaskThread(const GwmGWRTaskThread& gwrTaskThread);
     // 根据带宽和Aic/cv值输出结果图
-    static void viewBandwidthResult(QMap<double,double> result, QwtPlot *plot);
+    static void viewBandwidthResult(QVariant data, QwtPlot *plot);
     // 获取bw和score
     QMap<double,double> getBwScore();
 protected:

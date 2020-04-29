@@ -168,14 +168,9 @@ QMap<double,double> GwmBandwidthSelectTaskThread::getBwScore(){
     return this->mBwScore;
 }
 
-void GwmBandwidthSelectTaskThread::viewBandwidthResult(QMap<double,double> result ,QwtPlot* plot)
+void GwmBandwidthSelectTaskThread::viewBandwidthResult(QVariant data,QwtPlot* plot)
 {
-    qDebug() << 123;
-//    QwtPlotCanvas *canvas=new QwtPlotCanvas();
-//    canvas->setPalette(Qt::white);
-//    canvas->setBorderRadius(10);
-//    plot = new QwtPlot();
-//    plot->setCanvas(canvas);
+    QList<QVariant> result = data.toList();
     //设置窗口属性
     plot->plotLayout()->setAlignCanvasToScales(true);
     //新建一个曲线对象
@@ -191,10 +186,11 @@ void GwmBandwidthSelectTaskThread::viewBandwidthResult(QMap<double,double> resul
     //输入数据
     QVector<double> xData;
     QVector<double> yData;
-    QMap<double, double>::const_iterator i;
+    QList<QVariant>::const_iterator i;
     for(i=result.constBegin();i!=result.constEnd();++i){
-        xData.push_back(i.key());
-        yData.push_back(i.value());
+        QPointF point = i->toPointF();
+        xData.push_back(point.x());
+        yData.push_back(point.y());
     }
     //设置X与Y坐标范围
     //返回xData与yData最大最小值

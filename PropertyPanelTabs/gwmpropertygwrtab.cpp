@@ -139,7 +139,12 @@ void GwmPropertyGWRTab::updateUI()
     if(mLayerItem->getIsBandwidthOptimized())
     {
         QMap<double, double> bwScores = mLayerItem->getBandwidthSelScores();
-        GwmBandwidthSelectTaskThread::viewBandwidthResult(bwScores, mBandwidthSelPlot);
+        QList<QVariant> plotData;
+        for (auto i = bwScores.constBegin(); i != bwScores.constEnd(); i++)
+        {
+            plotData.append(QVariant(QPointF(i.key(), i.value())));
+        }
+        GwmBandwidthSelectTaskThread::viewBandwidthResult(plotData, mBandwidthSelPlot);
     }
 }
 
