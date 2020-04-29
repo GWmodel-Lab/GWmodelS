@@ -34,6 +34,10 @@ public slots:
 private:
     Ui::GwmProgressDialog *ui;
     GwmTaskThread* mTaskThread;
+    bool isAutoClose = true;
+
+private:
+    void onAutoCloseToggled(bool checked);
 };
 
 #endif // GWMPROGRESSDIALOG_H

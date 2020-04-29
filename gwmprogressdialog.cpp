@@ -10,6 +10,9 @@ GwmProgressDialog::GwmProgressDialog(GwmTaskThread* thread, QWidget *parent) :
 {
     ui->setupUi(this);
     setWindowTitle(thread->name());
+
+    connect(ui->cbxAutoClose, &QAbstractButton::toggled, this, &GwmProgressDialog::onAutoCloseToggled);
+
     connect(mTaskThread, &GwmTaskThread::tick, this, &GwmProgressDialog::onTick);
     connect(mTaskThread, &GwmTaskThread::message, this, &GwmProgressDialog::onMessage);
     connect(mTaskThread, &GwmTaskThread::success, this, &GwmProgressDialog::onSuccess);
@@ -69,7 +72,15 @@ void GwmProgressDialog::onSuccess()
     qDebug() << "[GwmProgressDialog::onSuccess]"
              << "onSuccess";
     ui->progressMessage->setText("Success");
-    accept();
+    if (isAutoClose)
+    {
+        accept();
+    }
+    else
+    {
+        ui->buttonBox->setStandardButtons(QDialogButtonBox::Ok |
+                                          QDialogButtonBox::Cancel);
+    }
 }
 
 void GwmProgressDialog::onError(QString e)
@@ -80,4 +91,9 @@ void GwmProgressDialog::onError(QString e)
     logItem->setPalette(QPalette(QPalette::WindowText, Qt::red));
     ui->logScrollAreaContents->layout()->addWidget(logItem);
     ui->progressMessage->setText(QStringLiteral("Error: ") + e);
+}
+
+void GwmProgressDialog::onAutoCloseToggled(bool checked)
+{
+    isAutoClose = checked;
 }
