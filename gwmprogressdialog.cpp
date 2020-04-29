@@ -59,13 +59,16 @@ void GwmProgressDialog::onMessage(QString message)
 {
     qDebug() << "[GwmProgressDialog::onMessage]"
              << "message" << message;
-    ui->progressMessage->setText(message);
+//    ui->progressMessage->setText(message);
+    QLabel* logItem = new QLabel(message, ui->logScrollAreaContents);
+    ui->logScrollAreaContents->layout()->addWidget(logItem);
 }
 
 void GwmProgressDialog::onSuccess()
 {
     qDebug() << "[GwmProgressDialog::onSuccess]"
              << "onSuccess";
+    ui->progressMessage->setText("Success");
     accept();
 }
 
@@ -73,5 +76,8 @@ void GwmProgressDialog::onError(QString e)
 {
     qDebug() << "[GwmProgressDialog::onError]"
              << "error" << e;
+    QLabel* logItem = new QLabel(e, ui->logScrollAreaContents);
+    logItem->setPalette(QPalette(QPalette::WindowText, Qt::red));
+    ui->logScrollAreaContents->layout()->addWidget(logItem);
     ui->progressMessage->setText(QStringLiteral("Error: ") + e);
 }
