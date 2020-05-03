@@ -168,7 +168,7 @@ QMap<double,double> GwmBandwidthSelectTaskThread::getBwScore(){
     return this->mBwScore;
 }
 
-void GwmBandwidthSelectTaskThread::viewBandwidthResult(QVariant data,QwtPlot* plot)
+void GwmBandwidthSelectTaskThread::plotBandwidthResult(QVariant data,QwtPlot* plot)
 {
     QList<QVariant> result = data.toList();
     //设置窗口属性

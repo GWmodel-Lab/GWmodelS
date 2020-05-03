@@ -23,6 +23,10 @@ class GwmGWRModelSelectionThread : public GwmGWRTaskThread
      Q_OBJECT
 
 public:
+    static void plotModelOrder(QVariant data, QwtPlot* plot);
+    static void plotModelAICcs(QVariant data, QwtPlot* plot);
+
+public:
     GwmGWRModelSelectionThread();
     GwmGWRModelSelectionThread(const GwmGWRTaskThread& gwrTaskThread);
 
@@ -38,8 +42,7 @@ public:
 
     void viewModels();
 
-    static void viewModels(QList<GwmLayerAttributeItem*> indepVars,QList<QStringList> modelInDepVars,QList<double> modelAICcs,
-                    QwtPlot *plot,QwtPlot *plot2);
+
     QList<QStringList> getModelInDepVars();
     QList<double> getModelAICcs();
     QList<QList<int>> getModelInDepVarsIndex();

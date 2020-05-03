@@ -95,23 +95,33 @@ void GwmGWRTaskThread::run()
         disconnect(&modelSelThread, &GwmTaskThread::message, this, &GwmTaskThread::message);
         disconnect(&modelSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
         disconnect(&modelSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
-//        QList<GwmLayerAttributeItem*> indepVarsNew;
-//        QStringList selectedVars = modelSelThread.modelSelection().first;
-//        for (QString varName : selectedVars)
-//        {
-//            for (GwmLayerAttributeItem* item : mIndepVars)
-//            {
-//                if (item->attributeName() == varName)
-//                    indepVarsNew.append(item);
-//            }
-//        }
-//        setIndepVars(indepVarsNew);
         QPair<QList<int>, double> optimizedModel = modelSelThread.modelSelection();
         if (optimizedModel.second != DBL_MAX)
         {
             mIndepVarsIndex = optimizedModel.first;
             mModelSelModels = modelSelThread.getModelInDepVars();
             mModelSelAICcs = modelSelThread.getModelAICcs();
+
+            // 绘图
+            QMap<QString, QVariant> data;
+            QList<QVariant> indepVarNames, modelSelModels, modelSelAICcs;
+            for (GwmLayerAttributeItem* item : mIndepVars)
+            {
+                indepVarNames.append(item->attributeName());
+            }
+            data["indepVarNames"] = indepVarNames;
+            for (QStringList modelStringList : mModelSelModels)
+            {
+                modelSelModels.append(modelStringList);
+            }
+            data["modelSelModels"] = modelSelModels;
+            for (double aic : mModelSelAICcs)
+            {
+                modelSelAICcs.append(aic);
+            }
+            data["modelSelAICcs"] = modelSelAICcs;
+            emit plot(data, &GwmGWRModelSelectionThread::plotModelOrder);
+            emit plot(data, &GwmGWRModelSelectionThread::plotModelAICcs);
         }
         else
         {
@@ -147,7 +157,7 @@ void GwmGWRTaskThread::run()
         {
             plotData.append(QVariant(QPointF(i.key(), i.value())));
         }
-        emit plot(QVariant(plotData), &GwmBandwidthSelectTaskThread::viewBandwidthResult);
+        emit plot(QVariant(plotData), &GwmBandwidthSelectTaskThread::plotBandwidthResult);
     }
 
     // 解算模型

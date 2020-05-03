@@ -337,36 +337,39 @@ void GwmGWRModelSelectionThread::viewModels()
 //    plot->setAutoReplot( true );//设置自动重画，相当于更新
 }
 
-void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indepVars, QList<QStringList> modelInDepVars, QList<double> modelAICcs, QwtPlot *plot, QwtPlot *plot2){
-    int n = indepVars.size();
-    double cex;
-    if( n > 10){
-        cex = 10/n;
+void GwmGWRModelSelectionThread::plotModelAICcs(QVariant data, QwtPlot *plot)
+{
+    QMap<QString, QVariant> params = data.toMap();
+    QList<QString> indepVarNameList;
+    QList<QStringList> modelInDepVars;
+    QList<double> modelAICcs;
+    for (QVariant item : params["indepVarNames"].toList())
+    {
+        indepVarNameList.append(item.toString());
     }
-    else{
-        cex = 1;
+    for (QVariant item : params["modelSelModels"].toList())
+    {
+        modelInDepVars.append(item.toStringList());
     }
+    for (QVariant item : params["modelSelAICcs"].toList())
+    {
+        modelAICcs.append(item.toDouble());
+    }
+    int n = indepVarNameList.size();
+    double cex = (n > 10) ? 10.0/n : 1.0;
     int numModels = modelInDepVars.size();
     double alpha = 2 * M_PI / numModels;
-    QStringList IndepVarNameList;
-    for (GwmLayerAttributeItem* item : indepVars)
-    {
-        QString IndepVarName = item->attributeName();
-        IndepVarNameList.append(IndepVarName);
-    }
 
-//    canvas1->setPalette(Qt::white);
-//    canvas1->setBorderRadius(10);
-//    QwtPlot* plot = new QwtPlot();
-//    plot->setCanvas( canvas1 );
     plot->plotLayout()->setAlignCanvasToScales( true );
     QPolygonF points1;
     int lastnVars = 1;
-    for(int i = 0; i < numModels; i++){
+    for (int i = 0; i < numModels; i++)
+    {
         QStringList vars = modelInDepVars[i];
         int nVars = vars.size();
         points1 << QPointF(i+1,modelAICcs[i]);
-        if(nVars != lastnVars){
+        if (nVars != lastnVars)
+        {
             QwtPlotMarker *mX = new QwtPlotMarker();
             mX->setXValue(i);
             mX->setLineStyle(QwtPlotMarker::VLine);
@@ -387,10 +390,34 @@ void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indep
     plot->resize(600,400);
     plot->replot();
     plot->show();
+}
+
+void GwmGWRModelSelectionThread::plotModelOrder(QVariant data, QwtPlot *plot)
+{
+    QMap<QString, QVariant> params = data.toMap();
+    QList<QString> indepVarNameList;
+    QList<QStringList> modelInDepVars;
+    QList<double> modelAICcs;
+    for (QVariant item : params["indepVarNames"].toList())
+    {
+        indepVarNameList.append(item.toString());
+    }
+    for (QVariant item : params["modelSelModels"].toList())
+    {
+        modelInDepVars.append(item.toStringList());
+    }
+    for (QVariant item : params["modelSelAICcs"].toList())
+    {
+        modelAICcs.append(item.toDouble());
+    }
+    int n = indepVarNameList.size();
+    double cex = (n > 10) ? 10.0/n : 1.0;
+    int numModels = modelInDepVars.size();
+    double alpha = 2 * M_PI / numModels;
 
 
-    plot2->setAxisScale(QwtPlot::yLeft,-n-1, n+1);
-    plot2->setAxisScale(QwtPlot::xBottom,-n,n+6);
+    plot->setAxisScale(QwtPlot::yLeft,-n-1, n+1);
+    plot->setAxisScale(QwtPlot::xBottom,-n,n+6);
     QList<Qt::GlobalColor> colors;
     colors << Qt::red << Qt::cyan << Qt::yellow << Qt::green << Qt::blue << Qt::black << Qt::lightGray << Qt::white;
     QList<QwtSymbol::Style> pointStyles;
@@ -398,11 +425,13 @@ void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indep
     int i = 1;
     QList<Qt::GlobalColor> legendColors;
     QList<QwtSymbol::Style> legendStyles;
-    for(QString var: IndepVarNameList){
-        legendColors.append(colors[IndepVarNameList.indexOf(var)%8]);
-        legendStyles.append(pointStyles[IndepVarNameList.indexOf(var)%5]);
+    for (QString var: indepVarNameList)
+    {
+        legendColors.append(colors[indepVarNameList.indexOf(var)%8]);
+        legendStyles.append(pointStyles[indepVarNameList.indexOf(var)%5]);
     }
-    for(QStringList vars:modelInDepVars){
+    for (QStringList vars:modelInDepVars)
+    {
         QwtPlotCurve *curve2=new QwtPlotCurve("curve2");
         curve2->setPen(Qt::gray,cex,Qt::DashLine);//设置曲线颜色 粗细
         QPolygonF points2;
@@ -413,18 +442,19 @@ void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indep
             points2 << QPointF(radius*cos((i-1)*alpha),radius*sin((i-1)*alpha));
             QwtPlotMarker *mX = new QwtPlotMarker(var);
             mX->setValue(QPointF(radius*cos((i-1)*alpha),radius*sin((i-1)*alpha)));
-            int k = IndepVarNameList.indexOf(var)%5;
-            mX->setSymbol(new QwtSymbol( pointStyles[IndepVarNameList.indexOf(var)%5],
-                                         QBrush( colors[IndepVarNameList.indexOf(var)%8] ), QPen( Qt::red, 0.5 ), QSize( 5, 5 )));
-            mX->attach(plot2);
+            int k = indepVarNameList.indexOf(var)%5;
+            mX->setSymbol(new QwtSymbol( pointStyles[indepVarNameList.indexOf(var)%5],
+                                         QBrush( colors[indepVarNameList.indexOf(var)%8] ), QPen( Qt::red, 0.5 ), QSize( 5, 5 )));
+            mX->attach(plot);
 //            mX->setLegendIconSize(QSize( 6, 6));
             j++;
         }
         curve2->setSamples(points2);
-        curve2->attach(plot2);
+        curve2->attach(plot);
         i++;
     }
-    for(i = 1; i <= modelInDepVars.size(); i++){
+    for (i = 1; i <= modelInDepVars.size(); i++)
+    {
         int j = modelInDepVars[i-1].size();
         double radius;
         radius = sqrt(n) * sqrt(j+1.5);
@@ -433,23 +463,24 @@ void GwmGWRModelSelectionThread::viewModels(QList<GwmLayerAttributeItem *> indep
         QwtText* text = new QwtText(QString::number(i,10));
         text->setFont(QFont("MS Shell Dlg 2",int(10-numModels/15+i*3/numModels)));
         mX->setLabel(*text);
-        mX->attach(plot2);
+        mX->attach(plot);
     }
     QwtLegend *legend = new QwtLegend();
-    QwtPlotItemList items = plot2->itemList( QwtPlotItem::Rtti_PlotMarker );
-    for ( int i = 0; i < indepVars.size(); i++ ){
+    QwtPlotItemList items = plot->itemList( QwtPlotItem::Rtti_PlotMarker );
+    for ( int i = 0; i < indepVarNameList.size(); i++ )
+    {
         items[i]->setItemAttribute(QwtPlotItem::Legend,true);
     }
-    items = plot2->itemList( QwtPlotItem::Rtti_PlotCurve );
-    for ( int i = 0; i < items.size(); i++ ){
-        const QVariant itemInfo = plot2->itemToInfo( items[i] );
+    items = plot->itemList( QwtPlotItem::Rtti_PlotCurve );
+    for ( int i = 0; i < items.size(); i++ )
+    {
+        const QVariant itemInfo = plot->itemToInfo( items[i] );
         items[i]->setItemAttribute(QwtPlotItem::Legend,false);
     }
-    plot2->insertLegend( legend, QwtPlot::RightLegend );
-    plot2->plotLayout()->setAlignCanvasToScales( true );
-    plot2->resize(600,400);
-    plot2->replot();
-    plot2->show();
+    plot->insertLegend( legend, QwtPlot::RightLegend );
+    plot->plotLayout()->setAlignCanvasToScales( true );
+    plot->resize(600,400);
+    plot->replot();
 }
 
 double GwmGWRModelSelectionThread::getFixedBwUpper()

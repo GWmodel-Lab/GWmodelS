@@ -130,10 +130,25 @@ void GwmPropertyGWRTab::updateUI()
     // 绘制可视化图标
     if (mLayerItem->getIsModelOptimized())
     {
-        QList<GwmLayerAttributeItem*> indepVarsOrigin = mLayerItem->getIndepVarsOrigin();
-        QList<QStringList> modelSelModels = mLayerItem->modelSelModels();
-        QList<double> modelSelAICcs = mLayerItem->modelSelAICcs();
-        GwmGWRModelSelectionThread::viewModels(indepVarsOrigin, modelSelModels, modelSelAICcs, mModelSelAICsPlot, mModelSelVarsPlot);
+        QMap<QString, QVariant> data;
+        QList<QVariant> indepVarNames, modelSelModels, modelSelAICcs;
+        for (GwmLayerAttributeItem* item : mLayerItem->getIndepVarsOrigin())
+        {
+            indepVarNames.append(item->attributeName());
+        }
+        data["indepVarNames"] = (indepVarNames);
+        for (QStringList modelStringList : mLayerItem->modelSelModels())
+        {
+            modelSelModels.append(modelStringList);
+        }
+        data["modelSelModels"] = (modelSelModels);
+        for (double aic : mLayerItem->modelSelAICcs())
+        {
+            modelSelAICcs.append(aic);
+        }
+        data["modelSelAICcs"] = (modelSelAICcs);
+        GwmGWRModelSelectionThread::plotModelOrder(data, mModelSelVarsPlot);
+        GwmGWRModelSelectionThread::plotModelAICcs(data, mModelSelAICsPlot);
     }
 
     if(mLayerItem->getIsBandwidthOptimized())
@@ -144,7 +159,7 @@ void GwmPropertyGWRTab::updateUI()
         {
             plotData.append(QVariant(QPointF(i.key(), i.value())));
         }
-        GwmBandwidthSelectTaskThread::viewBandwidthResult(plotData, mBandwidthSelPlot);
+        GwmBandwidthSelectTaskThread::plotBandwidthResult(plotData, mBandwidthSelPlot);
     }
 }
 

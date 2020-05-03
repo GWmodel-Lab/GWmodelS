@@ -7,12 +7,6 @@
 
 typedef void (*PlotFunction)(QVariant data, QwtPlot* widget);
 
-struct PlotParameter
-{
-    QVariant data;
-    PlotFunction func;
-};
-
 class GwmTaskThread : public QThread
 {
     Q_OBJECT
