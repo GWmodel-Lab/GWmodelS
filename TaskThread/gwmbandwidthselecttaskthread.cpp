@@ -3,6 +3,20 @@
 #include "GWmodel/GWmodel.h"
 #include <cmath>
 
+#include <qwt_plot.h>
+#include <qwt_plot_curve.h>
+#include <qwt_plot_layout.h>
+#include <qwt_plot_canvas.h>
+#include <qwt_plot_renderer.h>
+#include <qwt_plot_grid.h>
+#include <qwt_plot_magnifier.h>
+#include <qwt_plot_panner.h>
+#include <qpen.h>
+#include <qwt_symbol.h>
+#include <qwt_legend.h>
+#include <qwt_legend_label.h>
+#include <qwt_column_symbol.h>
+
 //gwr.cv
 //typedef double (GwmBandwidthSelect::*pf)(const mat& , const vec& , const mat& , double , int , bool );
 //gwr.aic
@@ -206,10 +220,9 @@ void GwmBandwidthSelectTaskThread::plotBandwidthResult(QVariant data,QwtPlot* pl
     curve->setSamples(xData,yData);
     curve->attach(plot);
     curve->setLegendAttribute(curve->LegendShowLine);
-    plot->resize(600,400);
+
+//    plot->resize(600,400);
     plot->replot();
-//    plot->show();
     //这个地方plot会一闪而过，使用debug模式打断点在下面一行调试可以看到输出的图形
     //具体原因不是很清楚
-    qDebug() << 123456;
 }

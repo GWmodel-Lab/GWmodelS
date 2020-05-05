@@ -2,6 +2,7 @@
 #include "ui_gwmprogressdialog.h"
 
 #include <QDebug>
+#include "gwmplot.h"
 
 GwmProgressDialog::GwmProgressDialog(GwmTaskThread* thread, QWidget *parent) :
     QDialog(parent),
@@ -97,7 +98,7 @@ void GwmProgressDialog::onError(QString e)
 void GwmProgressDialog::onPlot(QVariant data, PlotFunction func)
 {
     qDebug() << "[GwmProgressDialog::onPlot]";
-    QwtPlot* plot = new QwtPlot();
+    QwtPlot* plot = new GwmPlot(ui->logScrollAreaContents);
     (*func)(data, plot);
     ui->logScrollAreaContents->layout()->addWidget(plot);
 }

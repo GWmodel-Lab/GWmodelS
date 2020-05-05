@@ -34,8 +34,8 @@ GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerGWRItem* item) :
     {
         if (item->getIsModelOptimized())
         {
-            mModelSelVarsPlot = new QwtPlot();
-            mModelSelAICsPlot = new QwtPlot();
+            mModelSelVarsPlot = new GwmPlot();
+            mModelSelAICsPlot = new GwmPlot();
             ui->grpModelSelView->layout()->addWidget(mModelSelVarsPlot);
             ui->grpModelSelView->layout()->addWidget(mModelSelAICsPlot);
         }
@@ -45,7 +45,7 @@ GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerGWRItem* item) :
         }
         if (item->getIsBandwidthOptimized())
         {
-            mBandwidthSelPlot = new QwtPlot();
+            mBandwidthSelPlot = new GwmPlot();
             ui->grpBwSelView->layout()->addWidget(mBandwidthSelPlot);
 //            ui->grpBwSelView->hide();
         }
