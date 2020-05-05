@@ -114,5 +114,21 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>GwmProgressDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>331</x>
+     <y>139</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>253</x>
+     <y>79</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
 </ui>
