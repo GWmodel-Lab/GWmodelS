@@ -184,6 +184,8 @@ void GwmPropertyGWRTab::setQuartiles(const int row, QString name, const GwmQuart
 
 }
 
+//GwmPropertyGWRTabCalcTread::
+
 GwmPropertyGWRTabCalcTread::GwmPropertyGWRTabCalcTread(GwmLayerGWRItem *item)
 {
     mLayerItem = item;
@@ -192,19 +194,16 @@ GwmPropertyGWRTabCalcTread::GwmPropertyGWRTabCalcTread(GwmLayerGWRItem *item)
 void GwmPropertyGWRTabCalcTread::run()
 {
     mat betas = mLayerItem->betas();
-    int ncol = betas.n_cols, nrow = betas.n_rows;
-    for (int c = 0; c < ncol; c++)
+    arma::uword ncol = betas.n_cols, nrow = betas.n_rows;
+    for (arma::uword c = 0; c < ncol; c++)
     {
         vec column = sort(betas.col(c));
         GwmQuartiles quartiles;
         quartiles.min = column(0);
-        quartiles.max = column(nrow - 1);
-        quartiles.median = median(column);
-        int gap = 2 - nrow % 2;
-        int groupSize = (nrow - gap) / 2;
-        vec group1 = column.rows(0, groupSize), group2 = column.rows(groupSize + gap, nrow - 1);
-        quartiles.first = median(group1);
-        quartiles.third = median(group2);
+        quartiles.first = quartile(column, 0.25);
+        quartiles.median = quartile(column, 0.5);
+        quartiles.third = quartile(column, 0.75);
+        quartiles.max= column(nrow - 1);
         mQuartiles.append(quartiles);
     }
 }

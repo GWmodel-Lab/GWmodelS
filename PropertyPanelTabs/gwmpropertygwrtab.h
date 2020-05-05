@@ -64,6 +64,13 @@ public:
         return (column[nrow / 2] + column[(nrow - 1) / 2]) / 2;
     }
 
+    inline double quartile(vec x, double p)
+    {
+        double p0 = (x.n_elem - 1) * p;
+        double w = p0 - int(p0);
+        return x.n_elem == 0 ? 0 : (x[(int)p0] * (1.0 - w) + x[(int)p0 + 1] * w);
+    }
+
     QList<GwmQuartiles> quartiles() const;
 
 private:
