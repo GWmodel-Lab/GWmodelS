@@ -68,10 +68,9 @@ void GwmGWRModelSelectionThread::run()
             mModelInDepVarsIndex.append(inDepVarsIndexList);
             mModelAICcs.append(AICcs[j]);
             message1 = message1 + ":" + (QString::number(AICcs[j],10,5));
-            emit message(message1);
             inDepVarsIndex.removeOne(mIndepVarsIndex[j]);
             emit tick(process,total);
-            emit message(QString("Model: %1 (AIC: %2").arg(inDepVarsName.join(",")).arg(AICcs[j], 0, 'f', 3));
+            emit message(QString("Model: %1 (AIC: %2)").arg(inDepVarsName.join(",")).arg(AICcs[j], 0, 'f', 3));
             process++;
         }
         int index = AICcs.index_min();
