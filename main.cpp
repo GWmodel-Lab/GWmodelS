@@ -5,9 +5,12 @@
 #include "mainwindow.h"
 #include "qgsapplication.h"
 #include <QApplication>
+#include <QMetaType>
 #include <qgsproviderregistry.h>
 #include <qgsproject.h>
 #include <qgscoordinatereferencesystem.h>
+
+#include "TaskThread/gwmtaskthread.h"
 
 #define QT_PLUGINS_DIR "D:/OSGeo4W64/apps/qgis-dev/qtplugins;D:/OSGeo4W64/apps/Qt5/plugins"
 
@@ -90,6 +93,7 @@ int main(int argc, char *argv[])
     QgsProject::instance()->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(4326));
 
     GwmGWRTaskThread::initUnitDict();
+    qRegisterMetaType<PlotFunction>("PlotFunction");
 
     MainWindow w;
     w.show();

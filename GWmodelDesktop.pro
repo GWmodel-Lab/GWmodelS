@@ -74,6 +74,7 @@ SOURCES += \
     gwmindepvarselectorwidget.cpp \
     gwmmaptoolidentifyfeature.cpp \
     gwmopenxyeventlayerdialog.cpp \
+    gwmplot.cpp \
     gwmprogressdialog.cpp \
     gwmpropertypanel.cpp \
     TaskThread/gwmtaskthread.cpp \
@@ -140,6 +141,7 @@ HEADERS += \
     gwmindepvarselectorwidget.h \
     gwmmaptoolidentifyfeature.h \
     gwmopenxyeventlayerdialog.h \
+    gwmplot.h \
     gwmprogressdialog.h \
     gwmpropertypanel.h \
     TaskThread/gwmtaskthread.h \

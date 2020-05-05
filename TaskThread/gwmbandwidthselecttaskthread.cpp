@@ -3,6 +3,20 @@
 #include "GWmodel/GWmodel.h"
 #include <cmath>
 
+#include <qwt_plot.h>
+#include <qwt_plot_curve.h>
+#include <qwt_plot_layout.h>
+#include <qwt_plot_canvas.h>
+#include <qwt_plot_renderer.h>
+#include <qwt_plot_grid.h>
+#include <qwt_plot_magnifier.h>
+#include <qwt_plot_panner.h>
+#include <qpen.h>
+#include <qwt_symbol.h>
+#include <qwt_legend.h>
+#include <qwt_legend_label.h>
+#include <qwt_column_symbol.h>
+
 //gwr.cv
 //typedef double (GwmBandwidthSelect::*pf)(const mat& , const vec& , const mat& , double , int , bool );
 //gwr.aic
@@ -168,14 +182,9 @@ QMap<double,double> GwmBandwidthSelectTaskThread::getBwScore(){
     return this->mBwScore;
 }
 
-void GwmBandwidthSelectTaskThread::viewBandwidthResult(QMap<double,double> result ,QwtPlot* plot)
+void GwmBandwidthSelectTaskThread::plotBandwidthResult(QVariant data,QwtPlot* plot)
 {
-    qDebug() << 123;
-//    QwtPlotCanvas *canvas=new QwtPlotCanvas();
-//    canvas->setPalette(Qt::white);
-//    canvas->setBorderRadius(10);
-//    plot = new QwtPlot();
-//    plot->setCanvas(canvas);
+    QList<QVariant> result = data.toList();
     //设置窗口属性
     plot->plotLayout()->setAlignCanvasToScales(true);
     //新建一个曲线对象
@@ -191,10 +200,11 @@ void GwmBandwidthSelectTaskThread::viewBandwidthResult(QMap<double,double> resul
     //输入数据
     QVector<double> xData;
     QVector<double> yData;
-    QMap<double, double>::const_iterator i;
+    QList<QVariant>::const_iterator i;
     for(i=result.constBegin();i!=result.constEnd();++i){
-        xData.push_back(i.key());
-        yData.push_back(i.value());
+        QPointF point = i->toPointF();
+        xData.push_back(point.x());
+        yData.push_back(point.y());
     }
     //设置X与Y坐标范围
     //返回xData与yData最大最小值
@@ -210,10 +220,9 @@ void GwmBandwidthSelectTaskThread::viewBandwidthResult(QMap<double,double> resul
     curve->setSamples(xData,yData);
     curve->attach(plot);
     curve->setLegendAttribute(curve->LegendShowLine);
-    plot->resize(600,400);
+
+//    plot->resize(600,400);
     plot->replot();
-//    plot->show();
     //这个地方plot会一闪而过，使用debug模式打断点在下面一行调试可以看到输出的图形
     //具体原因不是很清楚
-    qDebug() << 123456;
 }
