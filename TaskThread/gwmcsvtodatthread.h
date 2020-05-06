@@ -23,8 +23,8 @@ protected:
     void run() override; //新线程入口
 
 private:
-    QString mCsvFielname;
-    QString mDatFielname;
+    QString mCsvFilename;
+    QString mDatFilename;
     QString mSeperator;
     QList<QStringList> mCsvLines;
     int mRowCount;
