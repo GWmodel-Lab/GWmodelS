@@ -41,6 +41,7 @@ public slots:
     void onDistTypeCRSToggled(bool checked);
     void onDistTypeMinkowskiToggled(bool checked);
     void onDistTypeDmatToggled(bool checked);
+    void onDmatFileOpenClicked();
     void onVariableAutoSelectionToggled(bool checked);
 
 

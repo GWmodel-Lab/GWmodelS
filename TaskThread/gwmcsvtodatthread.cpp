@@ -67,12 +67,12 @@ void GwmCsvToDatThread::run()
         {
             if (datFile.open(QFile::QIODevice::WriteOnly))
             {
-                unsigned long long basePos = 3 * sizeof (int);
+                unsigned long long basePos = 2 * sizeof (int);
                 QByteArray byte;
-                byte.resize(basePos);
-                int metaData[3] = {mRowCount, mColCount, 1};
-                memcpy(byte.data(), metaData, basePos);
-                datFile.write(byte);
+//                byte.resize(basePos);
+                int metaData[2] = {mRowCount, mColCount};
+//                memcpy(byte.data(), metaData, basePos);
+                datFile.write((char*)metaData, basePos);
                 QStringList lines;
                 QTextStream fin(&csvFile);
                 for (int c = 0; c < mColCount; c++)
@@ -114,10 +114,10 @@ void GwmCsvToDatThread::run()
         {
             if (sourceFile.open(QFile::QIODevice::ReadOnly))
             {
-                unsigned long long basePos = 3 * sizeof (int);
+                unsigned long long basePos = 2 * sizeof (int);
                 QDataStream fout(&targetFile);
-                fout.setByteOrder(QDataStream::BigEndian);
-                fout << mRowCount << mColCount << 0;
+                fout.setByteOrder(QDataStream::LittleEndian);
+                fout << mRowCount << mColCount;
                 // 文本文件转二进制文件
                 QStringList lines;
                 QTextStream fin(&sourceFile);
@@ -127,6 +127,7 @@ void GwmCsvToDatThread::run()
                     for (QString line : lines)
                     {
                         double data = line.toDouble();
+                        fout.setByteOrder(QDataStream::LittleEndian);
                         fout << data;
                     }
                     progress++;

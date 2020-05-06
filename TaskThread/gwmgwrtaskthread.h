@@ -230,6 +230,7 @@ protected:
     vec distance(int focus);
     vec distanceCRS(int focus);
     vec distanceMinkowski(int focus);
+    vec distanceDmat(int focus);
 
     void diagnostic();
 

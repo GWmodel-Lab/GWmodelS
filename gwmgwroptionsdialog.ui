@@ -439,7 +439,7 @@
       <item>
        <widget class="QStackedWidget" name="mDistParamSettingStack">
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="mCRSDistPage"/>
         <widget class="QWidget" name="mMinkowskiDistPage">
