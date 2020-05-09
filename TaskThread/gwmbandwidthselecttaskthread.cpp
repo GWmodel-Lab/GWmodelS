@@ -155,8 +155,46 @@ double GwmBandwidthSelectTaskThread::getFixedBwUpper()
     extentDp(0, 1) = extent.yMinimum();
     extentDp(1, 0) = extent.xMaximum();
     extentDp(1, 1) = extent.yMaximum();
-    vec dist = gwDist(extentDp, extentDp, 0, 2.0, 0.0, longlat, false);
-    return dist(1);
+
+    vec dist;
+    QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
+    double p = parameters["p"].toDouble();
+
+    QString filename = mDistSrcParameters.toString();
+    qint64 featureCount = mFeatureList.size();
+    QFile dmat(filename);
+    double maxDist;
+    switch(mDistSrcType)
+    {
+        case DistanceSourceType::DMatFile:
+            if (dmat.open(QFile::QIODevice::ReadOnly))
+            {
+                QDataStream in(&dmat);
+                //跳过8字节
+                in.skipRawData(8);
+                //存储读出来的数据
+                double tmp;
+                in >> tmp;
+                maxDist =  tmp;
+                //判断是否读到文件末尾
+                while(in.atEnd() != true){
+                    in >> tmp;
+                    if(tmp > maxDist){
+                        //更新最大值
+                        maxDist = tmp;
+                    }
+                }
+                return maxDist;
+            }else{
+                return DBL_MAX;
+            }
+        case DistanceSourceType::Minkowski:
+            dist = gwDist(extentDp, extentDp, 0, p, 0.0, longlat, false);
+            return dist(1);
+        default:
+            dist = gwDist(extentDp, extentDp, 0, 2.0, 0.0, longlat, false);
+            return dist(1);
+    }
 }
 
 QString GwmBandwidthSelectTaskThread::createOutputMessage(double bw, double score)
