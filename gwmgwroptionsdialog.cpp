@@ -2,6 +2,7 @@
 #include "ui_gwmgwroptionsdialog.h"
 #include <QComboBox>
 #include <QButtonGroup>
+#include <QFileDialog>
 
 GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGWRTaskThread* thread,QWidget *parent) :
     QDialog(parent),
@@ -45,6 +46,7 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onDistTypeCRSToggled);
     connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onDistTypeMinkowskiToggled);
     connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onDistTypeDmatToggled);
+    connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &GwmGWROptionsDialog::onDmatFileOpenClicked);
 
     QButtonGroup* calcParallelTypeBtnGroup = new QButtonGroup(this);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
@@ -80,8 +82,9 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     connect(ui->mThetaValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mPValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mDistMatrixFileNameEdit, &QLineEdit::textChanged, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistMatrixFileNameEdit, &QLineEdit::textChanged, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
@@ -235,6 +238,12 @@ void GwmGWROptionsDialog::onDistTypeDmatToggled(bool checked)
     ui->mCalcParallelGroup->setEnabled(!checked);
 }
 
+void GwmGWROptionsDialog::onDmatFileOpenClicked()
+{
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open Dmat File"), tr(""), tr("Dmat File (*.dmat)"));
+    ui->mDistMatrixFileNameEdit->setText(filePath);
+}
+
 void GwmGWROptionsDialog::onVariableAutoSelectionToggled(bool checked)
 {
     ui->mModelSelAICThreshold->setEnabled(checked);
@@ -301,11 +310,11 @@ GwmGWRTaskThread::KernelFunction GwmGWROptionsDialog::bandwidthKernelFunction()
 
 GwmGWRTaskThread::DistanceSourceType GwmGWROptionsDialog::distanceSourceType()
 {
-    if (ui->mDistTypeCRSRadio)
+    if (ui->mDistTypeCRSRadio->isChecked())
         return GwmGWRTaskThread::DistanceSourceType::CRS;
-    else if (ui->mDistTypeDmatRadio)
+    else if (ui->mDistTypeDmatRadio->isChecked())
         return GwmGWRTaskThread::DistanceSourceType::DMatFile;
-    else if (ui->mDistTypeMinkowskiRadio)
+    else if (ui->mDistTypeMinkowskiRadio->isChecked())
         return GwmGWRTaskThread::DistanceSourceType::Minkowski;
     else
         return GwmGWRTaskThread::DistanceSourceType::CRS;
@@ -313,17 +322,18 @@ GwmGWRTaskThread::DistanceSourceType GwmGWROptionsDialog::distanceSourceType()
 
 QVariant GwmGWROptionsDialog::distanceSourceParameters()
 {
-    if (ui->mDistTypeDmatRadio)
+    if (ui->mDistTypeDmatRadio->isChecked())
     {
         return ui->mDistMatrixFileNameEdit->text();
     }
-    else if (ui->mDistTypeMinkowskiRadio)
+    else if (ui->mDistTypeMinkowskiRadio->isChecked())
     {
         QMap<QString, QVariant> parameters;
         parameters["theta"] = ui->mThetaValue->value();
         parameters["p"] = ui->mPValue->value();
         return parameters;
     }
+
     else return QVariant();
 }
 

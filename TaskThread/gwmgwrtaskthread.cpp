@@ -244,6 +244,40 @@ bool GwmGWRTaskThread::isValid(QString &message)
             return false;
         }
     }
+    if (mDistSrcType == DistanceSourceType::DMatFile)
+    {
+        QString filename = mDistSrcParameters.toString();
+        if (filename.isNull() || filename.isEmpty())
+        {
+            message = tr("Distance matrix file is not selected.");
+            return false;
+        }
+
+        QFile dmat(filename);
+        if (dmat.open(QIODevice::ReadOnly))
+        {
+            QDataStream fin(&dmat);
+            fin.setByteOrder(QDataStream::LittleEndian);
+            int featureCount = mLayer->featureCount();
+            int nrow = 0, ncol = 0;
+            fin >> nrow >> ncol;
+            if (nrow != featureCount)
+            {
+                message = tr("The number of rows of selected distance matrix is not equal to the number of data points.");
+                return false;
+            }
+            if (ncol != featureCount)
+            {
+                message = tr("The number of columns of selected distance matrix is not equal to the number of regression points.");
+                return false;
+            }
+        }
+        else
+        {
+            message = tr("Distance matrix file cannot be opened.");
+            return false;
+        }
+    }
 
     return true;
 }
@@ -554,6 +588,8 @@ vec GwmGWRTaskThread::distance(int focus)
     {
     case DistanceSourceType::Minkowski:
         return distanceMinkowski(focus);
+    case DistanceSourceType::DMatFile:
+        return distanceDmat(focus);
     default:
         return distanceCRS(focus);
     }
@@ -570,6 +606,24 @@ vec GwmGWRTaskThread::distanceMinkowski(int focus)
     QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
     double p = parameters["p"].toDouble();
     return gwDist(mDataPoints, mDataPoints, focus, p, 0.0, false, false);
+}
+
+vec GwmGWRTaskThread::distanceDmat(int focus)
+{
+    QString filename = mDistSrcParameters.toString();
+    qint64 featureCount = mFeatureList.size();
+    QFile dmat(filename);
+    if (dmat.open(QFile::QIODevice::ReadOnly))
+    {
+        qint64 basePos = 2 * sizeof (int);
+        dmat.seek(basePos + focus * featureCount * sizeof (double));
+        QByteArray values = dmat.read(featureCount * sizeof (double));
+        return vec((double*)values.data(), featureCount);
+    }
+    else
+    {
+        return vec(featureCount, fill::zeros);
+    }
 }
 
 void GwmGWRTaskThread::diagnostic()
