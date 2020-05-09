@@ -41,6 +41,15 @@ void GwmGWRModelSelectionThread::run()
     }
     qDebug() << mFeatureList.size();
     QList<int> inDepVarsIndex = QList<int>();
+    //设定带宽值
+    if (mBandwidthType == BandwidthType::Adaptive)
+    {
+        mBandwidthSize = mFeatureList.size();
+    }
+    else
+    {
+        mBandwidthSize = getFixedBwUpper();
+    }
     for (int i = 0; i < mIndepVars.size(); i++)
     {
         vec AICcs = vec(mIndepVars.size() - i);
@@ -153,14 +162,6 @@ double GwmGWRModelSelectionThread::gwRegAll()
     mat betas = mat(mX.n_cols, mFeatureList.size());
     vec s_hat(2, fill::zeros);
 //    calDmat();
-    if (mBandwidthType == BandwidthType::Adaptive)
-    {
-        mBandwidthSize = mFeatureList.size();
-    }
-    else
-    {
-        mBandwidthSize = getFixedBwUpper();
-    }
     mat ci, si;
     for (int i = 0; i < mFeatureList.size(); i++)
     {
