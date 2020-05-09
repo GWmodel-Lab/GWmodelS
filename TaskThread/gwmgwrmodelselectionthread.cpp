@@ -484,15 +484,30 @@ void GwmGWRModelSelectionThread::plotModelOrder(QVariant data, QwtPlot *plot)
 
 double GwmGWRModelSelectionThread::getFixedBwUpper()
 {
-    QgsRectangle extent = this->mLayer->extent();
-    bool longlat = mLayer->crs().isGeographic();
-    mat extentDp(2, 2, fill::zeros);
-    extentDp(0, 0) = extent.xMinimum();
-    extentDp(0, 1) = extent.yMinimum();
-    extentDp(1, 0) = extent.xMaximum();
-    extentDp(1, 1) = extent.yMaximum();
-    vec dist = gwDist(extentDp, extentDp, 0, 2.0, 0.0, longlat, false);
-    return dist(1);
+    double fixedBw = 0;
+    if(mDistSrcType == DistanceSourceType::Minkowski){
+        bool longlat = mLayer->crs().isGeographic();
+        for (int i = 0; i < mFeatureList.size(); i++){
+            vec dist = gwDist(mDataPoints, mDataPoints, i, 2.0, 0.0, longlat, false);
+            double max = dist.max();
+            if(max > fixedBw){
+                fixedBw = max;
+            }
+        }
+    }
+    else{
+        QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
+        double p = parameters["p"].toDouble();
+        for (int i = 0; i < mFeatureList.size(); i++){
+            vec dist = gwDist(mDataPoints, mDataPoints, i, p, 0.0, false, false);
+            double max = dist.max();
+            if(max > fixedBw){
+                fixedBw = max;
+            }
+        }
+    }
+    qDebug() << fixedBw;
+    return fixedBw;
 }
 
 QList<QStringList> GwmGWRModelSelectionThread::getModelInDepVars(){
