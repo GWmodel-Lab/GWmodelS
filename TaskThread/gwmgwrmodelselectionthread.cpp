@@ -486,16 +486,6 @@ double GwmGWRModelSelectionThread::getFixedBwUpper()
 {
     double fixedBw = 0;
     if(mDistSrcType == DistanceSourceType::Minkowski){
-        bool longlat = mLayer->crs().isGeographic();
-        for (int i = 0; i < mFeatureList.size(); i++){
-            vec dist = gwDist(mDataPoints, mDataPoints, i, 2.0, 0.0, longlat, false);
-            double max = dist.max();
-            if(max > fixedBw){
-                fixedBw = max;
-            }
-        }
-    }
-    else{
         QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
         double p = parameters["p"].toDouble();
         for (int i = 0; i < mFeatureList.size(); i++){
@@ -506,7 +496,25 @@ double GwmGWRModelSelectionThread::getFixedBwUpper()
             }
         }
     }
-    qDebug() << fixedBw;
+    else if(mDistSrcType == DistanceSourceType::DMatFile){
+        for (int i = 0; i < mFeatureList.size(); i++){
+            vec dist = distanceDmat(i);
+            double max = dist.max();
+            if(max > fixedBw){
+                fixedBw = max;
+            }
+        }
+    }
+    else{
+        bool longlat = mLayer->crs().isGeographic();
+        for (int i = 0; i < mFeatureList.size(); i++){
+            vec dist = gwDist(mDataPoints, mDataPoints, i, 2.0, 0.0, longlat, false);
+            double max = dist.max();
+            if(max > fixedBw){
+                fixedBw = max;
+            }
+        }
+    }
     return fixedBw;
 }
 
