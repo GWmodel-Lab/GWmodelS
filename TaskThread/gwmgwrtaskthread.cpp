@@ -1,6 +1,8 @@
 #include "gwmgwrtaskthread.h"
 
 #include <exception>
+#include <gsl/gsl_cdf.h>
+
 #include "GWmodel/GWmodel.h"
 
 #include "TaskThread/gwmbandwidthselecttaskthread.h"
@@ -82,6 +84,7 @@ GwmGWRTaskThread::GwmGWRTaskThread(const GwmGWRTaskThread &taskThread)
 
 void GwmGWRTaskThread::run()
 {
+    arma::uword nDp = mFeatureList.size();
     // 优选模型
     if (isEnableIndepVarAutosel)
     {
@@ -162,8 +165,10 @@ void GwmGWRTaskThread::run()
 
     // 解算模型
     emit message(tr("Calibrating GWR model..."));
-    emit tick(0, mFeatureList.size());
+    emit tick(0, nDp);
     bool isAllCorrect = true;
+    bool isStoreQ = mFeatureList.size() < 5000;
+    mat S(isStoreQ ? nDp : 1, nDp, fill::zeros);
     if (hasHatMatrix)
     {
         for (int i = 0; i < mFeatureList.size(); i++)
@@ -177,6 +182,7 @@ void GwmGWRTaskThread::run()
                 mBetasSE.col(i) = (ci % ci) * mRowSumBetasSE;
                 mSHat(0) += si(0, i);
                 mSHat(1) += det(si * trans(si));
+                S.row(isStoreQ ? 0 : i) = si;
                 vec p = -trans(si);
                 p(i) += 1.0;
                 mQDiag += p % p;
@@ -206,6 +212,13 @@ void GwmGWRTaskThread::run()
     }
     if (isAllCorrect)
     {
+        double trQtQ = DBL_MAX;
+        if (isStoreQ)
+        {
+            mat EmS = eye(nDp, nDp) - S;
+            mat Q = trans(EmS) * EmS;
+            trQtQ = sum(diagvec(trans(Q) * Q));
+        }
         diagnostic();
         createResultLayer();
         emit success();
@@ -654,6 +667,79 @@ void GwmGWRTaskThread::diagnostic()
         double rss = sum(dyhat2 % w);
         mLocalRSquare(i) = (tss - rss) / tss;
     }
+}
+
+GwmFTestResult GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
+{
+    GwmFTestResult f1, f2, f4;
+    double v1 = params.trS, v2 = params.trStS;
+    int nDp = params.nDp, nVar = params.nVar;
+    double edf = 1.0 * nDp - 2 * v1 + v2;
+    double RSSg = params.gwrRSS;
+    vec rss = mY - mX * mBetas;
+    double RSSo = sum(rss);
+    double DFo = nDp - nVar - 1;
+    double delta1 = 1.0 * nDp - 2 * v1 + v2;
+    double sigma2delta1 = RSSg / delta1;
+    double sigma2 = RSSg / nDp;
+    double trQ = params.trQ, trQtQ = params.trQtQ;
+    double lDelta1 = trQ;
+    double lDelta2 = trQtQ;
+    // F1 Test
+    f1.s = (RSSg/lDelta1)/(RSSo/DFo);
+    f1.df1 = lDelta1 * lDelta1 / lDelta2;
+    f1.df2 = DFo;
+    f1.p = gsl_cdf_fdist_P(f1.s, f1.df1, f1.df2);
+    // F2 Test
+    f2.s = ((RSSo-RSSg)/(DFo-lDelta1))/(RSSo/DFo);
+    f2.df1 = (DFo-lDelta1) * (DFo-lDelta1) / (DFo - 2 * lDelta1 + lDelta2);
+    f2.df2 = DFo;
+    f2.p = gsl_cdf_fdist_P(f2.s, f2.df1, f2.df2);
+    // F3 Test
+    vec vJndp = vec(nDp, fill::ones) * (1.0 / nDp);
+    vec vk2(nVar, fill::zeros);
+    for (int i = 0; i < nVar; i++)
+    {
+        vec betasi = mBetas.col(i);
+        vec betasJndp = ones(1, nDp) * (trans(betasi) * vJndp);
+        vk2(i) = (1.0 / nDp) * sum((betasi - betasJndp) % betasi);
+    }
+    vec ek = eye(nVar, nVar);
+    vec wspan(nVar, fill::ones);
+    vec gamma1(nVar, fill::zeros), gamma2(nVar, fill::zeros);
+    for (int j = 0; j < nDp; j++)
+    {
+        vec dist = distance(j);
+        vec w = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType);
+        mat xtw = trans(mX % (w * wspan));
+        mat b0 = inv(xtw * mX) * xtw;
+        for (int i = 0; i < nVar; i++)
+        {
+            vec b = ek.row(i) * b0;
+            vec bJndp = ones(1, nDp) * (trans(b) * vJndp);
+            double Bjj = (1.0 / nDp) * sum((b - bJndp) % b);
+            gamma1(i) += Bjj;
+            gamma2(i) += Bjj * Bjj;
+        }
+    }
+    QList<GwmFTestResult> f3;
+    f3.reserve(nVar);
+    for (int i = 0; i < nVar; i++)
+    {
+        GwmFTestResult f3i;
+        double g1 = gamma1(i), g2 = gamma2(i);
+        double numdf = g1 * g1 / g2;
+        f3i.s = (vk2(i) / g1) / sigma2delta1;
+        f3i.df1 = numdf;
+        f3i.df2 = f1.df1;
+        f3i.p = gsl_cdf_fdist_Q(f3[i].s, numdf, f1.df1);
+        f3.append(f3i);
+    }
+    // F4 Test
+    f4.s = RSSg / RSSo;
+    f4.df1 = delta1;
+    f4.df2 = DFo;
+    f4.p = gsl_cdf_fdist_P(f4.s, f4.df1, f4.df2);
 }
 
 void GwmGWRTaskThread::createResultLayer()

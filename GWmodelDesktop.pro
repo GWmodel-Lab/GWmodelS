@@ -233,6 +233,11 @@ CONFIG(debug, debug|release) {
 }
 ## Armadillo END
 
+## GSL
+INCLUDEPATH += "$(OSGEO_HOME)/include/gsl"
+LIBS += "$(OSGEO_HOME)/lib" -lgsl
+## GSL END
+
 TRANSLATIONS += \
     GWmodelDesktop_zh_CN.ts
 

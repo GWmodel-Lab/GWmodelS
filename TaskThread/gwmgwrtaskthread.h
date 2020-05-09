@@ -42,6 +42,58 @@ struct GwmGWRDiagnostic
     }
 };
 
+struct GwmFTestParameters
+{
+    int nDp;
+    int nVar;
+    double trS;
+    double trStS;
+    double gwrRSS;
+    double bw;
+    bool adaptive;
+    int kernel;
+    double trQ;
+    double trQtQ;
+
+    GwmFTestParameters ()
+    {
+        trS = 0.0;
+        trStS = 0.0;
+        nDp = 0.0;
+        gwrRSS = 0.0;
+        nVar = 0.0;
+        bw = DBL_MAX;
+        adaptive = false;
+        kernel = 0;
+        trQ = 0.0;
+        trQtQ = 0.0;
+    }
+};
+
+struct GwmFTestResult
+{
+    double s;
+    double df1;
+    double df2;
+    double p;
+
+    GwmFTestResult()
+    {
+        s = 0.0;
+        df1 = 0.0;
+        df2 = 0.0;
+        p = 0.0;
+    }
+
+    GwmFTestResult(double s, double n, double d, double p)
+    {
+        s = s;
+        df1 = n;
+        df2 = d;
+        p = p;
+    }
+};
+
 class GwmGWRTaskThread : public GwmTaskThread
 {
     Q_OBJECT
@@ -233,6 +285,8 @@ protected:
     vec distanceDmat(int focus);
 
     void diagnostic();
+
+    GwmFTestResult f1234Test(const GwmFTestParameters& params);
 
     void createResultLayer();
 };
