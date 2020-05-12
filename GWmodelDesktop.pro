@@ -235,7 +235,7 @@ CONFIG(debug, debug|release) {
 
 ## GSL
 INCLUDEPATH += "$(OSGEO_HOME)/include/gsl"
-LIBS += "$(OSGEO_HOME)/lib" -lgsl
+LIBS += -L"$(OSGEO_HOME)/lib" -lgsl
 ## GSL END
 
 TRANSLATIONS += \

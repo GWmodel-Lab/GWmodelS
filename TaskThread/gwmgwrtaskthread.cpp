@@ -84,7 +84,6 @@ GwmGWRTaskThread::GwmGWRTaskThread(const GwmGWRTaskThread &taskThread)
 
 void GwmGWRTaskThread::run()
 {
-    arma::uword nDp = mFeatureList.size();
     // 优选模型
     if (isEnableIndepVarAutosel)
     {
@@ -164,11 +163,12 @@ void GwmGWRTaskThread::run()
     }
 
     // 解算模型
+    arma::uword nDp = mFeatureList.size();
     emit message(tr("Calibrating GWR model..."));
     emit tick(0, nDp);
     bool isAllCorrect = true;
-    bool isStoreQ = mFeatureList.size() < 5000;
-    mat S(isStoreQ ? nDp : 1, nDp, fill::zeros);
+    bool isStoreS = mFeatureList.size() <= 5000;
+    mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
     if (hasHatMatrix)
     {
         for (int i = 0; i < mFeatureList.size(); i++)
@@ -182,7 +182,7 @@ void GwmGWRTaskThread::run()
                 mBetasSE.col(i) = (ci % ci) * mRowSumBetasSE;
                 mSHat(0) += si(0, i);
                 mSHat(1) += det(si * trans(si));
-                S.row(isStoreQ ? 0 : i) = si;
+                S.row(isStoreS ? i : 0) = si;
                 vec p = -trans(si);
                 p(i) += 1.0;
                 mQDiag += p % p;
@@ -212,14 +212,48 @@ void GwmGWRTaskThread::run()
     }
     if (isAllCorrect)
     {
+        diagnostic();
+        // F Test
         double trQtQ = DBL_MAX;
-        if (isStoreQ)
+        if (isStoreS)
         {
             mat EmS = eye(nDp, nDp) - S;
             mat Q = trans(EmS) * EmS;
             trQtQ = sum(diagvec(trans(Q) * Q));
         }
-        diagnostic();
+        else
+        {
+            mat wspan(1, mX.n_cols, fill::zeros);
+            for (int i = 0; i < nDp; i++)
+            {
+                vec qi(nDp, fill::zeros);
+                for (int j = 0; j < nDp; j++)
+                {
+                    vec d = distance(j);
+                    vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                    mat xtw = trans(mX % (w * wspan));
+                    mat si = mX.row(j) * inv(xtw * mX) * xtw;
+                    vec pj = -trans(si);
+                    pj(j) += 1.0;
+                    qi += pj(i) * pj;
+                }
+                trQtQ += sum(qi % qi);
+            }
+        }
+        GwmFTestParameters fTestParams;
+        fTestParams.nDp = mX.n_rows;
+        fTestParams.nVar = mX.n_cols;
+        fTestParams.trS = mSHat(0);
+        fTestParams.trStS = mSHat(1);
+        fTestParams.trQ = sum(mQDiag);
+        fTestParams.trQtQ = trQtQ;
+        fTestParams.bw = mBandwidthSize;
+        fTestParams.adaptive = mBandwidthType == BandwidthType::Adaptive;
+        fTestParams.kernel = mBandwidthKernelFunction;
+        fTestParams.gwrRSS = sum(mResidual % mResidual);
+        f1234Test(fTestParams);
+
+        // Create Result Layer
         createResultLayer();
         emit success();
     }
@@ -669,16 +703,19 @@ void GwmGWRTaskThread::diagnostic()
     }
 }
 
-GwmFTestResult GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
+void GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
 {
+    emit message("F Test");
     GwmFTestResult f1, f2, f4;
     double v1 = params.trS, v2 = params.trStS;
     int nDp = params.nDp, nVar = params.nVar;
+    emit tick(0, nVar + 3);
     double edf = 1.0 * nDp - 2 * v1 + v2;
     double RSSg = params.gwrRSS;
-    vec rss = mY - mX * mBetas;
-    double RSSo = sum(rss);
-    double DFo = nDp - nVar - 1;
+    vec betao = solve(mX, mY);
+    vec residual = mY - mX * betao;
+    double RSSo = sum(residual % residual);
+    double DFo = nDp - nVar;
     double delta1 = 1.0 * nDp - 2 * v1 + v2;
     double sigma2delta1 = RSSg / delta1;
     double sigma2 = RSSg / nDp;
@@ -690,56 +727,59 @@ GwmFTestResult GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
     f1.df1 = lDelta1 * lDelta1 / lDelta2;
     f1.df2 = DFo;
     f1.p = gsl_cdf_fdist_P(f1.s, f1.df1, f1.df2);
+    emit tick(1, nVar + 3);
     // F2 Test
     f2.s = ((RSSo-RSSg)/(DFo-lDelta1))/(RSSo/DFo);
     f2.df1 = (DFo-lDelta1) * (DFo-lDelta1) / (DFo - 2 * lDelta1 + lDelta2);
     f2.df2 = DFo;
-    f2.p = gsl_cdf_fdist_P(f2.s, f2.df1, f2.df2);
+    f2.p = gsl_cdf_fdist_Q(f2.s, f2.df1, f2.df2);
+    emit tick(2, nVar + 3);
     // F3 Test
-    vec vJndp = vec(nDp, fill::ones) * (1.0 / nDp);
+//    vec vJndp = vec(nDp, fill::ones) * (1.0 / nDp);
     vec vk2(nVar, fill::zeros);
     for (int i = 0; i < nVar; i++)
     {
         vec betasi = mBetas.col(i);
-        vec betasJndp = ones(1, nDp) * (trans(betasi) * vJndp);
-        vk2(i) = (1.0 / nDp) * sum((betasi - betasJndp) % betasi);
+        vec betasJndp = vec(nDp, fill::ones) * (sum(betasi) * 1.0 / nDp);
+        vk2(i) = (1.0 / nDp) * det(trans(betasi - betasJndp) * betasi);
     }
-    vec ek = eye(nVar, nVar);
-    vec wspan(nVar, fill::ones);
-    vec gamma1(nVar, fill::zeros), gamma2(nVar, fill::zeros);
-    for (int j = 0; j < nDp; j++)
-    {
-        vec dist = distance(j);
-        vec w = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType);
-        mat xtw = trans(mX % (w * wspan));
-        mat b0 = inv(xtw * mX) * xtw;
-        for (int i = 0; i < nVar; i++)
-        {
-            vec b = ek.row(i) * b0;
-            vec bJndp = ones(1, nDp) * (trans(b) * vJndp);
-            double Bjj = (1.0 / nDp) * sum((b - bJndp) % b);
-            gamma1(i) += Bjj;
-            gamma2(i) += Bjj * Bjj;
-        }
-    }
+    mat ek = eye(nVar, nVar);
+    mat wspan(1, nVar, fill::ones);
     QList<GwmFTestResult> f3;
     f3.reserve(nVar);
     for (int i = 0; i < nVar; i++)
     {
-        GwmFTestResult f3i;
-        double g1 = gamma1(i), g2 = gamma2(i);
+        mat B(nDp, nDp, fill::zeros);
+        for (int j = 0; j < nDp; j++)
+        {
+            vec d = distance(j);
+            vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+            mat xtw = trans(mX % (w * wspan));
+            B.row(j) = ek.row(i) * inv(xtw * mX) * xtw;
+        }
+        mat Bj = 1.0 / nDp * (B.t() * (eye(nDp, nDp) - (1.0 / nDp) * mat(nDp, nDp, fill::ones)) * B);
+        vec b = diagvec(Bj);
+        double g1 = sum(b), g2 = sum(b % b);
         double numdf = g1 * g1 / g2;
+        GwmFTestResult f3i;
         f3i.s = (vk2(i) / g1) / sigma2delta1;
         f3i.df1 = numdf;
         f3i.df2 = f1.df1;
-        f3i.p = gsl_cdf_fdist_Q(f3[i].s, numdf, f1.df1);
+        f3i.p = gsl_cdf_fdist_Q(f3i.s, numdf, f1.df1);
         f3.append(f3i);
+        emit tick(3 + i, nVar + 3);
     }
     // F4 Test
     f4.s = RSSg / RSSo;
     f4.df1 = delta1;
     f4.df2 = DFo;
     f4.p = gsl_cdf_fdist_P(f4.s, f4.df1, f4.df2);
+    emit tick(nVar + 3, nVar + 3);
+    // 保存结果
+    mF1Result = f1;
+    mF2Result = f2;
+    mF3Result = f3;
+    mF4Result = f4;
 }
 
 void GwmGWRTaskThread::createResultLayer()

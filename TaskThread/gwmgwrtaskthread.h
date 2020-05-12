@@ -271,6 +271,12 @@ protected:
     vec mStudentizedResidual;
     vec mLocalRSquare;
 
+    // F检验结果
+    GwmFTestResult mF1Result;
+    GwmFTestResult mF2Result;
+    QList<GwmFTestResult> mF3Result;
+    GwmFTestResult mF4Result;
+
     // 结果
     GwmGWRDiagnostic mDiagnostic;
     QgsVectorLayer* mResultLayer;
@@ -286,7 +292,7 @@ protected:
 
     void diagnostic();
 
-    GwmFTestResult f1234Test(const GwmFTestParameters& params);
+    void f1234Test(const GwmFTestParameters& params);
 
     void createResultLayer();
 };
