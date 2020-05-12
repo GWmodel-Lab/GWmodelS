@@ -215,6 +215,8 @@ public:
     double getModelSelThreshold() const;
     void setModelSelThreshold(double modelSelThreshold);
 
+    QList<GwmFTestResult> fTestResults() const;
+
 protected:
     // 图层和 X Y 属性列
     QgsVectorLayer* mLayer = nullptr;

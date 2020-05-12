@@ -6,6 +6,8 @@
 #include "TaskThread/gwmgwrmodelselectionthread.h"
 #include "TaskThread/gwmbandwidthselecttaskthread.h"
 
+#include <QStandardItemModel>
+
 using namespace arma;
 
 QMap<GwmGWRTaskThread::KernelFunction, QString> GwmPropertyGWRTab::kernelFunctionNameDict = {
@@ -160,6 +162,54 @@ void GwmPropertyGWRTab::updateUI()
             plotData.append(QVariant(QPointF(i.key(), i.value())));
         }
         GwmBandwidthSelectTaskThread::plotBandwidthResult(plotData, mBandwidthSelPlot);
+    }
+
+    // F检验结果
+    QList<GwmFTestResult> fTestResults = mLayerItem->getFTestResults();
+    if (fTestResults.size() > 0)
+    {
+        QStandardItemModel* model = new QStandardItemModel(4, 5);
+        model->setHorizontalHeaderLabels(
+                    QStringList() << ""
+                    << tr("Statistics")
+                    << tr("Numerator DF")
+                    << tr("Denominator DF")
+                    << QStringLiteral("Pr(>)"));
+        ui->trvFTest->setModel(model);
+        GwmFTestResult f1 = fTestResults.takeFirst(),
+                f2 = fTestResults.takeFirst(),
+                f4 = fTestResults.takeFirst();
+        QList<GwmFTestResult> f3 = fTestResults;
+        // F1
+        model->setItem(0, 0, new QStandardItem(tr("F1 test")));
+        model->setItem(0, 1, new QStandardItem(QString("%1").arg(f1.s, 0, 'f', 4)));
+        model->setItem(0, 2, new QStandardItem(QString("%1").arg(f1.df1, 0, 'f', 4)));
+        model->setItem(0, 3, new QStandardItem(QString("%1").arg(f1.df2, 0, 'f', 4)));
+        model->setItem(0, 4, new QStandardItem(QString("%1").arg(f1.p, 0, 'f', 4)));
+        // F2
+        model->setItem(1, 0, new QStandardItem(tr("F2 test")));
+        model->setItem(1, 1, new QStandardItem(QString("%1").arg(f2.s, 0, 'f', 4)));
+        model->setItem(1, 2, new QStandardItem(QString("%1").arg(f2.df1, 0, 'f', 4)));
+        model->setItem(1, 3, new QStandardItem(QString("%1").arg(f2.df2, 0, 'f', 4)));
+        model->setItem(1, 4, new QStandardItem(QString("%1").arg(f2.p, 0, 'f', 4)));
+        // F4
+        model->setItem(3, 0, new QStandardItem(tr("F4 test")));
+        model->setItem(3, 1, new QStandardItem(QString("%1").arg(f4.s, 0, 'f', 4)));
+        model->setItem(3, 2, new QStandardItem(QString("%1").arg(f4.df1, 0, 'f', 4)));
+        model->setItem(3, 3, new QStandardItem(QString("%1").arg(f4.df2, 0, 'f', 4)));
+        model->setItem(3, 4, new QStandardItem(QString("%1").arg(f4.p, 0, 'f', 4)));
+        // F3
+        QStandardItem* f3Item = new QStandardItem(tr("F3 test"));
+        model->setItem(2, 0, f3Item);
+        for (int i = 0; i < f3.size(); i++)
+        {
+            QString name = i == 0 ? tr("Intercept") : indepVars[i - 1]->attributeName();
+            f3Item->appendRow(new QStandardItem(name));
+            f3Item->setChild(i, 1, new QStandardItem(QString("%1").arg(f3[i].s, 0, 'f', 4)));
+            f3Item->setChild(i, 2, new QStandardItem(QString("%1").arg(f3[i].df1, 0, 'f', 4)));
+            f3Item->setChild(i, 3, new QStandardItem(QString("%1").arg(f3[i].df2, 0, 'f', 4)));
+            f3Item->setChild(i, 4, new QStandardItem(QString("%1").arg(f3[i].p, 0, 'f', 4)));
+        }
     }
 }
 

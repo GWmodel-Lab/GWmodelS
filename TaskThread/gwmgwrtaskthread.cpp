@@ -501,6 +501,16 @@ void GwmGWRTaskThread::setModelSelThreshold(double modelSelThreshold)
     mModelSelThreshold = modelSelThreshold;
 }
 
+QList<GwmFTestResult> GwmGWRTaskThread::fTestResults() const
+{
+    QList<GwmFTestResult> f124Results = {
+        mF1Result,
+        mF2Result,
+        mF4Result
+    };
+    return f124Results + mF3Result;
+}
+
 double GwmGWRTaskThread::getBandwidthSize() const
 {
     return mBandwidthSize;

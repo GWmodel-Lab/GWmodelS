@@ -50,6 +50,8 @@ public:
 
     QMap<double, double> getBandwidthSelScores() const;
 
+    QList<GwmFTestResult> getFTestResults() const;
+
 private:
     int mDataPointsSize;
     int mDepVarIndex;
@@ -64,6 +66,7 @@ private:
     QList<QStringList> mModelSelModels;
     QList<double> mModelSelAICcs;
     QMap<double, double> mBandwidthSelScores;
+    QList<GwmFTestResult> mFTestResults;
 
     bool isModelOptimized;
     bool isBandwidthOptimized;
