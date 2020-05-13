@@ -255,6 +255,7 @@ void GwmGWRTaskThread::run()
                 mBetas.col(i) = gwReg(mX, mY, weight, i);
                 emit tick(i + 1, mFeatureList.size());
             } catch (exception e) {
+                isAllCorrect = false;
                 emit error(e.what());
             }
         }
@@ -552,6 +553,16 @@ bool GwmGWRTaskThread::getHasHatMatrix() const
 void GwmGWRTaskThread::setHasHatMatrix(bool value)
 {
     hasHatMatrix = value;
+}
+
+QgsVectorLayer *GwmGWRTaskThread::getRegressionLayer() const
+{
+    return mRegressionLayer;
+}
+
+void GwmGWRTaskThread::setRegressionLayer(QgsVectorLayer *regressionLayer)
+{
+    mRegressionLayer = regressionLayer;
 }
 
 double GwmGWRTaskThread::getBandwidthSize() const

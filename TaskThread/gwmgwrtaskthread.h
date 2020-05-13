@@ -223,6 +223,9 @@ public:
     bool getHasHatMatrix() const;
     void setHasHatMatrix(bool value);
 
+    QgsVectorLayer *getRegressionLayer() const;
+    void setRegressionLayer(QgsVectorLayer *regressionLayer);
+
 protected:
     // 图层和 X Y 属性列
     QgsVectorLayer* mLayer = nullptr;

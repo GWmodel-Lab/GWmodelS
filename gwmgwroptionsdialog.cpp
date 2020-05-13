@@ -17,9 +17,13 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
 
     for (GwmLayerGroupItem* item : mMapLayerList){
         ui->mLayerComboBox->addItem(item->originChild()->layer()->name());
+        ui->cmbRegressionLayerSelect->addItem(item->originChild()->layer()->name());
     }
     ui->mLayerComboBox->setCurrentIndex(-1);
+    ui->cmbRegressionLayerSelect->setCurrentIndex(-1);
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::layerChanged);
+    connect(ui->ckbRegressionPoints, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::on_cbkRegressionPoints_toggled);
+    connect(ui->cmbRegressionLayerSelect, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::on_cmbRegressionLayerSelect_currentIndexChanged);
 
     ui->mDepVarComboBox->setCurrentIndex(-1);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::onDepVarChanged);
@@ -64,6 +68,8 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     connect(ui->cbxHatmatrix, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::on_cbxHatmatrix_toggled);
 
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->ckbRegressionPoints, &QAbstractButton::toggle, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->cmbRegressionLayerSelect, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mVariableAutoSelectionCheck, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
@@ -400,6 +406,23 @@ void GwmGWROptionsDialog::updateFields()
     {
         mTaskThread->setLayer(mSelectedLayer->originChild()->layer());
     }
+    // 回归点设置
+    if (ui->ckbRegressionPoints->isChecked())
+    {
+        int regLayerIndex = ui->cmbRegressionLayerSelect->currentIndex();
+        if (regLayerIndex > -1)
+        {
+            mTaskThread->setRegressionLayer(mMapLayerList[regLayerIndex]->originChild()->layer());
+        }
+        else
+        {
+            mTaskThread->setRegressionLayer(nullptr);
+        }
+    }
+    else
+    {
+        mTaskThread->setRegressionLayer(nullptr);
+    }
     // 因变量设置
     if (ui->mDepVarComboBox->currentIndex() > -1)
     {
@@ -476,4 +499,30 @@ void GwmGWROptionsDialog::on_cbxHatmatrix_toggled(bool checked)
         ui->cbxFTest->setChecked(false);
         ui->cbxFTest->setEnabled(false);
     }
+}
+
+void GwmGWROptionsDialog::on_cbkRegressionPoints_toggled(bool checked)
+{
+    ui->cmbRegressionLayerSelect->setEnabled(checked);
+    if (checked)
+    {
+        ui->mBwSizeCustomizeRadio->setChecked(true);
+        ui->mBwSizeAutomaticRadio->setEnabled(false);
+        ui->mVariableAutoSelectionCheck->setChecked(false);
+        ui->mVariableAutoSelectionCheck->setEnabled(false);
+        ui->cbxHatmatrix->setEnabled(false);
+        ui->cbxHatmatrix->setChecked(false);
+    }
+    else
+    {
+        ui->mBwSizeAutomaticRadio->setEnabled(true);
+        ui->mVariableAutoSelectionCheck->setEnabled(true);
+    }
+    ui->cbxHatmatrix->setEnabled(!checked);
+    ui->cbxHatmatrix->setChecked(!checked);
+}
+
+void GwmGWROptionsDialog::on_cmbRegressionLayerSelect_currentIndexChanged(int index)
+{
+
 }
