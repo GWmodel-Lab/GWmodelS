@@ -52,6 +52,10 @@ public:
 
     QList<GwmFTestResult> getFTestResults() const;
 
+    bool getHasHatmatrix() const;
+
+    bool getHasFTest() const;
+
 private:
     int mDataPointsSize;
     int mDepVarIndex;
@@ -70,6 +74,8 @@ private:
 
     bool isModelOptimized;
     bool isBandwidthOptimized;
+    bool hasHatmatrix;
+    bool hasFTest;
 };
 
 #endif // GWMLAYERGWRITEM_H

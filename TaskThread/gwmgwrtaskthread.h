@@ -217,6 +217,12 @@ public:
 
     QList<GwmFTestResult> fTestResults() const;
 
+    bool getHasFTest() const;
+    void setHasFTest(bool value);
+
+    bool getHasHatMatrix() const;
+    void setHasHatMatrix(bool value);
+
 protected:
     // 图层和 X Y 属性列
     QgsVectorLayer* mLayer = nullptr;
@@ -227,7 +233,9 @@ protected:
     bool isEnableIndepVarAutosel = false;
     QgsFeatureList mFeatureList;  // 预收集的要素列表
 
+    // 检验配置
     bool hasHatMatrix = true;
+    bool hasFTest = false;
 
     // 优选模型的结果
     double mModelSelThreshold;

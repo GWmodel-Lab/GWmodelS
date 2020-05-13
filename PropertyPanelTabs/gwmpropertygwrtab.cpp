@@ -55,6 +55,14 @@ GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerGWRItem* item) :
         {
             ui->grpBwSelView->hide();
         }
+        if (!item->getHasHatmatrix())
+        {
+            ui->grpDiagnostic->hide();
+        }
+        if (!item->getHasFTest())
+        {
+            ui->grpFTest->hide();
+        }
     }
 }
 
@@ -90,14 +98,18 @@ void GwmPropertyGWRTab::updateUI()
         ui->lblDistanceMetric->setText(tr("Edclidean distance metric is used."));
     }
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
-    GwmGWRDiagnostic diagnostic = mLayerItem->diagnostic();
-    ui->lblENP->setText(QString("%1").arg(diagnostic.ENP, 0, 'f', 6));
-    ui->lblEDF->setText(QString("%1").arg(diagnostic.EDF, 0, 'f', 6));
-    ui->lblAIC->setText(QString("%1").arg(diagnostic.AIC, 0, 'f', 6));
-    ui->lblAICc->setText(QString("%1").arg(diagnostic.AICc, 0, 'f', 6));
-    ui->lblRSS->setText(QString("%1").arg(diagnostic.RSS, 0, 'f', 6));
-    ui->lblRSquare->setText(QString("%1").arg(diagnostic.RSquare, 0, 'f', 6));
-    ui->lblRSquareAdjusted->setText(QString("%1").arg(diagnostic.RSquareAdjust, 0, 'f', 6));
+
+    if (mLayerItem->getHasHatmatrix())
+    {
+        GwmGWRDiagnostic diagnostic = mLayerItem->diagnostic();
+        ui->lblENP->setText(QString("%1").arg(diagnostic.ENP, 0, 'f', 6));
+        ui->lblEDF->setText(QString("%1").arg(diagnostic.EDF, 0, 'f', 6));
+        ui->lblAIC->setText(QString("%1").arg(diagnostic.AIC, 0, 'f', 6));
+        ui->lblAICc->setText(QString("%1").arg(diagnostic.AICc, 0, 'f', 6));
+        ui->lblRSS->setText(QString("%1").arg(diagnostic.RSS, 0, 'f', 6));
+        ui->lblRSquare->setText(QString("%1").arg(diagnostic.RSquare, 0, 'f', 6));
+        ui->lblRSquareAdjusted->setText(QString("%1").arg(diagnostic.RSquareAdjust, 0, 'f', 6));
+    }
 
     // 计算四分位数
     QList<int> indepVarsIndex = mLayerItem->getIndepVarIndex();
@@ -166,7 +178,7 @@ void GwmPropertyGWRTab::updateUI()
 
     // F检验结果
     QList<GwmFTestResult> fTestResults = mLayerItem->getFTestResults();
-    if (fTestResults.size() > 0)
+    if (mLayerItem->getHasFTest() && fTestResults.size() > 0)
     {
         QStandardItemModel* model = new QStandardItemModel(4, 5);
         model->setHorizontalHeaderLabels(

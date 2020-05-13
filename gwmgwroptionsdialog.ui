@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>GWR Configure</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1,0,0,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1,0,0,0,0,0">
    <item>
     <layout class="QFormLayout" name="formLayout_6">
      <item row="0" column="1">
@@ -700,6 +700,32 @@
           </item>
          </layout>
         </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>Others</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_7">
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="cbxFTest">
+        <property name="text">
+         <string>F Test</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="cbxHatmatrix">
+        <property name="text">
+         <string>Hatmatrix</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>

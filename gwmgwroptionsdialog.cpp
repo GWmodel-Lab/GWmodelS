@@ -61,6 +61,8 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     ui->mCalcParallelNoneRadio->setChecked(true);
     ui->mDistTypeCRSRadio->setChecked(true);
 
+    connect(ui->cbxHatmatrix, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::on_cbxHatmatrix_toggled);
+
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
@@ -90,6 +92,8 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
 }
 
 GwmGWROptionsDialog::~GwmGWROptionsDialog()
@@ -440,6 +444,9 @@ void GwmGWROptionsDialog::updateFields()
         mTaskThread->setParallelMethodType(this->parallelMethod());
         mTaskThread->setParallelParameter(this->parallelParameters());
     }
+    // 其他设置
+    mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
+    mTaskThread->setHasFTest(ui->cbxFTest->isChecked());
 }
 
 void GwmGWROptionsDialog::enableAccept()
@@ -455,3 +462,16 @@ void GwmGWROptionsDialog::enableAccept()
     }
 }
 
+
+void GwmGWROptionsDialog::on_cbxHatmatrix_toggled(bool checked)
+{
+    if (checked)
+    {
+        ui->cbxFTest->setEnabled(true);
+    }
+    else
+    {
+        ui->cbxFTest->setChecked(false);
+        ui->cbxFTest->setEnabled(false);
+    }
+}

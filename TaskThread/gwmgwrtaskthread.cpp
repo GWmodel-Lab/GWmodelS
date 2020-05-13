@@ -163,29 +163,28 @@ void GwmGWRTaskThread::run()
     }
 
     // 解算模型
-    arma::uword nDp = mFeatureList.size();
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     emit message(tr("Calibrating GWR model..."));
     emit tick(0, nDp);
     bool isAllCorrect = true;
-    bool isStoreS = mFeatureList.size() <= 8192;
-    mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
     if (hasHatMatrix)
     {
+        bool isStoreS = hasFTest && (nDp <= 8192);
+        mat ci, si, S(isStoreS ? nDp : 1, nDp, fill::zeros);
         for (int i = 0; i < mFeatureList.size(); i++)
         {
             try
             {
                 vec dist = distance(i);
                 vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                mat ci, si;
                 mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
                 mBetasSE.col(i) = (ci % ci) * mRowSumBetasSE;
                 mSHat(0) += si(0, i);
                 mSHat(1) += det(si * trans(si));
-                S.row(isStoreS ? i : 0) = si;
                 vec p = -trans(si);
                 p(i) += 1.0;
                 mQDiag += p % p;
+                S.row(isStoreS ? i : 0) = si;
                 emit tick(i + 1, mFeatureList.size());
             } catch (exception e) {
                 isAllCorrect = false;
@@ -194,6 +193,55 @@ void GwmGWRTaskThread::run()
         }
         mBetas = trans(mBetas);
         mBetasSE = trans(mBetasSE);
+
+        // 诊断和检验
+        if (isAllCorrect)
+        {
+            diagnostic();
+
+            // F Test
+            if (hasHatMatrix && hasFTest)
+            {
+                double trQtQ = DBL_MAX;
+                if (isStoreS)
+                {
+                    mat EmS = eye(nDp, nDp) - S;
+                    mat Q = trans(EmS) * EmS;
+                    trQtQ = sum(diagvec(trans(Q) * Q));
+                }
+                else
+                {
+                    mat wspan(1, mX.n_cols, fill::zeros);
+                    for (int i = 0; i < nDp; i++)
+                    {
+                        vec qi(nDp, fill::zeros);
+                        for (int j = 0; j < nDp; j++)
+                        {
+                            vec d = distance(j);
+                            vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                            mat xtw = trans(mX % (w * wspan));
+                            mat si = mX.row(j) * inv(xtw * mX) * xtw;
+                            vec pj = -trans(si);
+                            pj(j) += 1.0;
+                            qi += pj(i) * pj;
+                        }
+                        trQtQ += sum(qi % qi);
+                    }
+                }
+                GwmFTestParameters fTestParams;
+                fTestParams.nDp = mX.n_rows;
+                fTestParams.nVar = mX.n_cols;
+                fTestParams.trS = mSHat(0);
+                fTestParams.trStS = mSHat(1);
+                fTestParams.trQ = sum(mQDiag);
+                fTestParams.trQtQ = trQtQ;
+                fTestParams.bw = mBandwidthSize;
+                fTestParams.adaptive = mBandwidthType == BandwidthType::Adaptive;
+                fTestParams.kernel = mBandwidthKernelFunction;
+                fTestParams.gwrRSS = sum(mResidual % mResidual);
+                f1234Test(fTestParams);
+            }
+        }
     }
     else
     {
@@ -210,53 +258,13 @@ void GwmGWRTaskThread::run()
         }
         mBetas = trans(mBetas);
     }
+
+    // Create Result Layer
     if (isAllCorrect)
     {
-        diagnostic();
-        // F Test
-        double trQtQ = DBL_MAX;
-        if (isStoreS)
-        {
-            mat EmS = eye(nDp, nDp) - S;
-            mat Q = trans(EmS) * EmS;
-            trQtQ = sum(diagvec(trans(Q) * Q));
-        }
-        else
-        {
-            mat wspan(1, mX.n_cols, fill::zeros);
-            for (int i = 0; i < nDp; i++)
-            {
-                vec qi(nDp, fill::zeros);
-                for (int j = 0; j < nDp; j++)
-                {
-                    vec d = distance(j);
-                    vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                    mat xtw = trans(mX % (w * wspan));
-                    mat si = mX.row(j) * inv(xtw * mX) * xtw;
-                    vec pj = -trans(si);
-                    pj(j) += 1.0;
-                    qi += pj(i) * pj;
-                }
-                trQtQ += sum(qi % qi);
-            }
-        }
-        GwmFTestParameters fTestParams;
-        fTestParams.nDp = mX.n_rows;
-        fTestParams.nVar = mX.n_cols;
-        fTestParams.trS = mSHat(0);
-        fTestParams.trStS = mSHat(1);
-        fTestParams.trQ = sum(mQDiag);
-        fTestParams.trQtQ = trQtQ;
-        fTestParams.bw = mBandwidthSize;
-        fTestParams.adaptive = mBandwidthType == BandwidthType::Adaptive;
-        fTestParams.kernel = mBandwidthKernelFunction;
-        fTestParams.gwrRSS = sum(mResidual % mResidual);
-        f1234Test(fTestParams);
-
-        // Create Result Layer
         createResultLayer();
-        emit success();
     }
+    emit success();
 }
 
 QString GwmGWRTaskThread::name() const
@@ -325,6 +333,19 @@ bool GwmGWRTaskThread::isValid(QString &message)
             return false;
         }
     }
+//    if (!hasHatMatrix)
+//    {
+//        if (isEnableIndepVarAutosel)
+//        {
+//            message = tr("");
+//            return false;
+//        }
+//        if (isBandwidthSizeAutoSel)
+//        {
+//            message = tr("");
+//            return false;
+//        }
+//    }
 
     return true;
 }
@@ -509,6 +530,26 @@ QList<GwmFTestResult> GwmGWRTaskThread::fTestResults() const
         mF4Result
     };
     return f124Results + mF3Result;
+}
+
+bool GwmGWRTaskThread::getHasFTest() const
+{
+    return hasFTest;
+}
+
+void GwmGWRTaskThread::setHasFTest(bool value)
+{
+    hasFTest = value;
+}
+
+bool GwmGWRTaskThread::getHasHatMatrix() const
+{
+    return hasHatMatrix;
+}
+
+void GwmGWRTaskThread::setHasHatMatrix(bool value)
+{
+    hasHatMatrix = value;
 }
 
 double GwmGWRTaskThread::getBandwidthSize() const
