@@ -231,7 +231,8 @@ protected:
     int mDepVarIndex;
     QList<int> mIndepVarsIndex;
     bool isEnableIndepVarAutosel = false;
-    QgsFeatureList mFeatureList;  // 预收集的要素列表
+    QgsVectorLayer* mRegressionLayer = nullptr;  // 回归点
+    QgsFeatureList mFeatureList;  // 预收集的要素列表，如果有回归点则是回归点要素，否则是数据点要素
 
     // 检验配置
     bool hasHatMatrix = true;
@@ -274,6 +275,7 @@ protected:
     mat mBetasSE;
     mat mBetasTV;
     mat mDataPoints;
+    mat mRegPoints;
     vec mSHat;
     vec mQDiag;
     vec mYHat;

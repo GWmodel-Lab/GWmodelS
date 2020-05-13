@@ -31,6 +31,7 @@ GwmGWRTaskThread::GwmGWRTaskThread()
     mX = mat(uword(0), uword(0));
     mY = vec(uword(0));
     mDataPoints = mat(uword(0), 2);
+    mRegPoints = mat(uword(0), 2);
     mBetas = mat(uword(0), uword(0));
     mRowSumBetasSE = mat(uword(0), uword(0));
     mBetasSE = mat(uword(0), uword(0));
@@ -70,6 +71,7 @@ GwmGWRTaskThread::GwmGWRTaskThread(const GwmGWRTaskThread &taskThread)
     mX = mat(taskThread.mX);
     mY = vec(taskThread.mY);
     mDataPoints = mat(taskThread.mDataPoints);
+    mRegPoints = mat(taskThread.mRegPoints);
     mBetas = mat(uword(0), uword(0));
     mRowSumBetasSE = mat(uword(0), uword(0));
     mBetasSE = mat(uword(0), uword(0));
@@ -333,19 +335,19 @@ bool GwmGWRTaskThread::isValid(QString &message)
             return false;
         }
     }
-//    if (!hasHatMatrix)
-//    {
-//        if (isEnableIndepVarAutosel)
-//        {
-//            message = tr("");
-//            return false;
-//        }
-//        if (isBandwidthSizeAutoSel)
-//        {
-//            message = tr("");
-//            return false;
-//        }
-//    }
+    if (mRegressionLayer)
+    {
+        if (isEnableIndepVarAutosel)
+        {
+            message = tr("Cannot automaticly select indenpendent variables if regression points are given.");
+            return false;
+        }
+        if (isBandwidthSizeAutoSel)
+        {
+            message = tr("Cannot automaticly optimize bandwidth if regression points are given.");
+            return false;
+        }
+    }
 
     return true;
 }
@@ -618,32 +620,33 @@ bool GwmGWRTaskThread::setXY()
 {
     // 提取 FeatureID
     emit message("Setting matrices.");
-    QgsFeatureIterator it = mLayer->getFeatures();
+    emit tick(0, 0);
+    QgsFeatureIterator it = (mRegressionLayer ? mRegressionLayer : mLayer)->getFeatures();
     QgsFeature f;
     while (it.nextFeature(f))
     {
         mFeatureList.append(f);
     }
     // 初始化所需矩阵
-    mX = mat(mFeatureList.size(), mIndepVarsIndex.size() + 1, fill::zeros);
-    mY = vec(mFeatureList.size(), fill::zeros);
-    mBetas = mat(mIndepVarsIndex.size() + 1, mFeatureList.size(), fill::zeros);
+    int nDp = mLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
+    int nVar = mIndepVarsIndex.size() + 1;
+    mX = mat(nDp, nVar, fill::zeros);
+    mY = vec(nDp, fill::zeros);
+    mBetas = mat(nVar, nRp, fill::zeros);
     if (hasHatMatrix)
     {
-        mBetasSE = mat(mIndepVarsIndex.size() + 1, mFeatureList.size(), fill::zeros);
+        mBetasSE = mat(nVar, nDp, fill::zeros);
         mSHat = vec(2, fill::zeros);
-        mQDiag = vec(mFeatureList.size(), fill::zeros);
-        mRowSumBetasSE = mat(mFeatureList.size(), 1, fill::ones);
+        mQDiag = vec(nDp, fill::zeros);
+        mRowSumBetasSE = mat(nDp, 1, fill::ones);
     }
-    mDataPoints = mat(mFeatureList.size(), 2);
+    mDataPoints = mat(nDp, 2);
 
     bool ok = false;
-    int row = 0, total = mFeatureList.size();
-    it.rewind();
-    for (row = 0; row < total; row++)
+    it = mLayer->getFeatures();
+    for (int row = 0; it.nextFeature(f); row++)
     {
-        QgsFeature feature = mFeatureList[row];
-        double vY = feature.attribute(mDepVarIndex).toDouble(&ok);
+        double vY = f.attribute(mDepVarIndex).toDouble(&ok);
         if (ok)
         {
             mY(row, 0) = vY;
@@ -652,7 +655,7 @@ bool GwmGWRTaskThread::setXY()
             for (int i = 0; i < mIndepVarsIndex.size(); i++)
             {
                 int index = mIndepVarsIndex[i];
-                double vX = feature.attribute(index).toDouble(&ok);
+                double vX = f.attribute(index).toDouble(&ok);
                 if (ok)
                 {
                     mX(row, i + 1) = vX;
@@ -663,12 +666,26 @@ bool GwmGWRTaskThread::setXY()
                 }
             }
             // 设置坐标
-            QgsPointXY centroPoint = feature.geometry().centroid().asPoint();
+            QgsPointXY centroPoint = f.geometry().centroid().asPoint();
             mDataPoints(row, 0) = centroPoint.x();
             mDataPoints(row, 1) = centroPoint.y();
         }
         else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
     }
+
+    // 回归点
+    if (mRegressionLayer)
+    {
+        mRegPoints = mat(nRp, 2);
+        it = mRegressionLayer->getFeatures();
+        for (int row = 0; it.nextFeature(f); row++)
+        {
+            QgsPointXY centroPoint = f.geometry().centroid().asPoint();
+            mRegPoints(row, 0) = centroPoint.x();
+            mRegPoints(row, 1) = centroPoint.y();
+        }
+    }
+    else mRegPoints = mDataPoints;
     // 坐标旋转
     if (mDistSrcType == DistanceSourceType::Minkowski)
     {
@@ -676,7 +693,6 @@ bool GwmGWRTaskThread::setXY()
         double theta = parameters["theta"].toDouble();
         mDataPoints = coordinateRotate(mDataPoints, theta);
     }
-    emit tick(total, total);
     return true;
 }
 
@@ -696,14 +712,15 @@ vec GwmGWRTaskThread::distance(int focus)
 vec GwmGWRTaskThread::distanceCRS(int focus)
 {
     bool longlat = mLayer->crs().isGeographic();
-    return gwDist(mDataPoints, mDataPoints, focus, 2.0, 0.0, longlat, false);
+    return gwDist(mDataPoints, mRegPoints, focus, 2.0, 0.0, longlat, mRegressionLayer != nullptr);
 }
 
 vec GwmGWRTaskThread::distanceMinkowski(int focus)
 {
     QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
     double p = parameters["p"].toDouble();
-    return gwDist(mDataPoints, mDataPoints, focus, p, 0.0, false, false);
+    double theta = parameters["theta"].toDouble();
+    return gwDist(mDataPoints, mRegPoints, focus, p, theta, false, mRegressionLayer != nullptr);
 }
 
 vec GwmGWRTaskThread::distanceDmat(int focus)
@@ -865,8 +882,9 @@ void GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
 void GwmGWRTaskThread::createResultLayer()
 {
     emit message("Creating result layer...");
-    QString layerFileName = QgsWkbTypes::displayString(mLayer->wkbType()) + QStringLiteral("?");
-    QString layerName = mLayer->name();
+    QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mLayer;
+    QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
+    QString layerName = srcLayer->name();
     if (mBandwidthType == BandwidthType::Fixed)
     {
         layerName += QString("_B%1%2").arg(mBandwidthSizeOrigin, 0, 'f', 3).arg(mBandwidthSize);
@@ -876,7 +894,7 @@ void GwmGWRTaskThread::createResultLayer()
         layerName += QString("_B%1").arg(int(mBandwidthSize));
     }
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
-    mResultLayer->setCrs(mLayer->crs());
+    mResultLayer->setCrs(srcLayer->crs());
 
     QgsFields fields;
     fields.append(QgsField(QStringLiteral("Intercept"), QVariant::Double, QStringLiteral("double")));
