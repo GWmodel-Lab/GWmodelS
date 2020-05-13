@@ -23,6 +23,9 @@ GwmLayerGWRItem::GwmLayerGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, c
         isBandwidthOptimized = taskThread->getIsBandwidthSizeAutoSel();
         isModelOptimized = taskThread->enableIndepVarAutosel();
         mBandwidthSelScores = taskThread->getBwScore();
+        mFTestResults = taskThread->fTestResults();
+        hasHatmatrix = taskThread->getHasHatMatrix();
+        hasFTest = taskThread->getHasFTest();
     }
 }
 
@@ -101,6 +104,21 @@ QList<GwmLayerAttributeItem *> GwmLayerGWRItem::getIndepVarsOrigin() const
 QMap<double, double> GwmLayerGWRItem::getBandwidthSelScores() const
 {
     return mBandwidthSelScores;
+}
+
+QList<GwmFTestResult> GwmLayerGWRItem::getFTestResults() const
+{
+    return mFTestResults;
+}
+
+bool GwmLayerGWRItem::getHasHatmatrix() const
+{
+    return hasHatmatrix;
+}
+
+bool GwmLayerGWRItem::getHasFTest() const
+{
+    return hasFTest;
 }
 
 GwmGWRTaskThread::KernelFunction GwmLayerGWRItem::bandwidthKernelFunction() const

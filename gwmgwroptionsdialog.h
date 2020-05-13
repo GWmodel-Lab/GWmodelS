@@ -66,6 +66,8 @@ public:
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
+private slots:
+    void on_cbxHatmatrix_toggled(bool checked);
 };
 
 #endif // GWMGWROPTIONSDIALOG_H

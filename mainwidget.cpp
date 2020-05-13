@@ -597,6 +597,7 @@ void MainWidget::onGWRBtnClicked()
     }
     if (gwrOptionDialog->exec() == QDialog::Accepted)
     {
+        gwrOptionDialog->updateFields();
         GwmLayerGroupItem* selectedItem = gwrOptionDialog->selectedLayer();
         const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);

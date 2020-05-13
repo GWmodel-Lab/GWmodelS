@@ -50,6 +50,12 @@ public:
 
     QMap<double, double> getBandwidthSelScores() const;
 
+    QList<GwmFTestResult> getFTestResults() const;
+
+    bool getHasHatmatrix() const;
+
+    bool getHasFTest() const;
+
 private:
     int mDataPointsSize;
     int mDepVarIndex;
@@ -64,9 +70,12 @@ private:
     QList<QStringList> mModelSelModels;
     QList<double> mModelSelAICcs;
     QMap<double, double> mBandwidthSelScores;
+    QList<GwmFTestResult> mFTestResults;
 
     bool isModelOptimized;
     bool isBandwidthOptimized;
+    bool hasHatmatrix;
+    bool hasFTest;
 };
 
 #endif // GWMLAYERGWRITEM_H
