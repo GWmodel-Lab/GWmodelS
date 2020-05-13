@@ -167,7 +167,7 @@ void GwmGWRTaskThread::run()
     emit message(tr("Calibrating GWR model..."));
     emit tick(0, nDp);
     bool isAllCorrect = true;
-    bool isStoreS = mFeatureList.size() <= 5000;
+    bool isStoreS = mFeatureList.size() <= 8192;
     mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
     if (hasHatMatrix)
     {
@@ -759,18 +759,47 @@ void GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
     f3.reserve(nVar);
     for (int i = 0; i < nVar; i++)
     {
-        mat B(nDp, nDp, fill::zeros);
-        for (int j = 0; j < nDp; j++)
+        double g1 = 0.0, g2 = 0.0, numdf = 0.0;
+        if (nDp <= 8192)
         {
-            vec d = distance(j);
-            vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-            mat xtw = trans(mX % (w * wspan));
-            B.row(j) = ek.row(i) * inv(xtw * mX) * xtw;
+            mat B(nDp, nDp, fill::zeros);
+            for (int j = 0; j < nDp; j++)
+            {
+                vec d = distance(j);
+                vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                mat xtw = trans(mX % (w * wspan));
+                B.row(j) = ek.row(i) * inv(xtw * mX) * xtw;
+            }
+            mat Bj = 1.0 / nDp * (B.t() * (eye(nDp, nDp) - (1.0 / nDp) * mat(nDp, nDp, fill::ones)) * B);
+            vec b = diagvec(Bj);
+            g1 = sum(b);
+            g2 = sum(b % b);
+            numdf = g1 * g1 / g2;
         }
-        mat Bj = 1.0 / nDp * (B.t() * (eye(nDp, nDp) - (1.0 / nDp) * mat(nDp, nDp, fill::ones)) * B);
-        vec b = diagvec(Bj);
-        double g1 = sum(b), g2 = sum(b % b);
-        double numdf = g1 * g1 / g2;
+        else
+        {
+            vec diagB(nDp, fill::zeros);
+            for (int k = 0; k < nDp; k++)
+            {
+                vec d1 = distance(k);
+                vec w1 = gwWeight(d1, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                mat xtw1 = trans(mX % (w1 * wspan));
+                vec b = ek.row(i) * inv(xtw1 * mX) * xtw1;
+                vec c(nDp, fill::zeros);
+                for (int j = 0; j < nDp; j++)
+                {
+                    vec d2 = distance(j);
+                    vec w2 = gwWeight(d2, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                    mat xtw2 = trans(mX % (w2 * wspan));
+                    c += ek.row(i) * inv(xtw2 * mX) * xtw2;
+                }
+                diagB += (b % b + (1.0 / nDp) * (b % c));
+            }
+            diagB = 1.0 / nDp * diagB;
+            g1 = sum(diagB);
+            g2 = sum(diagB % diagB);
+            numdf = g1 * g1 / g2;
+        }
         GwmFTestResult f3i;
         f3i.s = (vk2(i) / g1) / sigma2delta1;
         f3i.df1 = numdf;
