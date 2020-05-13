@@ -266,11 +266,13 @@ void GwmGWROptionsDialog::onCustomizeRaidoToggled(bool checked)
 void GwmGWROptionsDialog::onFixedRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(1);
+    mTaskThread->setBandwidthType(GwmGWRTaskThread::BandwidthType::Fixed);
 }
 
 void GwmGWROptionsDialog::onVariableRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(0);
+    mTaskThread->setBandwidthType(GwmGWRTaskThread::BandwidthType::Adaptive);
 }
 
 double GwmGWROptionsDialog::bandwidthSize(){
