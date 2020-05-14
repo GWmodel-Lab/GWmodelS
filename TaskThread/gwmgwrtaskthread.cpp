@@ -213,21 +213,32 @@ void GwmGWRTaskThread::run()
                 }
                 else
                 {
-                    mat wspan(1, mX.n_cols, fill::zeros);
-                    for (int i = 0; i < nDp; i++)
+                    emit message(tr("Calculating the trace of matrix Q..."));
+                    emit tick(0, nDp);
+                    trQtQ = 0.0;
+                    mat wspan(1, nVar, fill::ones);
+                    for (arma::uword i = 0; i < nDp; i++)
                     {
-                        vec qi(nDp, fill::zeros);
-                        for (int j = 0; j < nDp; j++)
+                        vec di = distance(i);
+                        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                        mat xtwi = trans(mX % (wi * wspan));
+                        mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+                        vec pi = -trans(si);
+                        pi(i) += 1.0;
+                        double qi = sum(pi % pi);
+                        trQtQ += qi * qi;
+                        for (arma::uword j = i + 1; j < nDp; j++)
                         {
-                            vec d = distance(j);
-                            vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                            mat xtw = trans(mX % (w * wspan));
-                            mat si = mX.row(j) * inv(xtw * mX) * xtw;
-                            vec pj = -trans(si);
+                            vec dj = distance(j);
+                            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                            mat xtwj = trans(mX % (wj * wspan));
+                            mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
+                            vec pj = -trans(sj);
                             pj(j) += 1.0;
-                            qi += pj(i) * pj;
+                            double qj = sum(pi % pj);
+                            trQtQ += qj * qj * 2.0;
                         }
-                        trQtQ += sum(qi % qi);
+                        emit tick(i + 1, nDp);
                     }
                 }
                 GwmFTestParameters fTestParams;
@@ -847,22 +858,21 @@ void GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
         }
         else
         {
-            vec diagB(nDp, fill::zeros);
+            vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
+            for (int j = 0; j < nDp; j++)
+            {
+                vec d = distance(j);
+                vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                mat xtw = trans(mX % (w * wspan));
+                c += trans(ek.row(i) * inv(xtw * mX) * xtw);
+            }
             for (int k = 0; k < nDp; k++)
             {
-                vec d1 = distance(k);
-                vec w1 = gwWeight(d1, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                mat xtw1 = trans(mX % (w1 * wspan));
-                vec b = ek.row(i) * inv(xtw1 * mX) * xtw1;
-                vec c(nDp, fill::zeros);
-                for (int j = 0; j < nDp; j++)
-                {
-                    vec d2 = distance(j);
-                    vec w2 = gwWeight(d2, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                    mat xtw2 = trans(mX % (w2 * wspan));
-                    c += ek.row(i) * inv(xtw2 * mX) * xtw2;
-                }
-                diagB += (b % b + (1.0 / nDp) * (b % c));
+                vec d = distance(k);
+                vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                mat xtw = trans(mX % (w * wspan));
+                vec b = trans(ek.row(i) * inv(xtw * mX) * xtw);
+                diagB += (b % b - (1.0 / nDp) * (b % c));
             }
             diagB = 1.0 / nDp * diagB;
             g1 = sum(diagB);
