@@ -7,6 +7,7 @@ CONFIG += qwt
 CONFIG += resources_big
 CONFIG += debug_and_release
 
+QMAKE_CXXFLAGS += /openmp
 QMAKE_CXXFLAGS_RELEASE += /Zi
 QMAKE_CXXFLAGS_RELEASE += /Od
 QMAKE_LFLAGS_RELEASE += /DEBUG

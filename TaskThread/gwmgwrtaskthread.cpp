@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <gsl/gsl_cdf.h>
+#include <omp.h>
 
 #include "GWmodel/GWmodel.h"
 
@@ -10,20 +11,30 @@
 
 using namespace std;
 
-QMap<QString, double> GwmGWRTaskThread::fixedBwUnitDict = QMap<QString, double>();
-QMap<QString, double> GwmGWRTaskThread::adaptiveBwUnitDict = QMap<QString, double>();
+QMap<QString, double> GwmGWRTaskThread::fixedBwUnitDict = {
+    make_pair(QString("m"), 1.0),
+    make_pair(QString("km"), 1000.0),
+    make_pair(QString("mile"), 1609.344)
+};
+QMap<QString, double> GwmGWRTaskThread::adaptiveBwUnitDict = {
+    make_pair(QString("x1"), 1),
+    make_pair(QString("x10"), 10),
+    make_pair(QString("x100"), 100),
+    make_pair(QString("x1000"), 1000)
+};
 
-void GwmGWRTaskThread::initUnitDict()
-{
-    // 设置静态变量
-    fixedBwUnitDict["m"] = 1.0;
-    fixedBwUnitDict["km"] = 1000.0;
-    fixedBwUnitDict["mile"] = 1609.344;
-    adaptiveBwUnitDict["x1"] = 1;
-    adaptiveBwUnitDict["x10"] = 10;
-    adaptiveBwUnitDict["x100"] = 100;
-    adaptiveBwUnitDict["x1000"] = 1000;
-}
+RegressionAll GwmGWRTaskThread::regressionAll[] = {
+    &GwmGWRTaskThread::regressionAllSerial,
+    &GwmGWRTaskThread::regressionAllOmp
+};
+CalcTrQtQ GwmGWRTaskThread::calcTrQtQ[] = {
+    &GwmGWRTaskThread::calcTrQtQSerial,
+    &GwmGWRTaskThread::calcTrQtQOmp
+};
+CalcDiagB GwmGWRTaskThread::calcDiagB[] = {
+    &GwmGWRTaskThread::calcDiagBSerial,
+    &GwmGWRTaskThread::calcDiagBOmp
+};
 
 GwmGWRTaskThread::GwmGWRTaskThread()
     : GwmTaskThread()
@@ -172,7 +183,72 @@ void GwmGWRTaskThread::run()
     if (hasHatMatrix)
     {
         bool isStoreS = hasFTest && (nDp <= 8192);
-        mat ci, si, S(isStoreS ? nDp : 1, nDp, fill::zeros);
+
+        // 解算
+        mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
+        const RegressionAll regression = regressionAll[mParallelMethodType];
+        bool isAllCorrect = (this->*regression)(hasHatMatrix, S);
+        mBetas = trans(mBetas);
+        mBetasSE = trans(mBetasSE);
+
+        // 诊断和检验
+        if (isAllCorrect)
+        {
+            diagnostic();
+            // F Test
+            if (hasHatMatrix && hasFTest)
+            {
+                // Q
+                double trQtQ = DBL_MAX;
+                if (isStoreS)
+                {
+                    mat EmS = eye(nDp, nDp) - S;
+                    mat Q = trans(EmS) * EmS;
+                    trQtQ = sum(diagvec(trans(Q) * Q));
+                }
+                else
+                {
+                    const CalcTrQtQ calc = calcTrQtQ[mParallelMethodType];
+                    trQtQ = (this->*calc)(S);
+                }
+                GwmFTestParameters fTestParams;
+                fTestParams.nDp = mX.n_rows;
+                fTestParams.nVar = mX.n_cols;
+                fTestParams.trS = mSHat(0);
+                fTestParams.trStS = mSHat(1);
+                fTestParams.trQ = sum(mQDiag);
+                fTestParams.trQtQ = trQtQ;
+                fTestParams.bw = mBandwidthSize;
+                fTestParams.adaptive = mBandwidthType == BandwidthType::Adaptive;
+                fTestParams.kernel = mBandwidthKernelFunction;
+                fTestParams.gwrRSS = sum(mResidual % mResidual);
+                f1234Test(fTestParams);
+            }
+        }
+    }
+    else
+    {
+        mat _(0, 0);
+        bool isAllCorrect = regressionAllSerial(hasHatMatrix, _);
+        mBetas = trans(mBetas);
+    }
+
+    // Create Result Layer
+    if (isAllCorrect)
+    {
+        createResultLayer();
+    }
+    emit success();
+}
+
+bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
+{
+    bool isAllCorrect = true;
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    if (hatmatrix)
+    {
+        bool isStoreS = hasFTest && (nDp <= 8192);
+        mat ci, si;
         for (int i = 0; i < mFeatureList.size(); i++)
         {
             try
@@ -193,68 +269,6 @@ void GwmGWRTaskThread::run()
                 emit error(e.what());
             }
         }
-        mBetas = trans(mBetas);
-        mBetasSE = trans(mBetasSE);
-
-        // 诊断和检验
-        if (isAllCorrect)
-        {
-            diagnostic();
-
-            // F Test
-            if (hasHatMatrix && hasFTest)
-            {
-                double trQtQ = DBL_MAX;
-                if (isStoreS)
-                {
-                    mat EmS = eye(nDp, nDp) - S;
-                    mat Q = trans(EmS) * EmS;
-                    trQtQ = sum(diagvec(trans(Q) * Q));
-                }
-                else
-                {
-                    emit message(tr("Calculating the trace of matrix Q..."));
-                    emit tick(0, nDp);
-                    trQtQ = 0.0;
-                    mat wspan(1, nVar, fill::ones);
-                    for (arma::uword i = 0; i < nDp; i++)
-                    {
-                        vec di = distance(i);
-                        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                        mat xtwi = trans(mX % (wi * wspan));
-                        mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
-                        vec pi = -trans(si);
-                        pi(i) += 1.0;
-                        double qi = sum(pi % pi);
-                        trQtQ += qi * qi;
-                        for (arma::uword j = i + 1; j < nDp; j++)
-                        {
-                            vec dj = distance(j);
-                            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                            mat xtwj = trans(mX % (wj * wspan));
-                            mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
-                            vec pj = -trans(sj);
-                            pj(j) += 1.0;
-                            double qj = sum(pi % pj);
-                            trQtQ += qj * qj * 2.0;
-                        }
-                        emit tick(i + 1, nDp);
-                    }
-                }
-                GwmFTestParameters fTestParams;
-                fTestParams.nDp = mX.n_rows;
-                fTestParams.nVar = mX.n_cols;
-                fTestParams.trS = mSHat(0);
-                fTestParams.trStS = mSHat(1);
-                fTestParams.trQ = sum(mQDiag);
-                fTestParams.trQtQ = trQtQ;
-                fTestParams.bw = mBandwidthSize;
-                fTestParams.adaptive = mBandwidthType == BandwidthType::Adaptive;
-                fTestParams.kernel = mBandwidthKernelFunction;
-                fTestParams.gwrRSS = sum(mResidual % mResidual);
-                f1234Test(fTestParams);
-            }
-        }
     }
     else
     {
@@ -270,15 +284,140 @@ void GwmGWRTaskThread::run()
                 emit error(e.what());
             }
         }
-        mBetas = trans(mBetas);
     }
+    return isAllCorrect;
+}
 
-    // Create Result Layer
-    if (isAllCorrect)
+bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
+{
+    int nThread = mParallelParameter.toInt();
+    bool isAllCorrect = true;
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    if (hatmatrix)
     {
-        createResultLayer();
+        bool isStoreS = hasFTest && (nDp <= 8192);
+        mat qdiag_all(nDp, nThread, fill::zeros);
+        vec s1(nDp, fill::zeros), s2(nDp, fill::zeros);
+        int current = 0;
+#pragma omp parallel for num_threads(nThread)
+        for (int i = 0; i < mFeatureList.size(); i++)
+        {
+            int thread_id = omp_get_thread_num();
+            mat ci, si, betas(nDp, nVar, fill::zeros), betasSE(nDp, nVar, fill::zeros);
+            vec qdiag(nDp, fill::zeros);
+            try
+            {
+                vec dist = distance(i);
+                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
+                mBetasSE.col(i) = (ci % ci) * mRowSumBetasSE;
+                s1(i) = si(0, i);
+                s2(i) = det(si * trans(si));
+                vec p = -trans(si);
+                p(i) += 1.0;
+                qdiag_all.col(thread_id) += p % p;
+                S.row(isStoreS ? i : 0) = si;
+                emit tick(++current, mFeatureList.size());
+            } catch (exception e) {
+                isAllCorrect = false;
+                emit error(e.what());
+            }
+        }
+        if (isAllCorrect)
+        {
+            mSHat(0) = sum(s1);
+            mSHat(1) = sum(s2);
+            mQDiag = sum(qdiag_all, 1);
+        }
     }
-    emit success();
+    else
+    {
+        int current = 0;
+#pragma omp parallel for num_threads(nThread)
+        for (int i = 0; i < mFeatureList.size(); i++)
+        {
+            try {
+                vec dist = distance(i);
+                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                mBetas.col(i) = gwReg(mX, mY, weight, i);
+                emit tick(++current, mFeatureList.size());
+            } catch (exception e) {
+                isAllCorrect = false;
+                emit error(e.what());
+            }
+        }
+    }
+    return isAllCorrect;
+}
+
+double GwmGWRTaskThread::calcTrQtQSerial(mat &S)
+{
+    double trQtQ = 0.0;
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    emit message(tr("Calculating the trace of matrix Q..."));
+    emit tick(0, nDp);
+    mat wspan(1, nVar, fill::ones);
+    for (arma::uword i = 0; i < nDp; i++)
+    {
+        vec di = distance(i);
+        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        mat xtwi = trans(mX % (wi * wspan));
+        mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+        vec pi = -trans(si);
+        pi(i) += 1.0;
+        double qi = sum(pi % pi);
+        trQtQ += qi * qi;
+        for (arma::uword j = i + 1; j < nDp; j++)
+        {
+            vec dj = distance(j);
+            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+            mat xtwj = trans(mX % (wj * wspan));
+            mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
+            vec pj = -trans(sj);
+            pj(j) += 1.0;
+            double qj = sum(pi % pj);
+            trQtQ += qj * qj * 2.0;
+        }
+        emit tick(i + 1, nDp);
+    }
+    return trQtQ;
+}
+
+double GwmGWRTaskThread::calcTrQtQOmp(mat& S)
+{
+    int nThread = mParallelParameter.toInt();
+    vec trQtQ_all(nThread, fill::zeros);
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    emit message(tr("Calculating the trace of matrix Q..."));
+    emit tick(0, nDp);
+    mat wspan(1, nVar, fill::ones);
+    int current = 0;
+#pragma omp parallel for num_threads(nThread)
+    for (arma::uword i = 0; i < nDp; i++)
+    {
+        int thread_id = omp_get_thread_num();
+        vec di = distance(i);
+        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        mat xtwi = trans(mX % (wi * wspan));
+        mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+        vec pi = -trans(si);
+        pi(i) += 1.0;
+        double qi = sum(pi % pi);
+        trQtQ_all(thread_id) += qi * qi;
+        for (arma::uword j = i + 1; j < nDp; j++)
+        {
+            vec dj = distance(j);
+            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+            mat xtwj = trans(mX % (wj * wspan));
+            mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
+            vec pj = -trans(sj);
+            pj(j) += 1.0;
+            double qj = sum(pi % pj);
+            trQtQ_all(thread_id) += qj * qj * 2.0;
+        }
+        emit tick(++current, nDp);
+    }
+    return sum(trQtQ_all);
 }
 
 QString GwmGWRTaskThread::name() const
@@ -833,8 +972,6 @@ void GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
         vec betasJndp = vec(nDp, fill::ones) * (sum(betasi) * 1.0 / nDp);
         vk2(i) = (1.0 / nDp) * det(trans(betasi - betasJndp) * betasi);
     }
-    mat ek = eye(nVar, nVar);
-    mat wspan(1, nVar, fill::ones);
     QList<GwmFTestResult> f3;
     f3.reserve(nVar);
     for (int i = 0; i < nVar; i++)
@@ -843,6 +980,8 @@ void GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
         if (nDp <= 8192)
         {
             mat B(nDp, nDp, fill::zeros);
+            mat ek = eye(nVar, nVar);
+            mat wspan(1, nVar, fill::ones);
             for (int j = 0; j < nDp; j++)
             {
                 vec d = distance(j);
@@ -858,23 +997,8 @@ void GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
         }
         else
         {
-            vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
-            for (int j = 0; j < nDp; j++)
-            {
-                vec d = distance(j);
-                vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                mat xtw = trans(mX % (w * wspan));
-                c += trans(ek.row(i) * inv(xtw * mX) * xtw);
-            }
-            for (int k = 0; k < nDp; k++)
-            {
-                vec d = distance(k);
-                vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                mat xtw = trans(mX % (w * wspan));
-                vec b = trans(ek.row(i) * inv(xtw * mX) * xtw);
-                diagB += (b % b - (1.0 / nDp) * (b % c));
-            }
-            diagB = 1.0 / nDp * diagB;
+            const CalcDiagB calculator = calcDiagB[mParallelMethodType];
+            vec diagB = (this->*calculator)(i);
             g1 = sum(diagB);
             g2 = sum(diagB % diagB);
             numdf = g1 * g1 / g2;
@@ -898,6 +1022,63 @@ void GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
     mF2Result = f2;
     mF3Result = f3;
     mF4Result = f4;
+}
+
+vec GwmGWRTaskThread::calcDiagBSerial(int i)
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
+    mat ek = eye(nVar, nVar);
+    mat wspan(1, nVar, fill::ones);
+    for (arma::uword j = 0; j < nDp; j++)
+    {
+        vec d = distance(j);
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        mat xtw = trans(mX % (w * wspan));
+        c += trans(ek.row(i) * inv(xtw * mX) * xtw);
+    }
+    for (arma::uword k = 0; k < nDp; k++)
+    {
+        vec d = distance(k);
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        mat xtw = trans(mX % (w * wspan));
+        vec b = trans(ek.row(i) * inv(xtw * mX) * xtw);
+        diagB += (b % b - (1.0 / nDp) * (b % c));
+    }
+    diagB = 1.0 / nDp * diagB;
+    return diagB;
+}
+
+vec GwmGWRTaskThread::calcDiagBOmp(int i)
+{
+    int nThread = mParallelParameter.toInt();
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    mat cAll(nDp, nThread, fill::zeros), diagBAll(nDp, nThread, fill::zeros);
+    mat ek = eye(nVar, nVar);
+    mat wspan(1, nVar, fill::ones);
+#pragma omp parallel for num_threads(nThread)
+    for (arma::uword j = 0; j < nDp; j++)
+    {
+        int thread = omp_get_thread_num();
+        vec d = distance(j);
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        mat xtw = trans(mX % (w * wspan));
+        cAll.col(thread) += trans(ek.row(i) * inv(xtw * mX) * xtw);
+    }
+    vec c = sum(cAll, 1);
+#pragma omp parallel for num_threads(nThread)
+    for (arma::uword k = 0; k < nDp; k++)
+    {
+        int thread = omp_get_thread_num();
+        vec d = distance(k);
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        mat xtw = trans(mX % (w * wspan));
+        vec b = trans(ek.row(i) * inv(xtw * mX) * xtw);
+        diagBAll.col(thread) += (b % b - (1.0 / nDp) * (b % c));
+    }
+    vec diagB = sum(diagBAll, 1);
+    diagB = 1.0 / nDp * diagB;
+    return diagB;
 }
 
 void GwmGWRTaskThread::createResultLayer()
