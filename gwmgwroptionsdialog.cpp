@@ -1,8 +1,10 @@
 #include "gwmgwroptionsdialog.h"
 #include "ui_gwmgwroptionsdialog.h"
+#include <omp.h>
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QFileDialog>
+
 
 GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGWRTaskThread* thread,QWidget *parent) :
     QDialog(parent),
@@ -56,6 +58,9 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
+    int cores = omp_get_num_procs();
+    ui->mThreadNum->setValue(cores);
+    ui->mThreadNum->setMaximum(cores);
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onGPURadioToggled);
@@ -373,7 +378,7 @@ QVariant GwmGWROptionsDialog::parallelParameters()
     }
     else if (ui->mCalcParallelMultithreadRadio->isChecked())
     {
-        return ui->mThreadNum->text();
+        return ui->mThreadNum->value();
     }
     else
     {

@@ -94,6 +94,12 @@ struct GwmFTestResult
     }
 };
 
+class GwmGWRTaskThread;
+
+typedef bool (GwmGWRTaskThread::*RegressionAll)(bool, mat&);
+typedef double (GwmGWRTaskThread::*CalcTrQtQ)(mat&);
+typedef vec (GwmGWRTaskThread::*CalcDiagB)(int);
+
 class GwmGWRTaskThread : public GwmTaskThread
 {
     Q_OBJECT
@@ -101,7 +107,10 @@ class GwmGWRTaskThread : public GwmTaskThread
 public:
     static QMap<QString, double> fixedBwUnitDict;
     static QMap<QString, double> adaptiveBwUnitDict;
-    static void initUnitDict();
+
+    static RegressionAll regressionAll[];
+    static CalcTrQtQ calcTrQtQ[];
+    static CalcDiagB calcDiagB[];
 
 public:
 
@@ -145,8 +154,32 @@ public:
     GwmGWRTaskThread(const GwmGWRTaskThread& taskThread);
 
 protected:
-    void run() override;
     QString name() const override;
+    void run() override;
+
+    bool regressionAllSerial(bool hatmatrix, mat& S);
+    bool regressionAllOmp(bool hatmatrix, mat& S);
+//    bool regressionAllCuda(bool hatmatrix, mat& S);
+
+    double calcTrQtQSerial(mat& S);
+    double calcTrQtQOmp(mat& S);
+//    double trQtQCuda();
+
+    bool isNumeric(QVariant::Type type);
+    bool setXY();
+
+    vec distance(int focus);
+    vec distanceCRS(int focus);
+    vec distanceMinkowski(int focus);
+    vec distanceDmat(int focus);
+
+    void diagnostic();
+
+    void f1234Test(const GwmFTestParameters& params);
+    vec calcDiagBSerial(int i);
+    vec calcDiagBOmp(int i);
+
+    void createResultLayer();
 
 public:
     bool isValid(QString& message);
@@ -295,21 +328,6 @@ protected:
     // 结果
     GwmGWRDiagnostic mDiagnostic;
     QgsVectorLayer* mResultLayer;
-
-protected:
-    bool isNumeric(QVariant::Type type);
-    bool setXY();
-
-    vec distance(int focus);
-    vec distanceCRS(int focus);
-    vec distanceMinkowski(int focus);
-    vec distanceDmat(int focus);
-
-    void diagnostic();
-
-    void f1234Test(const GwmFTestParameters& params);
-
-    void createResultLayer();
 };
 
 #endif // GWMGWRTASKTHREAD_H

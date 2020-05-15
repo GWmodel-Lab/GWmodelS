@@ -92,7 +92,6 @@ int main(int argc, char *argv[])
     QgsProviderRegistry::instance(pluginDir);
     QgsProject::instance()->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(4326));
 
-    GwmGWRTaskThread::initUnitDict();
     qRegisterMetaType<PlotFunction>("PlotFunction");
 
     MainWindow w;
