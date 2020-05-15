@@ -387,13 +387,13 @@ double GwmGWRTaskThread::calcTrQtQOmp(mat& S)
 {
     int nThread = mParallelParameter.toInt();
     vec trQtQ_all(nThread, fill::zeros);
-    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    int nDp = mX.n_rows, nVar = mX.n_cols;
     emit message(tr("Calculating the trace of matrix Q..."));
     emit tick(0, nDp);
     mat wspan(1, nVar, fill::ones);
     int current = 0;
 #pragma omp parallel for num_threads(nThread)
-    for (arma::uword i = 0; i < nDp; i++)
+    for (int i = 0; i < nDp; i++)
     {
         int thread_id = omp_get_thread_num();
         vec di = distance(i);
@@ -1052,12 +1052,12 @@ vec GwmGWRTaskThread::calcDiagBSerial(int i)
 vec GwmGWRTaskThread::calcDiagBOmp(int i)
 {
     int nThread = mParallelParameter.toInt();
-    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    int nDp = mX.n_rows, nVar = mX.n_cols;
     mat cAll(nDp, nThread, fill::zeros), diagBAll(nDp, nThread, fill::zeros);
     mat ek = eye(nVar, nVar);
     mat wspan(1, nVar, fill::ones);
 #pragma omp parallel for num_threads(nThread)
-    for (arma::uword j = 0; j < nDp; j++)
+    for (int j = 0; j < nDp; j++)
     {
         int thread = omp_get_thread_num();
         vec d = distance(j);
@@ -1067,7 +1067,7 @@ vec GwmGWRTaskThread::calcDiagBOmp(int i)
     }
     vec c = sum(cAll, 1);
 #pragma omp parallel for num_threads(nThread)
-    for (arma::uword k = 0; k < nDp; k++)
+    for (int k = 0; k < nDp; k++)
     {
         int thread = omp_get_thread_num();
         vec d = distance(k);
