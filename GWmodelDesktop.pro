@@ -214,8 +214,8 @@ CONFIG(debug, debug|release) {
     INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-debug/include"
     LIBS += -L"$(OSGEO_HOME)/apps/qgis-debug/lib" -lqgis_core -lqgis_gui
 } else {
-    INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-dev/include"
-    LIBS += -L"$(OSGEO_HOME)/apps/qgis-dev/lib" -lqgis_core -lqgis_gui
+    INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-rel-dev/include"
+    LIBS += -L"$(OSGEO_HOME)/apps/qgis-rel-dev/lib" -lqgis_core -lqgis_gui
 }
 LIBS += -L"$(OSGEO_HOME)/lib" -lgdal_i
 GDAL_DATA = ".\share\gdal"
