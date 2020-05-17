@@ -97,7 +97,7 @@ struct GwmFTestResult
 class GwmGWRTaskThread;
 
 typedef bool (GwmGWRTaskThread::*RegressionAll)(bool, mat&);
-typedef double (GwmGWRTaskThread::*CalcTrQtQ)(mat&);
+typedef double (GwmGWRTaskThread::*CalcTrQtQ)();
 typedef vec (GwmGWRTaskThread::*CalcDiagB)(int);
 
 class GwmGWRTaskThread : public GwmTaskThread
@@ -161,8 +161,8 @@ protected:
     bool regressionAllOmp(bool hatmatrix, mat& S);
 //    bool regressionAllCuda(bool hatmatrix, mat& S);
 
-    double calcTrQtQSerial(mat& S);
-    double calcTrQtQOmp(mat& S);
+    double calcTrQtQSerial();
+    double calcTrQtQOmp();
 //    double trQtQCuda();
 
     bool isNumeric(QVariant::Type type);

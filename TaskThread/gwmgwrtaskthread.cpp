@@ -209,7 +209,7 @@ void GwmGWRTaskThread::run()
                 else
                 {
                     const CalcTrQtQ calc = calcTrQtQ[mParallelMethodType];
-                    trQtQ = (this->*calc)(S);
+                    trQtQ = (this->*calc)();
                 }
                 GwmFTestParameters fTestParams;
                 fTestParams.nDp = mX.n_rows;
@@ -350,7 +350,7 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
     return isAllCorrect;
 }
 
-double GwmGWRTaskThread::calcTrQtQSerial(mat &S)
+double GwmGWRTaskThread::calcTrQtQSerial()
 {
     double trQtQ = 0.0;
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
@@ -362,6 +362,8 @@ double GwmGWRTaskThread::calcTrQtQSerial(mat &S)
         vec di = distance(i);
         vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
         mat xtwi = trans(mX % (wi * wspan));
+        mat xtwxR = inv(xtwi * mX);
+        mat ci = xtwxR * xtwi;
         mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
         vec pi = -trans(si);
         pi(i) += 1.0;
@@ -383,7 +385,7 @@ double GwmGWRTaskThread::calcTrQtQSerial(mat &S)
     return trQtQ;
 }
 
-double GwmGWRTaskThread::calcTrQtQOmp(mat& S)
+double GwmGWRTaskThread::calcTrQtQOmp()
 {
     int nThread = mParallelParameter.toInt();
     vec trQtQ_all(nThread, fill::zeros);
@@ -977,7 +979,7 @@ void GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
     for (int i = 0; i < nVar; i++)
     {
         double g1 = 0.0, g2 = 0.0, numdf = 0.0;
-        if (nDp <= 8192)
+        if (nDp > 8192)
         {
             mat B(nDp, nDp, fill::zeros);
             mat ek = eye(nVar, nVar);
@@ -993,14 +995,16 @@ void GwmGWRTaskThread::f1234Test(const GwmFTestParameters& params)
             vec b = diagvec(Bj);
             g1 = sum(b);
             g2 = sum(b % b);
+            qDebug("Var %d tr(B)   = %lf", i, g1);
+            qDebug("Var %d tr(B.B) = %lf", i, g2);
             numdf = g1 * g1 / g2;
         }
         else
         {
             const CalcDiagB calculator = calcDiagB[mParallelMethodType];
             vec diagB = (this->*calculator)(i);
-            g1 = sum(diagB);
-            g2 = sum(diagB % diagB);
+            g1 = diagB(0);
+            g2 = diagB(1);
             numdf = g1 * g1 / g2;
         }
         GwmFTestResult f3i;
@@ -1035,18 +1039,20 @@ vec GwmGWRTaskThread::calcDiagBSerial(int i)
         vec d = distance(j);
         vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
         mat xtw = trans(mX % (w * wspan));
-        c += trans(ek.row(i) * inv(xtw * mX) * xtw);
+        mat C = trans(xtw) * inv(xtw * mX);
+        c += C.col(i);
     }
     for (arma::uword k = 0; k < nDp; k++)
     {
         vec d = distance(k);
         vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
         mat xtw = trans(mX % (w * wspan));
-        vec b = trans(ek.row(i) * inv(xtw * mX) * xtw);
+        mat C = trans(xtw) * inv(xtw * mX);
+        vec b = C.col(i);
         diagB += (b % b - (1.0 / nDp) * (b % c));
     }
     diagB = 1.0 / nDp * diagB;
-    return diagB;
+    return { sum(diagB), sum(diagB % diagB) };
 }
 
 vec GwmGWRTaskThread::calcDiagBOmp(int i)
@@ -1078,7 +1084,7 @@ vec GwmGWRTaskThread::calcDiagBOmp(int i)
     }
     vec diagB = sum(diagBAll, 1);
     diagB = 1.0 / nDp * diagB;
-    return diagB;
+    return { sum(diagB), sum(diagB % diagB) };
 }
 
 void GwmGWRTaskThread::createResultLayer()
