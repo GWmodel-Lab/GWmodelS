@@ -118,6 +118,8 @@ public slots:
     void onShowCoordinateTransDlg(const QModelIndex &index);
     void onGWRBtnClicked();
 
+    void onRobustGWRBtnClicked();
+
    // void transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index);
 
     //void setNewCoordinate(QgsCoordinateReferenceSystem,QString,QModelIndex);

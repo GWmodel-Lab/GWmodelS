@@ -19,9 +19,9 @@ protected:
     // 主解算函数
     bool gwrModelCalibration(const vec& weightMask);
     // 鲁棒GWR的第一种解法
-    void robustGWRCaliFirst();
+    bool robustGWRCaliFirst();
     // 第二种解法
-    void robustGWRCaliSecond();
+    bool robustGWRCaliSecond();
     // 计算二次权重函数
     vec filtWeight(vec x);
 

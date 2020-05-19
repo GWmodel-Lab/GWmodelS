@@ -8,18 +8,24 @@ GwmRobustGWRTaskThread::GwmRobustGWRTaskThread():GwmGWRTaskThread()
 
 void GwmRobustGWRTaskThread::run()
 {
+    bool isAllCorrect;
     // 设置矩阵
     if (!setXY())
     {
         return;
     }
     if(filtered==true){
-        robustGWRCaliFirst();
+        isAllCorrect = robustGWRCaliFirst();
     }else if(filtered==false){
-        robustGWRCaliSecond();
+        isAllCorrect = robustGWRCaliSecond();
     }
     //产生结果图层
-    createResultLayer();
+    if(isAllCorrect)
+    {
+        createResultLayer();
+        //诊断信息
+        diagnostic();
+    }
 }
 
 bool GwmRobustGWRTaskThread::gwrModelCalibration(const vec &weightMask)
@@ -48,7 +54,7 @@ bool GwmRobustGWRTaskThread::gwrModelCalibration(const vec &weightMask)
     return isAllCorrect;
 }
 
-void GwmRobustGWRTaskThread::robustGWRCaliFirst()
+bool GwmRobustGWRTaskThread::robustGWRCaliFirst()
 {
     //  ------------- 计算W.vect
     vec WVect;
@@ -71,6 +77,7 @@ void GwmRobustGWRTaskThread::robustGWRCaliFirst()
         }
     }
     bool res1 = gwrModelCalibration(WVect);
+    return res1;
 }
 
 vec GwmRobustGWRTaskThread::filtWeight(vec x)
@@ -97,12 +104,13 @@ vec GwmRobustGWRTaskThread::filtWeight(vec x)
     return result;
 }
 
-void GwmRobustGWRTaskThread::robustGWRCaliSecond()
+bool GwmRobustGWRTaskThread::robustGWRCaliSecond()
 {
     double iter = 0;
     double diffmse = 1;
     double delta = 1.0e-5;
     double maxiter = 20;
+    bool res2;
     //计算residual
     mYHat = fitted(mX, mBetas);
     mResidual = mY - mYHat;
@@ -113,7 +121,7 @@ void GwmRobustGWRTaskThread::robustGWRCaliSecond()
     WVect = filtWeight(abs(mResidual/sqrt(mse)));
     while(diffmse>delta && iter<maxiter){
         double oldmse = mse;
-        gwrModelCalibration(WVect);
+        res2 = gwrModelCalibration(WVect);
         //计算residual
         mYHat = fitted(mX, mBetas);
         mResidual = mY - mYHat;
@@ -122,6 +130,7 @@ void GwmRobustGWRTaskThread::robustGWRCaliSecond()
         diffmse = abs(oldmse-mse)/mse;
         iter = iter +1;
     }
+    return res2;
 }
 
 void GwmRobustGWRTaskThread::setFiltered(bool value)

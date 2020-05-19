@@ -142,6 +142,9 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
     connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRBtnClicked);
 
+    //
+    connect(toolbar,&GwmToolbar::gwmodelRobustGWRBtnSignal,this,&MainWidget::onRobustGWRBtnClicked);
+
 }
 
 void MainWidget::setupFeaturePanel()
@@ -612,6 +615,38 @@ void MainWidget::onGWRBtnClicked()
 }
 
 void MainWidget::onRobustGWR()
+{
+    GwmRobustGWRTaskThread* gwrRobustTaskThread = new GwmRobustGWRTaskThread();
+    GwmRobustGWROptionsDialog* gwrRobustOptionDialog = new GwmRobustGWROptionsDialog(mapModel->rootChildren(), gwrRobustTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwrRobustOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwrRobustOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwrRobustOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwrRobustOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwrRobustOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrRobustTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwrRobustTaskThread->getResultLayer();
+            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
+            mapModel->appentItem(gwrItem, selectedIndex);
+        }
+    }
+}
+
+void MainWidget::onRobustGWRBtnClicked()
 {
     GwmRobustGWRTaskThread* gwrRobustTaskThread = new GwmRobustGWRTaskThread();
     GwmRobustGWROptionsDialog* gwrRobustOptionDialog = new GwmRobustGWROptionsDialog(mapModel->rootChildren(), gwrRobustTaskThread);
