@@ -179,6 +179,22 @@ void GwmGWRTaskThread::run()
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     emit message(tr("Calibrating GWR model..."));
     emit tick(0, nDp);
+    vec weightMask(nDp, fill::ones);
+    bool isAllCorrect = gwrCalibration(weightMask);
+
+    // Create Result Layer
+    if (isAllCorrect)
+    {
+        createResultLayer();
+    }
+    emit success();
+}
+
+bool GwmGWRTaskThread::gwrCalibration(const vec& weightMask)
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    emit message(tr("Calibrating GWR model..."));
+    emit tick(0, nDp);
     bool isAllCorrect = true;
     if (hasHatMatrix)
     {
@@ -187,7 +203,7 @@ void GwmGWRTaskThread::run()
         // 解算
         mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
         const RegressionAll regression = regressionAll[mParallelMethodType];
-        bool isAllCorrect = (this->*regression)(hasHatMatrix, S);
+        bool isAllCorrect = (this->*regression)(hasHatMatrix, weightMask, S);
         mBetas = trans(mBetas);
         mBetasSE = trans(mBetasSE);
 
@@ -229,19 +245,13 @@ void GwmGWRTaskThread::run()
     else
     {
         mat _(0, 0);
-        bool isAllCorrect = regressionAllSerial(hasHatMatrix, _);
+        isAllCorrect = regressionAllSerial(hasHatMatrix, weightMask, _);
         mBetas = trans(mBetas);
     }
-
-    // Create Result Layer
-    if (isAllCorrect)
-    {
-        createResultLayer();
-    }
-    emit success();
+    return isAllCorrect;
 }
 
-bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
+bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, const vec& weightMask, mat& S)
 {
     bool isAllCorrect = true;
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
@@ -254,7 +264,7 @@ bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
             try
             {
                 vec dist = distance(i);
-                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % weightMask;
                 mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
                 mBetasSE.col(i) = (ci % ci) * mRowSumBetasSE;
                 mSHat(0) += si(0, i);
@@ -288,7 +298,7 @@ bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
     return isAllCorrect;
 }
 
-bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
+bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, const vec& weightMask, mat &S)
 {
     int nThread = mParallelParameter.toInt();
     bool isAllCorrect = true;
@@ -308,7 +318,7 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
             try
             {
                 vec dist = distance(i);
-                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % weightMask;
                 mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
                 mBetasSE.col(i) = (ci % ci) * mRowSumBetasSE;
                 s1(i) = si(0, i);

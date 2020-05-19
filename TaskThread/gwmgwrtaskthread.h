@@ -157,8 +157,10 @@ protected:
     QString name() const override;
     void run() override;
 
-    bool regressionAllSerial(bool hatmatrix, mat& S);
-    bool regressionAllOmp(bool hatmatrix, mat& S);
+    bool gwrCalibration(const vec& weightMask);
+
+    bool regressionAllSerial(bool hatmatrix, const vec& weightMask, mat& S);
+    bool regressionAllOmp(bool hatmatrix, const vec& weightMask, mat& S);
 //    bool regressionAllCuda(bool hatmatrix, mat& S);
 
     double calcTrQtQSerial();

@@ -36,6 +36,7 @@
 #include "gwmattributetabledialog.h"
 #include "Model/gwmlayergwritem.h"
 
+//鲁棒GWR
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
     , mapModel(new GwmLayerItemModel)
@@ -605,6 +606,38 @@ void MainWidget::onGWRBtnClicked()
         {
             QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
             GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrTaskThread);
+            mapModel->appentItem(gwrItem, selectedIndex);
+        }
+    }
+}
+
+void MainWidget::onRobustGWR()
+{
+    GwmRobustGWRTaskThread* gwrRobustTaskThread = new GwmRobustGWRTaskThread();
+    GwmRobustGWROptionsDialog* gwrRobustOptionDialog = new GwmRobustGWROptionsDialog(mapModel->rootChildren(), gwrRobustTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwrRobustOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwrRobustOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwrRobustOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwrRobustOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwrRobustOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrRobustTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwrRobustTaskThread->getResultLayer();
+            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
