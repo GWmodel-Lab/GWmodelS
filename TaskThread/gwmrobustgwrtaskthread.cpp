@@ -14,18 +14,22 @@ void GwmRobustGWRTaskThread::run()
     {
         return;
     }
-    if(filtered==true){
+    if (filtered)
+    {
         isAllCorrect = robustGWRCaliFirst();
-    }else if(filtered==false){
+    }
+    else
+    {
         isAllCorrect = robustGWRCaliSecond();
     }
     //产生结果图层
     if(isAllCorrect)
     {
-        createResultLayer();
         //诊断信息
         diagnostic();
+        createResultLayer();
     }
+    emit success();
 }
 
 bool GwmRobustGWRTaskThread::gwrModelCalibration(const vec &weightMask)
@@ -39,17 +43,16 @@ bool GwmRobustGWRTaskThread::gwrModelCalibration(const vec &weightMask)
         bool isStoreS = hasFTest && (nDp <= 8192);
 
         // 解算
+        mSHat.fill(fill::zeros);
+        mQDiag.fill(fill::zeros);
         mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
         const RegressionAll regression = regressionAll[mParallelMethodType];
-        bool isAllCorrect = (this->*regression)(hasHatMatrix, weightMask, S);
-        mBetas = trans(mBetas);
-        mBetasSE = trans(mBetasSE);
+        isAllCorrect = (this->*regression)(hasHatMatrix, weightMask, S);
     }
     else
     {
         mat _(0, 0);
         isAllCorrect = regressionAllSerial(hasHatMatrix, weightMask, _);
-        mBetas = trans(mBetas);
     }
     return isAllCorrect;
 }
@@ -106,18 +109,22 @@ vec GwmRobustGWRTaskThread::filtWeight(vec x)
 
 bool GwmRobustGWRTaskThread::robustGWRCaliSecond()
 {
+    int nDp = mX.n_rows;
     double iter = 0;
     double diffmse = 1;
     double delta = 1.0e-5;
     double maxiter = 20;
     bool res2;
+    vec WVect(nDp, fill::ones);
+    gwrModelCalibration(WVect);
     //计算residual
+    mX.print("X");
+    mBetas.print("Betas");
     mYHat = fitted(mX, mBetas);
     mResidual = mY - mYHat;
     //计算mse
     mse = sum((mResidual % mResidual))/ mResidual.size();
     //计算WVect
-    vec WVect;
     WVect = filtWeight(abs(mResidual/sqrt(mse)));
     while(diffmse>delta && iter<maxiter){
         double oldmse = mse;

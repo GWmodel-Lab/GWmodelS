@@ -411,6 +411,11 @@ void GwmRobustGWROptionsDialog::updateFields()
         }
     }
     // 带宽设置
+    if (ui->mBwSizeCustomizeRadio->isChecked())
+    {
+        mTaskThread->setIsBandwidthSizeAutoSel(false);
+        mTaskThread->setBandwidth(this->bandwidthType(), this->bandwidthSize(), this->bandWidthUnit());
+    }
     mTaskThread->setBandwidthKernelFunction(this->bandwidthKernelFunction());
     // 距离设置
     auto distSrcType = this->distanceSourceType();
