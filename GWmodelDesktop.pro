@@ -335,6 +335,13 @@ INCLUDEPATH += "$(QT_HOME)/include/gsl"
 LIBS += -L"$(QT_HOME)/lib" -lgsl -lgslcblas
 ## GSL END
 
+## GWmodelCUDA
+INCLUDEPATH += "$(QT_HOME)/include/GWmodelCUDA"
+LIBS += -L"$(QT_HOME)/lib" -lGWmodelCUDA64 -lCUDAInspector
+
+
+## GWmodelCUDA END
+
 TRANSLATIONS += \
     GWmodelDesktop_zh_CN.ts
 

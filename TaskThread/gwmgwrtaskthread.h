@@ -5,6 +5,8 @@
 #include <qgsvectorlayer.h>
 #include <armadillo>
 
+#include "GWmodelCUDA/IGWmodelCUDA.h"
+
 #include "Model/gwmlayerattributeitem.h"
 
 using namespace arma;
@@ -160,11 +162,11 @@ protected:
     virtual bool regressionAllSerial(bool hatmatrix, mat& S);
     virtual bool regressionAllOmp(bool hatmatrix, mat& S);
     bool gwrCalibration();
-//    bool regressionAllCuda(bool hatmatrix, mat& S);
+    virtual bool regressionAllCuda(bool hatmatrix, mat& S);
 
     virtual double calcTrQtQSerial();
     virtual double calcTrQtQOmp();
-//    double trQtQCuda();
+    virtual double calcTrQtQCuda();
 
     bool isNumeric(QVariant::Type type);
     virtual bool setXY();
@@ -179,6 +181,7 @@ protected:
     virtual void f1234Test(const GwmFTestParameters& params);
     virtual vec calcDiagBSerial(int i);
     virtual vec calcDiagBOmp(int i);
+    virtual vec calcDiagBCuda(int i);
 
     virtual void createResultLayer();
 
