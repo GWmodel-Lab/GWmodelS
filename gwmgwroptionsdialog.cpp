@@ -72,19 +72,26 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     // 获取显卡信息
     ICUDAInspector* inspector = CUDAInspector_Create();
     int gpuCount = inspector->GetDeviceCount();
-    for (int i = 0; i < gpuCount; ++i)
+    if (gpuCount > 0)
     {
-        char name[255] = { "" };
-        int nameLength = inspector->GetDeviceName(i);
-        for (int n = 0; n < nameLength; ++n)
+        for (int i = 0; i < gpuCount; ++i)
         {
-            name[n] = inspector->GetNameChar(n);
+            char name[255] = { "" };
+            int nameLength = inspector->GetDeviceName(i);
+            for (int n = 0; n < nameLength; ++n)
+            {
+                name[n] = inspector->GetNameChar(n);
+            }
+            name[nameLength] = '\0';
+            QString gpuItem(name);
+            ui->mGPUSelection->addItem(gpuItem);
         }
-        name[nameLength] = '\0';
-        QString gpuItem(name);
-        ui->mGPUSelection->addItem(gpuItem);
+        CUDAInspector_Delete(inspector);
     }
-    CUDAInspector_Delete(inspector);
+    else
+    {
+        ui->mCalcParallelGPURadio->setEnabled(false);
+    }
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);
