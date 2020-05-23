@@ -63,7 +63,7 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     connect(ui->cbxHatmatrix, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::on_cbxHatmatrix_toggled);
 
     //鲁棒GWR
-    connect(ui->cbxFilter,&QAbstractButton::toggled,this,&GwmRobustGWROptionsDialog::on_cbxFilter_toggled);
+    //connect(ui->cbxFilter,&QAbstractButton::toggled,this,&GwmRobustGWROptionsDialog::on_cbxFilter_toggled);
 
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmRobustGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmRobustGWROptionsDialog::updateFieldsAndEnable);
@@ -92,7 +92,11 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmRobustGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmRobustGWROptionsDialog::updateFieldsAndEnable);
     //
-    connect(ui->cbxFilter,&QAbstractButton::toggle, this, &GwmRobustGWROptionsDialog::updateFieldsAndEnable);
+    //connect(ui->cbxFilter,&QAbstractButton::toggle, this, &GwmRobustGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mFilteredRadio,&QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mNotFilteredRadio,&QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mFilteredRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onFilteredRadioToggled);
+    connect(ui->mNotFilteredRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onNotFilteredRadioToggled);
 }
 
 GwmRobustGWROptionsDialog::~GwmRobustGWROptionsDialog()
@@ -431,7 +435,7 @@ void GwmRobustGWROptionsDialog::updateFields()
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
     mTaskThread->setHasFTest(ui->cbxFTest->isChecked());
     //
-    mTaskThread->setFiltered(ui->cbxFilter->isChecked());
+    //mTaskThread->setFiltered(ui->cbxFilter->isChecked());
 }
 
 void GwmRobustGWROptionsDialog::enableAccept()
@@ -473,15 +477,25 @@ void GwmRobustGWROptionsDialog::on_cmbRegressionLayerSelect_currentIndexChanged(
 }
 
 //
-void GwmRobustGWROptionsDialog::on_cbxFilter_toggled(bool checked)
+//void GwmRobustGWROptionsDialog::on_cbxFilter_toggled(bool checked)
+//{
+//    if (checked)
+//    {
+//        ui->cbxFilter->setEnabled(true);
+//    }
+//    else
+//    {
+//        ui->cbxFilter->setChecked(false);
+//        //ui->cbxFilter->setEnabled(false);
+//    }
+//}
+
+void GwmRobustGWROptionsDialog::onFilteredRadioToggled(bool checked)
 {
-    if (checked)
-    {
-        ui->cbxFilter->setEnabled(true);
-    }
-    else
-    {
-        ui->cbxFilter->setChecked(false);
-        //ui->cbxFilter->setEnabled(false);
-    }
+    mTaskThread->setFiltered(true);
+}
+
+void GwmRobustGWROptionsDialog::onNotFilteredRadioToggled(bool checked)
+{
+    mTaskThread->setFiltered(false);
 }

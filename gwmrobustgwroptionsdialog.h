@@ -44,7 +44,8 @@ public slots:
     void onDmatFileOpenClicked();
     void onVariableAutoSelectionToggled(bool checked);
 
-
+    void onFilteredRadioToggled(bool checked);
+    void onNotFilteredRadioToggled(bool checked);
 public:
     QString crsRotateTheta();
     QString crsRotateP();
@@ -71,7 +72,7 @@ private slots:
     void on_cbkRegressionPoints_toggled(bool checked);
     void on_cmbRegressionLayerSelect_currentIndexChanged(int index);
 
-    void on_cbxFilter_toggled(bool checked);
+    //void on_cbxFilter_toggled(bool checked);
 };
 
 #endif // GWMROBUSTGWROPTIONSDIALOG_H

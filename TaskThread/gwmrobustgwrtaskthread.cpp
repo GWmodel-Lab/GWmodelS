@@ -14,6 +14,9 @@ void GwmRobustGWRTaskThread::run()
     {
         return;
     }
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    bool isStoreS = hasFTest && (nDp <= 8192);
+    mS=mat(isStoreS ? nDp : 1, nDp, fill::zeros);
     if (filtered)
     {
         isAllCorrect = robustGWRCaliFirst();
@@ -27,6 +30,35 @@ void GwmRobustGWRTaskThread::run()
     {
         //诊断信息
         diagnostic();
+        // F Test
+        if (hasHatMatrix && hasFTest)
+        {
+            // Q
+            double trQtQ = DBL_MAX;
+            if (isStoreS)
+            {
+                mat EmS = eye(nDp, nDp) - mS;
+                mat Q = trans(EmS) * EmS;
+                trQtQ = sum(diagvec(trans(Q) * Q));
+            }
+            else
+            {
+                const CalcTrQtQ calc = calcTrQtQ[mParallelMethodType];
+                trQtQ = (this->*calc)(mS);
+            }
+            GwmFTestParameters fTestParams;
+            fTestParams.nDp = mX.n_rows;
+            fTestParams.nVar = mX.n_cols;
+            fTestParams.trS = mSHat(0);
+            fTestParams.trStS = mSHat(1);
+            fTestParams.trQ = sum(mQDiag);
+            fTestParams.trQtQ = trQtQ;
+            fTestParams.bw = mBandwidthSize;
+            fTestParams.adaptive = mBandwidthType == BandwidthType::Adaptive;
+            fTestParams.kernel = mBandwidthKernelFunction;
+            fTestParams.gwrRSS = sum(mResidual % mResidual);
+            f1234Test(fTestParams);
+        }
         createResultLayer();
     }
     emit success();
@@ -45,9 +77,8 @@ bool GwmRobustGWRTaskThread::gwrModelCalibration()
         // 解算
         mSHat.fill(fill::zeros);
         mQDiag.fill(fill::zeros);
-        mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
         const RegressionAll regression = regressionAll[mParallelMethodType];
-        isAllCorrect = (this->*regression)(hasHatMatrix, S);
+        isAllCorrect = (this->*regression)(hasHatMatrix, mS);
     }
     else
     {
@@ -59,8 +90,8 @@ bool GwmRobustGWRTaskThread::gwrModelCalibration()
 
 bool GwmRobustGWRTaskThread::robustGWRCaliFirst()
 {
+    gwrModelCalibration();
     //  ------------- 计算W.vect
-    vec WVect;
     //计算Stud_residual
     mYHat = fitted(mX, mBetas);
     mResidual = mY - mYHat;
@@ -68,17 +99,21 @@ bool GwmRobustGWRTaskThread::robustGWRCaliFirst()
     vec vDiags = gwrDiag(mY, mX, mBetas, mSHat);
     mDiagnostic = GwmGWRDiagnostic(vDiags);
     double trS = mSHat(0), trStS = mSHat(1);
-    double nDp = mFeatureList.size();
-    double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+    int nDp = mFeatureList.size();
+    double sigmaHat = mDiagnostic.RSS / (nDp * 1.0 - 2 * trS + trStS);
     mStudentizedResidual = mResidual / sqrt(sigmaHat * mQDiag);
+
+    vec WVect(nDp,fill::zeros);
+
     //生成W.vect
     for(int i=0;i<mStudentizedResidual.size();i++){
         if(fabs(mStudentizedResidual[i])>3){
-            WVect[i]=0;
+            WVect(i)=0;
         }else{
-            WVect[i]=1;
+            WVect(i)=1;
         }
     }
+    WVect.print();
     mWeightMask = WVect;
     bool res1 = gwrModelCalibration();
     return res1;

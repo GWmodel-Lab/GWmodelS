@@ -13,6 +13,8 @@ public:
     double mse;
     bool filtered;
 
+    mat mS;
+
     void setFiltered(bool value);
 protected:
     void run() override;

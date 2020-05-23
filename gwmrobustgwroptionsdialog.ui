@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>GWR Configure</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1,0,0,0,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,1,0,0,0,0,0">
    <item>
     <layout class="QFormLayout" name="formLayout_6">
      <item row="0" column="0">
@@ -43,6 +43,58 @@
       <widget class="QComboBox" name="mDepVarComboBox"/>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_5">
+     <property name="minimumSize">
+      <size>
+       <width>609</width>
+       <height>50</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>Method</string>
+     </property>
+     <widget class="QLabel" name="label_10">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>72</width>
+        <height>15</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Algorithm</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="mFilteredRadio">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>20</y>
+        <width>91</width>
+        <height>19</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Filtered</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="mNotFilteredRadio">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>20</y>
+        <width>131</width>
+        <height>19</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Not Filtered</string>
+      </property>
+     </widget>
+    </widget>
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox">
@@ -651,13 +703,6 @@
         </property>
         <property name="checked">
          <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QCheckBox" name="cbxFilter">
-        <property name="text">
-         <string>Filtered</string>
         </property>
        </widget>
       </item>
