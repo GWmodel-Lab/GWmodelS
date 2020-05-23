@@ -41,6 +41,7 @@ GwmGWRTaskThread::GwmGWRTaskThread()
 {
     mX = mat(uword(0), uword(0));
     mY = vec(uword(0));
+    mWeightMask = vec(uword(0));
     mDataPoints = mat(uword(0), 2);
     mRegPoints = mat(uword(0), 2);
     mBetas = mat(uword(0), uword(0));
@@ -81,6 +82,7 @@ GwmGWRTaskThread::GwmGWRTaskThread(const GwmGWRTaskThread &taskThread)
     mParallelParameter = taskThread.mParallelParameter;
     mX = mat(taskThread.mX);
     mY = vec(taskThread.mY);
+    mWeightMask = vec(mWeightMask);
     mDataPoints = mat(taskThread.mDataPoints);
     mRegPoints = mat(taskThread.mRegPoints);
     mBetas = mat(uword(0), uword(0));
@@ -248,7 +250,7 @@ bool GwmGWRTaskThread::gwrCalibration(const vec& weightMask)
     return isAllCorrect;
 }
 
-bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, const vec& weightMask, mat& S)
+bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
 {
     bool isAllCorrect = true;
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
@@ -263,7 +265,7 @@ bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, const vec& weightMask
             try
             {
                 vec dist = distance(i);
-                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % weightMask;
+                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
                 mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
                 mBetasSE.col(i) = sum(ci % ci, 1);
                 mSHat(0) += si(0, i);
@@ -301,7 +303,7 @@ bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, const vec& weightMask
     return isAllCorrect;
 }
 
-bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, const vec& weightMask, mat &S)
+bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
 {
     int nThread = mParallelParameter.toInt();
     bool isAllCorrect = true;
@@ -323,7 +325,7 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, const vec& weightMask, m
             try
             {
                 vec dist = distance(i);
-                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % weightMask;
+                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
                 mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
                 mBetasSE.col(i) = sum(ci % ci, 1);
                 s1(i) = si(0, i);
@@ -379,7 +381,7 @@ double GwmGWRTaskThread::calcTrQtQSerial()
     for (arma::uword i = 0; i < nDp; i++)
     {
         vec di = distance(i);
-        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
         mat xtwi = trans(mX % (wi * wspan));
         mat xtwxR = inv(xtwi * mX);
         mat ci = xtwxR * xtwi;
@@ -391,7 +393,7 @@ double GwmGWRTaskThread::calcTrQtQSerial()
         for (arma::uword j = i + 1; j < nDp; j++)
         {
             vec dj = distance(j);
-            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
             mat xtwj = trans(mX % (wj * wspan));
             mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
             vec pj = -trans(sj);
@@ -418,7 +420,7 @@ double GwmGWRTaskThread::calcTrQtQOmp()
     {
         int thread_id = omp_get_thread_num();
         vec di = distance(i);
-        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
         mat xtwi = trans(mX % (wi * wspan));
         mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
         vec pi = -trans(si);
@@ -428,7 +430,7 @@ double GwmGWRTaskThread::calcTrQtQOmp()
         for (arma::uword j = i + 1; j < nDp; j++)
         {
             vec dj = distance(j);
-            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
             mat xtwj = trans(mX % (wj * wspan));
             mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
             vec pj = -trans(sj);
@@ -814,6 +816,7 @@ bool GwmGWRTaskThread::setXY()
     int nVar = mIndepVarsIndex.size() + 1;
     mX = mat(nDp, nVar, fill::zeros);
     mY = vec(nDp, fill::zeros);
+    mWeightMask = vec(nDp, fill::ones);
     mBetas = mat(nRp, nVar, fill::zeros);
     if (hasHatMatrix)
     {
@@ -1056,7 +1059,7 @@ vec GwmGWRTaskThread::calcDiagBSerial(int i)
     for (arma::uword j = 0; j < nDp; j++)
     {
         vec d = distance(j);
-        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
         mat xtw = trans(mX % (w * wspan));
         mat C = trans(xtw) * inv(xtw * mX);
         c += C.col(i);
@@ -1064,7 +1067,7 @@ vec GwmGWRTaskThread::calcDiagBSerial(int i)
     for (arma::uword k = 0; k < nDp; k++)
     {
         vec d = distance(k);
-        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
         mat xtw = trans(mX % (w * wspan));
         mat C = trans(xtw) * inv(xtw * mX);
         vec b = C.col(i);
@@ -1086,7 +1089,7 @@ vec GwmGWRTaskThread::calcDiagBOmp(int i)
     {
         int thread = omp_get_thread_num();
         vec d = distance(j);
-        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
         mat xtw = trans(mX % (w * wspan));
         cAll.col(thread) += trans(ek.row(i) * inv(xtw * mX) * xtw);
     }
@@ -1096,7 +1099,7 @@ vec GwmGWRTaskThread::calcDiagBOmp(int i)
     {
         int thread = omp_get_thread_num();
         vec d = distance(k);
-        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
         mat xtw = trans(mX % (w * wspan));
         vec b = trans(ek.row(i) * inv(xtw * mX) * xtw);
         diagBAll.col(thread) += (b % b - (1.0 / nDp) * (b % c));

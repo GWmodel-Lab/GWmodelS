@@ -32,7 +32,7 @@ void GwmRobustGWRTaskThread::run()
     emit success();
 }
 
-bool GwmRobustGWRTaskThread::gwrModelCalibration(const vec &weightMask)
+bool GwmRobustGWRTaskThread::gwrModelCalibration()
 {
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     emit message(tr("Calibrating GWR model..."));
@@ -47,12 +47,12 @@ bool GwmRobustGWRTaskThread::gwrModelCalibration(const vec &weightMask)
         mQDiag.fill(fill::zeros);
         mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
         const RegressionAll regression = regressionAll[mParallelMethodType];
-        isAllCorrect = (this->*regression)(hasHatMatrix, weightMask, S);
+        isAllCorrect = (this->*regression)(hasHatMatrix, S);
     }
     else
     {
         mat _(0, 0);
-        isAllCorrect = regressionAllSerial(hasHatMatrix, weightMask, _);
+        isAllCorrect = regressionAllSerial(hasHatMatrix, _);
     }
     return isAllCorrect;
 }
@@ -79,7 +79,8 @@ bool GwmRobustGWRTaskThread::robustGWRCaliFirst()
             WVect[i]=1;
         }
     }
-    bool res1 = gwrModelCalibration(WVect);
+    mWeightMask = WVect;
+    bool res1 = gwrModelCalibration();
     return res1;
 }
 
@@ -115,8 +116,7 @@ bool GwmRobustGWRTaskThread::robustGWRCaliSecond()
     double delta = 1.0e-5;
     double maxiter = 20;
     bool res2;
-    vec WVect(nDp, fill::ones);
-    gwrModelCalibration(WVect);
+    gwrModelCalibration();
     //计算residual
     mX.print("X");
     mBetas.print("Betas");
@@ -125,15 +125,15 @@ bool GwmRobustGWRTaskThread::robustGWRCaliSecond()
     //计算mse
     mse = sum((mResidual % mResidual))/ mResidual.size();
     //计算WVect
-    WVect = filtWeight(abs(mResidual/sqrt(mse)));
+    mWeightMask = filtWeight(abs(mResidual/sqrt(mse)));
     while(diffmse>delta && iter<maxiter){
         double oldmse = mse;
-        res2 = gwrModelCalibration(WVect);
+        res2 = gwrModelCalibration();
         //计算residual
         mYHat = fitted(mX, mBetas);
         mResidual = mY - mYHat;
         mse = sum((mResidual % mResidual))/ mResidual.size();
-        WVect = filtWeight(abs(mResidual/sqrt(mse)));
+        mWeightMask = filtWeight(abs(mResidual/sqrt(mse)));
         diffmse = abs(oldmse-mse)/mse;
         iter = iter +1;
     }

@@ -17,7 +17,7 @@ public:
 protected:
     void run() override;
     // 主解算函数
-    bool gwrModelCalibration(const vec& weightMask);
+    bool gwrModelCalibration();
     // 鲁棒GWR的第一种解法
     bool robustGWRCaliFirst();
     // 第二种解法

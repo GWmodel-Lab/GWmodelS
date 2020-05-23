@@ -159,8 +159,8 @@ protected:
 
     bool gwrCalibration(const vec& weightMask);
 
-    bool regressionAllSerial(bool hatmatrix, const vec& weightMask, mat& S);
-    bool regressionAllOmp(bool hatmatrix, const vec& weightMask, mat& S);
+    bool regressionAllSerial(bool hatmatrix, mat& S);
+    bool regressionAllOmp(bool hatmatrix, mat& S);
 //    bool regressionAllCuda(bool hatmatrix, mat& S);
 
     double calcTrQtQSerial();
@@ -308,6 +308,7 @@ protected:
     // 计算用的矩阵
     mat mX;
     vec mY;
+    vec mWeightMask;
     mat mBetas;
     mat mRowSumBetasSE;
     mat mBetasSE;
