@@ -157,7 +157,7 @@ protected:
     QString name() const override;
     void run() override;
 
-    bool gwrCalibration(const vec& weightMask);
+    bool gwrCalibration();
 
     bool regressionAllSerial(bool hatmatrix, mat& S);
     bool regressionAllOmp(bool hatmatrix, mat& S);

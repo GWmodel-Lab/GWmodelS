@@ -181,8 +181,8 @@ void GwmGWRTaskThread::run()
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     emit message(tr("Calibrating GWR model..."));
     emit tick(0, nDp);
-    vec weightMask(nDp, fill::ones);
-    bool isAllCorrect = gwrCalibration(weightMask);
+    mWeightMask = vec(nDp, fill::ones);
+    bool isAllCorrect = gwrCalibration();
 
     // Create Result Layer
     if (isAllCorrect)
@@ -192,7 +192,7 @@ void GwmGWRTaskThread::run()
     emit success();
 }
 
-bool GwmGWRTaskThread::gwrCalibration(const vec& weightMask)
+bool GwmGWRTaskThread::gwrCalibration()
 {
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     emit message(tr("Calibrating GWR model..."));
@@ -205,7 +205,7 @@ bool GwmGWRTaskThread::gwrCalibration(const vec& weightMask)
         // 解算
         mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
         const RegressionAll regression = regressionAll[mParallelMethodType];
-        isAllCorrect = (this->*regression)(hasHatMatrix, weightMask, S);
+        isAllCorrect = (this->*regression)(hasHatMatrix, S);
 
         // 诊断和检验
         if (isAllCorrect)
@@ -245,7 +245,7 @@ bool GwmGWRTaskThread::gwrCalibration(const vec& weightMask)
     else
     {
         mat _(0, 0);
-        isAllCorrect = regressionAllSerial(hasHatMatrix, weightMask, _);
+        isAllCorrect = regressionAllSerial(hasHatMatrix, _);
     }
     return isAllCorrect;
 }
