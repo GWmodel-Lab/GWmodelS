@@ -80,6 +80,9 @@
       <property name="text">
        <string>Filtered</string>
       </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
      </widget>
      <widget class="QRadioButton" name="mNotFilteredRadio">
       <property name="geometry">

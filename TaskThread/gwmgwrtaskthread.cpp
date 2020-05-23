@@ -1059,7 +1059,7 @@ vec GwmGWRTaskThread::calcDiagBSerial(int i)
     for (arma::uword j = 0; j < nDp; j++)
     {
         vec d = distance(j);
-        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
         mat xtw = trans(mX % (w * wspan));
         mat C = trans(xtw) * inv(xtw * mX);
         c += C.col(i);
@@ -1067,7 +1067,7 @@ vec GwmGWRTaskThread::calcDiagBSerial(int i)
     for (arma::uword k = 0; k < nDp; k++)
     {
         vec d = distance(k);
-        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
         mat xtw = trans(mX % (w * wspan));
         mat C = trans(xtw) * inv(xtw * mX);
         vec b = C.col(i);
@@ -1089,7 +1089,7 @@ vec GwmGWRTaskThread::calcDiagBOmp(int i)
     {
         int thread = omp_get_thread_num();
         vec d = distance(j);
-        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
         mat xtw = trans(mX % (w * wspan));
         cAll.col(thread) += trans(ek.row(i) * inv(xtw * mX) * xtw);
     }
@@ -1099,7 +1099,7 @@ vec GwmGWRTaskThread::calcDiagBOmp(int i)
     {
         int thread = omp_get_thread_num();
         vec d = distance(k);
-        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
+        vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
         mat xtw = trans(mX % (w * wspan));
         vec b = trans(ek.row(i) * inv(xtw * mX) * xtw);
         diagBAll.col(thread) += (b % b - (1.0 / nDp) * (b % c));

@@ -44,7 +44,7 @@ void GwmRobustGWRTaskThread::run()
             else
             {
                 const CalcTrQtQ calc = calcTrQtQ[mParallelMethodType];
-                trQtQ = (this->*calc)(mS);
+                trQtQ = (this->*calc)();
             }
             GwmFTestParameters fTestParams;
             fTestParams.nDp = mX.n_rows;
@@ -90,33 +90,36 @@ bool GwmRobustGWRTaskThread::gwrModelCalibration()
 
 bool GwmRobustGWRTaskThread::robustGWRCaliFirst()
 {
-    gwrModelCalibration();
-    //  ------------- 计算W.vect
-    //计算Stud_residual
-    mYHat = fitted(mX, mBetas);
-    mResidual = mY - mYHat;
-    // 诊断信息
-    vec vDiags = gwrDiag(mY, mX, mBetas, mSHat);
-    mDiagnostic = GwmGWRDiagnostic(vDiags);
-    double trS = mSHat(0), trStS = mSHat(1);
-    int nDp = mFeatureList.size();
-    double sigmaHat = mDiagnostic.RSS / (nDp * 1.0 - 2 * trS + trStS);
-    mStudentizedResidual = mResidual / sqrt(sigmaHat * mQDiag);
+    if(gwrModelCalibration())
+    {
+        //  ------------- 计算W.vect
+        //计算Stud_residual
+        mYHat = fitted(mX, mBetas);
+        mResidual = mY - mYHat;
+        // 诊断信息
+        vec vDiags = gwrDiag(mY, mX, mBetas, mSHat);
+        mDiagnostic = GwmGWRDiagnostic(vDiags);
+        double trS = mSHat(0), trStS = mSHat(1);
+        int nDp = mFeatureList.size();
+        double sigmaHat = mDiagnostic.RSS / (nDp * 1.0 - 2 * trS + trStS);
+        mStudentizedResidual = mResidual / sqrt(sigmaHat * mQDiag);
 
-    vec WVect(nDp,fill::zeros);
+        vec WVect(nDp,fill::zeros);
 
-    //生成W.vect
-    for(int i=0;i<mStudentizedResidual.size();i++){
-        if(fabs(mStudentizedResidual[i])>3){
-            WVect(i)=0;
-        }else{
-            WVect(i)=1;
+        //生成W.vect
+        for(int i=0;i<mStudentizedResidual.size();i++){
+            if(fabs(mStudentizedResidual[i])>3){
+                WVect(i)=0;
+            }else{
+                WVect(i)=1;
+            }
         }
+        mWeightMask = WVect;
+        bool res1 = gwrModelCalibration();
+        return res1;
+    }else{
+        return false;
     }
-    WVect.print();
-    mWeightMask = WVect;
-    bool res1 = gwrModelCalibration();
-    return res1;
 }
 
 vec GwmRobustGWRTaskThread::filtWeight(vec x)
