@@ -22,6 +22,11 @@ public:
     void run() override;
     void diagnostic() override;
 
+    int getPolynomial() const;
+    double getCV() const;
+    double getScale() const;
+    double getPenalty() const;
+
 protected:
     void getNeighbours();
     double optimize(const mat& x, const mat& y, uword bw, double P, const mat& Mx0, const mat& My0, double& b_tilde, double& alpha);

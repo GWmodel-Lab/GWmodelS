@@ -38,6 +38,7 @@ SOURCES += \
     Model/gwmlayeritem.cpp \
     Model/gwmlayeritemmodel.cpp \
     Model/gwmlayeroriginitem.cpp \
+    Model/gwmlayerscalablegwritem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
@@ -104,6 +105,7 @@ HEADERS += \
     Model/gwmlayeritem.h \
     Model/gwmlayeritemmodel.h \
     Model/gwmlayeroriginitem.h \
+    Model/gwmlayerscalablegwritem.h \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \

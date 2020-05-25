@@ -139,3 +139,23 @@ double GwmScalableGWRTaskThread::optimize(const mat &x, const mat &y, uword bw, 
     gsl_multimin_fminimizer_free(minizer);
     return  cv;
 }
+
+double GwmScalableGWRTaskThread::getPenalty() const
+{
+    return mPenalty;
+}
+
+double GwmScalableGWRTaskThread::getScale() const
+{
+    return mScale;
+}
+
+double GwmScalableGWRTaskThread::getCV() const
+{
+    return mCV;
+}
+
+int GwmScalableGWRTaskThread::getPolynomial() const
+{
+    return mPolynomial;
+}
