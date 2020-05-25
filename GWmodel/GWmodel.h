@@ -59,4 +59,8 @@ mat gwDist(const mat& dp, const mat& rp, int focus, double p, double theta, bool
 vec gwWeight(const vec& dist, double bw, int kernel, bool adaptive);
 vec gwLocalR2(const mat& dp, const vec& dybar2, const vec& dyhat2, bool dm_given, const mat& dmat, double p, double theta, bool longlat, double bw, int kernel, bool adaptive);
 
+void scgwr_pre(const mat& x, const vec& y, int bw, int poly, double b0, const mat& g0, const umat& neighbour, mat& Mx0, mat& My0);
+double scgwr_loocv(const vec& target, const mat& x, const vec& y, int bw, int poly, const mat& Mx0, const mat& My0);
+bool scgwr_reg(const mat& x, const vec& y, int bw, int poly, const mat& G0, const umat& neighbour, const vec& parameters, mat& Mx0, mat& My0, mat& betas, vec& s_hat, mat& betasSE);
+
 #endif // GWMODEL_H

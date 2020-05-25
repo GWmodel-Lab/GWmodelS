@@ -51,6 +51,7 @@ SOURCES += \
 #    attributetable/qgsattributetablemodel.cpp \
 #    attributetable/qgsattributetableview.cpp \
 #    attributetable/qgsdualview.cpp \
+    TaskThread/gwmscalablegwrtaskthread.cpp \
     attributetable/qgsaddattrdialog.cpp \
     attributetable/qgsfeaturefilterwidget.cpp \
 #    attributetable/qgsfeaturelistmodel.cpp \
@@ -126,6 +127,7 @@ HEADERS += \
 #    attributetable/qgsifeatureselectionmanager.h \
 #    attributetable/qgsorganizetablecolumnsdialog.h \
 #    attributetable/qgsvectorlayerselectionmanager.h \
+    TaskThread/gwmscalablegwrtaskthread.h \
     attributetable/gwmfeaturefilterwidget_p.h \
     attributetable/qgsaddattrdialog.h \
     attributetable/qgsfieldcalculator.h \
