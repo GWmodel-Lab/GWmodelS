@@ -17,10 +17,8 @@ void GwmScalableGWRTaskThread::run()
     getNeighbours();
 
     // 解算模型
+    emit tick(0, 0);
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nBw = mBandwidthSize;
-    emit message(tr("Calibrating GWR model..."));
-    emit tick(0, nDp);
-
     double P = mPolynomial, band0 = 0.0;
     mat G0(nDp, nBw, fill::zeros);
     switch (mBandwidthKernelFunction)
@@ -36,24 +34,29 @@ void GwmScalableGWRTaskThread::run()
     default:
         return;
     }
+    emit message(tr("Scalable GWR preparing..."));
     mat XtX = mX.t() * mX, XtY = mX.t() * mY;
     mat Mx0, My0;
     scgwr_pre(mX, mY, nBw, P, band0, G0, mNeighbours, Mx0, My0);
 
+    emit message(tr("Scalable GWR optimizing..."));
     double b_tilde = 1.0, alpha = 0.01;
     mCV = optimize(mX, mY, nBw, P, Mx0, My0, b_tilde, alpha);
     if (mCV < DBL_MAX)
     {
+        emit message(tr("Scalable GWR calibrating..."));
         vec parameters = { b_tilde, alpha };
         bool isAllCorrect = scgwr_reg(mX, mY, nBw, P, G0, mNeighbours, parameters, Mx0, My0, mBetas, mSHat, mBetasSE);
         if (isAllCorrect)
         {
             diagnostic();
             createResultLayer();
+            emit success();
         }
     }
     else
     {
+        emit error(tr("Cannot find optimized b.tilde and alpha"));
         return;
     }
 }
@@ -133,6 +136,7 @@ double GwmScalableGWRTaskThread::optimize(const mat &x, const mat &y, uword bw, 
         b_tilde = gsl_vector_get(minizer->x, 0);
         alpha = gsl_vector_get(minizer->x, 1);
         cv = minizer->fval;
+        emit message(QString().sprintf("Scalable GWR optimizing: b.tilde=%.3lf alpha=%.3lf (CV: %.3lf)", b_tilde, alpha, cv));
     }
     gsl_vector_free(target);
     gsl_vector_free(step);
