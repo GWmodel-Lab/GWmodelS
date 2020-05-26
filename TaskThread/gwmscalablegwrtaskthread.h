@@ -8,7 +8,7 @@ struct GwmScalableGWRLoocvParams
     const mat* x;
     const mat* y;
     const int bw;
-    const double polynomial;
+    const int polynomial;
     const mat* Mx0;
     const mat* My0;
 };
@@ -29,7 +29,7 @@ public:
 
 protected:
     void getNeighbours();
-    double optimize(const mat& x, const mat& y, uword bw, double P, const mat& Mx0, const mat& My0, double& b_tilde, double& alpha);
+    double optimize(const mat& Mx0, const mat& My0, double& b_tilde, double& alpha);
 
 protected:
     int mPolynomial = 4;

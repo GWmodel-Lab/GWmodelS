@@ -41,7 +41,7 @@ void GwmScalableGWRTaskThread::run()
 
     emit message(tr("Scalable GWR optimizing..."));
     double b_tilde = 1.0, alpha = 0.01;
-    mCV = optimize(mX, mY, nBw, P, Mx0, My0, b_tilde, alpha);
+    mCV = optimize(Mx0, My0, b_tilde, alpha);
     if (mCV < DBL_MAX)
     {
         emit message(tr("Scalable GWR calibrating..."));
@@ -107,7 +107,7 @@ double scagwr_loocv_multimin_function(const gsl_vector* vars, void* params)
     return scgwr_loocv(target, *x, *y, bw, polynomial, *Mx0, *My0);
 }
 
-double GwmScalableGWRTaskThread::optimize(const mat &x, const mat &y, uword bw, double P, const mat &Mx0, const mat &My0, double& b_tilde, double& alpha)
+double GwmScalableGWRTaskThread::optimize(const mat &Mx0, const mat &My0, double& b_tilde, double& alpha)
 {
     gsl_multimin_fminimizer* minizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex2, 2);
     gsl_vector* target = gsl_vector_alloc(2);
@@ -116,7 +116,7 @@ double GwmScalableGWRTaskThread::optimize(const mat &x, const mat &y, uword bw, 
     gsl_vector* step = gsl_vector_alloc(2);
     gsl_vector_set(step, 0, 0.01);
     gsl_vector_set(step, 1, 0.01);
-    GwmScalableGWRLoocvParams params = { &x, &y, (int)bw, P, &Mx0, &My0 };
+    GwmScalableGWRLoocvParams params = { &mX, &mY, (int)mBandwidthSize, mPolynomial, &Mx0, &My0 };
     gsl_multimin_function function = { &scagwr_loocv_multimin_function, 2, &params };
     double cv = DBL_MAX;
     int status = gsl_multimin_fminimizer_set(minizer, &function, target, step);
