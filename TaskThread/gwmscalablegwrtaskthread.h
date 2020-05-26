@@ -23,6 +23,8 @@ public:
     void diagnostic() override;
 
     int getPolynomial() const;
+    void setPolynomial(int polynomial);
+
     double getCV() const;
     double getScale() const;
     double getPenalty() const;

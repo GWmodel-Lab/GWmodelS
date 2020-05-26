@@ -87,6 +87,7 @@ SOURCES += \
     attributetable/qgsdelattrdialog.cpp \
     attributetable/qgsfeatureaction.cpp \
     attributetable/qgsfieldcalculator.cpp \
+    gwmscalablegwroptionsdialog.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
@@ -156,6 +157,7 @@ HEADERS += \
     attributetable/qgsdelattrdialog.h \
     attributetable/qgsfeatureaction.h \
     attributetable/qgsfieldcalculator.h \
+    gwmscalablegwroptionsdialog.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
@@ -176,6 +178,7 @@ FORMS += \
     gwmprogressdialog.ui \
     gwmpropertypanel.ui \
     gwmsaveascsvdialog.ui \
+    gwmscalablegwroptionsdialog.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui \

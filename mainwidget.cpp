@@ -33,6 +33,10 @@
 #include <qgsvectorfilewriter.h>
 #include <TaskThread/gwmcsvtodatthread.h>
 
+#include "gwmscalablegwroptionsdialog.h"
+#include "TaskThread/gwmscalablegwrtaskthread.h"
+#include "Model/gwmlayerscalablegwritem.h"
+
 #include "gwmattributetabledialog.h"
 #include "Model/gwmlayergwritem.h"
 
@@ -140,6 +144,7 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::zoomToLayerBtnSignal,this,&MainWidget::onZoomToLayerBtn);
     connect(toolbar, &GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
     connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRBtnClicked);
+    connect(toolbar,&GwmToolbar::gwmScalableGWRBtnSignal,this,&MainWidget::onScalableGWRBtnClicked);
 
 }
 
@@ -605,6 +610,38 @@ void MainWidget::onGWRBtnClicked()
         {
             QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
             GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrTaskThread);
+            mapModel->appentItem(gwrItem, selectedIndex);
+        }
+    }
+}
+
+void MainWidget::onScalableGWRBtnClicked()
+{
+    GwmScalableGWRTaskThread* gwrTaskThread = new GwmScalableGWRTaskThread();
+    GwmScalableGWROptionsDialog* gwrOptionDialog = new GwmScalableGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwrOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwrOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwrOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
+            GwmLayerScalableGWRItem* gwrItem = new GwmLayerScalableGWRItem(selectedItem, resultLayer, gwrTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }

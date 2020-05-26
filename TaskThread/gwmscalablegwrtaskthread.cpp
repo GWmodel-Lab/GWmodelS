@@ -144,6 +144,11 @@ double GwmScalableGWRTaskThread::optimize(const mat &Mx0, const mat &My0, double
     return  cv;
 }
 
+void GwmScalableGWRTaskThread::setPolynomial(int polynomial)
+{
+    mPolynomial = polynomial;
+}
+
 double GwmScalableGWRTaskThread::getPenalty() const
 {
     return mPenalty;
