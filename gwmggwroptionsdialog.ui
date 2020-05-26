@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GwmGWROptionsDialog</class>
- <widget class="QDialog" name="GwmGWROptionsDialog">
+ <class>GwmGGWROptionsDialog</class>
+ <widget class="QDialog" name="GwmGGWROptionsDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>GWR Configure</string>
+   <string>GGWR Configure</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1,0,0,0,0,0">
    <item>
@@ -453,7 +453,7 @@
       <item>
        <widget class="QStackedWidget" name="mDistParamSettingStack">
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="mCRSDistPage"/>
         <widget class="QWidget" name="mMinkowskiDistPage">
@@ -793,7 +793,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>GwmGWROptionsDialog</receiver>
+   <receiver>GwmGGWROptionsDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -809,7 +809,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>GwmGWROptionsDialog</receiver>
+   <receiver>GwmGGWROptionsDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

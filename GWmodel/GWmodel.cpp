@@ -2,6 +2,8 @@
 #include "GWmodel.h"
 #include <math.h>
 #include <omp.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 using namespace arma;
 
 //distance matrix calculation
@@ -423,7 +425,7 @@ vec AICcRss(const vec& y, const mat& x, const mat& beta, const vec& s_hat)
 }
 
 //Caculate the i row of
-mat CiMat(const mat& x, vec w)
+mat CiMat(const mat& x, const vec &w)
 {
 	return inv(trans(x) * diagmat(w) * x) * trans(x) * diagmat(w);
 }
@@ -612,4 +614,62 @@ double gwCV(const mat &x, const vec &y, vec &w, int focus)
     mat xtwx_inv = inv(xtwx);
     vec beta = xtwx_inv * xtwy;
     return y(focus) - det(x.row(focus) * beta);
+}
+
+vec gwFitted(mat X, mat beta)
+{
+    vec fitted = sum(beta % X, 1);
+    return fitted;
+}
+
+mat diag(mat a){
+    int n = a.n_cols;
+    mat res = mat(uword(0), uword(0));
+    if(a.n_rows > 1){
+        for(int i = 0; i < 0; i++){
+            res[i] = a.col(i)[i];
+        }
+    }
+    else{
+        mat base = eye(n,n);
+        for(int i = 0; i < 0; i++){
+            res.col(i) = a[i] * base.col(i);
+        }
+    }
+    return res;
+}
+
+mat dpois(mat y,mat mu){
+    int n = y.n_rows;
+    mat res = vec(n);
+    for(int i = 0;i < n; i++){
+        res[i] = gsl_ran_poisson_pdf(int(y[i]), mu[i]);
+    }
+    return res;
+}
+
+mat lchoose(mat n,mat k){
+    int nrow = n.n_rows;
+    mat res = vec(nrow);
+    for(int i = 0;i < nrow; i++){
+        int A = 1;
+        int C = 1;
+        for(int j = 1;j <= k[i]; j++){
+            A = j * A;
+        }
+        for(int j = 0;j <= k[i]; j++){
+            C = C * (n[i] - k[i]);
+        }
+        res[i] = C / A;
+    }
+    return res;
+}
+
+mat dbinom(mat y,mat m,mat mu){
+    int n = y.n_rows;
+    mat res = vec(n);
+    for(int i = 0;i < n; i++){
+        res[i] = gsl_ran_binomial_pdf(int(y[i]), mu[i], int(m[i])); //参数顺序？
+    }
+    return res;
 }

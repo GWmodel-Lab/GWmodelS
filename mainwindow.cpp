@@ -7,7 +7,6 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , mainWidget(new MainWidget())
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
@@ -23,9 +22,10 @@ MainWindow::~MainWindow()
 void MainWindow::setupMenus()
 {
 
-    connect(ui->action_ESRI_Shapefile, &QAction::triggered, mainWidget, &MainWidget::openFileImportShapefile);
-    connect(ui->actionGeo_Json, &QAction::triggered, mainWidget, &MainWidget::openFileImportJson);
-    connect(ui->action_CSV, &QAction::triggered, mainWidget, &MainWidget::openFileImportCsv);
-    connect(ui->action_CsvToDat, &QAction::triggered, mainWidget, &MainWidget::onCsvToDat);
+    connect(ui->action_ESRI_Shapefile, &QAction::triggered, ui->centralwidget, &MainWidget::openFileImportShapefile);
+    connect(ui->actionGeo_Json, &QAction::triggered, ui->centralwidget, &MainWidget::openFileImportJson);
+    connect(ui->action_CSV, &QAction::triggered, ui->centralwidget, &MainWidget::openFileImportCsv);
+    connect(ui->action_CsvToDat, &QAction::triggered, ui->centralwidget, &MainWidget::onCsvToDat);
+    connect(ui->action_GGWR,&QAction::triggered, ui->centralwidget, &MainWidget::onGGWRBtnClicked);
 }
 

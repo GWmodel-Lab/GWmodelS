@@ -54,6 +54,7 @@
      <string>GWR</string>
     </property>
     <addaction name="action_CsvToDat"/>
+    <addaction name="action_GGWR"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menuGWR"/>
@@ -92,6 +93,11 @@
   <action name="action_CsvToDat">
    <property name="text">
     <string>CsvToDmat</string>
+   </property>
+  </action>
+  <action name="action_GGWR">
+   <property name="text">
+    <string>GGWR</string>
    </property>
   </action>
  </widget>

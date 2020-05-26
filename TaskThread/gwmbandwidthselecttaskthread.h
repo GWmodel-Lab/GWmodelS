@@ -22,11 +22,8 @@ public:
 protected:
     void run() override;
 
-private:
+protected:
     bool createdFromGWRTaskThread = false;
-
-    double cvAll(const mat& x, const vec& y,const mat& dp,double bw, int kernel, bool adaptive);
-    double aicAll(const mat& x, const vec& y, const mat& dp,double bw,int kernel,bool adaptive);
 
     double gold(pfApproach p,double xL, double xU, bool adaptBw,const mat& x, const vec& y, const mat& dp, int kernel, bool adaptive);
 
@@ -35,6 +32,10 @@ private:
     QString createOutputMessage(double bw, double score);
 
     QMap<double,double> mBwScore;
+
+private:
+    double cvAll(const mat& x, const vec& y,const mat& dp,double bw, int kernel, bool adaptive);
+    double aicAll(const mat& x, const vec& y, const mat& dp,double bw,int kernel,bool adaptive);
 };
 
 #endif // GWMBANDWIDTHSELECT_H

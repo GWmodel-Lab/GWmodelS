@@ -31,6 +31,10 @@ SOURCES += \
     DelimitedText/qgsdelimitedtextfile.cpp \
     DelimitedText/qgsdelimitedtextprovider.cpp \
     GWmodel/GWmodel.cpp \
+    GWmodel/gwmbinomialmodel.cpp \
+    GWmodel/gwmgeneralizedlinearmodel.cpp \
+    GWmodel/gwmlinearmodel.cpp \
+    GWmodel/gwmpoissonmodel.cpp \
     Model/gwmlayerattributeitem.cpp \
     Model/gwmlayerattributeitemmodel.cpp \
     Model/gwmlayergroupitem.cpp \
@@ -43,6 +47,8 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
+    TaskThread/gwmggwrbandwidthselectionthread.cpp \
+    TaskThread/gwmggwrtaskthread.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmsavelayerthread.cpp \
@@ -71,6 +77,7 @@ SOURCES += \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
+    gwmggwroptionsdialog.cpp \
     gwmgwroptionsdialog.cpp \
     gwmindepvarselectorwidget.cpp \
     gwmmaptoolidentifyfeature.cpp \
@@ -96,6 +103,10 @@ HEADERS += \
     DelimitedText/qgsdelimitedtextfile.h \
     DelimitedText/qgsdelimitedtextprovider.h \
     GWmodel/GWmodel.h \
+    GWmodel/gwmbinomialmodel.h \
+    GWmodel/gwmgeneralizedlinearmodel.h \
+    GWmodel/gwmlinearmodel.h \
+    GWmodel/gwmpoissonmodel.h \
     Model/gwmlayerattributeitem.h \
     Model/gwmlayerattributeitemmodel.h \
     Model/gwmlayergroupitem.h \
@@ -108,6 +119,8 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertygwrtab.h \
     PropertyPanelTabs/utils.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
+    TaskThread/gwmggwrbandwidthselectionthread.h \
+    TaskThread/gwmggwrtaskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmsavelayerthread.h \
@@ -138,6 +151,7 @@ HEADERS += \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
+    gwmggwroptionsdialog.h \
     gwmgwroptionsdialog.h \
     gwmindepvarselectorwidget.h \
     gwmmaptoolidentifyfeature.h \
@@ -166,6 +180,7 @@ FORMS += \
     gwmfeaturepanel.ui \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
+    gwmggwroptionsdialog.ui \
     gwmgwroptionsdialog.ui \
     gwmindepvarselectorwidget.ui \
     gwmopenxyeventlayerdialog.ui \

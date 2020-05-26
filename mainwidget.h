@@ -55,6 +55,7 @@ public slots:
     void openFileImportCsv();
     void onShowSymbolSetting(const QModelIndex &index);
     void onCsvToDat();
+    void onGGWRBtnClicked();
 
 public:
     bool eventFilter(QObject* obj, QEvent* e);
@@ -114,6 +115,8 @@ public slots:
     void refreshCanvas();
     void onShowCoordinateTransDlg(const QModelIndex &index);
     void onGWRBtnClicked();
+
+
 
    // void transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index);
 

@@ -59,4 +59,10 @@ mat gwDist(const mat& dp, const mat& rp, int focus, double p, double theta, bool
 vec gwWeight(const vec& dist, double bw, int kernel, bool adaptive);
 vec gwLocalR2(const mat& dp, const vec& dybar2, const vec& dyhat2, bool dm_given, const mat& dmat, double p, double theta, bool longlat, double bw, int kernel, bool adaptive);
 
+vec gwFitted(mat X, mat beta);
+mat diag(mat a);
+mat dpois(mat y,mat mu);
+mat dbinom(mat y,mat m,mat mu);
+mat lchoose(mat n,mat k);
+
 #endif // GWMODEL_H
