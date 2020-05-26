@@ -239,8 +239,8 @@ CONFIG(debug, debug|release) {
 ## Armadillo END
 
 ## GSL
-INCLUDEPATH += "$(OSGEO_HOME)/include/gsl"
-LIBS += -L"$(OSGEO_HOME)/lib" -lgsl
+INCLUDEPATH += "$(QT_HOME)/include/gsl"
+LIBS += -L"$(QT_HOME)/lib" -lgsl -lgslcblas
 ## GSL END
 
 TRANSLATIONS += \
