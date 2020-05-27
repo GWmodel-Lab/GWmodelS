@@ -58,6 +58,10 @@ public:
     QVariant distanceSourceParameters();
     GwmGWRTaskThread::ParallelMethod parallelMethod();
     QVariant parallelParameters();
+    double epsilonSize();
+    QString epsilonUnit();
+    GwmGGWRTaskThread::Family distributionFunction();
+    int maxiter();
 
     void setTaskThread(GwmGGWRTaskThread* taskThread);
     void updateFieldsAndEnable();

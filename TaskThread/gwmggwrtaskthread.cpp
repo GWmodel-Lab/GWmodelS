@@ -7,6 +7,16 @@
 
 using namespace std;
 
+QMap<QString, double> GwmGGWRTaskThread::TolUnitDict = QMap<QString, double>();
+
+void GwmGGWRTaskThread::initUnitDict1()
+{
+    // 设置静态变量
+    TolUnitDict["e -3"] = 1e-3;
+    TolUnitDict["e -5"] = 1e-5;
+    TolUnitDict["e -7"] = 1e-7;
+    TolUnitDict["e -10"] = 1e-10;
+}
 
 GwmGGWRTaskThread::GwmGGWRTaskThread()
     :GwmGWRTaskThread()
@@ -14,9 +24,9 @@ GwmGGWRTaskThread::GwmGGWRTaskThread()
     mWtMat1 = mat(uword(0), uword(0));
     mWtMat2 = mat(uword(0), uword(0));
     isCV = true;
-    mMaxiter = 20;
-    mTol = 1.0e-5;
-    mFamily = Family::Poisson;
+//    mMaxiter = 20;
+//    mTol = 1.0e-5;
+//    mFamily = Family::Poisson;
 }
 
 GwmGGWRTaskThread::GwmGGWRTaskThread(const GwmGGWRTaskThread &taskThread)
@@ -533,8 +543,9 @@ bool GwmGGWRTaskThread::setFamily(Family family){
     return true;
 }
 
-bool GwmGGWRTaskThread::setTol(double tol){
-    mTol = tol;
+bool GwmGGWRTaskThread::setTol(double tol, QString unit){
+    mTolUnit = unit;
+    mTol = tol * TolUnitDict[unit];
     return true;
 }
 

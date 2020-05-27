@@ -100,6 +100,14 @@ GwmGGWROptionsDialog::GwmGGWROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmGGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmGGWROptionsDialog::updateFieldsAndEnable);
+
+    connect(ui->mDistributionType, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mEpsilonSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mEpsilonUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mMaxiterSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGGWROptionsDialog::updateFieldsAndEnable);
+
+    ui->mEpsilonSize->setValue(1.0);
+    ui->mMaxiterSpinBox->setValue(20);
 }
 
 GwmGGWROptionsDialog::~GwmGGWROptionsDialog()
@@ -381,6 +389,30 @@ QVariant GwmGGWROptionsDialog::parallelParameters()
     }
 }
 
+double GwmGGWROptionsDialog::epsilonSize(){
+    if(ui->mEpsilonSize->value() <= 0.0){
+        return 1.0;
+    }
+    return ui->mEpsilonSize->value();
+}
+
+QString GwmGGWROptionsDialog::epsilonUnit(){
+    return ui->mEpsilonUnit->currentText();
+}
+
+GwmGGWRTaskThread::Family GwmGGWROptionsDialog::distributionFunction(){
+    int distributionSelected = ui->mDistributionType->currentIndex();
+    return GwmGGWRTaskThread::Family(distributionSelected);
+}
+
+int GwmGGWROptionsDialog::maxiter(){
+    if(ui->mMaxiterSpinBox->value() <= 0){
+        return 20;
+    }
+    return ui->mMaxiterSpinBox->value();
+}
+
+
 void GwmGGWROptionsDialog::setTaskThread(GwmGGWRTaskThread *taskThread)
 {
 
@@ -447,6 +479,11 @@ void GwmGGWROptionsDialog::updateFields()
         mTaskThread->setEnableIndepVarAutosel(ui->mVariableAutoSelectionCheck->isChecked());
         mTaskThread->setModelSelThreshold(ui->mModelSelAICThreshold->value());
     }
+    //GGWR 参数设置
+    mTaskThread->setTol(this->epsilonSize(),this->epsilonUnit());
+    mTaskThread->setFamily(this->distributionFunction());
+    mTaskThread->setMaxiter(this->maxiter());
+
     // 带宽设置
     if (ui->mBwSizeAutomaticRadio->isChecked())
     {

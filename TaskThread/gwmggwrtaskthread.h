@@ -6,6 +6,10 @@
 class GwmGGWRTaskThread : public GwmGWRTaskThread
 {
 public:
+    static QMap<QString, double> TolUnitDict;
+    static void initUnitDict1();
+
+public:
     enum Family
     {
         Poisson,
@@ -19,6 +23,7 @@ public:
 protected:
     Family mFamily;
     double mTol;
+    QString mTolUnit;
     int mMaxiter;
     bool isCV;
 
@@ -48,7 +53,7 @@ public:
     mat getWtMat2() const;
 
     bool setFamily(Family family);
-    bool setTol(double tol);
+    bool setTol(double tol, QString unit);
     bool setMaxiter(int maxiter);
     bool setIsCV(bool iscv);
 };
