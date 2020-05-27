@@ -646,7 +646,7 @@ mat dpois(mat y,mat mu){
 //        unsigned int k = int(unsigned(y[i]));
 //        double t = double(mu[i]);
 //        double test = gsl_ran_poisson_pdf(k, double(mu[i]));
-        res[i] = gsl_ran_poisson_pdf(int(y[i]), mu[i]);
+        res[i] = log(gsl_ran_poisson_pdf(int(y[i]), mu[i]));
     }
     return res;
 }
@@ -656,14 +656,10 @@ mat lchoose(mat n,mat k){
     mat res = vec(nrow);
     for(int i = 0;i < nrow; i++){
         double A = 1;
-        double C = 1;
         for(int j = 1;j <= k[i]; j++){
-            A = j * A;
+            A = A * (n[i] - j + 1) / j ;
         }
-        for(int j = 0;j < k[i]; j++){
-            C = C * (n[i] - j);
-        }
-        res.row(i) = log(C / A);
+        res.row(i) = log(A);
     }
     return res;
 }
@@ -672,7 +668,7 @@ mat dbinom(mat y,mat m,mat mu){
     int n = y.n_rows;
     mat res = vec(n);
     for(int i = 0;i < n; i++){
-        res[i] = gsl_ran_binomial_pdf(int(y[i]), mu[i], int(m[i])); //参数顺序？
+        res[i] = log(gsl_ran_binomial_pdf(int(y[i]), mu[i], int(m[i]))); //参数顺序？
     }
     return res;
 }
