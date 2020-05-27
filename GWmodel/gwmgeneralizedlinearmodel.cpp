@@ -55,7 +55,7 @@ void GwmGeneralizedLinearModel::fit(){
         mu = mModel->linkinv(eta);
         vec devoldtemp = mModel->devResids(mY,mu,mWeight);
         double devold = sum(devoldtemp);
-        mat start = mat(uword(0), uword(0));
+        mat start = mat(nVars, mX.n_rows, fill::zeros);
         mat coef;
         bool boundary = false;
         bool conv = false;
@@ -67,7 +67,8 @@ void GwmGeneralizedLinearModel::fit(){
             for (int i = 0; i < mX.n_rows; i++){
                 start.col(i) = gwReg(mX,z,w,i);
             }
-            eta = gwFitted(mX , start) ; //?不是很确定
+            mat starttrans = trans(start);
+            eta = gwFitted(mX , starttrans) ; //?不是很确定
             mu = mModel->linkinv(eta + mOffset);
             vec devtemp = mModel->devResids(mY,mu,mWeight);
             mDev = sum(devtemp);
@@ -81,8 +82,12 @@ void GwmGeneralizedLinearModel::fit(){
             }
         }
     }
-    mat wtdmu = (mIntercept)? sum(mWeight % mY)/sum(mWeight) : mModel->linkinv(mOffset);
-    vec nulldevtemp = mModel->devResids(mY,wtdmu,mWeight);
+    vec wtdmu = (mIntercept)? sum(mWeight % mY)/sum(mWeight) : mModel->linkinv(mOffset);
+    vec wtdmu1 = vec(mY.n_rows);
+    for(int i = 0; i < wtdmu1.n_rows; i++){
+        wtdmu1.row(i) = wtdmu;
+    }
+    vec nulldevtemp = mModel->devResids(mY,wtdmu1,mWeight);
     mNullDev = sum(nulldevtemp);
     int rank = empty? 0 : mX.n_rows;
     mAIC = mModel->aic(mY,n,mu,mWeight,mDev) + 2 * rank;

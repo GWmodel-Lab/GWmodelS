@@ -6,9 +6,12 @@ GwmGGWRBandWidthSelectionThread::GwmGGWRBandWidthSelectionThread()
     mWt2 = vec(uword(0));
     mLLik = 0.0;
     myAdj = vec(uword(0));
+    mMaxiter = 20;
+    mTol = 1.0e-5;
+    mFamily = GwmGGWRTaskThread::Family::Poisson;
 }
 
-GwmGGWRBandWidthSelectionThread::GwmGGWRBandWidthSelectionThread(const GwmGWRTaskThread& gwrTaskThread)
+GwmGGWRBandWidthSelectionThread::GwmGGWRBandWidthSelectionThread(const GwmGGWRTaskThread& gwrTaskThread)
     : GwmBandwidthSelectTaskThread(gwrTaskThread)
 {
     GwmGWRTaskThread::hasHatMatrix = false;
@@ -16,6 +19,9 @@ GwmGGWRBandWidthSelectionThread::GwmGGWRBandWidthSelectionThread(const GwmGWRTas
     mLLik = 0.0;
     myAdj = vec(uword(0));
     createdFromGWRTaskThread = true;
+    mMaxiter = gwrTaskThread.getMaxiter();
+    mTol = gwrTaskThread.getTol();
+    mFamily = gwrTaskThread.getFamily();
 }
 
 
@@ -63,16 +69,16 @@ double GwmGGWRBandWidthSelectionThread::cvAll(const mat& x, const vec& y,const m
     }
     for (int i = 0; i < n; i++){
         mat wi = wt.col(i) % mWt2;
-        vec gwsi = gwReg(x, y, wi, i);
-        mat yhatnoi = x.row(i) % gwsi;
+        vec gwsi = gwReg(x, myAdj, wi, i);
+        mat yhatnoi = x.row(i) * gwsi;
         if(mFamily == GwmGGWRTaskThread::Family::Poisson){
-            cv.col(i) = y.col(i) - exp(yhatnoi);
+            cv.row(i) = y.row(i) - exp(yhatnoi);
         }
         else{
-            cv.col(i) = y.col(i) - exp(yhatnoi)/(1+exp(yhatnoi));
+            cv.row(i) = y.row(i) - exp(yhatnoi)/(1+exp(yhatnoi));
         }
     }
-    vec cvsquare = cv * trans(cv);
+    vec cvsquare = trans(cv) * cv ;
     double res = sum(cvsquare);
     this->mBwScore.insert(bw,res);
     emit message(createOutputMessage(bw, res));
@@ -97,13 +103,13 @@ mat GwmGGWRBandWidthSelectionThread::cvContrib(const mat& x, const vec& y,const 
     }
     for (int i = 0; i < n; i++){
         mat wi = wt.col(i) % mWt2;
-        vec gwsi = gwReg(x, y, wi, i);
-        mat yhatnoi = x.row(i) % gwsi;
+        vec gwsi = gwReg(x, myAdj, wi, i);
+        mat yhatnoi = x.row(i) * gwsi;
         if(mFamily == GwmGGWRTaskThread::Family::Poisson){
-            cv.col(i) = y.col(i) - exp(yhatnoi);
+            cv.row(i) = y.row(i) - exp(yhatnoi);
         }
         else{
-            cv.col(i) = y.col(i) - exp(yhatnoi)/(1+exp(yhatnoi));
+            cv.row(i) = y.row(i) - exp(yhatnoi)/(1+exp(yhatnoi));
         }
     }
     return cv;
@@ -129,7 +135,7 @@ double GwmGGWRBandWidthSelectionThread::aicAll(const mat &x, const vec &y, const
     for (int i = 0; i < n; i++){
         vec wi = wt.col(i) % mWt2;
         mat Ci = CiMat(x,wi);
-        S.col(i) = x.col(i) * Ci;
+        S.row(i) = x.row(i) * Ci;
     }
     vec diagS = diag(S);
     double trS = sum(diagS);
@@ -140,37 +146,38 @@ double GwmGGWRBandWidthSelectionThread::aicAll(const mat &x, const vec &y, const
 }
 
 void GwmGGWRBandWidthSelectionThread::PoissonWt(const mat &x, const vec &y, double bw, mat wt,bool verbose){
-    double tol = 1.0e-5;
-    int maxiter = 20;
+//    double tol = 1.0e-5;
+//    int maxiter = 20;
     int varn = x.n_cols;
     int dpn = x.n_rows;
-    mat betas = mat(dpn,varn);
+    mat betas = mat(varn, dpn, fill::zeros);
     mat S = mat(dpn,dpn);
     int itCount = 0;
     double oldLLik = 0.0;
     vec mu = y + 0.1;
     vec nu = log(mu);
     vec cv = vec(dpn);
+    mWt2 = ones(dpn);
 
     while(1){
         myAdj = nu + (y - mu)/mu;
         for (int i = 0; i < dpn; i++)
         {
             vec wi = wt.col(i);
-            vec gwsi = gwReg(x, y, wi * mWt2, i);
+            vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
             betas.col(i) = gwsi;
         }
-        betas = trans(betas);
-        nu = gwFitted(x,betas);
+        mat betas1 = trans(betas);
+        nu = gwFitted(x,betas1);
         mu = exp(nu);
         oldLLik = mLLik;
         vec lliktemp = dpois(y,mu);
         mLLik = sum(lliktemp);
-        if (abs((oldLLik - mLLik)/mLLik) < tol)
+        if (abs((oldLLik - mLLik)/mLLik) < mTol)
             break;
         mWt2 = mu;
         itCount++;
-        if (itCount == maxiter)
+        if (itCount == mMaxiter)
             break;
     }
 //    return cv;
@@ -178,39 +185,41 @@ void GwmGGWRBandWidthSelectionThread::PoissonWt(const mat &x, const vec &y, doub
 
 
 void GwmGGWRBandWidthSelectionThread::BinomialWt(const mat &x, const vec &y, double bw, mat wt,bool verbose){
-    double tol = 1.0e-5;
-    int maxiter = 20;
+//    double tol = 1.0e-5;
+//    int maxiter = 20;
     int varn = x.n_cols;
     int dpn = x.n_rows;
-    mat betas = mat(dpn,varn);
+    mat betas = mat(varn, dpn, fill::zeros);
     mat S = mat(dpn,dpn);
-    mat n = vec(y.n_cols);
+    mat n = vec(y.n_rows,fill::ones);
     int itCount = 0;
 //    double lLik = 0.0;
     double oldLLik = 0.0;
-    vec mu = vec(dpn,0.5);
-    vec nu = vec(dpn,0);
+    vec mu = vec(dpn,fill::ones) * 0.5;
+    vec nu = vec(dpn,fill::zeros);
 //    vec cv = vec(dpn);
+    mWt2 = ones(dpn);
 
     while(1){
         //计算公式有调整
-        myAdj = nu + (y - mu)/(mu*(1 - mu));
+        myAdj = nu + (y - mu)/(mu % (1 - mu));
         for (int i = 0; i < dpn; i++)
         {
             vec wi = wt.col(i);
-            vec gwsi = gwReg(x, y, wi * mWt2, i);
+            vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
             betas.col(i) = gwsi;
         }
-        betas = trans(betas);
-        nu = gwFitted(x,betas);
+        mat betas1 = trans(betas);
+        nu = gwFitted(x,betas1);
         mu = exp(nu)/(1 + exp(nu));
         oldLLik = mLLik;
-        mLLik = sum(lchoose(n,y) + (n-y)*log(1 - mu/n) + y*log(mu/n));
-        if (abs((oldLLik - mLLik)/mLLik) < tol)
+        lchoose(n,y);
+        mLLik = sum(lchoose(n,y) + (n-y)%log(1 - mu/n) + y%log(mu/n));
+        if (abs((oldLLik - mLLik)/mLLik) < mTol)
             break;
         mWt2 = mu;
         itCount++;
-        if (itCount == maxiter)
+        if (itCount == mMaxiter)
             break;
     }
 

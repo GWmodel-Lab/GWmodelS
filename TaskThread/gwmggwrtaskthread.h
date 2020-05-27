@@ -33,8 +33,8 @@ protected:
     vec distanceMinkowski(int focus, mat regPoints);
     vec distanceDmat(int focus, mat regPoints);
 
-    void gwrPoisson();
-    void gwrBinomial();
+    bool gwrPoisson();
+    bool gwrBinomial();
 
     mat diag(mat a);
 

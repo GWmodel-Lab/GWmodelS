@@ -3,6 +3,11 @@
 #include "gwmggwrbandwidthselectionthread.h"
 #include "GWmodel/gwmgeneralizedlinearmodel.h"
 
+#include <exception>
+
+using namespace std;
+
+
 GwmGGWRTaskThread::GwmGGWRTaskThread()
     :GwmGWRTaskThread()
 {
@@ -63,6 +68,15 @@ void GwmGGWRTaskThread::run(){
 //    int nRp = mRegPoints.n_rows;
     int nDp = mLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
 //    mat betas1 = mBetas;
+
+    emit message(tr("Calculating Distance Matrix..."));
+    mWtMat1 = mat(nDp,nDp,fill::zeros);
+    if(mRegressionLayer){
+        mWtMat2 = mat(nRp,nDp,fill::zeros);
+    }
+    else{
+        mWtMat2 = mat(nDp,nDp,fill::zeros);
+    }
     for(int i = 0; i < mFeatureList.size(); i++){
         vec dist = distance(i,mDataPoints);
         vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
@@ -79,21 +93,26 @@ void GwmGGWRTaskThread::run(){
         mWtMat2 = mWtMat1;
     }
      //model calibration
+    bool isAllCorrect = true;
     if(mFamily == Family::Poisson){
-        gwrPoisson();
+        isAllCorrect = gwrPoisson();
     }
     else{
-        gwrBinomial();
+        isAllCorrect = gwrBinomial();
     }
 
     if(hasHatMatrix && isCV){
-        GwmGGWRBandWidthSelectionThread* taskThread = new GwmGGWRBandWidthSelectionThread();
+        GwmGGWRBandWidthSelectionThread* taskThread = new GwmGGWRBandWidthSelectionThread(*this);
         mat CV = taskThread->cvContrib(mX,mY,mDataPoints,mBandwidthSize,mBandwidthKernelFunction,mBandwidthType == BandwidthType::Adaptive);
         delete taskThread;
         taskThread = nullptr;
     }
-
-    createResultLayer();
+    // Create Result Layer
+    if (isAllCorrect)
+    {
+        createResultLayer();
+    }
+    emit success();
 }
 
 
@@ -142,7 +161,7 @@ vec GwmGGWRTaskThread::distanceDmat(int focus, mat regPoints)
     }
 }
 
-void GwmGGWRTaskThread::gwrPoisson(){
+bool GwmGGWRTaskThread::gwrPoisson(){
     int itCount = 0;
     double lLik = 0.0;
     double oldLLik = 0.0;
@@ -153,6 +172,7 @@ void GwmGGWRTaskThread::gwrPoisson(){
     mat yAdj = vec(nDp);
     int nVar = mY.n_rows;
 
+    emit message(tr("Calibrating GLM model..."));
     GwmGeneralizedLinearModel* glm = new GwmGeneralizedLinearModel();
     glm->setX(mX);
     glm->setY(mY);
@@ -162,7 +182,6 @@ void GwmGGWRTaskThread::gwrPoisson(){
     double dev = glm->dev();
     double pseudor2 = 1- dev/nulldev;
 
-
     while(1){
         yAdj = nu + (mY - mu)/mu;
         for(int i = 0; i < nDp; i++){
@@ -170,8 +189,8 @@ void GwmGGWRTaskThread::gwrPoisson(){
             vec gwsi = gwReg(mX, yAdj, wi % wt2, i);
             mBetas.col(i) = gwsi;
         }
-        mBetas = trans(mBetas);
-        nu = gwFitted(mX,mBetas);
+        mat mBetastemp = trans(mBetas);
+        nu = gwFitted(mX,mBetastemp);
         mu = exp(nu);
         oldLLik = lLik;
 //        lLik = sum(dpois(y, mu, log = TRUE));
@@ -194,129 +213,167 @@ void GwmGGWRTaskThread::gwrPoisson(){
 //    mat ci;
 //    mat s_ri;
 //    mat S = mat(uword(0), uword(0));
+    emit message(tr("Calibrating GGWR model..."));
+    emit tick(0, nDp);
+    bool isAllCorrect = true;
     bool isStoreS = hasFTest && (nDp <= 8192);
     mat ci, s_ri, S(isStoreS ? nDp : 1, nDp, fill::zeros);
     if(hasHatMatrix){
         for(int i = 0; i < nDp; i++){
-            vec wi = mWtMat2.col(i);
-            vec gwsi = gwRegHatmatrix(mX, yAdj, wi % wt2, i, ci, s_ri);
-            mBetas.col(i) = gwsi;
-            mat invwt2 = 1.0 / wt2;
-            S.col(i) = s_ri;
-            mBetasSE.col(i) = diag((ci % invwt2) * trans(ci));
-
-            mSHat(0) += s_ri(0, i);
-            mSHat(1) += det(s_ri * trans(s_ri));
-
-            mBetasSE.col(i) = sqrt(mBetasSE.col(i));
-            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
-
-            vec p = -trans(s_ri);
-            p(i) += 1.0;
-            mQDiag += p % p;
-        }
-        mBetas = trans(mBetas);
-        mBetasSE = trans(mBetasSE);
-        mBetasTV = trans(mBetasTV);
-
-        vec diagS = diag(S);
-        double trS = sum(diagS);
-        vec diagStS = diag(S * diag(wt2) * trans(S) * diag(1/wt2));
-        double trStS =  sum(diagStS);
-        mYHat = gwFitted(mX,mBetas);
-        mat residual = mY - mYHat;
-//        for(int i = 0; i < nDp; i++){
-
-//        }
-        double AIC = gwDev + 2 * trS;
-        double AICc = AIC + 2*trS*(trS+1)/(nDp-trS-1);
-        double R2 = 1 - gwDev/(nulldev);  // pseudo.R2 <- 1 - gw.dev/null.dev
-
-
-        diagnostic();
-
-        // F Test
-        if (hasHatMatrix && hasFTest)
-        {
-            double trQtQ = DBL_MAX;
-            if (isStoreS)
-            {
-                mat EmS = eye(nDp, nDp) - S;
-                mat Q = trans(EmS) * EmS;
-                trQtQ = sum(diagvec(trans(Q) * Q));
-            }
-            else
-            {
-                emit message(tr("Calculating the trace of matrix Q..."));
-                emit tick(0, nDp);
-                trQtQ = 0.0;
-                mat wspan(1, nVar, fill::ones);
-                for (arma::uword i = 0; i < nDp; i++)
-                {
-                    vec di = distance(i,mRegPoints);
-                    vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                    mat xtwi = trans(mX % (wi * wspan));
-                    mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
-                    vec pi = -trans(si);
-                    pi(i) += 1.0;
-                    double qi = sum(pi % pi);
-                    trQtQ += qi * qi;
-                    for (arma::uword j = i + 1; j < nDp; j++)
-                    {
-                        vec dj = distance(j,mRegPoints);
-                        vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                        mat xtwj = trans(mX % (wj * wspan));
-                        mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
-                        vec pj = -trans(sj);
-                        pj(j) += 1.0;
-                        double qj = sum(pi % pj);
-                        trQtQ += qj * qj * 2.0;
-                    }
-                    emit tick(i + 1, nDp);
+            try{
+                vec wi = mWtMat2.col(i);
+                vec gwsi = gwRegHatmatrix(mX, yAdj, wi % wt2, i, ci, s_ri);
+                mBetas.col(i) = gwsi;
+                mat invwt2 = 1.0 / wt2;
+                S.row(isStoreS ? i : 0) = s_ri;
+                mat temp = mat(ci.n_rows,ci.n_cols);
+                for(int j = 0; j < ci.n_rows; j++){
+                    temp.row(j) = ci.row(j) % trans(invwt2);
                 }
+                mBetasSE.col(i) = diag(temp * trans(ci));
+
+                mSHat(0) += s_ri(0, i);
+                mSHat(1) += det(s_ri * trans(s_ri));
+
+                mBetasSE.col(i) = sqrt(mBetasSE.col(i));
+    //            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
+
+                vec p = -trans(s_ri);
+                p(i) += 1.0;
+                mQDiag += p % p;
+
+                emit tick(i + 1, mFeatureList.size());
             }
-            GwmFTestParameters fTestParams;
-            fTestParams.nDp = mX.n_rows;
-            fTestParams.nVar = mX.n_cols;
-            fTestParams.trS = mSHat(0);
-            fTestParams.trStS = mSHat(1);
-            fTestParams.trQ = sum(mQDiag);
-            fTestParams.trQtQ = trQtQ;
-            fTestParams.bw = mBandwidthSize;
-            fTestParams.adaptive = mBandwidthType == BandwidthType::Adaptive;
-            fTestParams.kernel = mBandwidthKernelFunction;
-            fTestParams.gwrRSS = sum(mResidual % mResidual);
-            f1234Test(fTestParams);
+            catch (exception e) {
+                isAllCorrect = false;
+                emit error(e.what());
+            }
+
         }
+        if(isAllCorrect){
+            mBetasTV = mBetas / mBetasSE;
+            mBetas = trans(mBetas);
+            mBetasSE = trans(mBetasSE);
+            mBetasTV = trans(mBetasTV);
+            double trS;
+            double trStS;
+            if(isStoreS){
+                vec diagS = diag(S);
+                trS = sum(diagS);
+                vec diagStS = diag(S * diag(wt2) * trans(S) * diag(1/wt2));
+                trStS =  sum(diagStS);
+            }
+            else{
+                vec diagS = trans(S);
+                trS = sum(diagS);
+                vec temp = S * diag(wt2) * trans(S);
+                vec diagStS = diag(double(temp[0]) * diag(1/wt2));
+                trStS =  sum(diagStS);
+            }
+
+            mYHat = gwFitted(mX,mBetas);
+            mat residual = mY - mYHat;
+    //        for(int i = 0; i < nDp; i++){
+
+    //        }
+            double AIC = gwDev + 2 * trS;
+            double AICc = AIC + 2*trS*(trS+1)/(nDp-trS-1);
+            double R2 = 1 - gwDev/(nulldev);  // pseudo.R2 <- 1 - gw.dev/null.dev
+
+
+            diagnostic();
+
+            // F Test
+            if (hasHatMatrix && hasFTest)
+            {
+                double trQtQ = DBL_MAX;
+                if (isStoreS)
+                {
+                    mat EmS = eye(nDp, nDp) - S;
+                    mat Q = trans(EmS) * EmS;
+                    trQtQ = sum(diagvec(trans(Q) * Q));
+                }
+                else
+                {
+                    emit message(tr("Calculating the trace of matrix Q..."));
+                    emit tick(0, nDp);
+                    trQtQ = 0.0;
+                    mat wspan(1, nVar, fill::ones);
+                    for (arma::uword i = 0; i < nDp; i++)
+                    {
+                        vec di = distance(i,mRegPoints);
+                        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                        mat xtwi = trans(mX % (wi * wspan));
+                        mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+                        vec pi = -trans(si);
+                        pi(i) += 1.0;
+                        double qi = sum(pi % pi);
+                        trQtQ += qi * qi;
+                        for (arma::uword j = i + 1; j < nDp; j++)
+                        {
+                            vec dj = distance(j,mRegPoints);
+                            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                            mat xtwj = trans(mX % (wj * wspan));
+                            mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
+                            vec pj = -trans(sj);
+                            pj(j) += 1.0;
+                            double qj = sum(pi % pj);
+                            trQtQ += qj * qj * 2.0;
+                        }
+                        emit tick(i + 1, nDp);
+                    }
+                }
+                GwmFTestParameters fTestParams;
+                fTestParams.nDp = mX.n_rows;
+                fTestParams.nVar = mX.n_cols;
+                fTestParams.trS = mSHat(0);
+                fTestParams.trStS = mSHat(1);
+                fTestParams.trQ = sum(mQDiag);
+                fTestParams.trQtQ = trQtQ;
+                fTestParams.bw = mBandwidthSize;
+                fTestParams.adaptive = mBandwidthType == BandwidthType::Adaptive;
+                fTestParams.kernel = mBandwidthKernelFunction;
+                fTestParams.gwrRSS = sum(mResidual % mResidual);
+                f1234Test(fTestParams);
+            }
+        }
+
     }
     else{
         for(int i = 0; i < nRp; i++){
-            vec wi = mWtMat2.col(i);
-            vec gwsi = gwReg(mX, yAdj, wi * wt2, i);
-            mBetas.col(i) = gwsi;
+            try{
+                vec wi = mWtMat2.col(i);
+                vec gwsi = gwReg(mX, yAdj, wi * wt2, i);
+                mBetas.col(i) = gwsi;
+                emit tick(i + 1, mFeatureList.size());
+            }
+            catch (exception e) {
+                isAllCorrect = false;
+                emit error(e.what());
+            }
         }
         mBetas = trans(mBetas);
     }
-
-
+    return isAllCorrect;
 }
 
-void GwmGGWRTaskThread::gwrBinomial(){
+bool GwmGGWRTaskThread::gwrBinomial(){
 //    double tol = 1.0e-5;
 //    int maxiter = 20;
     int nVar = mX.n_cols;
     int nDp = mLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
-    mat S = mat(nDp,nDp);
-    mat n = vec(mY.n_cols);
+//    mat S = mat(nDp,nDp);
+    mat n = vec(mY.n_rows,fill::ones);
     int itCount = 0;
     double lLik = 0.0;
     double oldLLik = 0.0;
-    vec mu = vec(nDp,0.5);
-    vec nu = vec(nDp,0);
+    vec mu = vec(nDp,fill::ones) * 0.5;
+    vec nu = vec(nDp,fill::zeros);
     vec wt2 = ones(nDp);
 //    vec cv = vec(nDp);
     mat yAdj = vec(nDp);
 
+    emit message(tr("Calibrating GLM model..."));
     GwmGeneralizedLinearModel* glm = new GwmGeneralizedLinearModel();
     glm->setX(mX);
     glm->setY(mY);
@@ -328,18 +385,18 @@ void GwmGGWRTaskThread::gwrBinomial(){
 
     while(1){
         //计算公式有调整
-        yAdj = nu + (mY - mu)/(mu*(1 - mu));
+        yAdj = nu + (mY - mu)/(mu%(1 - mu));
         for (int i = 0; i < nDp; i++)
         {
             vec wi = mWtMat1.col(i);
             vec gwsi = gwReg(mX, yAdj, wi % wt2, i);
             mBetas.col(i) = gwsi;
         }
-        mBetas = trans(mBetas);
-        nu = gwFitted(mX,mBetas);
+        mat mBetastemp = trans(mBetas);
+        nu = gwFitted(mX,mBetastemp);
         mu = exp(nu)/(1 + exp(nu));
         oldLLik = lLik;
-        lLik = sum(lchoose(n,mY) + (n-mY)*log(1 - mu/n) + mY*log(mu/n));
+        lLik = sum(lchoose(n,mY) + (n-mY)%log(1 - mu/n) + mY%log(mu/n));
         if (abs((oldLLik - lLik)/lLik) < mTol)
             break;
         wt2 = mu;
@@ -347,30 +404,55 @@ void GwmGGWRTaskThread::gwrBinomial(){
         if (itCount == mMaxiter)
             break;
     }
+
+    emit message(tr("Calibrating GGWR model..."));
+    emit tick(0, nDp);
+    bool isAllCorrect = true;
+
+    bool isStoreS = hasFTest && (nDp <= 8192);
     mat ci;
-    mat s_ri;
+    mat s_ri, S(isStoreS ? nDp : 1, nDp, fill::zeros);;
 //    mat S = mat(uword(0), uword(0));
     if(hasHatMatrix){
         for(int i = 0; i < nDp; i++){
-            vec wi = mWtMat1.col(i);
-            vec gwsi = gwRegHatmatrix(mX, yAdj, wi % wt2, i, ci, s_ri);
-            mat invwt2 = 1.0 / wt2;
-            S.col(i) = s_ri;
-            mBetasSE.col(i) = diag((ci % invwt2) * trans(ci));
+            try {
+                vec wi = mWtMat1.col(i);
+                vec gwsi = gwRegHatmatrix(mX, yAdj, wi % wt2, i, ci, s_ri);
+                mat invwt2 = 1.0 / wt2;
+                S.row(isStoreS ? i : 0) = s_ri;
+                mat temp = mat(ci.n_rows,ci.n_cols);
+                for(int j = 0; j < ci.n_rows; j++){
+                    temp.row(j) = ci.row(j) % trans(invwt2);
+                }
+                mBetasSE.col(i) = diag(temp * trans(ci));
+                emit tick(i + 1, mFeatureList.size());
+            }
+            catch (exception e) {
+                isAllCorrect = false;
+                emit error(e.what());
+            }
         }
         mBetas = trans(mBetas);
-        vec diagS = diag(S);
-        double trS = sum(diagS);
+        double trS;
+        if(isStoreS){
+            vec diagS = diag(S);
+            trS = sum(diagS);
+        }
+        else{
+            vec diagS = trans(S);
+            trS = sum(diagS);
+        }
         mYHat = gwFitted(mX,mBetas);
         mat residual = mY - exp(mYHat)/(1+exp(mYHat));
-        vec Dev = log(1/((mY-n+exp(mYHat)/(1+exp(mYHat)))) * ((mY-n+exp(mYHat)/(1+exp(mYHat)))));
+        vec Dev = log(1/((mY-n+exp(mYHat)/(1+exp(mYHat)))) % ((mY-n+exp(mYHat)/(1+exp(mYHat)))));
         double gwDev = sum(Dev);
-        vec residual2 = residual * residual;
+        vec residual2 = residual % residual;
         double rss = sum(residual2);
         for(int i = 0; i < nDp; i++){
             mBetasSE.col(i) = sqrt(mBetasSE.col(i));
-            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
+//            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
         }
+        mBetasTV = mBetas / mBetasSE;
         mBetasSE = trans(mBetasSE);
         mBetasTV = trans(mBetasTV);
 
@@ -380,26 +462,37 @@ void GwmGGWRTaskThread::gwrBinomial(){
     }
     else{
         for(int i = 0; i < nRp; i++){
-            vec wi = mWtMat2.col(i);
-            vec gwsi = gwReg(mX, yAdj, wi * wt2, i);
-            mBetas.col(i) = gwsi;
+            try {
+                vec wi = mWtMat2.col(i);
+                vec gwsi = gwReg(mX, yAdj, wi * wt2, i);
+                mBetas.col(i) = gwsi;
+                emit tick(i + 1, mFeatureList.size());
+            }
+            catch (exception e) {
+                isAllCorrect = false;
+                emit error(e.what());
+            }
         }
         mBetas = trans(mBetas);
     }
+
+    return isAllCorrect;
 }
 
 mat GwmGGWRTaskThread::diag(mat a){
-    int n = a.n_cols;
+    int n = a.n_rows;
     mat res = mat(uword(0), uword(0));
-    if(a.n_rows > 1){
-        for(int i = 0; i < 0; i++){
-            res[i] = a.col(i)[i];
+    if(a.n_cols > 1){
+        res = vec(a.n_rows);
+        for(int i = 0; i < n; i++){
+            res[i] = a.row(i)[i];
         }
     }
     else{
+        res = mat(a.n_rows,a.n_rows);
         mat base = eye(n,n);
-        for(int i = 0; i < 0; i++){
-            res.col(i) = a[i] * base.col(i);
+        for(int i = 0; i < n; i++){
+            res.row(i) = a[i] * base.row(i);
         }
     }
     return res;

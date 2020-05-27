@@ -23,11 +23,14 @@ class GwmGGWRBandWidthSelectionThread : public GwmBandwidthSelectTaskThread
 public:
     GwmGGWRBandWidthSelectionThread();
 
-    GwmGGWRBandWidthSelectionThread(const GwmGWRTaskThread& gwrTaskThread);
+    GwmGGWRBandWidthSelectionThread(const GwmGGWRTaskThread& gwrTaskThread);
 
     GwmGGWRTaskThread::Family mFamily;
 
     mat cvContrib(const mat& x, const vec& y,const mat& dp,double bw, int kernel, bool adaptive);
+
+    double mTol;
+    int mMaxiter;
 
 protected:
     void run();

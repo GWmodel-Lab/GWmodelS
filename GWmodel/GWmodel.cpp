@@ -643,6 +643,9 @@ mat dpois(mat y,mat mu){
     int n = y.n_rows;
     mat res = vec(n);
     for(int i = 0;i < n; i++){
+//        unsigned int k = int(unsigned(y[i]));
+//        double t = double(mu[i]);
+//        double test = gsl_ran_poisson_pdf(k, double(mu[i]));
         res[i] = gsl_ran_poisson_pdf(int(y[i]), mu[i]);
     }
     return res;
@@ -652,15 +655,15 @@ mat lchoose(mat n,mat k){
     int nrow = n.n_rows;
     mat res = vec(nrow);
     for(int i = 0;i < nrow; i++){
-        int A = 1;
-        int C = 1;
+        double A = 1;
+        double C = 1;
         for(int j = 1;j <= k[i]; j++){
             A = j * A;
         }
-        for(int j = 0;j <= k[i]; j++){
-            C = C * (n[i] - k[i]);
+        for(int j = 0;j < k[i]; j++){
+            C = C * (n[i] - j);
         }
-        res[i] = C / A;
+        res.row(i) = log(C / A);
     }
     return res;
 }
