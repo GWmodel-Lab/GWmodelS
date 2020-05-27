@@ -10,6 +10,8 @@ class GwmLayerScalableGWRItem : public GwmLayerGWRItem
 public:
     GwmLayerScalableGWRItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmScalableGWRTaskThread* taskThread = nullptr);
 
+    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::ScalableGWR; }
+
     double getCV() const;
 
     double getScale() const;

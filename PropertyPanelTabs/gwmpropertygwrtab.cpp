@@ -127,19 +127,23 @@ void GwmPropertyGWRTab::updateUI()
     ui->tbwCoefficient->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     QStringList headers = QStringList() << tr("Name") << tr("Min") << tr("1st Qu") << tr("Median") << tr("3rd Qu") << tr("Max");
     ui->tbwCoefficient->setHorizontalHeaderLabels(headers);
-    GwmPropertyGWRTabCalcTread* thread = new GwmPropertyGWRTabCalcTread(mLayerItem);
-    connect(thread, &QThread::finished, this, [=]() {
-        QList<GwmQuartiles> quartiles = thread->quartiles();
-        setQuartiles(0, QStringLiteral("Intercept"), quartiles[0]);
-        QgsVectorLayer* layer = mLayerItem->layer();
-        for (int i = 0; i < indepVarsIndex.size(); i++)
+    const mat& betas = mLayerItem->betas();
+    const vec p = { 0.0, 0.25, 0.5, 0.75, 1.0 };
+    for (uword r = 0; r < betas.n_cols; r++)
+    {
+        vec q = quantile(betas.col(r), p);
+        QString name = (r == 0) ? QStringLiteral("Intercept") : indepVars[r - 1]->attributeName();
+        QTableWidgetItem* nameItem = new QTableWidgetItem(name);
+        nameItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+        ui->tbwCoefficient->setItem(r, 0, nameItem);
+        for (int c = 0; c < 5; c++)
         {
-            int r = i + 1;
-            setQuartiles(r, indepVars[i]->attributeName(), quartiles[r]);
+            QTableWidgetItem* quantileItem = new QTableWidgetItem(QString("%1").arg(q(c), 0, 'f', 3));
+            quantileItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+            quantileItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+            ui->tbwCoefficient->setItem(r, c + 1, quantileItem);
         }
-        delete thread;
-    });
-    thread->start();
+    }
 
     // 绘制可视化图标
     if (mLayerItem->getIsModelOptimized())
@@ -223,54 +227,4 @@ void GwmPropertyGWRTab::updateUI()
             f3Item->setChild(i, 4, new QStandardItem(QString("%1").arg(f3[i].p, 0, 'f', 4)));
         }
     }
-}
-
-void GwmPropertyGWRTab::setQuartiles(const int row, QString name, const GwmQuartiles &quartiles)
-{
-    ui->tbwCoefficient->setItem(row, 0, new QTableWidgetItem(name));
-    QTableWidgetItem* minItem = new QTableWidgetItem(QString("%1").arg(quartiles.min, 0, 'f', 3));
-    QTableWidgetItem* firstItem = new QTableWidgetItem(QString("%1").arg(quartiles.first, 0, 'f', 3));
-    QTableWidgetItem* medianItem = new QTableWidgetItem(QString("%1").arg(quartiles.median, 0, 'f', 3));
-    QTableWidgetItem* thirdItem = new QTableWidgetItem(QString("%1").arg(quartiles.third, 0, 'f', 3));
-    QTableWidgetItem* maxItem = new QTableWidgetItem(QString("%1").arg(quartiles.max, 0, 'f', 3));
-    minItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    firstItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    medianItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    thirdItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    maxItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    ui->tbwCoefficient->setItem(row, 1, minItem);
-    ui->tbwCoefficient->setItem(row, 2, firstItem);
-    ui->tbwCoefficient->setItem(row, 3, medianItem);
-    ui->tbwCoefficient->setItem(row, 4, thirdItem);
-    ui->tbwCoefficient->setItem(row, 5, maxItem);
-
-}
-
-//GwmPropertyGWRTabCalcTread::
-
-GwmPropertyGWRTabCalcTread::GwmPropertyGWRTabCalcTread(GwmLayerGWRItem *item)
-{
-    mLayerItem = item;
-}
-
-void GwmPropertyGWRTabCalcTread::run()
-{
-    mat betas = mLayerItem->betas();
-    arma::uword ncol = betas.n_cols, nrow = betas.n_rows;
-    for (arma::uword c = 0; c < ncol; c++)
-    {
-        vec column = sort(betas.col(c));
-        GwmQuartiles quartiles;
-        quartiles.min = column(0);
-        quartiles.first = quartile(column, 0.25);
-        quartiles.median = quartile(column, 0.5);
-        quartiles.third = quartile(column, 0.75);
-        quartiles.max= column(nrow - 1);
-        mQuartiles.append(quartiles);
-    }
-}
-
-QList<GwmQuartiles> GwmPropertyGWRTabCalcTread::quartiles() const
-{
-    return mQuartiles;
 }

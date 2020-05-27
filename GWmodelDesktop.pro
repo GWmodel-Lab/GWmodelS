@@ -42,6 +42,7 @@ SOURCES += \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
+    PropertyPanelTabs/gwmpropertyscalablegwrtab.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
@@ -110,6 +111,7 @@ HEADERS += \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
+    PropertyPanelTabs/gwmpropertyscalablegwrtab.h \
     PropertyPanelTabs/utils.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
@@ -167,6 +169,7 @@ HEADERS += \
 
 FORMS += \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
+    PropertyPanelTabs/gwmpropertyscalablegwrtab.ui \
     gwmcoordtranssettingdialog.ui \
     gwmcsvtodatdialog.ui \
     gwmfeaturepanel.ui \

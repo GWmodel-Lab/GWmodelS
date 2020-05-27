@@ -44,8 +44,10 @@ void GwmScalableGWRTaskThread::run()
     mCV = optimize(Mx0, My0, b_tilde, alpha);
     if (mCV < DBL_MAX)
     {
+        mScale = b_tilde * b_tilde;
+        mPenalty = alpha * alpha;
         emit message(tr("Scalable GWR calibrating..."));
-        vec parameters = { b_tilde, alpha };
+        vec parameters = { mScale, mPenalty };
         bool isAllCorrect = scgwr_reg(mX, mY, nBw, P, G0, mNeighbours, parameters, Mx0, My0, mBetas, mSHat, mBetasSE);
         if (isAllCorrect)
         {

@@ -217,16 +217,17 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
         GwmLayerVectorItem* layerItem;
         GwmLayerItem* item = mapModel->itemFromIndex(current);
         switch (item->itemType()) {
-            case GwmLayerItem::GwmLayerItemType::Group:
-                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+        case GwmLayerItem::GwmLayerItemType::Group:
+            layerItem = ((GwmLayerGroupItem*)item)->originChild();
             break;
-            case GwmLayerItem::GwmLayerItemType::Vector:
-            case GwmLayerItem::GwmLayerItemType::Origin:
-            case GwmLayerItem::GwmLayerItemType::GWR:
-                layerItem = ((GwmLayerVectorItem*)item);
+        case GwmLayerItem::GwmLayerItemType::Vector:
+        case GwmLayerItem::GwmLayerItemType::Origin:
+        case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+            layerItem = ((GwmLayerVectorItem*)item);
             break;
-            default:
-                layerItem = nullptr;
+        default:
+            layerItem = nullptr;
         }
         if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
             toolbar->setBtnEnabled(true);
@@ -277,16 +278,17 @@ void MainWidget::onSaveLayer()
         GwmLayerVectorItem* layerItem;
         GwmLayerItem* item = mapModel->itemFromIndex(index);
         switch (item->itemType()) {
-            case GwmLayerItem::GwmLayerItemType::Group:
-                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+        case GwmLayerItem::GwmLayerItemType::Group:
+            layerItem = ((GwmLayerGroupItem*)item)->originChild();
             break;
-            case GwmLayerItem::GwmLayerItemType::Vector:
-            case GwmLayerItem::GwmLayerItemType::Origin:
-            case GwmLayerItem::GwmLayerItemType::GWR:
-                layerItem = ((GwmLayerVectorItem*)item);
+        case GwmLayerItem::GwmLayerItemType::Vector:
+        case GwmLayerItem::GwmLayerItemType::Origin:
+        case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+            layerItem = ((GwmLayerVectorItem*)item);
             break;
-            default:
-                layerItem = nullptr;
+        default:
+            layerItem = nullptr;
         }
         if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
             if(layerItem->provider() != "ogr"){
@@ -317,16 +319,17 @@ void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
     GwmLayerItem* item = mapModel->itemFromIndex(index);
     GwmLayerVectorItem* layerItem;
     switch (item->itemType()) {
-        case GwmLayerItem::GwmLayerItemType::Group:
-            layerItem = ((GwmLayerGroupItem*)item)->originChild();
+    case GwmLayerItem::GwmLayerItemType::Group:
+        layerItem = ((GwmLayerGroupItem*)item)->originChild();
         break;
-        case GwmLayerItem::GwmLayerItemType::Vector:
-        case GwmLayerItem::GwmLayerItemType::Origin:
-        case GwmLayerItem::GwmLayerItemType::GWR:
-            layerItem = ((GwmLayerVectorItem*)item);
+    case GwmLayerItem::GwmLayerItemType::Vector:
+    case GwmLayerItem::GwmLayerItemType::Origin:
+    case GwmLayerItem::GwmLayerItemType::GWR:
+    case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+        layerItem = ((GwmLayerVectorItem*)item);
         break;
-        default:
-            layerItem = nullptr;
+    default:
+        layerItem = nullptr;
     }
     if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
         GwmSaveAsCSVDialog* saveAsCSVDlg = new GwmSaveAsCSVDialog();
@@ -361,16 +364,17 @@ void MainWidget::onExportLayer(QString filetype)
         GwmLayerVectorItem* layerItem;
         GwmLayerItem* item = mapModel->itemFromIndex(index);
         switch (item->itemType()) {
-            case GwmLayerItem::GwmLayerItemType::Group:
-                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+        case GwmLayerItem::GwmLayerItemType::Group:
+            layerItem = ((GwmLayerGroupItem*)item)->originChild();
             break;
-            case GwmLayerItem::GwmLayerItemType::Vector:
-            case GwmLayerItem::GwmLayerItemType::Origin:
-            case GwmLayerItem::GwmLayerItemType::GWR:
-                layerItem = ((GwmLayerVectorItem*)item);
+        case GwmLayerItem::GwmLayerItemType::Vector:
+        case GwmLayerItem::GwmLayerItemType::Origin:
+        case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+            layerItem = ((GwmLayerVectorItem*)item);
             break;
-            default:
-                layerItem = nullptr;
+        default:
+            layerItem = nullptr;
         }
         if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
                 QString filePath = QFileDialog::getSaveFileName(this,tr("Save file"),tr(""),filetype);
