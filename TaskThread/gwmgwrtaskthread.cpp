@@ -445,14 +445,22 @@ bool GwmGWRTaskThread::isValid(QString &message)
         message = (tr("Dependent variable is not numeric."));
         return false;
     }
-    for (int iIndepVar : mIndepVarsIndex)
+    if (mIndepVarsIndex.size() > 0)
     {
-        QgsField indepField = mLayer->fields()[iIndepVar];
-        if (!isNumeric(indepField.type()))
+        for (int iIndepVar : mIndepVarsIndex)
         {
-            message = (tr("Independent variable \"") + indepField.name() + tr("\" is not numeric."));
-            return false;
+            QgsField indepField = mLayer->fields()[iIndepVar];
+            if (!isNumeric(indepField.type()))
+            {
+                message = (tr("Independent variable \"") + indepField.name() + tr("\" is not numeric."));
+                return false;
+            }
         }
+    }
+    else
+    {
+        message = (tr("No independent variables."));
+        return false;
     }
     if (mDistSrcType == DistanceSourceType::DMatFile)
     {
@@ -498,6 +506,30 @@ bool GwmGWRTaskThread::isValid(QString &message)
         if (isBandwidthSizeAutoSel)
         {
             message = tr("Cannot automaticly optimize bandwidth if regression points are given.");
+            return false;
+        }
+    }
+    if (!isBandwidthSizeAutoSel)
+    {
+        if (mBandwidthType == BandwidthType::Adaptive)
+        {
+            if (mBandwidthSize < 20.0 || mBandwidthSize < (mIndepVarsIndex.size() + 1))
+            {
+                message = tr("Bandwidth size is too small.");
+                return false;
+            }
+        }
+        else if (mBandwidthSize == BandwidthType::Fixed)
+        {
+            if (mBandwidthSize < 1e-6)
+            {
+                message = tr("Bandwidth size is too small.");
+                return false;
+            }
+        }
+        else
+        {
+            message = tr("Unknown bandwidth type.");
             return false;
         }
     }

@@ -65,6 +65,8 @@ GwmScalableGWROptionsDialog::GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem
     connect(ui->mDistMatrixFileNameEdit, &QLineEdit::textChanged, this, &GwmScalableGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &GwmScalableGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mPolynomialSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmScalableGWROptionsDialog::updateFieldsAndEnable);
+
+    updateFieldsAndEnable();
 }
 
 GwmScalableGWROptionsDialog::~GwmScalableGWROptionsDialog()
@@ -297,14 +299,6 @@ void GwmScalableGWROptionsDialog::updateFields()
         {
             mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
         }
-        else
-        {
-            GwmLayerAttributeItemModel* indepVarModel = ui->mIndepVarSelector->indepVarModel();
-            if (indepVarModel)
-            {
-                mTaskThread->setIndepVars(indepVarModel->attributeItemList());
-            }
-        }
     }
     // 带宽设置
     if (ui->mBwSizeCustomizeRadio->isChecked())
@@ -324,12 +318,14 @@ void GwmScalableGWROptionsDialog::updateFields()
 void GwmScalableGWROptionsDialog::enableAccept()
 {
     QString message;
-    if (!mTaskThread->isValid(message))
+    if (mTaskThread->isValid(message))
     {
-        ui->mCheckMessage->setText(message);
+        ui->mCheckMessage->setText(tr("Valid."));
+        ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     }
     else
     {
-        ui->mCheckMessage->setText(tr("Valid."));
+        ui->mCheckMessage->setText(message);
+        ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Cancel);
     }
 }

@@ -105,6 +105,8 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+
+    updateFieldsAndEnable();
 }
 
 GwmGWROptionsDialog::~GwmGWROptionsDialog()
@@ -441,7 +443,7 @@ void GwmGWROptionsDialog::updateFields()
         {
             mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
         }
-        else
+        else if (ui->mVariableAutoSelectionCheck->isChecked())
         {
             GwmLayerAttributeItemModel* indepVarModel = ui->mIndepVarSelector->indepVarModel();
             if (indepVarModel)
@@ -482,13 +484,15 @@ void GwmGWROptionsDialog::updateFields()
 void GwmGWROptionsDialog::enableAccept()
 {
     QString message;
-    if (!mTaskThread->isValid(message))
+    if (mTaskThread->isValid(message))
     {
-        ui->mCheckMessage->setText(message);
+        ui->mCheckMessage->setText(tr("Valid."));
+        ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     }
     else
     {
-        ui->mCheckMessage->setText(tr("Valid."));
+        ui->mCheckMessage->setText(message);
+        ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Cancel);
     }
 }
 

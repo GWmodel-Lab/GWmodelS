@@ -761,7 +761,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
+      <widget class="QDialogButtonBox" name="btbOkCancle">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -791,7 +791,7 @@
  <resources/>
  <connections>
   <connection>
-   <sender>buttonBox</sender>
+   <sender>btbOkCancle</sender>
    <signal>accepted()</signal>
    <receiver>GwmGWROptionsDialog</receiver>
    <slot>accept()</slot>
@@ -807,7 +807,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>buttonBox</sender>
+   <sender>btbOkCancle</sender>
    <signal>rejected()</signal>
    <receiver>GwmGWROptionsDialog</receiver>
    <slot>reject()</slot>
