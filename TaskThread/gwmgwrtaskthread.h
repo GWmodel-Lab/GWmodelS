@@ -157,29 +157,29 @@ protected:
     QString name() const override;
     void run() override;
 
-    bool regressionAllSerial(bool hatmatrix, mat& S);
-    bool regressionAllOmp(bool hatmatrix, mat& S);
+    virtual bool regressionAllSerial(bool hatmatrix, mat& S);
+    virtual bool regressionAllOmp(bool hatmatrix, mat& S);
 //    bool regressionAllCuda(bool hatmatrix, mat& S);
 
-    double calcTrQtQSerial();
-    double calcTrQtQOmp();
+    virtual double calcTrQtQSerial();
+    virtual double calcTrQtQOmp();
 //    double trQtQCuda();
 
     bool isNumeric(QVariant::Type type);
-    bool setXY();
+    virtual bool setXY();
 
     vec distance(int focus);
     vec distanceCRS(int focus);
     vec distanceMinkowski(int focus);
     vec distanceDmat(int focus);
 
-    void diagnostic();
+    virtual void diagnostic();
 
-    void f1234Test(const GwmFTestParameters& params);
-    vec calcDiagBSerial(int i);
-    vec calcDiagBOmp(int i);
+    virtual void f1234Test(const GwmFTestParameters& params);
+    virtual vec calcDiagBSerial(int i);
+    virtual vec calcDiagBOmp(int i);
 
-    void createResultLayer();
+    virtual void createResultLayer();
 
 public:
     bool isValid(QString& message);

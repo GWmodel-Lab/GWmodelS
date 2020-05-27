@@ -33,6 +33,10 @@
 #include <qgsvectorfilewriter.h>
 #include <TaskThread/gwmcsvtodatthread.h>
 
+#include "gwmscalablegwroptionsdialog.h"
+#include "TaskThread/gwmscalablegwrtaskthread.h"
+#include "Model/gwmlayerscalablegwritem.h"
+
 #include "gwmattributetabledialog.h"
 #include "Model/gwmlayergwritem.h"
 
@@ -140,6 +144,7 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::zoomToLayerBtnSignal,this,&MainWidget::onZoomToLayerBtn);
     connect(toolbar, &GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
     connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRBtnClicked);
+    connect(toolbar,&GwmToolbar::gwmScalableGWRBtnSignal,this,&MainWidget::onScalableGWRBtnClicked);
 
 }
 
@@ -212,16 +217,17 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
         GwmLayerVectorItem* layerItem;
         GwmLayerItem* item = mapModel->itemFromIndex(current);
         switch (item->itemType()) {
-            case GwmLayerItem::GwmLayerItemType::Group:
-                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+        case GwmLayerItem::GwmLayerItemType::Group:
+            layerItem = ((GwmLayerGroupItem*)item)->originChild();
             break;
-            case GwmLayerItem::GwmLayerItemType::Vector:
-            case GwmLayerItem::GwmLayerItemType::Origin:
-            case GwmLayerItem::GwmLayerItemType::GWR:
-                layerItem = ((GwmLayerVectorItem*)item);
+        case GwmLayerItem::GwmLayerItemType::Vector:
+        case GwmLayerItem::GwmLayerItemType::Origin:
+        case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+            layerItem = ((GwmLayerVectorItem*)item);
             break;
-            default:
-                layerItem = nullptr;
+        default:
+            layerItem = nullptr;
         }
         if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
             toolbar->setBtnEnabled(true);
@@ -272,16 +278,17 @@ void MainWidget::onSaveLayer()
         GwmLayerVectorItem* layerItem;
         GwmLayerItem* item = mapModel->itemFromIndex(index);
         switch (item->itemType()) {
-            case GwmLayerItem::GwmLayerItemType::Group:
-                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+        case GwmLayerItem::GwmLayerItemType::Group:
+            layerItem = ((GwmLayerGroupItem*)item)->originChild();
             break;
-            case GwmLayerItem::GwmLayerItemType::Vector:
-            case GwmLayerItem::GwmLayerItemType::Origin:
-            case GwmLayerItem::GwmLayerItemType::GWR:
-                layerItem = ((GwmLayerVectorItem*)item);
+        case GwmLayerItem::GwmLayerItemType::Vector:
+        case GwmLayerItem::GwmLayerItemType::Origin:
+        case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+            layerItem = ((GwmLayerVectorItem*)item);
             break;
-            default:
-                layerItem = nullptr;
+        default:
+            layerItem = nullptr;
         }
         if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
             if(layerItem->provider() != "ogr"){
@@ -312,16 +319,17 @@ void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
     GwmLayerItem* item = mapModel->itemFromIndex(index);
     GwmLayerVectorItem* layerItem;
     switch (item->itemType()) {
-        case GwmLayerItem::GwmLayerItemType::Group:
-            layerItem = ((GwmLayerGroupItem*)item)->originChild();
+    case GwmLayerItem::GwmLayerItemType::Group:
+        layerItem = ((GwmLayerGroupItem*)item)->originChild();
         break;
-        case GwmLayerItem::GwmLayerItemType::Vector:
-        case GwmLayerItem::GwmLayerItemType::Origin:
-        case GwmLayerItem::GwmLayerItemType::GWR:
-            layerItem = ((GwmLayerVectorItem*)item);
+    case GwmLayerItem::GwmLayerItemType::Vector:
+    case GwmLayerItem::GwmLayerItemType::Origin:
+    case GwmLayerItem::GwmLayerItemType::GWR:
+    case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+        layerItem = ((GwmLayerVectorItem*)item);
         break;
-        default:
-            layerItem = nullptr;
+    default:
+        layerItem = nullptr;
     }
     if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
         GwmSaveAsCSVDialog* saveAsCSVDlg = new GwmSaveAsCSVDialog();
@@ -356,16 +364,17 @@ void MainWidget::onExportLayer(QString filetype)
         GwmLayerVectorItem* layerItem;
         GwmLayerItem* item = mapModel->itemFromIndex(index);
         switch (item->itemType()) {
-            case GwmLayerItem::GwmLayerItemType::Group:
-                layerItem = ((GwmLayerGroupItem*)item)->originChild();
+        case GwmLayerItem::GwmLayerItemType::Group:
+            layerItem = ((GwmLayerGroupItem*)item)->originChild();
             break;
-            case GwmLayerItem::GwmLayerItemType::Vector:
-            case GwmLayerItem::GwmLayerItemType::Origin:
-            case GwmLayerItem::GwmLayerItemType::GWR:
-                layerItem = ((GwmLayerVectorItem*)item);
+        case GwmLayerItem::GwmLayerItemType::Vector:
+        case GwmLayerItem::GwmLayerItemType::Origin:
+        case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+            layerItem = ((GwmLayerVectorItem*)item);
             break;
-            default:
-                layerItem = nullptr;
+        default:
+            layerItem = nullptr;
         }
         if(layerItem && layerItem->itemType() != GwmLayerItem::GwmLayerItemType::Symbol){
                 QString filePath = QFileDialog::getSaveFileName(this,tr("Save file"),tr(""),filetype);
@@ -605,6 +614,38 @@ void MainWidget::onGWRBtnClicked()
         {
             QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
             GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrTaskThread);
+            mapModel->appentItem(gwrItem, selectedIndex);
+        }
+    }
+}
+
+void MainWidget::onScalableGWRBtnClicked()
+{
+    GwmScalableGWRTaskThread* gwrTaskThread = new GwmScalableGWRTaskThread();
+    GwmScalableGWROptionsDialog* gwrOptionDialog = new GwmScalableGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwrOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwrOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwrOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
+            GwmLayerScalableGWRItem* gwrItem = new GwmLayerScalableGWRItem(selectedItem, resultLayer, gwrTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }

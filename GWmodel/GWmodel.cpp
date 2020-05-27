@@ -380,7 +380,7 @@ vec gwrDiag(const vec& y, const mat& x, const mat& beta, const vec& s_hat)
 	double AICc = n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + s_hat(0)) / (n - 2 - s_hat(0))); //AICc
 	double edf = n - 2 * s_hat(0) + s_hat(1);																														//edf
 	double enp = 2 * s_hat(0) - s_hat(1);																																// enp
-	double yss = sum(pow(y - mean(y), 2));																															//yss.g
+    double yss = sum((y - mean(y)) % (y - mean(y)));																															//yss.g
 	double r2 = 1 - ss / yss;
 	double r2_adj = 1 - (1 - r2) * (n - 1) / (edf - 1);
 	result(0) = AIC;
@@ -612,4 +612,222 @@ double gwCV(const mat &x, const vec &y, vec &w, int focus)
     mat xtwx_inv = inv(xtwx);
     vec beta = xtwx_inv * xtwy;
     return y(focus) - det(x.row(focus) * beta);
+}
+
+void scgwr_pre(const mat& x, const vec& y, int bw, int poly, double b0, const mat& g0, const umat& neighbour, mat& Mx0, mat& My0) {
+  int n = x.n_rows;
+  int k = x.n_cols;
+  mat g0s(g0.n_cols + 1, g0.n_rows, fill::ones);
+  mat g0t = trans(g0);
+  for (int i = 0; i < bw; i++) {
+    g0s.row(i + 1) = g0t.row(i);
+  }
+  g0s = trans(g0s);
+  Mx0 = mat((poly + 1)*k*k, n, fill::zeros);
+  My0 = mat((poly + 1)*k, n, fill::zeros);
+  mat spanXnei(1, poly + 1, fill::ones);
+  mat spanXtG(1, k, fill::ones);
+  for (int i = 0; i < n; i++) {
+    mat g(poly + 1, bw + 1, fill::ones);
+    for (int p = 0; p < poly; p++) {
+      g.row(p + 1) = pow(g0s.row(i), pow(2.0, poly/2.0)/pow(2.0, p + 1));
+    }
+    g = trans(g);
+    g = g.rows(1, bw);
+    mat xnei(bw, k, fill::zeros);
+    vec ynei(bw, fill::zeros);
+    for (int j = 0; j < bw; j++) {
+      int inei = int(neighbour(i, j));
+      xnei.row(j) = x.row(inei);
+      ynei.row(j) = y(inei);
+    }
+    for (int k1 = 0; k1 < k; k1++) {
+      mat XtG = xnei.col(k1) * spanXnei % g;
+      for (int p = 0; p < (poly + 1); p++) {
+        mat XtGX = XtG.col(p) * spanXtG % xnei;
+        for (int k2 = 0; k2 < k; k2++) {
+          int xindex = (k1 * (poly + 1) + p) * k + k2;
+          Mx0(xindex, i) = sum(XtGX.col(k2));
+        }
+        int yindex = p * k + k1;
+        vec XtGY = XtG.col(p) % ynei;
+        My0(yindex, i) = sum(XtGY);
+      }
+    }
+  }
+}
+
+
+double scgwr_loocv(const vec& target, const mat& x, const vec& y, int bw, int poly, const mat& Mx0, const mat& My0) {
+  int n = x.n_rows, k = x.n_cols, poly1 = poly + 1;
+  double b = target(0) * target(0), a = target(1) * target(1);
+  vec R0 = vec(poly1) * b;
+  for (int p = 1; p < poly1; p++) {
+    R0(p) = pow(b, p + 1);
+  }
+  vec Rx(k*k*poly1, fill::zeros), Ry(k*poly1, fill::zeros);
+  for (int p = 0; p < poly1; p++) {
+    for (int k2 = 0; k2 < k; k2++) {
+      for (int k1 = 0; k1 < k; k1++) {
+        int xindex = k1*poly1*k + p*k + k2;
+        Rx(xindex) = R0(p);
+      }
+      int yindex = p*k + k2;
+      Ry(yindex) = R0(p);
+    }
+  }
+  mat Mx = Rx * mat(1, n, fill::ones) % Mx0, My = Ry * mat(1, n, fill::ones) % My0;
+  vec yhat(n, 1, fill::zeros);
+  for (int i = 0; i < n; i++) {
+    mat sumMx(k, k, fill::zeros);
+    vec sumMy(k, fill::zeros);
+    for (int k2 = 0; k2 < k; k2++) {
+      for (int p = 0; p < poly1; p++) {
+        for (int k1 = 0; k1 < k; k1++) {
+          int xindex = k1*poly1*k + p*k + k2;
+          sumMx(k1, k2) += Mx(xindex, i);
+        }
+        int yindex = p*k + k2;
+        sumMy(k2) += My(yindex, i);
+      }
+    }
+    sumMx = sumMx + a * (x.t() * x);
+    sumMy = sumMy + a * (x.t() * y);
+    if (det(sumMx) < 1e-10) {
+      return 1e6;
+    } else {
+      mat beta = solve(sumMx, sumMy);
+      yhat.row(i) = x.row(i) * beta;
+    }
+  }
+  return sum((y - yhat) % (y - yhat));
+}
+
+
+bool scgwr_reg(const mat& x, const vec& y, int bw, int poly, const mat& G0, const umat& neighbour, const vec& parameters, mat& Mx0, mat& My0, mat& betas, vec& s_hat, mat& betasSE) {
+  int n = x.n_rows, k = x.n_cols, poly1 = poly + 1;
+  double b = parameters(0), a = parameters(1);
+  mat XtX = x.t() * x, XtY = x.t() * y;
+  /**
+   * Calculate Rx, Ry, and R0.
+   */
+  // printf("Calculate Rx, Ry, and R0 ");
+  vec R0 = vec(poly1, fill::ones) * b;
+  for (int p = 1; p < poly1; p++) {
+    R0(p) = pow(b, p + 1);
+  }
+  vec Rx(k*k*poly1, fill::zeros), Ry(k*poly1, fill::zeros);
+  for (int p = 0; p < poly1; p++) {
+    for (int k2 = 0; k2 < k; k2++) {
+      for (int k1 = 0; k1 < k; k1++) {
+        Rx(k1*poly1*k + p*k + k2) = R0(p);
+      }
+      Ry(p*k + k2) = R0(p);
+    }
+  }
+  /**
+  * Create G0.
+  */
+  // printf("Create G0 ");
+  mat G0s(G0.n_cols + 1, G0.n_rows, fill::ones);
+  mat G0t = trans(G0);
+  G0s.rows(1, bw) = G0t.rows(0, bw - 1);
+  G0s = trans(G0s);
+  mat G2(n, bw + 1, fill::zeros);
+  for (int p = 0; p < poly; p++) {
+    G2 += pow(G0s, pow(2.0, poly/2.0)/pow(2.0, p + 1)) * R0(poly - 1);
+  }
+  /**
+   * Calculate Mx, My.
+   */
+  // printf("Calculate Mx, My ");
+  // mat Mx00(Mx0), My00(My0);
+  for (int i = 0; i < n; i++) {
+    for (int k1 = 0; k1 < k; k1++) {
+      for (int p = 0; p < poly1; p++) {
+        for (int k2 = 0; k2 < k; k2++) {
+          Mx0((k1 * (poly + 1) + p) * k + k2, i) += x(i, k1) * x(i, k2);
+        }
+        My0(p * k + k1, i) += x(i, k1) * y(i);
+      }
+    }
+  }
+  mat Mx = (Rx * mat(1, n, fill::ones)) % Mx0, My = (Ry * mat(1, n, fill::ones)) % My0;
+  /**
+   * Regression.
+   */
+  // printf("Regression ");
+  mat Xp(bw + 1, k * poly1, fill::zeros);
+  mat rowsumG(poly1, 1, fill::ones);
+  mat colsumXp(1, bw + 1, fill::zeros);
+  mat spanG(1, k, fill::ones);
+  mat spanX(1, poly1, fill::ones);
+  betas = mat(n, k, fill::zeros);
+  betasSE = mat(n, k, fill::zeros);
+  double trS = 0.0, trStS = 0.0;
+  bool isAllCorrect = true;
+  for (int i = 0; i < n; i++) {
+    /**
+     * Calculate G.
+     */
+    mat G = mat(poly1, bw + 1, fill::ones) * R0(0);
+    for (int p = 0; p < poly; p++) {
+      G.row(p + 1) = pow(G0s.row(i), pow(2.0, poly/2.0)/pow(2.0, p + 1)) * R0(p);
+    }
+    G = trans(G);
+    mat g = G * rowsumG;
+    /**
+     * Calculate Xp.
+     */
+    mat xnei(bw + 1, k, fill::zeros);
+    vec ynei(bw + 1, fill::zeros);
+    xnei.row(0) = x.row(i);
+    ynei.row(0) = y.row(i);
+    for (int j = 0; j < bw; j++) {
+      int inei = int(neighbour(i, j));
+      xnei.row(j+1) = x.row(inei);
+      ynei.row(j+1) = y(inei);
+    }
+    /**
+     * Calculate sumMx, sumMy.
+     */
+    mat sumMx(k, k, fill::zeros);
+    vec sumMy(k, fill::zeros);
+    for (int k2 = 0; k2 < k; k2++) {
+      for (int p = 0; p < poly1; p++) {
+        for (int k1 = 0; k1 < k; k1++) {
+          int xindex = k1*poly1*k + p*k + k2;
+          sumMx(k1, k2) += Mx(xindex, i);
+        }
+        int yindex = p*k + k2;
+        sumMy(k2) += My(yindex, i);
+      }
+    }
+    sumMx += a * XtX;
+    sumMy += a * XtY;
+    try {
+        mat invMx = inv(sumMx);
+        betas.row(i) = trans(invMx * sumMy);
+        /**
+         * Calculate Diagnostic statistics, trS and trStS.
+         */
+        mat StS = invMx * trans(x.row(i));
+        trS += det((x.row(i) * g(0, 0)) * StS);
+        mat XG2X(k, k, fill::zeros);
+        for (int k1 = 0; k1 < k; k1++) {
+          for (int k2 = 0; k2 < k; k2++) {
+            mat Gi = G2.row(i);
+            XG2X(k1, k2) = sum(xnei.col(k1) % trans(Gi % Gi + 2 * a * Gi) % xnei.col(k2)) + a * a * XtX(k1, k2);
+          }
+        }
+        mat XX = invMx * XG2X * invMx;
+        mat xi = x.row(i);
+        trStS += det(sum(xi * XX * trans(xi)));
+        betasSE.row(i) = trans(sqrt(XX.diag()));
+    } catch (...) {
+        isAllCorrect = false;
+    }
+  }
+  s_hat = { trS, trStS };
+  return isAllCorrect;
 }

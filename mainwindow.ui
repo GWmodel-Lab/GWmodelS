@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>29</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -53,6 +53,7 @@
     <property name="title">
      <string>GWR</string>
     </property>
+    <addaction name="actionScalable_GWR"/>
     <addaction name="action_CsvToDat"/>
    </widget>
    <addaction name="menu_File"/>
@@ -92,6 +93,11 @@
   <action name="action_CsvToDat">
    <property name="text">
     <string>CsvToDmat</string>
+   </property>
+  </action>
+  <action name="actionScalable_GWR">
+   <property name="text">
+    <string>Scalable GWR</string>
    </property>
   </action>
  </widget>

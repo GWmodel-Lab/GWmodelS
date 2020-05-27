@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GwmGWROptionsDialog</class>
- <widget class="QDialog" name="GwmGWROptionsDialog">
+ <class>GwmScalableGWROptionsDialog</class>
+ <widget class="QDialog" name="GwmScalableGWROptionsDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>627</width>
-    <height>720</height>
+    <height>611</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>GWR Configure</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1,0,0,0,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1,0,0,0,0">
    <item>
     <layout class="QFormLayout" name="formLayout_6">
      <item row="0" column="0">
@@ -32,29 +32,15 @@
      <item row="0" column="1">
       <widget class="QComboBox" name="mLayerComboBox"/>
      </item>
-     <item row="2" column="0">
+     <item row="1" column="0">
       <widget class="QLabel" name="label_12">
        <property name="text">
         <string>Dependent Variable</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QComboBox" name="mDepVarComboBox"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QCheckBox" name="ckbRegressionPoints">
-       <property name="text">
-        <string>Regression Points</string>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="cmbRegressionLayerSelect">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
+      <widget class="QComboBox" name="mDepVarComboBox"/>
      </item>
     </layout>
    </item>
@@ -63,53 +49,9 @@
      <property name="title">
       <string>Independent Variable Selection</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,0">
+     <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1">
       <item>
        <widget class="GwmIndepVarSelectorWidget" name="mIndepVarSelector" native="true"/>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_7">
-        <item>
-         <widget class="QCheckBox" name="mVariableAutoSelectionCheck">
-          <property name="text">
-           <string>Enable automatic variable-selection</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="Line" name="line_3">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_10">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Threshold</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDoubleSpinBox" name="mModelSelAICThreshold">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="decimals">
-           <number>3</number>
-          </property>
-          <property name="value">
-           <double>3.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </item>
      </layout>
     </widget>
@@ -167,19 +109,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="mBwTypeFixedRadio">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Fixed</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <spacer name="horizontalSpacer">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -215,7 +144,7 @@
         <property name="leftMargin">
          <number>6</number>
         </property>
-        <item row="1" column="0">
+        <item row="0" column="0">
          <widget class="QRadioButton" name="mBwSizeCustomizeRadio">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -231,7 +160,7 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
+        <item row="0" column="1">
          <widget class="QStackedWidget" name="mBwSizeSettingStack">
           <property name="currentIndex">
            <number>0</number>
@@ -335,36 +264,6 @@
           </widget>
          </widget>
         </item>
-        <item row="0" column="0">
-         <widget class="QRadioButton" name="mBwSizeAutomaticRadio">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Auto-selection</string>
-          </property>
-          <property name="checked">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="mBwSizeAutomaticApprochCombo">
-          <item>
-           <property name="text">
-            <string>CV</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>AICc</string>
-           </property>
-          </item>
-         </widget>
-        </item>
        </layout>
       </item>
       <item row="2" column="0">
@@ -384,21 +283,6 @@
         <item>
          <property name="text">
           <string>Exponential</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Bisquare</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Tricube</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Boxcar</string>
          </property>
         </item>
        </widget>
@@ -574,171 +458,25 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="mCalcParallelGroup">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="title">
-      <string>Algorithm Configuration</string>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
-        <item>
-         <widget class="QLabel" name="label_7">
-          <property name="text">
-           <string>Parallel Method</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="mCalcParallelNoneRadio">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>None</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="mCalcParallelMultithreadRadio">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Multithreading</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="mCalcParallelGPURadio">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>GPU</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="Line" name="line_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QStackedWidget" name="stackedWidget">
-        <property name="currentIndex">
-         <number>0</number>
-        </property>
-        <widget class="QWidget" name="page">
-         <layout class="QVBoxLayout" name="verticalLayout">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="page_3">
-         <layout class="QFormLayout" name="formLayout_3">
-          <property name="leftMargin">
-           <number>9</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>9</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_9">
-            <property name="text">
-             <string>Threads</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QSpinBox" name="mThreadNum">
-            <property name="maximum">
-             <number>8</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="page_2">
-         <layout class="QFormLayout" name="formLayout_4">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>Batch Size</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QSpinBox" name="mSampleGroupSize">
-            <property name="maximum">
-             <number>4096</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QGroupBox" name="groupBox_4">
      <property name="title">
-      <string>Others</string>
+      <string>Parameters</string>
      </property>
-     <layout class="QFormLayout" name="formLayout_7">
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="cbxFTest">
+     <layout class="QFormLayout" name="formLayout_3">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>F Test</string>
+         <string>Polynomial</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QCheckBox" name="cbxHatmatrix">
-        <property name="text">
-         <string>Hatmatrix</string>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="mPolynomialSpin">
+        <property name="minimum">
+         <number>1</number>
         </property>
-        <property name="checked">
-         <bool>true</bool>
+        <property name="value">
+         <number>4</number>
         </property>
        </widget>
       </item>
@@ -793,7 +531,7 @@
   <connection>
    <sender>btbOkCancle</sender>
    <signal>accepted()</signal>
-   <receiver>GwmGWROptionsDialog</receiver>
+   <receiver>GwmScalableGWROptionsDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -809,7 +547,7 @@
   <connection>
    <sender>btbOkCancle</sender>
    <signal>rejected()</signal>
-   <receiver>GwmGWROptionsDialog</receiver>
+   <receiver>GwmScalableGWROptionsDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

@@ -43,39 +43,7 @@ private:
 
 public:
     void updateUI();
-
-private:
-    void setQuartiles(const int row, QString name, const GwmQuartiles& quartiles);
 };
 
-
-class GwmPropertyGWRTabCalcTread : public QThread
-{
-    Q_OBJECT
-
-public:
-    explicit GwmPropertyGWRTabCalcTread(GwmLayerGWRItem* item);
-
-    void run() override;
-
-    inline double median(vec column)
-    {
-        int nrow = column.n_rows;
-        return (column[nrow / 2] + column[(nrow - 1) / 2]) / 2;
-    }
-
-    inline double quartile(vec x, double p)
-    {
-        double p0 = (x.n_elem - 1) * p;
-        double w = p0 - int(p0);
-        return x.n_elem == 0 ? 0 : (x[(int)p0] * (1.0 - w) + x[(int)p0 + 1] * w);
-    }
-
-    QList<GwmQuartiles> quartiles() const;
-
-private:
-    GwmLayerGWRItem* mLayerItem;
-    QList<GwmQuartiles> mQuartiles;
-};
 
 #endif // GWMPROPERTYGWRTAB_H

@@ -21,7 +21,8 @@ public:
         Vector,
         Origin,
         GWR,
-        Symbol
+        Symbol,
+        ScalableGWR
     };
 
 public:

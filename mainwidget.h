@@ -114,6 +114,7 @@ public slots:
     void refreshCanvas();
     void onShowCoordinateTransDlg(const QModelIndex &index);
     void onGWRBtnClicked();
+    void onScalableGWRBtnClicked();
 
    // void transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index);
 

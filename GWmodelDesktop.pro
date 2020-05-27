@@ -38,9 +38,11 @@ SOURCES += \
     Model/gwmlayeritem.cpp \
     Model/gwmlayeritemmodel.cpp \
     Model/gwmlayeroriginitem.cpp \
+    Model/gwmlayerscalablegwritem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
+    PropertyPanelTabs/gwmpropertyscalablegwrtab.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
@@ -51,6 +53,7 @@ SOURCES += \
 #    attributetable/qgsattributetablemodel.cpp \
 #    attributetable/qgsattributetableview.cpp \
 #    attributetable/qgsdualview.cpp \
+    TaskThread/gwmscalablegwrtaskthread.cpp \
     attributetable/qgsaddattrdialog.cpp \
     attributetable/qgsfeaturefilterwidget.cpp \
 #    attributetable/qgsfeaturelistmodel.cpp \
@@ -85,6 +88,7 @@ SOURCES += \
     attributetable/qgsdelattrdialog.cpp \
     attributetable/qgsfeatureaction.cpp \
     attributetable/qgsfieldcalculator.cpp \
+    gwmscalablegwroptionsdialog.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp \
@@ -103,9 +107,11 @@ HEADERS += \
     Model/gwmlayeritem.h \
     Model/gwmlayeritemmodel.h \
     Model/gwmlayeroriginitem.h \
+    Model/gwmlayerscalablegwritem.h \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
+    PropertyPanelTabs/gwmpropertyscalablegwrtab.h \
     PropertyPanelTabs/utils.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
@@ -126,6 +132,7 @@ HEADERS += \
 #    attributetable/qgsifeatureselectionmanager.h \
 #    attributetable/qgsorganizetablecolumnsdialog.h \
 #    attributetable/qgsvectorlayerselectionmanager.h \
+    TaskThread/gwmscalablegwrtaskthread.h \
     attributetable/gwmfeaturefilterwidget_p.h \
     attributetable/qgsaddattrdialog.h \
     attributetable/qgsfieldcalculator.h \
@@ -152,6 +159,7 @@ HEADERS += \
     attributetable/qgsdelattrdialog.h \
     attributetable/qgsfeatureaction.h \
     attributetable/qgsfieldcalculator.h \
+    gwmscalablegwroptionsdialog.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
@@ -161,6 +169,7 @@ HEADERS += \
 
 FORMS += \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
+    PropertyPanelTabs/gwmpropertyscalablegwrtab.ui \
     gwmcoordtranssettingdialog.ui \
     gwmcsvtodatdialog.ui \
     gwmfeaturepanel.ui \
@@ -172,6 +181,7 @@ FORMS += \
     gwmprogressdialog.ui \
     gwmpropertypanel.ui \
     gwmsaveascsvdialog.ui \
+    gwmscalablegwroptionsdialog.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
     mainwindow.ui \
@@ -235,8 +245,8 @@ CONFIG(debug, debug|release) {
 ## Armadillo END
 
 ## GSL
-INCLUDEPATH += "$(OSGEO_HOME)/include/gsl"
-LIBS += -L"$(OSGEO_HOME)/lib" -lgsl
+INCLUDEPATH += "$(QT_HOME)/include/gsl"
+LIBS += -L"$(QT_HOME)/lib" -lgsl -lgslcblas
 ## GSL END
 
 TRANSLATIONS += \
