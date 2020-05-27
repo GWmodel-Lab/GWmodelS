@@ -88,8 +88,8 @@ void GwmScalableGWRTaskThread::getNeighbours()
         vec d = distance(i);
         uvec indices = sort_index(d);
         vec d_sorted = sort(d);
-        mNeighbours.col(i) = indices.rows(1, nBw + 1);
-        mNeighbourDists.col(i) = d_sorted.rows(1, nBw + 1);
+        mNeighbours.col(i) = indices(span(1, nBw));
+        mNeighbourDists.col(i) = d_sorted(span(1, nBw));
     }
     mNeighbours = trans(mNeighbours);
     mNeighbourDists = trans(mNeighbourDists);
@@ -109,7 +109,7 @@ double scagwr_loocv_multimin_function(const gsl_vector* vars, void* params)
 
 double GwmScalableGWRTaskThread::optimize(const mat &Mx0, const mat &My0, double& b_tilde, double& alpha)
 {
-    gsl_multimin_fminimizer* minizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex2, 2);
+    gsl_multimin_fminimizer* minizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex, 2);
     gsl_vector* target = gsl_vector_alloc(2);
     gsl_vector_set(target, 0, b_tilde);
     gsl_vector_set(target, 1, alpha);
@@ -131,6 +131,10 @@ double GwmScalableGWRTaskThread::optimize(const mat &Mx0, const mat &My0, double
             if (status) break;
             size = gsl_multimin_fminimizer_size(minizer);
             status = gsl_multimin_test_size(size, 1e-6);
+            b_tilde = gsl_vector_get(minizer->x, 0);
+            alpha = gsl_vector_get(minizer->x, 1);
+            cv = minizer->fval;
+            emit message(QString().sprintf("Scalable GWR optimizing: b.tilde=%.3lf alpha=%.3lf (CV: %.3lf)", b_tilde, alpha, cv));
         }
         while (status == GSL_CONTINUE && iter < mMaxIter);
         b_tilde = gsl_vector_get(minizer->x, 0);
@@ -142,6 +146,113 @@ double GwmScalableGWRTaskThread::optimize(const mat &Mx0, const mat &My0, double
     gsl_vector_free(step);
     gsl_multimin_fminimizer_free(minizer);
     return  cv;
+}
+
+void GwmScalableGWRTaskThread::createResultLayer()
+{
+    emit message("Creating result layer...");
+    QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mLayer;
+    QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
+    QString layerName = srcLayer->name();
+    if (mBandwidthType == BandwidthType::Fixed)
+    {
+        layerName += QString("_B%1%2").arg(mBandwidthSizeOrigin, 0, 'f', 3).arg(mBandwidthSize);
+    }
+    else
+    {
+        layerName += QString("_B%1").arg(int(mBandwidthSize));
+    }
+    mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
+    mResultLayer->setCrs(srcLayer->crs());
+
+    QgsFields fields;
+    fields.append(QgsField(QStringLiteral("Intercept"), QVariant::Double, QStringLiteral("double")));
+    for (int index : mIndepVarsIndex)
+    {
+        QString srcName = mLayer->fields().field(index).name();
+        QString name = srcName;
+        fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
+    }
+    if (hasHatMatrix)
+    {
+        fields.append(QgsField(QStringLiteral("y"), QVariant::Double, QStringLiteral("double")));
+        fields.append(QgsField(QStringLiteral("yhat"), QVariant::Double, QStringLiteral("double")));
+        fields.append(QgsField(QStringLiteral("residual"), QVariant::Double, QStringLiteral("double")));
+        fields.append(QgsField(QStringLiteral("Intercept_SE"), QVariant::Double, QStringLiteral("double")));
+        for (int index : mIndepVarsIndex)
+        {
+            QString srcName = mLayer->fields().field(index).name();
+            QString name = srcName + QStringLiteral("_SE");
+            fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
+        }
+        fields.append(QgsField(QStringLiteral("Intercept_TV"), QVariant::Double, QStringLiteral("double")));
+        for (int index : mIndepVarsIndex)
+        {
+            QString srcName = mLayer->fields().field(index).name();
+            QString name = srcName + QStringLiteral("_TV");
+            fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
+        }
+    }
+    mResultLayer->dataProvider()->addAttributes(fields.toList());
+    mResultLayer->updateFields();
+
+    mResultLayer->startEditing();
+    if (hasHatMatrix)
+    {
+        int indepSize = mIndepVarsIndex.size() + 1;
+        for (int f = 0; f < mFeatureList.size(); f++)
+        {
+            int curCol = 0;
+            QgsFeature srcFeature = mFeatureList[f];
+            QgsFeature feature(fields);
+            feature.setGeometry(srcFeature.geometry());
+            for (int a = 0; a < indepSize; a++)
+            {
+                int fieldIndex = a + curCol;
+                QString attributeName = fields[fieldIndex].name();
+                double attributeValue = mBetas(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            curCol += indepSize;
+            feature.setAttribute(fields[curCol++].name(), mY(f));
+            feature.setAttribute(fields[curCol++].name(), mYHat(f));
+            feature.setAttribute(fields[curCol++].name(), mResidual(f));
+            for (int a = 0; a < indepSize; a++)
+            {
+                int fieldIndex = a + curCol;
+                QString attributeName = fields[fieldIndex].name();
+                double attributeValue = mBetasSE(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            curCol += indepSize;
+            for (int a = 0; a < indepSize; a++)
+            {
+                int fieldIndex = a + curCol;
+                QString attributeName = fields[fieldIndex].name();
+                double attributeValue = mBetasTV(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            curCol += indepSize;
+            mResultLayer->addFeature(feature);
+        }
+    }
+    else
+    {
+        for (int f = 0; f < mFeatureList.size(); f++)
+        {
+            QgsFeature srcFeature = mFeatureList[f];
+            QgsFeature feature(fields);
+            feature.setGeometry(srcFeature.geometry());
+            for (int a = 0; a < fields.size(); a++)
+            {
+                QString attributeName = fields[a].name();
+                double attributeValue = mBetas(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            mResultLayer->addFeature(feature);
+        }
+    }
+    mResultLayer->commitChanges();
 }
 
 void GwmScalableGWRTaskThread::setPolynomial(int polynomial)

@@ -21,6 +21,7 @@ public:
 
     void run() override;
     void diagnostic() override;
+    void createResultLayer() override;
 
     int getPolynomial() const;
     void setPolynomial(int polynomial);

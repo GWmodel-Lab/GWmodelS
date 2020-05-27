@@ -367,7 +367,7 @@
    <item>
     <widget class="QToolButton" name="gwmScalableGWRBtn">
      <property name="text">
-      <string>Scalable</string>
+      <string>Scalable GWR</string>
      </property>
      <property name="autoRaise">
       <bool>true</bool>

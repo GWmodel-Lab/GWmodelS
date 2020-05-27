@@ -637,7 +637,7 @@ void scgwr_pre(const mat& x, const vec& y, int bw, int poly, double b0, const ma
     mat xnei(bw, k, fill::zeros);
     vec ynei(bw, fill::zeros);
     for (int j = 0; j < bw; j++) {
-      int inei = int(neighbour(i, j) - 1);
+      int inei = int(neighbour(i, j));
       xnei.row(j) = x.row(inei);
       ynei.row(j) = y(inei);
     }
@@ -784,7 +784,7 @@ bool scgwr_reg(const mat& x, const vec& y, int bw, int poly, const mat& G0, cons
     xnei.row(0) = x.row(i);
     ynei.row(0) = y.row(i);
     for (int j = 0; j < bw; j++) {
-      int inei = int(neighbour(i, j) - 1);
+      int inei = int(neighbour(i, j));
       xnei.row(j+1) = x.row(inei);
       ynei.row(j+1) = y(inei);
     }
