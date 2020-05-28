@@ -159,6 +159,7 @@ protected:
 
     virtual bool regressionAllSerial(bool hatmatrix, mat& S);
     virtual bool regressionAllOmp(bool hatmatrix, mat& S);
+    bool gwrCalibration();
 //    bool regressionAllCuda(bool hatmatrix, mat& S);
 
     virtual double calcTrQtQSerial();
@@ -306,6 +307,7 @@ protected:
     // 计算用的矩阵
     mat mX;
     vec mY;
+    vec mWeightMask;
     mat mBetas;
     mat mRowSumBetasSE;
     mat mBetasSE;

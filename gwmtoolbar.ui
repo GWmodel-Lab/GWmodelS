@@ -327,6 +327,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QToolButton" name="gwmodelRobustGWRBtn">
+     <property name="text">
+      <string>RobustGWR</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QToolButton" name="gwmodelGWSSBtn">
      <property name="toolTip">
       <string>GWSS</string>

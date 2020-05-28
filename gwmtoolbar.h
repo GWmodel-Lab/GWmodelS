@@ -49,6 +49,8 @@ signals:
     void saveLayerBtnSignal();
     void exportLayerBtnSignal();
 
+    void gwmodelRobustGWRBtnSignal();
+
 public:
     void setBtnEnabled(bool flag);
 };

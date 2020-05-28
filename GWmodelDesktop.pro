@@ -47,6 +47,7 @@ SOURCES += \
     TaskThread/gwmcsvtodatthread.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
+    TaskThread/gwmrobustgwrtaskthread.cpp \
     TaskThread/gwmsavelayerthread.cpp \
 #    attributetable/qgsattributetabledelegate.cpp \
 #    attributetable/qgsattributetablefiltermodel.cpp \
@@ -82,6 +83,7 @@ SOURCES += \
     gwmprogressdialog.cpp \
     gwmpropertypanel.cpp \
     TaskThread/gwmtaskthread.cpp \
+    gwmrobustgwroptionsdialog.cpp \
     gwmsaveascsvdialog.cpp \
     attributetable/qgsaddattrdialog.cpp \
 #    attributetable/qgsclipboard.cpp \
@@ -116,6 +118,8 @@ HEADERS += \
     TaskThread/gwmbandwidthselecttaskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
+    TaskThread/gwmrobustgwrtaskthread.h \
+    TaskThread/gwmrobustgwrtaskthread.h \
     TaskThread/gwmsavelayerthread.h \
 #    attributetable/qgsattributetabledelegate.h \
 #    attributetable/qgsattributetablefiltermodel.h \
@@ -153,6 +157,7 @@ HEADERS += \
     gwmprogressdialog.h \
     gwmpropertypanel.h \
     TaskThread/gwmtaskthread.h \
+    gwmrobustgwroptionsdialog.h \
     gwmsaveascsvdialog.h \
     attributetable/qgsaddattrdialog.h \
 #    attributetable/qgsclipboard.h \
@@ -180,6 +185,7 @@ FORMS += \
     gwmopenxyeventlayerdialog.ui \
     gwmprogressdialog.ui \
     gwmpropertypanel.ui \
+    gwmrobustgwroptionsdialog.ui \
     gwmsaveascsvdialog.ui \
     gwmscalablegwroptionsdialog.ui \
     gwmtoolbar.ui \

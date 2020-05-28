@@ -41,6 +41,7 @@ GwmGWRTaskThread::GwmGWRTaskThread()
 {
     mX = mat(uword(0), uword(0));
     mY = vec(uword(0));
+    mWeightMask = vec(uword(0));
     mDataPoints = mat(uword(0), 2);
     mRegPoints = mat(uword(0), 2);
     mBetas = mat(uword(0), uword(0));
@@ -81,6 +82,7 @@ GwmGWRTaskThread::GwmGWRTaskThread(const GwmGWRTaskThread &taskThread)
     mParallelParameter = taskThread.mParallelParameter;
     mX = mat(taskThread.mX);
     mY = vec(taskThread.mY);
+    mWeightMask = vec(mWeightMask);
     mDataPoints = mat(taskThread.mDataPoints);
     mRegPoints = mat(taskThread.mRegPoints);
     mBetas = mat(uword(0), uword(0));
@@ -179,6 +181,22 @@ void GwmGWRTaskThread::run()
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     emit message(tr("Calibrating GWR model..."));
     emit tick(0, nDp);
+    mWeightMask = vec(nDp, fill::ones);
+    bool isAllCorrect = gwrCalibration();
+
+    // Create Result Layer
+    if (isAllCorrect)
+    {
+        createResultLayer();
+    }
+    emit success();
+}
+
+bool GwmGWRTaskThread::gwrCalibration()
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    emit message(tr("Calibrating GWR model..."));
+    emit tick(0, nDp);
     bool isAllCorrect = true;
     if (hasHatMatrix)
     {
@@ -187,9 +205,7 @@ void GwmGWRTaskThread::run()
         // 解算
         mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
         const RegressionAll regression = regressionAll[mParallelMethodType];
-        bool isAllCorrect = (this->*regression)(hasHatMatrix, S);
-        mBetas = trans(mBetas);
-        mBetasSE = trans(mBetasSE);
+        isAllCorrect = (this->*regression)(hasHatMatrix, S);
 
         // 诊断和检验
         if (isAllCorrect)
@@ -229,16 +245,9 @@ void GwmGWRTaskThread::run()
     else
     {
         mat _(0, 0);
-        bool isAllCorrect = regressionAllSerial(hasHatMatrix, _);
-        mBetas = trans(mBetas);
+        isAllCorrect = regressionAllSerial(hasHatMatrix, _);
     }
-
-    // Create Result Layer
-    if (isAllCorrect)
-    {
-        createResultLayer();
-    }
-    emit success();
+    return isAllCorrect;
 }
 
 bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
@@ -247,6 +256,8 @@ bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     if (hatmatrix)
     {
+        mBetas = mBetas.t();
+        mBetasSE = mBetasSE.t();
         bool isStoreS = hasFTest && (nDp <= 8192);
         mat ci, si;
         for (int i = 0; i < mFeatureList.size(); i++)
@@ -254,9 +265,9 @@ bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
             try
             {
                 vec dist = distance(i);
-                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
                 mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
-                mBetasSE.col(i) = (ci % ci) * mRowSumBetasSE;
+                mBetasSE.col(i) = sum(ci % ci, 1);
                 mSHat(0) += si(0, i);
                 mSHat(1) += det(si * trans(si));
                 vec p = -trans(si);
@@ -269,9 +280,12 @@ bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
                 emit error(e.what());
             }
         }
+        mBetas = mBetas.t();
+        mBetasSE = mBetasSE.t();
     }
     else
     {
+        mBetas = mBetas.t();
         for (int i = 0; i < mFeatureList.size(); i++)
         {
             try {
@@ -284,6 +298,7 @@ bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
                 emit error(e.what());
             }
         }
+        mBetas = mBetas.t();
     }
     return isAllCorrect;
 }
@@ -295,6 +310,8 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     if (hatmatrix)
     {
+        mBetas = mBetas.t();
+        mBetasSE = mBetasSE.t();
         bool isStoreS = hasFTest && (nDp <= 8192);
         mat qdiag_all(nDp, nThread, fill::zeros);
         vec s1(nDp, fill::zeros), s2(nDp, fill::zeros);
@@ -308,9 +325,9 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
             try
             {
                 vec dist = distance(i);
-                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
                 mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
-                mBetasSE.col(i) = (ci % ci) * mRowSumBetasSE;
+                mBetasSE.col(i) = sum(ci % ci, 1);
                 s1(i) = si(0, i);
                 s2(i) = det(si * trans(si));
                 vec p = -trans(si);
@@ -329,9 +346,12 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
             mSHat(1) = sum(s2);
             mQDiag = sum(qdiag_all, 1);
         }
+        mBetas = mBetas.t();
+        mBetasSE = mBetasSE.t();
     }
     else
     {
+        mBetas = mBetas.t();
         int current = 0;
 #pragma omp parallel for num_threads(nThread)
         for (int i = 0; i < mFeatureList.size(); i++)
@@ -346,6 +366,7 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
                 emit error(e.what());
             }
         }
+        mBetas = mBetas.t();
     }
     return isAllCorrect;
 }
@@ -360,7 +381,7 @@ double GwmGWRTaskThread::calcTrQtQSerial()
     for (arma::uword i = 0; i < nDp; i++)
     {
         vec di = distance(i);
-        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
         mat xtwi = trans(mX % (wi * wspan));
         mat xtwxR = inv(xtwi * mX);
         mat ci = xtwxR * xtwi;
@@ -372,7 +393,7 @@ double GwmGWRTaskThread::calcTrQtQSerial()
         for (arma::uword j = i + 1; j < nDp; j++)
         {
             vec dj = distance(j);
-            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
             mat xtwj = trans(mX % (wj * wspan));
             mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
             vec pj = -trans(sj);
@@ -399,7 +420,7 @@ double GwmGWRTaskThread::calcTrQtQOmp()
     {
         int thread_id = omp_get_thread_num();
         vec di = distance(i);
-        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
         mat xtwi = trans(mX % (wi * wspan));
         mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
         vec pi = -trans(si);
@@ -409,7 +430,7 @@ double GwmGWRTaskThread::calcTrQtQOmp()
         for (arma::uword j = i + 1; j < nDp; j++)
         {
             vec dj = distance(j);
-            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
             mat xtwj = trans(mX % (wj * wspan));
             mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
             vec pj = -trans(sj);
@@ -827,10 +848,11 @@ bool GwmGWRTaskThread::setXY()
     int nVar = mIndepVarsIndex.size() + 1;
     mX = mat(nDp, nVar, fill::zeros);
     mY = vec(nDp, fill::zeros);
-    mBetas = mat(nVar, nRp, fill::zeros);
+    mWeightMask = vec(nDp, fill::ones);
+    mBetas = mat(nRp, nVar, fill::zeros);
     if (hasHatMatrix)
     {
-        mBetasSE = mat(nVar, nDp, fill::zeros);
+        mBetasSE = mat(nDp, nVar, fill::zeros);
         mSHat = vec(2, fill::zeros);
         mQDiag = vec(nDp, fill::zeros);
         mRowSumBetasSE = mat(nDp, 1, fill::ones);
