@@ -55,6 +55,7 @@ SOURCES += \
     TaskThread/gwmggwrtaskthread.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
+    TaskThread/gwmmultiscalegwrtaskthread.cpp \
     TaskThread/gwmrobustgwrtaskthread.cpp \
     TaskThread/gwmsavelayerthread.cpp \
 #    attributetable/qgsattributetabledelegate.cpp \
@@ -135,6 +136,7 @@ HEADERS += \
     TaskThread/gwmggwrtaskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
+    TaskThread/gwmmultiscalegwrtaskthread.h \
     TaskThread/gwmrobustgwrtaskthread.h \
     TaskThread/gwmrobustgwrtaskthread.h \
     TaskThread/gwmsavelayerthread.h \

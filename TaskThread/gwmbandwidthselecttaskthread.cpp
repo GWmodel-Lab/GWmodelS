@@ -220,6 +220,16 @@ QMap<double,double> GwmBandwidthSelectTaskThread::getBwScore(){
     return this->mBwScore;
 }
 
+void GwmBandwidthSelectTaskThread::setX(const mat &x)
+{
+    mX = mat(x);
+}
+
+void GwmBandwidthSelectTaskThread::setY(const vec &y)
+{
+    mY = vec(y);
+}
+
 void GwmBandwidthSelectTaskThread::plotBandwidthResult(QVariant data,QwtPlot* plot)
 {
     QList<QVariant> result = data.toList();

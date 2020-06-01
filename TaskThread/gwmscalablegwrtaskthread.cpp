@@ -63,7 +63,7 @@ void GwmScalableGWRTaskThread::run()
     }
 }
 
-void GwmScalableGWRTaskThread::diagnostic()
+void GwmScalableGWRTaskThread::diagnostic(bool doLocalR2)
 {
     emit message(tr("Calculating diagnostic informations..."));
 

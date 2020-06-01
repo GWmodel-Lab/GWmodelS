@@ -19,6 +19,10 @@ public:
     static void plotBandwidthResult(QVariant data, QwtPlot *plot);
     // 获取bw和score
     QMap<double,double> getBwScore();
+
+    void setX(const mat& x);
+    void setY(const vec& y);
+
 protected:
     void run() override;
 

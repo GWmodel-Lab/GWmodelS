@@ -20,7 +20,7 @@ public:
     GwmScalableGWRTaskThread();
 
     void run() override;
-    void diagnostic() override;
+    void diagnostic(bool doLocalR2 = true) override;
     void createResultLayer() override;
 
     int getPolynomial() const;

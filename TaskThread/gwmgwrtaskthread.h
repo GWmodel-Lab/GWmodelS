@@ -174,7 +174,7 @@ protected:
     vec distanceMinkowski(int focus);
     vec distanceDmat(int focus);
 
-    virtual void diagnostic();
+    virtual void diagnostic(bool doLocalR2 = true);
 
     virtual void f1234Test(const GwmFTestParameters& params);
     virtual vec calcDiagBSerial(int i);
