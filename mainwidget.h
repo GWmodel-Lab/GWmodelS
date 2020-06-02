@@ -20,6 +20,7 @@
 #include <gwmcsvtodatdialog.h>
 
 #include "gwmrobustgwroptionsdialog.h"
+#include "gwmlcrgwroptionsdialog.h"
 
 namespace Ui {
     class MainWidget;
@@ -125,6 +126,8 @@ public slots:
    // void transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index);
 
     //void setNewCoordinate(QgsCoordinateReferenceSystem,QString,QModelIndex);
+
+    void onLcrGWRBtnClicked();
 };
 
 #endif // MAINLAYOUT_H

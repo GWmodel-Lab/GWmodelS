@@ -55,6 +55,7 @@ SOURCES += \
     TaskThread/gwmggwrtaskthread.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
+    TaskThread/gwmlcrgwrtaskthread.cpp \
     TaskThread/gwmrobustgwrtaskthread.cpp \
     TaskThread/gwmsavelayerthread.cpp \
 #    attributetable/qgsattributetabledelegate.cpp \
@@ -86,6 +87,7 @@ SOURCES += \
     gwmggwroptionsdialog.cpp \
     gwmgwroptionsdialog.cpp \
     gwmindepvarselectorwidget.cpp \
+    gwmlcrgwroptionsdialog.cpp \
     gwmmaptoolidentifyfeature.cpp \
     gwmopenxyeventlayerdialog.cpp \
     gwmplot.cpp \
@@ -135,6 +137,7 @@ HEADERS += \
     TaskThread/gwmggwrtaskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
+    TaskThread/gwmlcrgwrtaskthread.h \
     TaskThread/gwmrobustgwrtaskthread.h \
     TaskThread/gwmrobustgwrtaskthread.h \
     TaskThread/gwmsavelayerthread.h \
@@ -169,6 +172,7 @@ HEADERS += \
     gwmggwroptionsdialog.h \
     gwmgwroptionsdialog.h \
     gwmindepvarselectorwidget.h \
+    gwmlcrgwroptionsdialog.h \
     gwmmaptoolidentifyfeature.h \
     gwmopenxyeventlayerdialog.h \
     gwmplot.h \
@@ -202,6 +206,7 @@ FORMS += \
     gwmggwroptionsdialog.ui \
     gwmgwroptionsdialog.ui \
     gwmindepvarselectorwidget.ui \
+    gwmlcrgwroptionsdialog.ui \
     gwmopenxyeventlayerdialog.ui \
     gwmprogressdialog.ui \
     gwmpropertypanel.ui \

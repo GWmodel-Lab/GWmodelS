@@ -106,6 +106,11 @@ GwmLcrGWROptionsDialog::GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originI
     connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
     //connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
 
+    connect(ui->mLambdaAdjustFRadioButton,&QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mLambdaAdjustTRadioButton,&QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mLambdaSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mcnThreshSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
+
     updateFieldsAndEnable();
 }
 
@@ -479,6 +484,15 @@ void GwmLcrGWROptionsDialog::updateFields()
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
     //mTaskThread->setHasFTest(ui->cbxFTest->isChecked());
+    if(ui->mLambdaAdjustFRadioButton->isChecked())
+    {
+        mTaskThread->mlambdaAdjust = false;
+    }else if(ui->mLambdaAdjustTRadioButton->isChecked())
+    {
+        mTaskThread->mlambdaAdjust = true;
+    }
+    mTaskThread->mcnThresh = ui->mcnThreshSpinBox->value();
+    mTaskThread->mlambda = ui->mLambdaSpinBox->value();
 }
 
 void GwmLcrGWROptionsDialog::enableAccept()

@@ -12,11 +12,28 @@ void GwmLcrGWRTaskThread::run()
     {
         return;
     }
+    //
+    if(mBandwidthType == BandwidthType::Adaptive){
+        madaptive = true;
+    }else{
+        madaptive = false;
+    }
+//    qDebug() << madaptive;
+//    qDebug() << mBandwidthKernelFunction;
+//    qDebug() << mlambda;
+//    qDebug() << mlambdaAdjust;
+//    qDebug() << mcnThresh;
     //选择带宽
-    double bw = LcrBandWidthSelect(mBandwidthKernelFunction,mlambda,mlambdaAdjust,mcnThresh,madaptive);
+    double bw;
+    if(isBandwidthSizeAutoSel){
+        bw = LcrBandWidthSelect(mBandwidthKernelFunction,mlambda,mlambdaAdjust,mcnThresh,madaptive);
+    }else{
+        bw = mBandwidthSize;
+    }
+    //double bw = 100;
     //arrays for the results
     //mFeatureList.length()
-    mat betas(mFeatureList.length(),mX.n_cols);
+    mat betas(mFeatureList.length(),mX.n_cols,fill::zeros);
     vec localcn(mFeatureList.length(),fill::zeros);
     vec locallambda(mFeatureList.length(),fill::zeros);
     vec hatrow(mFeatureList.length(),fill::zeros);
@@ -26,14 +43,12 @@ void GwmLcrGWRTaskThread::run()
     for(int i=0;i<mFeatureList.length();i++)
     {
         vec distvi = distance(i);
+        //distvi.print();
         vec wi = gwWeight(distvi,bw,mBandwidthKernelFunction,madaptive);
+        //wi.print();
         //计算xw
         //取mX不含第一列的部分
-        mat mXnot1 = mat(mX.n_rows,mX.n_cols-1,fill::zeros);
-        for(int k=0;k<mX.n_cols-1;k++)
-        {
-            mXnot1.col(k) = mX.col(k+1);
-        }
+        mat mXnot1 = mX.cols(1, mX.n_cols - 1);
         mat wispan(1,mXnot1.n_cols,fill::ones);
         mat wispan1(1,mX.n_cols,fill::ones);
         //计算xw
@@ -42,18 +57,20 @@ void GwmLcrGWRTaskThread::run()
         mat x1w = mX % (wi * wispan1);
         //计算svd.x
         //mat U,V均为正交矩阵，S为奇异值构成的列向量
+        //sqrt(sum((x1w % x1w),2));
         mat U,V;
         colvec S;
-        svd(U,S,V,x1w);
+        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
+        //qDebug() << mX.n_cols;
         //赋值操作
-        localcn(i)=S(1)/S(mX.n_cols);
+        localcn(i)=S(0)/S(mX.n_cols-1);
         locallambda(i) = mlambda;
         if(mlambdaAdjust){
             if(localcn(i)>mcnThresh){
-                locallambda(i) = (S(1) - mcnThresh*S(mX.n_cols)) / (mcnThresh - 1);
+                locallambda(i) = (S(0) - mcnThresh*S(mX.n_cols-1)) / (mcnThresh - 1);
             }
         }
-        betas.row(i) = trans( ridgelm(wi,locallambda(i)) );
+        mBetas.row(i) = trans( ridgelm(wi,locallambda(i)) );
         //如果没有给regressionpoint
         if(!mRegressionLayer)
         {
@@ -61,32 +78,36 @@ void GwmLcrGWRTaskThread::run()
             mat xtw = trans(mX % (wi * wispan1));
             mat xtwx = xtw * mX;
             mat xtwxinv = inv(xtwx);
-            vec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
+            rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
             trs += hatrow(i);
             trsts += sum(hatrow % hatrow);
         }
+        emit tick(i+1, mFeatureList.length());
     }
     //end of main loop
     //yhat赋值
-    for(int i=0;i<mYHat.n_rows;i++)
-    {
-        mat tmp(mX.n_rows,mX.n_cols,fill::zeros);
-        tmp = (mX % betas);
-        mYHat.row(i) = sum(tmp.row(i));
-    }
+    mYHat = fitted(mX,mBetas);
+//    for(int i=0;i<mYHat.n_rows;i++)
+//    {
+//        mat tmp(mX.n_rows,mX.n_cols,fill::zeros);
+//        tmp = (mX % betas);
+//        mYHat.row(i) = sum(tmp.row(i));
+//    }
     mResidual = mY - mYHat;
     mDiagnostic.RSS = sum(mResidual % mResidual);
     mDiagnostic.ENP = 2*trs - trsts;
     mDiagnostic.EDF = mDataPoints.n_rows - mDiagnostic.ENP;
-    mDiagnostic.RSquare = mDiagnostic.RSS / (mDataPoints.n_rows - mDiagnostic.ENP);
-    mDiagnostic.AIC = mDataPoints.n_rows * (log(2*M_PI*mDiagnostic.RSS)+1) + 2*(mDiagnostic.ENP + 1);
-    mDiagnostic.AICc = mDataPoints.n_rows * (log(2*M_PI*mDiagnostic.RSS)) + mDataPoints.n_rows*( (1+mDiagnostic.ENP/mDataPoints.n_rows) / (1-(mDiagnostic.ENP+2)/mDataPoints.n_rows) );
+    //mDiagnostic.RSquare =
+    double s2 = mDiagnostic.RSS / (mDataPoints.n_rows - mDiagnostic.ENP);
+    mDiagnostic.AIC = mDataPoints.n_rows * (log(2*M_PI*s2)+1) + 2*(mDiagnostic.ENP + 1);
+    mDiagnostic.AICc = mDataPoints.n_rows * (log(2*M_PI*s2)) + mDataPoints.n_rows*( (1+mDiagnostic.ENP/mDataPoints.n_rows) / (1-(mDiagnostic.ENP+2)/mDataPoints.n_rows) );
     // enp 、 edf
     // s2
     // aic 、 aicc
     //调用gwr.lcr.cv.contrib
     //生成诊断信息
     createResultLayer();
+    emit success();
 }
 
 double GwmLcrGWRTaskThread::LcrCV(double bw, int kernel, bool adaptive, double lambda, bool lambdaAdjust, double cnThresh)
@@ -119,34 +140,37 @@ double GwmLcrGWRTaskThread::LcrCV(double bw, int kernel, bool adaptive, double l
         mat x1w = mX % (wgt * wgtspan1);
         //计算用于SVD分解的矩阵
         //x1w按列求和
-        for(int j = 0;j<x1w.n_cols;j++)
-        {
-            mat tmp(x1w.n_rows,x1w.n_cols,fill::ones);
-            tmp = x1w % x1w;
-            x1w.col(j) = x1w.col(j) / sqrt(sum(tmp.col(j)));
-        }
+//        for(int j = 0;j<x1w.n_cols;j++)
+//        {
+//            mat tmp(x1w.n_rows,x1w.n_cols,fill::ones);
+//            tmp = x1w % x1w;
+//            x1w.col(j) = x1w.col(j) / sqrt(sum(tmp.col(j)));
+//        }
         //计算svd.x
         //mat U,V均为正交矩阵，S为奇异值构成的列向量
         mat U,V;
         colvec S;
-        svd(U,S,V,x1w);
+        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
         //赋值操作
-        localcn(i)=S(1)/S(m);
+        S.print();
+        //qDebug() << S(m);
+        localcn(i)=S(0)/S(m-1);
         locallambda(i) = lambda;
         if(lambdaAdjust){
             if(localcn(i)>cnThresh){
-                locallambda(i) = (S(1) - cnThresh*S(m)) / (cnThresh - 1);
+                locallambda(i) = (S(0) - cnThresh*S(m-1)) / (cnThresh - 1);
             }
         }
-        betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
+        mBetas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
     }
     //yhat赋值
-    for(int i=0;i<mYHat.n_rows;i++)
-    {
-        mat tmp(mX.n_rows,mX.n_cols,fill::zeros);
-        tmp = (mX % betas);
-        mYHat.row(i) = sum(tmp.row(i));
-    }
+    mYHat = fitted(mX,mBetas);
+//    for(int i=0;i<mYHat.n_rows;i++)
+//    {
+//        mat tmp(mX.n_rows,mX.n_cols,fill::zeros);
+//        tmp = (mX % betas);
+//        mYHat.row(i) = sum(tmp.row(i));
+//    }
     //计算residual
     mResidual = mY - mYHat;
     //计算cv
@@ -184,34 +208,31 @@ vec GwmLcrGWRTaskThread::LcrCVContrib(double bw, int kernel, bool adaptive, doub
         mat x1w = mX % (wgt * wgtspan1);
         //计算用于SVD分解的矩阵
         //x1w按列求和
-        for(int j = 0;j<x1w.n_cols;j++)
-        {
-            mat tmp(x1w.n_rows,x1w.n_cols,fill::ones);
-            tmp = x1w % x1w;
-            x1w.col(j) = x1w.col(j) / sqrt(sum(tmp.col(j)));
-        }
+//        for(int j = 0;j<x1w.n_cols;j++)
+//        {
+//            mat tmp(x1w.n_rows,x1w.n_cols,fill::ones);
+//            tmp = x1w % x1w;
+//            x1w.col(j) = x1w.col(j) / sqrt(sum(tmp.col(j)));
+//        }
         //计算svd.x
         //mat U,V均为正交矩阵，S为奇异值构成的列向量
         mat U,V;
         colvec S;
-        svd(U,S,V,x1w);
+        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
         //赋值操作
-        localcn(i)=S(1)/S(m);
+        S.print();
+        //qDebug() << S(m);
+        localcn(i)=S(0)/S(m-1);
         locallambda(i) = lambda;
         if(lambdaAdjust){
             if(localcn(i)>cnThresh){
-                locallambda(i) = (S(1) - cnThresh*S(m)) / (cnThresh - 1);
+                locallambda(i) = (S(0) - cnThresh*S(m-1)) / (cnThresh - 1);
             }
         }
-        betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
+        mBetas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
     }
     //yhat赋值
-    for(int i=0;i<mYHat.n_rows;i++)
-    {
-        mat tmp(mX.n_rows,mX.n_cols,fill::zeros);
-        tmp = (mX % betas);
-        mYHat.row(i) = sum(tmp.row(i));
-    }
+    mYHat = fitted(mX,mBetas);
     //计算cv向量
     vec cv(mY.n_rows,fill::zeros);
     cv = mY - mYHat;
@@ -227,43 +248,32 @@ vec GwmLcrGWRTaskThread::ridgelm(const vec &w, double lambda)
     mat yw = mY % (sqrt(w));
     //求标准差
     //取mX不含第一列的部分
-    mat mXnot1 = mat(mX.n_rows,mX.n_cols-1,fill::zeros);
-    for(int i=0;i<mX.n_cols-1;i++)
-    {
-        mXnot1.col(i) = mX.col(i+1);
-    }
+    mat mXnot1 = mX.cols(1, mX.n_cols - 1);
     //标准差结果矩阵
-    mat Xsd(1,mX.n_cols,fill::zeros);
-    for(int i=1;i<Xsd.n_cols;i++)
-    {
-        //求平均值
-        double avg = sum(mXnot1.col(i-1))/mXnot1.n_rows;
-        double sum = 0;
-        for(int j=0;j<mXnot1.n_rows;j++)
-        {
-            sum+= pow(mXnot1(j,i-1)-avg,2);
-        }
-        //标准差计算
-        Xsd(0,i) = sqrt((1.0/(mXnot1.n_rows-1))*sum);
-    }
-    Xsd(0,0) = 1;
+    mat Xsd(1, mX.n_cols, fill::ones);
+    Xsd.cols(1, mX.n_cols - 1) = stddev(mX.cols(1, mX.n_cols - 1),0);
+    //Xsd = trans(Xsd);
     //计算Xws
-    mat Xws = mat(Xw.n_rows,Xw.n_cols,fill::ones);
-    for(int i=0;i<Xw.n_cols;i++)
-    {
-        Xws.col(i) = Xw.col(i)/Xsd(0,i);
+    //mat Xws = mat(Xw.n_rows,Xw.n_cols,fill::ones);
+//    for(int i=0;i<Xw.n_rows;i++)
+//    {
+//        Xws.col(i) = Xw.col(i)/Xsd(0,i);
+//    }
+    if (abs(w(0) - 1.0) < 1e-6) {
+        Xsd.print();
+        Xw.print("xw");
+        w.print("w");
     }
+    mat Xws = Xw.each_row() / Xsd;
     //计算y的sd值
-    double sumTmp = 0;
-    for(int i=0;i<mY.n_rows;i++){
-        for(int j=0;j<mY.n_cols;j++){
-            sumTmp+=pow((mY(i,j)-sum(mY)),2);
-        }
-    }
-    double ysd = sqrt(sumTmp/(mY.n_rows*mY.n_cols -1));
-    mat yws = mat(yw.n_rows,yw.n_cols,fill::ones);
-    //计算yws
-    yws = yw/ysd;
+    // double sumTmp = 0;
+    // for(int i=0;i<mY.n_rows;i++){
+    //     for(int j=0;j<mY.n_cols;j++){
+    //         sumTmp+=pow((mY(i,j)-sum(mY)),2);
+    //     }
+    // }
+    double ysd = stddev(yw.col(0));
+    mat yws = yw / ysd;
     //计算b值
     //计算crossprod(Xws)
     mat tmpCrossprodXws = trans(Xws)*Xws;
@@ -272,7 +282,7 @@ vec GwmLcrGWRTaskThread::ridgelm(const vec &w, double lambda)
     //方程求解
     mat tmpXX = tmpCrossprodXws+lambda*tmpdiag;
     mat tmpYY = trans(Xws)*yws;
-    vec resultb = inv(tmpXX)*(tmpYY)*ysd/Xsd;
+    vec resultb = inv(tmpXX)*(tmpYY)*ysd/trans(Xsd);
     //如何返回？？
     return resultb;
 }
@@ -323,6 +333,9 @@ double GwmLcrGWRTaskThread::LcrBandWidthSelect(int kernel, double lambda, bool l
     lower = adaptive ? 20 : 0.0;
     double bw;
     bw = gold(&GwmLcrGWRTaskThread::LcrCV,lower,upper,adaptive,kernel,adaptive,lambda,lambdaAdjust,cnThresh);
+    //显示带宽和CV值
+    double cvShow = GwmLcrGWRTaskThread::LcrCV(bw,kernel,adaptive,lambda,lambdaAdjust,cnThresh);
+    emit message("BandWidth select....");
     return bw;
 }
 
@@ -375,4 +388,81 @@ double GwmLcrGWRTaskThread::getFixedBwUpper()
             dist = gwDist(extentDp, extentDp, 0, 2.0, 0.0, longlat, false);
             return dist(1);
     }
+}
+
+void GwmLcrGWRTaskThread::createResultLayer()
+{
+    emit message("Creating result layer...");
+    QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mLayer;
+    QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
+    QString layerName = srcLayer->name();
+    if (mBandwidthType == BandwidthType::Fixed)
+    {
+        layerName += QString("_B%1%2").arg(mBandwidthSizeOrigin, 0, 'f', 3).arg(mBandwidthSize);
+    }
+    else
+    {
+        layerName += QString("_B%1").arg(int(mBandwidthSize));
+    }
+    mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
+    mResultLayer->setCrs(srcLayer->crs());
+
+    QgsFields fields;
+    fields.append(QgsField(QStringLiteral("Intercept"), QVariant::Double, QStringLiteral("double")));
+    for (int index : mIndepVarsIndex)
+    {
+        QString srcName = mLayer->fields().field(index).name();
+        QString name = srcName;
+        fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
+    }
+    if (hasHatMatrix)
+    {
+        fields.append(QgsField(QStringLiteral("y"), QVariant::Double, QStringLiteral("double")));
+        fields.append(QgsField(QStringLiteral("yhat"), QVariant::Double, QStringLiteral("double")));
+        fields.append(QgsField(QStringLiteral("residual"), QVariant::Double, QStringLiteral("double")));
+    }
+    mResultLayer->dataProvider()->addAttributes(fields.toList());
+    mResultLayer->updateFields();
+
+    mResultLayer->startEditing();
+    if (hasHatMatrix)
+    {
+        int indepSize = mIndepVarsIndex.size() + 1;
+        for (int f = 0; f < mFeatureList.size(); f++)
+        {
+            int curCol = 0;
+            QgsFeature srcFeature = mFeatureList[f];
+            QgsFeature feature(fields);
+            feature.setGeometry(srcFeature.geometry());
+            for (int a = 0; a < indepSize; a++)
+            {
+                int fieldIndex = a + curCol;
+                QString attributeName = fields[fieldIndex].name();
+                double attributeValue = mBetas(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            curCol += indepSize;
+            feature.setAttribute(fields[curCol++].name(), mY(f));
+            feature.setAttribute(fields[curCol++].name(), mYHat(f));
+            feature.setAttribute(fields[curCol++].name(), mResidual(f));
+            mResultLayer->addFeature(feature);
+        }
+    }
+    else
+    {
+        for (int f = 0; f < mFeatureList.size(); f++)
+        {
+            QgsFeature srcFeature = mFeatureList[f];
+            QgsFeature feature(fields);
+            feature.setGeometry(srcFeature.geometry());
+            for (int a = 0; a < fields.size(); a++)
+            {
+                QString attributeName = fields[a].name();
+                double attributeValue = mBetas(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            mResultLayer->addFeature(feature);
+        }
+    }
+    mResultLayer->commitChanges();
 }

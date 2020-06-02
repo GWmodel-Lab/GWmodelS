@@ -11,8 +11,17 @@ class GwmLcrGWRTaskThread:public GwmGWRTaskThread
 {
 public:
     GwmLcrGWRTaskThread();
+    double mlambda;
+    //
+    bool mlambdaAdjust;
+    //
+    double mcnThresh;
+    //
+    bool madaptive;
 protected:
     void run() override;
+
+    void createResultLayer() override;
     //返回cv的函数
     double LcrCV(double bw,int kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
     //ridge.lm函数
@@ -26,13 +35,6 @@ protected:
     //
     double getFixedBwUpper();
     //
-    double mlambda = 0;
-    //
-    bool mlambdaAdjust = true;
-    //
-    double mcnThresh = 0;
-    //
-    bool madaptive = true;
 };
 
 #endif // GWMLCRGWRTASKTHREAD_H
