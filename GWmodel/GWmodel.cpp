@@ -643,10 +643,11 @@ mat dpois(mat y,mat mu){
     int n = y.n_rows;
     mat res = vec(n);
     for(int i = 0;i < n; i++){
-//        unsigned int k = int(unsigned(y[i]));
-//        double t = double(mu[i]);
-//        double test = gsl_ran_poisson_pdf(k, double(mu[i]));
-        res[i] = log(gsl_ran_poisson_pdf(int(y[i]), mu[i]));
+        double pdf = lgammafn(int(y[i]));
+        double k = mu[i];
+        int s = int(y[i]);
+        double test = -mu[i] + int(y[i])*log(mu[i])-pdf;
+        res[i] = -mu[i] + int(y[i])*log(mu[i])-pdf;
     }
     return res;
 }
@@ -668,7 +669,16 @@ mat dbinom(mat y,mat m,mat mu){
     int n = y.n_rows;
     mat res = vec(n);
     for(int i = 0;i < n; i++){
-        res[i] = log(gsl_ran_binomial_pdf(int(y[i]), mu[i], int(m[i]))); //参数顺序？
+        double pdf = gsl_ran_binomial_pdf(int(y[i]), mu[i], int(m[i]));
+        res[i] = log(pdf);
+    }
+    return res;
+}
+
+double lgammafn(int x){
+    double res = 0;
+    for(int i = x; i >= 1; i--){
+        res = res + log(i);
     }
     return res;
 }

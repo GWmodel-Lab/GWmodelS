@@ -7,16 +7,13 @@
 
 using namespace std;
 
-QMap<QString, double> GwmGGWRTaskThread::TolUnitDict = QMap<QString, double>();
+QMap<QString, double> GwmGGWRTaskThread::TolUnitDict = {
+    make_pair(QString("e -3"), 0.001),
+    make_pair(QString("e -5"), 0.00001),
+    make_pair(QString("e -7"), 0.0000001),
+    make_pair(QString("e -10"), 0.0000000001)
+};
 
-void GwmGGWRTaskThread::initUnitDict1()
-{
-    // 设置静态变量
-    TolUnitDict["e -3"] = 1e-3;
-    TolUnitDict["e -5"] = 1e-5;
-    TolUnitDict["e -7"] = 1e-7;
-    TolUnitDict["e -10"] = 1e-10;
-}
 
 GwmGGWRTaskThread::GwmGGWRTaskThread()
     :GwmGWRTaskThread()
@@ -265,33 +262,30 @@ bool GwmGGWRTaskThread::gwrPoisson(){
             mBetas = trans(mBetas);
             mBetasSE = trans(mBetasSE);
             mBetasTV = trans(mBetasTV);
-            double trS;
-            double trStS;
-            if(isStoreS){
-                vec diagS = diag(S);
-                trS = sum(diagS);
-                vec diagStS = diag(S * diag(wt2) * trans(S) * diag(1/wt2));
-                trStS =  sum(diagStS);
-            }
-            else{
-                vec diagS = trans(S);
-                trS = sum(diagS);
-                vec temp = S * diag(wt2) * trans(S);
-                vec diagStS = diag(double(temp[0]) * diag(1/wt2));
-                trStS =  sum(diagStS);
-            }
+            double trS = mSHat(0);
+            double trStS = mSHat(1);
 
-            mYHat = gwFitted(mX,mBetas);
-            mat residual = mY - mYHat;
-    //        for(int i = 0; i < nDp; i++){
+            mYHat = exp(gwFitted(mX,mBetas));
+            mResidual = mY - mYHat;
 
-    //        }
+            //计算诊断信息
             double AIC = gwDev + 2 * trS;
             double AICc = AIC + 2*trS*(trS+1)/(nDp-trS-1);
             double R2 = 1 - gwDev/(nulldev);  // pseudo.R2 <- 1 - gw.dev/null.dev
-
-
-            diagnostic();
+            vec vDiags(4);
+            int n = mX.n_rows;
+//            double edf = n - 2 * mSHat(0) + mSHat(1);																														//edf
+//            double enp = 2 * mSHat(0) - mSHat(1);																																// enp
+//            double r2_adj = 1 - (1 - R2) * (n - 1) / (edf - 1);
+            vDiags(0) = AIC;
+            vDiags(1) = AICc;
+            vDiags(2) = gwDev;
+            vDiags(3) = R2;
+//            vDiags(4) = gwDev;
+//            vDiags(5) = R2;
+//            vDiags(6) = r2_adj;
+            mDiagnostic = GwmGGWRDiagnostic(vDiags);
+            diagnosticGGWR();
 
             // F Test
             if (hasHatMatrix && hasFTest)
@@ -442,33 +436,102 @@ bool GwmGGWRTaskThread::gwrBinomial(){
                 emit error(e.what());
             }
         }
-        mBetas = trans(mBetas);
-        double trS;
-        if(isStoreS){
-            vec diagS = diag(S);
-            trS = sum(diagS);
-        }
-        else{
-            vec diagS = trans(S);
-            trS = sum(diagS);
-        }
-        mYHat = gwFitted(mX,mBetas);
-        mat residual = mY - exp(mYHat)/(1+exp(mYHat));
-        vec Dev = log(1/((mY-n+exp(mYHat)/(1+exp(mYHat)))) % ((mY-n+exp(mYHat)/(1+exp(mYHat)))));
-        double gwDev = sum(Dev);
-        vec residual2 = residual % residual;
-        double rss = sum(residual2);
-        for(int i = 0; i < nDp; i++){
-            mBetasSE.col(i) = sqrt(mBetasSE.col(i));
-//            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
-        }
-        mBetasTV = mBetas / mBetasSE;
-        mBetasSE = trans(mBetasSE);
-        mBetasTV = trans(mBetasTV);
+        if(isAllCorrect){
+            mBetas = trans(mBetas);
 
-        double AIC = gwDev + 2 * trS;
-        double AICc = AIC + 2*trS*(trS+1)/(nDp-trS-1);
-        double R2 = 1 - gwDev/(nulldev);  // pseudo.R2 <- 1 - gw.dev/null.dev
+            double trS = mSHat(0);
+            double trStS = mSHat(1);
+
+            mat yhat = gwFitted(mX,mBetas);
+            mYHat = exp(yhat)/(1+exp(yhat));
+
+            mResidual = mY - mYHat;
+            vec Dev = log(1/((mY-n+exp(yhat)/(1+exp(yhat)))) % ((mY-n+exp(yhat)/(1+exp(yhat)))));
+            double gwDev = sum(Dev);
+            vec residual2 = mResidual % mResidual;
+            double rss = sum(residual2);
+            for(int i = 0; i < nDp; i++){
+                mBetasSE.col(i) = sqrt(mBetasSE.col(i));
+    //            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
+            }
+            mBetasTV = mBetas / mBetasSE;
+            mBetasSE = trans(mBetasSE);
+            mBetasTV = trans(mBetasTV);
+
+            double AIC = gwDev + 2 * trS;
+            double AICc = AIC + 2*trS*(trS+1)/(nDp-trS-1);
+            double R2 = 1 - gwDev/(nulldev);  // pseudo.R2 <- 1 - gw.dev/null.dev
+            vec vDiags(4);
+            int n = mX.n_rows;
+//            double edf = n - 2 * mSHat(0) + mSHat(1);																														//edf
+//            double enp = 2 * mSHat(0) - mSHat(1);																																// enp
+//            double r2_adj = 1 - (1 - R2) * (n - 1) / (edf - 1);
+            vDiags(0) = AIC;
+            vDiags(1) = AICc;
+            vDiags(2) = gwDev;
+            vDiags(3) = R2;
+//            vDiags(4) = gwDev;
+//            vDiags(5) = R2;
+//            vDiags(6) = r2_adj;
+            mDiagnostic = GwmGGWRDiagnostic(vDiags);
+            diagnosticGGWR();
+
+            // F Test
+            if (hasHatMatrix && hasFTest)
+            {
+                double trQtQ = DBL_MAX;
+                if (isStoreS)
+                {
+                    mat EmS = eye(nDp, nDp) - S;
+                    mat Q = trans(EmS) * EmS;
+                    trQtQ = sum(diagvec(trans(Q) * Q));
+                }
+                else
+                {
+                    emit message(tr("Calculating the trace of matrix Q..."));
+                    emit tick(0, nDp);
+                    trQtQ = 0.0;
+                    mat wspan(1, nVar, fill::ones);
+                    for (arma::uword i = 0; i < nDp; i++)
+                    {
+                        vec di = distance(i,mRegPoints);
+                        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                        mat xtwi = trans(mX % (wi * wspan));
+                        mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+                        vec pi = -trans(si);
+                        pi(i) += 1.0;
+                        double qi = sum(pi % pi);
+                        trQtQ += qi * qi;
+                        for (arma::uword j = i + 1; j < nDp; j++)
+                        {
+                            vec dj = distance(j,mRegPoints);
+                            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                            mat xtwj = trans(mX % (wj * wspan));
+                            mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
+                            vec pj = -trans(sj);
+                            pj(j) += 1.0;
+                            double qj = sum(pi % pj);
+                            trQtQ += qj * qj * 2.0;
+                        }
+                        emit tick(i + 1, nDp);
+                    }
+                }
+                GwmFTestParameters fTestParams;
+                fTestParams.nDp = mX.n_rows;
+                fTestParams.nVar = mX.n_cols;
+                fTestParams.trS = mSHat(0);
+                fTestParams.trStS = mSHat(1);
+                fTestParams.trQ = sum(mQDiag);
+                fTestParams.trQtQ = trQtQ;
+                fTestParams.bw = mBandwidthSize;
+                fTestParams.adaptive = mBandwidthType == BandwidthType::Adaptive;
+                fTestParams.kernel = mBandwidthKernelFunction;
+                fTestParams.gwrRSS = sum(mResidual % mResidual);
+                f1234Test(fTestParams);
+            }
+        }
+
+
     }
     else{
         for(int i = 0; i < nRp; i++){
@@ -508,6 +571,32 @@ mat GwmGGWRTaskThread::diag(mat a){
     return res;
 }
 
+void GwmGGWRTaskThread::diagnosticGGWR()
+{
+    emit message(tr("Calculating diagnostic informations..."));
+
+    // 诊断信息
+    double trS = mSHat(0), trStS = mSHat(1);
+    double nDp = mFeatureList.size();
+    double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+    mStudentizedResidual = mResidual / sqrt(sigmaHat * mQDiag);
+    mBetasSE = sqrt(sigmaHat * mBetasSE);
+    mBetasTV = mBetas / mBetasSE;
+    vec dybar2 = (mY - sum(mY) / nDp) % (mY - sum(mY) / nDp);
+    vec dyhat2 = (mY - mYHat) % (mY - mYHat);
+
+    // Local RSquare
+    mLocalRSquare = vec(mFeatureList.size(), fill::zeros);
+    for (int i = 0; i < mFeatureList.size(); i++)
+    {
+        vec dist = distance(i,mRegPoints);
+        mat w = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+        double tss = sum(dybar2 % w);
+        double rss = sum(dyhat2 % w);
+        mLocalRSquare(i) = (tss - rss) / tss;
+    }
+}
+
 GwmGGWRTaskThread::Family GwmGGWRTaskThread::getFamily() const
 {
     return mFamily;
@@ -538,6 +627,11 @@ mat GwmGGWRTaskThread::getWtMat2() const
     return mWtMat2;
 }
 
+GwmGGWRDiagnostic GwmGGWRTaskThread::getDiagnostic() const
+{
+    return mDiagnostic;
+}
+
 bool GwmGGWRTaskThread::setFamily(Family family){
     mFamily = family;
     return true;
@@ -545,7 +639,7 @@ bool GwmGGWRTaskThread::setFamily(Family family){
 
 bool GwmGGWRTaskThread::setTol(double tol, QString unit){
     mTolUnit = unit;
-    mTol = tol * TolUnitDict[unit];
+    mTol = double(tol) * TolUnitDict[unit];
     return true;
 }
 

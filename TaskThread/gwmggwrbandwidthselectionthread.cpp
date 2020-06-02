@@ -7,7 +7,7 @@ GwmGGWRBandWidthSelectionThread::GwmGGWRBandWidthSelectionThread()
     mLLik = 0.0;
     myAdj = vec(uword(0));
     mMaxiter = 20;
-    mTol = 1.0e-5;
+    mTol = 0.00001;
     mFamily = GwmGGWRTaskThread::Family::Poisson;
 }
 
@@ -59,6 +59,7 @@ double GwmGGWRBandWidthSelectionThread::cvAll(const mat& x, const vec& y,const m
     {
         vec d = distance(i);
         vec w = gwWeight(d, bw, kernel, adaptive);
+        w.row(i) = 0;
         wt.col(i) = w;
     }
     if(mFamily == GwmGGWRTaskThread::Family::Poisson){
@@ -93,6 +94,7 @@ mat GwmGGWRBandWidthSelectionThread::cvContrib(const mat& x, const vec& y,const 
     {
         vec d = distance(i);
         vec w = gwWeight(d, bw, kernel, adaptive);
+        w.row(i) = 0;
         wt.col(i) = w;
     }
     if(mFamily == GwmGGWRTaskThread::Family::Poisson){
@@ -119,7 +121,7 @@ double GwmGGWRBandWidthSelectionThread::aicAll(const mat &x, const vec &y, const
     int n = dp.n_rows;
     vec cv = vec(n);
     mat wt = mat(n,n);
-    mat S = mat(uword(0),uword(0));
+    mat S = mat(n,n);
     for (int i = 0; i < n; i++)
     {
         vec d = distance(i);
@@ -132,14 +134,22 @@ double GwmGGWRBandWidthSelectionThread::aicAll(const mat &x, const vec &y, const
     else{
         BinomialWt(x,y,bw,wt);
     }
+    vec trS = vec(1,fill::zeros);
     for (int i = 0; i < n; i++){
         vec wi = wt.col(i) % mWt2;
         mat Ci = CiMat(x,wi);
         S.row(i) = x.row(i) * Ci;
+        trS(0) += S(i,i);
     }
-    vec diagS = diag(S);
-    double trS = sum(diagS);
-    double AICc = 2*mLLik + 2*trS + 2*trS*(trS+1)/(n-trS-1);
+    double AICc;
+    if(S.is_finite()){
+        double trs = double(trS(0));
+        AICc = -2*mLLik + 2*trs + 2*trs*(trs+1)/(n-trs-1);
+    }
+    else{
+        AICc = qInf();
+    }
+
     this->mBwScore.insert(bw,AICc);
     emit message(createOutputMessage(bw, AICc));
     return AICc;
@@ -217,7 +227,7 @@ void GwmGGWRBandWidthSelectionThread::BinomialWt(const mat &x, const vec &y, dou
         mLLik = sum(lchoose(n,y) + (n-y)%log(1 - mu/n) + y%log(mu/n));
         if (abs((oldLLik - mLLik)/mLLik) < mTol)
             break;
-        mWt2 = mu;
+        mWt2 = n%mu%(1-mu);
         itCount++;
         if (itCount == mMaxiter)
             break;
@@ -236,7 +246,7 @@ double GwmGGWRBandWidthSelectionThread::gold(pfApproach1 p,double xL, double xU,
     double x2 = adaptBw ? round(xU - d) : (xU - d);
     double f1 = (this->*p)(x, y, dp, x1, kernel, adaptive);
     double f2 = (this->*p)(x, y, dp, x2, kernel, adaptive);
-    double d1 = f2 - f1;
+    double d1 = (isinf(f1) && isinf(f2))? qInf() : f2 - f1;
     double xopt = f1 < f2 ? x1 : x2;
     double ea = 100;
     while ((fabs(d) > eps) && (fabs(d1) > eps) && iter < ea)
@@ -260,7 +270,7 @@ double GwmGGWRBandWidthSelectionThread::gold(pfApproach1 p,double xL, double xU,
         }
         iter = iter + 1;
         xopt = (f1 < f2) ? x1 : x2;
-        d1 = f2 - f1;
+        d1 = (isinf(f1) && isinf(f2))? qInf() : f2 - f1;
     }
     return xopt;
 }

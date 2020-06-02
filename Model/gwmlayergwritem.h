@@ -56,7 +56,7 @@ public:
 
     bool getHasFTest() const;
 
-private:
+protected:
     int mDataPointsSize;
     int mDepVarIndex;
     QList<int> mIndepVarsIndex;

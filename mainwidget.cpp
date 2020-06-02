@@ -37,6 +37,7 @@
 
 #include "gwmattributetabledialog.h"
 #include "Model/gwmlayergwritem.h"
+#include "Model/gwmlayerggwritem.h"
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -637,8 +638,8 @@ void MainWidget::onGGWRBtnClicked(){
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = ggwrTaskThread->getResultLayer();
-            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, ggwrTaskThread);
-            mapModel->appentItem(gwrItem, selectedIndex);
+            GwmLayerGGWRItem* ggwrItem = new GwmLayerGGWRItem(selectedItem, resultLayer, ggwrTaskThread);
+            mapModel->appentItem(ggwrItem, selectedIndex);
         }
     }
 }

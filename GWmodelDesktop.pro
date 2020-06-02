@@ -37,6 +37,7 @@ SOURCES += \
     GWmodel/gwmpoissonmodel.cpp \
     Model/gwmlayerattributeitem.cpp \
     Model/gwmlayerattributeitemmodel.cpp \
+    Model/gwmlayerggwritem.cpp \
     Model/gwmlayergroupitem.cpp \
     Model/gwmlayergwritem.cpp \
     Model/gwmlayeritem.cpp \
@@ -44,6 +45,7 @@ SOURCES += \
     Model/gwmlayeroriginitem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
+    PropertyPanelTabs/gwmpropertyggwrtab.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
@@ -109,6 +111,7 @@ HEADERS += \
     GWmodel/gwmpoissonmodel.h \
     Model/gwmlayerattributeitem.h \
     Model/gwmlayerattributeitemmodel.h \
+    Model/gwmlayerggwritem.h \
     Model/gwmlayergroupitem.h \
     Model/gwmlayergwritem.h \
     Model/gwmlayeritem.h \
@@ -116,6 +119,7 @@ HEADERS += \
     Model/gwmlayeroriginitem.h \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
+    PropertyPanelTabs/gwmpropertyggwrtab.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
     PropertyPanelTabs/utils.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
@@ -174,6 +178,7 @@ HEADERS += \
     qgsattributetableviewextend.h
 
 FORMS += \
+    PropertyPanelTabs/gwmpropertyggwrtab.ui \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
     gwmcoordtranssettingdialog.ui \
     gwmcsvtodatdialog.ui \
