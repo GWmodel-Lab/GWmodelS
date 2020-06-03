@@ -651,11 +651,12 @@ mat lchoose(mat n,mat k){
     int nrow = n.n_rows;
     mat res = vec(nrow);
     for(int i = 0;i < nrow; i++){
-        double A = 1;
-        for(int j = 1;j <= k[i]; j++){
-            A = A * (n[i] - j + 1) / j ;
-        }
-        res.row(i) = log(A);
+//        double A = 1;
+//        for(int j = 1;j <= k[i]; j++){
+//            A = A * (n[i] - j + 1) / j ;
+//        }
+//        res.row(i) = log(A);
+        res.row(i) = lgamma(n[i]) - lgamma(n[i]-k[i]) - lgamma(k[i]);
     }
     return res;
 }
@@ -674,17 +675,18 @@ mat lgammafn(mat x){
     int n = x.n_rows;
     mat res = vec(n,fill::zeros);   
     for(int j = 0; j < n ; j++){
-        double A = 1;
-        double OldA = 1;
-        for(int i = x[j]; i >= 1; i--){
-            OldA = A;
-            A = A * i ;
-            if(A >= DBL_MAX){
-                res[j] += log(OldA);
-                A = i;
-            }
-        }
-        res[j] += log(A);
+//        double A = 1;
+//        double OldA = 1;
+//        for(int i = x[j]; i >= 1; i--){
+//            OldA = A;
+//            A = A * i ;
+//            if(A >= DBL_MAX){
+//                res[j] += log(OldA);
+//                A = i;
+//            }
+//        }
+//        res[j] += log(A);
+        res[j] = lgamma(x[j]);
     }
     return res;
 }
