@@ -23,11 +23,15 @@ public:
     void setX(const mat& x);
     void setY(const vec& y);
 
+    double getLower() const;
+    void setLower(double lower);
+
 protected:
     void run() override;
 
 protected:
     bool createdFromGWRTaskThread = false;
+    double mLower = DBL_MAX;
 
     double gold(pfApproach p,double xL, double xU, bool adaptBw,const mat& x, const vec& y, const mat& dp, int kernel, bool adaptive);
 

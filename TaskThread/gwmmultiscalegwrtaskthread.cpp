@@ -24,7 +24,7 @@ void GwmMultiscaleGWRTaskThread::run()
     // ********************************
     mX0 = mX;
     mY0 = mY;
-    for (uword i = 1; i < (nVar - 1); i++)
+    for (uword i = 1; i < nVar; i++)
     {
         if (mPreditorCentered[i - 1])
         {
@@ -41,12 +41,17 @@ void GwmMultiscaleGWRTaskThread::run()
     {
         if (mBandwidthSeled[i] == BandwidthSeledType::Null)
         {
-            GwmBandwidthSelectTaskThread bwSelThread(*this);
+            GwmBandwidthSelectTaskThread bwSelThread;
+            bwSelThread.setLayer(mLayer);
+            bwSelThread.setDepVar(mDepVar);
             QList<GwmLayerAttributeItem*> selIndepVars = QList<GwmLayerAttributeItem*>();
             if (i > 0)
                 selIndepVars.append(mIndepVars[i - 1]);
             bwSelThread.setIndepVars(selIndepVars);
-            double bw = selectOptimizedBandwidth(bwSelThread);
+            bwSelThread.setBandwidthType(mBandwidthType);
+            bwSelThread.setBandwidthKernelFunction(mBandwidthKernelFunction);
+            bwSelThread.setBandwidthSelectionApproach(mBandwidthSelectionApproach);
+            double bw = selectOptimizedBandwidth(bwSelThread, false);
             mInitialBandwidthSize(i) = bw;
         }
     }
@@ -68,11 +73,12 @@ void GwmMultiscaleGWRTaskThread::run()
     // ***********************************************************
     // Select the optimum bandwidths for each independent variable
     // ***********************************************************
+    emit message(QString("-------- Select the Optimum Bandwidths for each Independent Varialbe --------"));
     uvec bwChangeNo(nVar, fill::zeros);
     vec resid = mY - fitted(mX, mBetas);
     double RSS0 = sum(resid % resid), RSS = DBL_MAX;
     double criterion = DBL_MAX;
-    for (int iteration = 0; iteration < mMaxIteration && criterion > mCriterionThreshold; iteration++)
+    for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
     {
         for (int i = 0; i < nVar; i++)
         {
@@ -85,12 +91,19 @@ void GwmMultiscaleGWRTaskThread::run()
             }
             else
             {
+                QString varName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i-1]->attributeName();
+                emit message(QString("Now select an optimum bandwidth for the variable: %1").arg(varName));
                 GwmBandwidthSelectTaskThread bwSelThread(*this);
                 bwSelThread.setX(mX.col(i));
-                bwi = selectOptimizedBandwidth(bwSelThread);
+                bwSelThread.setY(yi);
+                bwi = selectOptimizedBandwidth(bwSelThread, false);
+                double bwi0 = mInitialBandwidthSize[i];
+                emit message(QString("The newly selected bandwidth for variable %1 is %2 (last is %3, difference is %4)")
+                             .arg(varName).arg(bwi).arg(bwi0).arg(abs(bwi - bwi0)));
                 if (abs(bwi - mInitialBandwidthSize[i]) > mBandwidthSelectThreshold(i))
                 {
                     bwChangeNo(i) = 0;
+                    emit message(QString("The bandwidth for variable %1 will be continually selected in the next iteration").arg(varName));
                 }
                 else
                 {
@@ -98,41 +111,59 @@ void GwmMultiscaleGWRTaskThread::run()
                     if (bwChangeNo(i) >= mBandwidthSelectRetryTimes)
                     {
                         mBandwidthSeled[i] = BandwidthSeledType::Specified;
+                        emit message(QString("The bandwidth for variable %1 seems to be converged and will be kept the same in the following iterations.").arg(varName));
+                    }
+                    else
+                    {
+                        emit message(QString("The bandwidth for variable %1 seems to be converged for %2 times. It will be continually optimized in the next %3 times.")
+                                     .arg(varName).arg(bwChangeNo(i)).arg(mBandwidthSelectRetryTimes - bwChangeNo(i)));
                     }
                 }
             }
             mInitialBandwidthSize[i] = bwi;
-            vec betai = regressionVar(mX.col(i), mY, hasHatMatrix, S);
-            mBetas.col(i) = betai;
+            mBetas.col(i) = regressionVar(mX.col(i), yi, hasHatMatrix, S);
             resid = mY - fitted(mX, mBetas);
         }
         RSS = rss(mY, mX, mBetas);
         criterion = (mCriterionType == CriterionType::CVR) ?
                     abs(RSS - RSS0) :
                     sqrt(abs(RSS - RSS0) / RSS);
+        QString criterionName = mCriterionType == CriterionType::CVR ? "change value of RSS (CVR)" : "differential change value of RSS (dCVR)";
+        emit message(QString("Iteration %1 the %2 is %3").arg(iteration).arg(criterionName).arg(criterion));
         RSS0 = RSS;
+        emit message(QString("---- End of Iteration %1 ----").arg(iteration));
     }
+    emit message(QString("-------- [End] Select the Optimum Bandwidths for each Independent Varialbe --------"));
+    isBandwidthSizeAutoSel = false;
     diagnostic(false);
     createResultLayer();
+
+    emit success();
 }
 
-double GwmMultiscaleGWRTaskThread::selectOptimizedBandwidth(GwmBandwidthSelectTaskThread &bwSelThread)
+double GwmMultiscaleGWRTaskThread::selectOptimizedBandwidth(GwmBandwidthSelectTaskThread &bwSelThread, bool verbose)
 {
-    connect(&bwSelThread, &GwmTaskThread::message, this, &GwmTaskThread::message);
-    connect(&bwSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
-    connect(&bwSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
+    if (verbose)
+    {
+        connect(&bwSelThread, &GwmTaskThread::message, this, &GwmTaskThread::message);
+        connect(&bwSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
+        connect(&bwSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
+    }
     bwSelThread.start();
     bwSelThread.wait();
-    disconnect(&bwSelThread, &GwmTaskThread::message, this, &GwmTaskThread::message);
-    disconnect(&bwSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
-    disconnect(&bwSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
+    if (verbose)
+    {
+        disconnect(&bwSelThread, &GwmTaskThread::message, this, &GwmTaskThread::message);
+        disconnect(&bwSelThread, &GwmTaskThread::tick, this, &GwmTaskThread::tick);
+        disconnect(&bwSelThread, &GwmTaskThread::error, this, &GwmTaskThread::error);
+    }
     return bwSelThread.getBandwidthSize();
 }
 
 vec GwmMultiscaleGWRTaskThread::regressionVar(const mat &x, const vec &y, bool hatmatrix, mat &S)
 {
     bool isAllCorrect = true;
-    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    arma::uword nDp = x.n_rows, nVar = x.n_cols;
     if (hatmatrix)
     {
         mat betas(nVar, nDp, fill::zeros);
@@ -182,4 +213,74 @@ vec GwmMultiscaleGWRTaskThread::regressionVar(const mat &x, const vec &y, bool h
         }
     }
     return vec(nDp, fill::zeros);
+}
+
+double GwmMultiscaleGWRTaskThread::criterionThreshold() const
+{
+    return mCriterionThreshold;
+}
+
+void GwmMultiscaleGWRTaskThread::setCriterionThreshold(double criterionThreshold)
+{
+    mCriterionThreshold = criterionThreshold;
+}
+
+GwmMultiscaleGWRTaskThread::CriterionType GwmMultiscaleGWRTaskThread::criterionType() const
+{
+    return mCriterionType;
+}
+
+void GwmMultiscaleGWRTaskThread::setCriterionType(const GwmMultiscaleGWRTaskThread::CriterionType &criterionType)
+{
+    mCriterionType = criterionType;
+}
+
+int GwmMultiscaleGWRTaskThread::bandwidthSelectRetryTimes() const
+{
+    return mBandwidthSelectRetryTimes;
+}
+
+void GwmMultiscaleGWRTaskThread::setBandwidthSelectRetryTimes(int bandwidthSelectRetryTimes)
+{
+    mBandwidthSelectRetryTimes = bandwidthSelectRetryTimes;
+}
+
+vec GwmMultiscaleGWRTaskThread::bandwidthSelectThreshold() const
+{
+    return mBandwidthSelectThreshold;
+}
+
+void GwmMultiscaleGWRTaskThread::setBandwidthSelectThreshold(const vec &bandwidthSelectThreshold)
+{
+    mBandwidthSelectThreshold = bandwidthSelectThreshold;
+}
+
+QList<bool> GwmMultiscaleGWRTaskThread::preditorCentered() const
+{
+    return mPreditorCentered;
+}
+
+void GwmMultiscaleGWRTaskThread::setPreditorCentered(const QList<bool> &preditorCentered)
+{
+    mPreditorCentered = preditorCentered;
+}
+
+QList<GwmMultiscaleGWRTaskThread::BandwidthSeledType> GwmMultiscaleGWRTaskThread::bandwidthSeled() const
+{
+    return mBandwidthSeled;
+}
+
+void GwmMultiscaleGWRTaskThread::setBandwidthSeled(const QList<BandwidthSeledType> &bandwidthSeled)
+{
+    mBandwidthSeled = bandwidthSeled;
+}
+
+vec GwmMultiscaleGWRTaskThread::initialBandwidthSize() const
+{
+    return mInitialBandwidthSize;
+}
+
+void GwmMultiscaleGWRTaskThread::setInitialBandwidthSize(const vec &initialBandwidthSize)
+{
+    mInitialBandwidthSize = initialBandwidthSize;
 }

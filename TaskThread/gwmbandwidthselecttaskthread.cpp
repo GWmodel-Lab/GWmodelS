@@ -48,7 +48,7 @@ void GwmBandwidthSelectTaskThread::run()
     //计算lower\upper
     bool adaptive = mBandwidthType == BandwidthType::Adaptive;
     double upper = adaptive ? mX.n_rows : getFixedBwUpper();
-    double lower = adaptive ? 20 : 0.0;
+    double lower = (mLower > 0 && mLower < DBL_MAX) ? mLower : (adaptive ? 20 : 0.0);
     //如果是cv,gold(gwr.cv....)
     //如果是Aic,gold(gwr.aic....)
     //默认是cv
@@ -65,6 +65,16 @@ void GwmBandwidthSelectTaskThread::run()
     //调用绘图函数
 //    GwmBandwidthSelectTaskThread::viewBandwidthResult(BW_Score,mPlot);
     qDebug() << "[GwmBandwidthSelectTaskThread::run]" << "bandwidth size" << mBandwidthSize;
+}
+
+double GwmBandwidthSelectTaskThread::getLower() const
+{
+    return mLower;
+}
+
+void GwmBandwidthSelectTaskThread::setLower(double lower)
+{
+    mLower = lower;
 }
 
 double GwmBandwidthSelectTaskThread::cvAll(const mat& x, const vec& y, const mat& dp,double bw, int kernel, bool adaptive)

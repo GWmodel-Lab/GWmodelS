@@ -39,6 +39,8 @@
 #include "TaskThread/gwmscalablegwrtaskthread.h"
 #include "Model/gwmlayerscalablegwritem.h"
 
+#include "TaskThread/gwmmultiscalegwrtaskthread.h"
+
 #include "gwmattributetabledialog.h"
 #include "Model/gwmlayergwritem.h"
 #include "Model/gwmlayerggwritem.h"
@@ -649,6 +651,46 @@ void MainWidget::onScalableGWRBtnClicked()
         {
             QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
             GwmLayerScalableGWRItem* gwrItem = new GwmLayerScalableGWRItem(selectedItem, resultLayer, gwrTaskThread);
+            mapModel->appentItem(gwrItem, selectedIndex);
+        }
+    }
+}
+
+void MainWidget::onMultiscaleGWRBtnClicked()
+{
+    GwmMultiscaleGWRTaskThread* gwrTaskThread = new GwmMultiscaleGWRTaskThread();
+    GwmGWROptionsDialog* gwrOptionDialog = new GwmGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwrOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwrOptionDialog->updateFields();
+        gwrTaskThread->setInitialBandwidthSize({100, 100, 100, 100});
+        gwrTaskThread->setBandwidthSeled({GwmMultiscaleGWRTaskThread::Null,
+                                          GwmMultiscaleGWRTaskThread::Null,
+                                          GwmMultiscaleGWRTaskThread::Null,
+                                          GwmMultiscaleGWRTaskThread::Null
+                                         });
+        gwrTaskThread->setPreditorCentered({true, true, true});
+        gwrTaskThread->setBandwidthSelectThreshold({0.1, 0.1, 0.1, 0.1});
+        GwmLayerGroupItem* selectedItem = gwrOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
+            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
