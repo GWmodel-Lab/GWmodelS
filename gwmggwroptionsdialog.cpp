@@ -113,6 +113,7 @@ GwmGGWROptionsDialog::GwmGGWROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     ui->mVariableAutoSelectionCheck->hide();
     ui->mModelSelAICThreshold->hide();
     ui->label_10->hide();
+    ui->cbxFTest->hide();
 }
 
 GwmGGWROptionsDialog::~GwmGGWROptionsDialog()

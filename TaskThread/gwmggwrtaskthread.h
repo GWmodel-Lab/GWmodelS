@@ -56,6 +56,7 @@ protected:
 
     GwmGGWRDiagnostic mDiagnostic;
 
+
 protected:
     void run() override;
 
@@ -70,6 +71,8 @@ protected:
     void diagnosticGGWR();
 
     mat diag(mat a);
+
+    void createResultLayer();
 
 public:
     Family getFamily() const;

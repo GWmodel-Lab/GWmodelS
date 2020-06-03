@@ -64,14 +64,32 @@ void GwmGeneralizedLinearModel::fit(){
             mat muetaval = mModel->muEta(eta);
             mat z = (eta - mOffset) + (mY - mu)/muetaval;
             mat w = sqrt((mWeight % (muetaval % muetaval))/varmu);
+            mat xadj = mat(mX.n_rows,mX.n_cols);
+            for (int i = 0; i < mX.n_cols; i++){
+                xadj.col(i) = mX.col(i)%w;
+            }
             for (int i = 0; i < mX.n_rows; i++){
-                start.col(i) = gwReg(mX,z,w,i);
+                start.col(i) = gwReg(xadj,z%w,vec(mX.n_rows,fill::ones),i);
             }
             mat starttrans = trans(start);
             eta = gwFitted(mX , starttrans) ; //?不是很确定
             mu = mModel->linkinv(eta + mOffset);
             vec devtemp = mModel->devResids(mY,mu,mWeight);
             mDev = sum(devtemp);
+            if (isinf(mDev)) {
+                int ii = 1;
+                while (isinf(mDev)) {
+                    if (ii > mMaxit){
+                        return;
+                    }
+                    ii++;
+                    start = (start + coefold)/2;
+                    mat starttrans = trans(start);
+                    eta = gwFitted(mX , starttrans);
+                    vec devtemp = mModel->devResids(mY,mu,mWeight);
+                    mDev = sum(devtemp);
+                }
+            }
             if (abs(mDev - devold)/(0.1 + abs(mDev)) < mEpsilon) {
                        conv = true;
                        coef = start;

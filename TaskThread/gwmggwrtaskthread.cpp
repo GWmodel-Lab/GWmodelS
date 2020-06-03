@@ -285,61 +285,10 @@ bool GwmGGWRTaskThread::gwrPoisson(){
 //            vDiags(5) = R2;
 //            vDiags(6) = r2_adj;
             mDiagnostic = GwmGGWRDiagnostic(vDiags);
-            diagnosticGGWR();
+//            diagnosticGGWR();
 
             // F Test
-            if (hasHatMatrix && hasFTest)
-            {
-                double trQtQ = DBL_MAX;
-                if (isStoreS)
-                {
-                    mat EmS = eye(nDp, nDp) - S;
-                    mat Q = trans(EmS) * EmS;
-                    trQtQ = sum(diagvec(trans(Q) * Q));
-                }
-                else
-                {
-                    emit message(tr("Calculating the trace of matrix Q..."));
-                    emit tick(0, nDp);
-                    trQtQ = 0.0;
-                    mat wspan(1, nVar, fill::ones);
-                    for (arma::uword i = 0; i < nDp; i++)
-                    {
-                        vec di = distance(i,mRegPoints);
-                        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                        mat xtwi = trans(mX % (wi * wspan));
-                        mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
-                        vec pi = -trans(si);
-                        pi(i) += 1.0;
-                        double qi = sum(pi % pi);
-                        trQtQ += qi * qi;
-                        for (arma::uword j = i + 1; j < nDp; j++)
-                        {
-                            vec dj = distance(j,mRegPoints);
-                            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                            mat xtwj = trans(mX % (wj * wspan));
-                            mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
-                            vec pj = -trans(sj);
-                            pj(j) += 1.0;
-                            double qj = sum(pi % pj);
-                            trQtQ += qj * qj * 2.0;
-                        }
-                        emit tick(i + 1, nDp);
-                    }
-                }
-                GwmFTestParameters fTestParams;
-                fTestParams.nDp = mX.n_rows;
-                fTestParams.nVar = mX.n_cols;
-                fTestParams.trS = mSHat(0);
-                fTestParams.trStS = mSHat(1);
-                fTestParams.trQ = sum(mQDiag);
-                fTestParams.trQtQ = trQtQ;
-                fTestParams.bw = mBandwidthSize;
-                fTestParams.adaptive = mBandwidthType == BandwidthType::Adaptive;
-                fTestParams.kernel = mBandwidthKernelFunction;
-                fTestParams.gwrRSS = sum(mResidual % mResidual);
-                f1234Test(fTestParams);
-            }
+
         }
 
     }
@@ -474,61 +423,9 @@ bool GwmGGWRTaskThread::gwrBinomial(){
 //            vDiags(5) = R2;
 //            vDiags(6) = r2_adj;
             mDiagnostic = GwmGGWRDiagnostic(vDiags);
-            diagnosticGGWR();
+//            diagnosticGGWR();
 
-            // F Test
-            if (hasHatMatrix && hasFTest)
-            {
-                double trQtQ = DBL_MAX;
-                if (isStoreS)
-                {
-                    mat EmS = eye(nDp, nDp) - S;
-                    mat Q = trans(EmS) * EmS;
-                    trQtQ = sum(diagvec(trans(Q) * Q));
-                }
-                else
-                {
-                    emit message(tr("Calculating the trace of matrix Q..."));
-                    emit tick(0, nDp);
-                    trQtQ = 0.0;
-                    mat wspan(1, nVar, fill::ones);
-                    for (arma::uword i = 0; i < nDp; i++)
-                    {
-                        vec di = distance(i,mRegPoints);
-                        vec wi = gwWeight(di, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                        mat xtwi = trans(mX % (wi * wspan));
-                        mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
-                        vec pi = -trans(si);
-                        pi(i) += 1.0;
-                        double qi = sum(pi % pi);
-                        trQtQ += qi * qi;
-                        for (arma::uword j = i + 1; j < nDp; j++)
-                        {
-                            vec dj = distance(j,mRegPoints);
-                            vec wj = gwWeight(dj, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                            mat xtwj = trans(mX % (wj * wspan));
-                            mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
-                            vec pj = -trans(sj);
-                            pj(j) += 1.0;
-                            double qj = sum(pi % pj);
-                            trQtQ += qj * qj * 2.0;
-                        }
-                        emit tick(i + 1, nDp);
-                    }
-                }
-                GwmFTestParameters fTestParams;
-                fTestParams.nDp = mX.n_rows;
-                fTestParams.nVar = mX.n_cols;
-                fTestParams.trS = mSHat(0);
-                fTestParams.trStS = mSHat(1);
-                fTestParams.trQ = sum(mQDiag);
-                fTestParams.trQtQ = trQtQ;
-                fTestParams.bw = mBandwidthSize;
-                fTestParams.adaptive = mBandwidthType == BandwidthType::Adaptive;
-                fTestParams.kernel = mBandwidthKernelFunction;
-                fTestParams.gwrRSS = sum(mResidual % mResidual);
-                f1234Test(fTestParams);
-            }
+
         }
 
 
@@ -651,4 +548,116 @@ bool GwmGGWRTaskThread::setIsCV(bool iscv){
 bool GwmGGWRTaskThread::setMaxiter(int maxiter){
     mMaxiter = maxiter;
     return true;
+}
+
+
+void GwmGGWRTaskThread::createResultLayer()
+{
+    emit message("Creating result layer...");
+    QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mLayer;
+    QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
+    QString layerName = srcLayer->name();
+    if (mBandwidthType == BandwidthType::Fixed)
+    {
+        layerName += QString("_B%1%2").arg(mBandwidthSizeOrigin, 0, 'f', 3).arg(mBandwidthSize);
+    }
+    else
+    {
+        layerName += QString("_B%1").arg(int(mBandwidthSize));
+    }
+    mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
+    mResultLayer->setCrs(srcLayer->crs());
+
+    QgsFields fields;
+    fields.append(QgsField(QStringLiteral("Intercept"), QVariant::Double, QStringLiteral("double")));
+    for (int index : mIndepVarsIndex)
+    {
+        QString srcName = mLayer->fields().field(index).name();
+        QString name = srcName;
+        fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
+    }
+    if (hasHatMatrix)
+    {
+        fields.append(QgsField(QStringLiteral("y"), QVariant::Double, QStringLiteral("double")));
+//        fields.append(QgsField(QStringLiteral("yhat"), QVariant::Double, QStringLiteral("double")));
+        fields.append(QgsField(QStringLiteral("residual"), QVariant::Double, QStringLiteral("double")));
+//        fields.append(QgsField(QStringLiteral("Stud_residual"), QVariant::Double, QStringLiteral("double")));
+        fields.append(QgsField(QStringLiteral("Intercept_SE"), QVariant::Double, QStringLiteral("double")));
+        for (int index : mIndepVarsIndex)
+        {
+            QString srcName = mLayer->fields().field(index).name();
+            QString name = srcName + QStringLiteral("_SE");
+            fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
+        }
+        fields.append(QgsField(QStringLiteral("Intercept_TV"), QVariant::Double, QStringLiteral("double")));
+        for (int index : mIndepVarsIndex)
+        {
+            QString srcName = mLayer->fields().field(index).name();
+            QString name = srcName + QStringLiteral("_TV");
+            fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
+        }
+//        fields.append(QgsField(QStringLiteral("Local_R2"), QVariant::Double, QStringLiteral("double")));
+    }
+    mResultLayer->dataProvider()->addAttributes(fields.toList());
+    mResultLayer->updateFields();
+
+    mResultLayer->startEditing();
+    if (hasHatMatrix)
+    {
+        int indepSize = mIndepVarsIndex.size() + 1;
+        for (int f = 0; f < mFeatureList.size(); f++)
+        {
+            int curCol = 0;
+            QgsFeature srcFeature = mFeatureList[f];
+            QgsFeature feature(fields);
+            feature.setGeometry(srcFeature.geometry());
+            for (int a = 0; a < indepSize; a++)
+            {
+                int fieldIndex = a + curCol;
+                QString attributeName = fields[fieldIndex].name();
+                double attributeValue = mBetas(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            curCol += indepSize;
+            feature.setAttribute(fields[curCol++].name(), mY(f));
+//            feature.setAttribute(fields[curCol++].name(), mYHat(f));
+            feature.setAttribute(fields[curCol++].name(), mResidual(f));
+//            feature.setAttribute(fields[curCol++].name(), mStudentizedResidual(f));
+            for (int a = 0; a < indepSize; a++)
+            {
+                int fieldIndex = a + curCol;
+                QString attributeName = fields[fieldIndex].name();
+                double attributeValue = mBetasSE(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            curCol += indepSize;
+            for (int a = 0; a < indepSize; a++)
+            {
+                int fieldIndex = a + curCol;
+                QString attributeName = fields[fieldIndex].name();
+                double attributeValue = mBetasTV(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            curCol += indepSize;
+//            feature.setAttribute(fields[curCol++].name(), mLocalRSquare(f));
+            mResultLayer->addFeature(feature);
+        }
+    }
+    else
+    {
+        for (int f = 0; f < mFeatureList.size(); f++)
+        {
+            QgsFeature srcFeature = mFeatureList[f];
+            QgsFeature feature(fields);
+            feature.setGeometry(srcFeature.geometry());
+            for (int a = 0; a < fields.size(); a++)
+            {
+                QString attributeName = fields[a].name();
+                double attributeValue = mBetas(f, a);
+                feature.setAttribute(attributeName, attributeValue);
+            }
+            mResultLayer->addFeature(feature);
+        }
+    }
+    mResultLayer->commitChanges();
 }

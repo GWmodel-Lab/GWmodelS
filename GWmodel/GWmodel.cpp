@@ -672,7 +672,7 @@ mat dbinom(mat y,mat m,mat mu){
 
 mat lgammafn(mat x){
     int n = x.n_rows;
-    mat res = vec(n,fill::zeros);
+    mat res = vec(n,fill::zeros);   
     for(int j = 0; j < n ; j++){
         double A = 1;
         double OldA = 1;
