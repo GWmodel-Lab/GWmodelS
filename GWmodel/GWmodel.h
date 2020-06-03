@@ -64,6 +64,6 @@ mat diag(mat a);
 mat dpois(mat y,mat mu);
 mat dbinom(mat y,mat m,mat mu);
 mat lchoose(mat n,mat k);
-double lgammafn(int x);
+mat lgammafn(mat x);
 
 #endif // GWMODEL_H

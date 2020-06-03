@@ -642,13 +642,8 @@ mat diag(mat a){
 mat dpois(mat y,mat mu){
     int n = y.n_rows;
     mat res = vec(n);
-    for(int i = 0;i < n; i++){
-        double pdf = lgammafn(int(y[i]));
-        double k = mu[i];
-        int s = int(y[i]);
-        double test = -mu[i] + int(y[i])*log(mu[i])-pdf;
-        res[i] = -mu[i] + int(y[i])*log(mu[i])-pdf;
-    }
+    mat pdf = lgammafn(y);
+    res = -mu + y%log(mu) - pdf;
     return res;
 }
 
@@ -675,10 +670,21 @@ mat dbinom(mat y,mat m,mat mu){
     return res;
 }
 
-double lgammafn(int x){
-    double res = 0;
-    for(int i = x; i >= 1; i--){
-        res = res + log(i);
+mat lgammafn(mat x){
+    int n = x.n_rows;
+    mat res = vec(n,fill::zeros);
+    for(int j = 0; j < n ; j++){
+        double A = 1;
+        double OldA = 1;
+        for(int i = x[j]; i >= 1; i--){
+            OldA = A;
+            A = A * i ;
+            if(A >= DBL_MAX){
+                res[j] += log(OldA);
+                A = i;
+            }
+        }
+        res[j] += log(A);
     }
     return res;
 }

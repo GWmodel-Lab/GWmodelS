@@ -108,6 +108,11 @@ GwmGGWROptionsDialog::GwmGGWROptionsDialog(QList<GwmLayerGroupItem*> originItemL
 
     ui->mEpsilonSize->setValue(1.0);
     ui->mMaxiterSpinBox->setValue(20);
+    ui->mEpsilonUnit->setCurrentIndex(1);
+
+    ui->mVariableAutoSelectionCheck->hide();
+    ui->mModelSelAICThreshold->hide();
+    ui->label_10->hide();
 }
 
 GwmGGWROptionsDialog::~GwmGGWROptionsDialog()
