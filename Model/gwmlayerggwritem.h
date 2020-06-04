@@ -14,6 +14,14 @@ public:
     GwmGGWRDiagnostic diagnostic() const;
 
     GwmGGWRDiagnostic mDiagnostic;
+
+    GwmGLMDiagnostic mGLMDiagnostic;
+
+    GwmGGWRTaskThread::Family mFamily;
+
+    GwmGLMDiagnostic GLMdiagnostic() const;
+
+    GwmGGWRTaskThread::Family family() const;
 };
 
 #endif // GWMLAYERGGWRITEM_H

@@ -223,7 +223,6 @@ void GwmGGWRBandWidthSelectionThread::BinomialWt(const mat &x, const vec &y, dou
         nu = gwFitted(x,betas1);
         mu = exp(nu)/(1 + exp(nu));
         oldLLik = mLLik;
-        lchoose(n,y);
         mLLik = sum(lchoose(n,y) + (n-y)%log(1 - mu/n) + y%log(mu/n));
         if (abs((oldLLik - mLLik)/mLLik) < mTol)
             break;

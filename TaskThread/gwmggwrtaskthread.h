@@ -27,6 +27,33 @@ struct GwmGGWRDiagnostic
     }
 };
 
+struct GwmGLMDiagnostic
+{
+    double NullDev;
+    double Dev;
+    double AIC;
+    double AICc;
+    double RSquare;
+
+    GwmGLMDiagnostic()
+    {
+        AIC = 0.0;
+        AICc = 0.0;
+        Dev = 0.0;
+        NullDev = 0.0;
+        RSquare = 0.0;
+    }
+
+    GwmGLMDiagnostic(const vec& diag)
+    {
+        AIC = diag(0);
+        AICc = diag(1);
+        NullDev = diag(2);
+        Dev = diag(3);
+        RSquare = diag(4);
+    }
+};
+
 class GwmGGWRTaskThread : public GwmGWRTaskThread
 {
 public:
@@ -56,6 +83,8 @@ protected:
 
     GwmGGWRDiagnostic mDiagnostic;
 
+    GwmGLMDiagnostic mGLMDiagnostic;
+
 
 protected:
     void run() override;
@@ -84,6 +113,8 @@ public:
     mat getWtMat2() const;
 
     GwmGGWRDiagnostic getDiagnostic() const;
+
+    GwmGLMDiagnostic getGLMDiagnostic() const;
 
     bool setFamily(Family family);
     bool setTol(double tol, QString unit);

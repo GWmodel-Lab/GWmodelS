@@ -16,6 +16,7 @@ GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector,
         mBandwidthUnit = taskThread->getBandwidthUnit();
         mBandwidthKernelFunction = taskThread->getBandwidthKernelFunction();
         mDiagnostic = taskThread->getDiagnostic();
+        mGLMDiagnostic = taskThread->getGLMDiagnostic();
         mBetas = mat(taskThread->getBetas());
         mModelSelModels = taskThread->getModelSelModels();
         mModelSelAICcs = taskThread->getModelSelAICcs();
@@ -25,10 +26,21 @@ GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector,
         mFTestResults = taskThread->fTestResults();
         hasHatmatrix = taskThread->getHasHatMatrix();
         hasFTest = taskThread->getHasFTest();
+        mFamily = taskThread->getFamily();
     }
 }
 
 GwmGGWRDiagnostic GwmLayerGGWRItem::diagnostic() const
 {
     return mDiagnostic;
+}
+
+GwmGLMDiagnostic GwmLayerGGWRItem::GLMdiagnostic() const
+{
+    return mGLMDiagnostic;
+}
+
+GwmGGWRTaskThread::Family GwmLayerGGWRItem::family() const
+{
+    return mFamily;
 }

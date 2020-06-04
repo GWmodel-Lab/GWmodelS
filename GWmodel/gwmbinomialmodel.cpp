@@ -30,7 +30,7 @@ mat GwmBinomialModel::muStart(){
 
 mat GwmBinomialModel::linkinv(mat eta){
     mat temp = exp(eta);
-    mat res = 1 / (1 + temp);
+    mat res = temp / (1 + temp);
     return res;
 }
 
@@ -81,7 +81,7 @@ double GwmBinomialModel::aic(mat y, mat n, mat mu, mat wt, double dev){
 
 mat GwmBinomialModel::muEta(mat eta){
     mat temp = exp(eta);
-    mat res = temp / (1 + temp) % (1 + temp);
+    mat res = temp / ((1 + temp) % (1 + temp));
     return res;
 }
 

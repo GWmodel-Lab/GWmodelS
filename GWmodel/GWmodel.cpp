@@ -656,7 +656,7 @@ mat lchoose(mat n,mat k){
 //            A = A * (n[i] - j + 1) / j ;
 //        }
 //        res.row(i) = log(A);
-        res.row(i) = lgamma(n[i]) - lgamma(n[i]-k[i]) - lgamma(k[i]);
+        res.row(i) = lgamma(n[i]+1) - lgamma(n[i]-k[i]+1) - lgamma(k[i]+1);
     }
     return res;
 }

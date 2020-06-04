@@ -17,6 +17,11 @@ QMap<GwmGWRTaskThread::BandwidthType, QString> GwmPropertyGGWRTab::bandwidthType
     std::make_pair(GwmGWRTaskThread::BandwidthType::Fixed, QStringLiteral("Fixed bandwidth:"))
 };
 
+QMap<GwmGGWRTaskThread::Family, QString> GwmPropertyGGWRTab::familyTypeNameDict = {
+    std::make_pair(GwmGGWRTaskThread::Family::Poisson, QStringLiteral("Poisson")),
+    std::make_pair(GwmGGWRTaskThread::Family::Binomial, QStringLiteral("Binomial"))
+};
+
 GwmPropertyGGWRTab::GwmPropertyGGWRTab(QWidget *parent,GwmLayerGGWRItem* item) :
     QWidget(parent),
     ui(new Ui::GwmPropertyGGWRTab),
@@ -78,7 +83,16 @@ void GwmPropertyGGWRTab::updateUI()
     {
         ui->lblDistanceMetric->setText(tr("Edclidean distance metric is used."));
     }
+    ui->lblFamily->setText(familyTypeNameDict[mLayerItem->family()]);
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
+
+    //GLM计算结果
+    GwmGLMDiagnostic GLMdiagnostic = mLayerItem->GLMdiagnostic();
+    ui->lblNullDev->setText(QString("%1").arg(GLMdiagnostic.NullDev, 0, 'f', 6));
+    ui->lblGLMDev->setText(QString("%1").arg(GLMdiagnostic.Dev, 0, 'f', 6));
+    ui->lblGLMAIC->setText(QString("%1").arg(GLMdiagnostic.AIC, 0, 'f', 6));
+    ui->lblGLMAICc->setText(QString("%1").arg(GLMdiagnostic.AICc, 0, 'f', 6));
+    ui->lblGLMRSS->setText(QString("%1").arg(GLMdiagnostic.RSquare, 0, 'f', 6));
 
     if (mLayerItem->getHasHatmatrix())
     {

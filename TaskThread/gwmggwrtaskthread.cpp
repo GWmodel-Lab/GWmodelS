@@ -177,7 +177,7 @@ bool GwmGGWRTaskThread::gwrPoisson(){
     int nDp = mLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
     mat wt2 = ones(nDp);
     mat yAdj = vec(nDp);
-    int nVar = mY.n_rows;
+    int nVar = mX.n_cols;
 
     emit message(tr("Calibrating GLM model..."));
     GwmGeneralizedLinearModel* glm = new GwmGeneralizedLinearModel();
@@ -188,6 +188,15 @@ bool GwmGGWRTaskThread::gwrPoisson(){
     double nulldev = glm->nullDev();
     double dev = glm->dev();
     double pseudor2 = 1- dev/nulldev;
+    double aic = dev + 2 * nVar;
+    double aicc = aic + 2 * nVar * (nVar + 1)/(nDp - nVar - 1);
+    vec vGLMDiags(5);
+    vGLMDiags(0) = aic;
+    vGLMDiags(1) = aicc;
+    vGLMDiags(2) = nulldev;
+    vGLMDiags(3) = dev;
+    vGLMDiags(4) = pseudor2;
+    mGLMDiagnostic = GwmGLMDiagnostic(vGLMDiags);
 
     while(1){
         yAdj = nu + (mY - mu)/mu;
@@ -200,6 +209,8 @@ bool GwmGGWRTaskThread::gwrPoisson(){
         nu = gwFitted(mX,mBetastemp);
         mu = exp(nu);
         oldLLik = lLik;
+        vec lliktemp = dpois(mY,mu);
+        lLik = sum(lliktemp);
 //        lLik = sum(dpois(y, mu, log = TRUE));
         if (abs((oldLLik - lLik)/lLik) < mTol)
             break;
@@ -273,7 +284,7 @@ bool GwmGGWRTaskThread::gwrPoisson(){
             double AICc = AIC + 2*trS*(trS+1)/(nDp-trS-1);
             double R2 = 1 - gwDev/(nulldev);  // pseudo.R2 <- 1 - gw.dev/null.dev
             vec vDiags(4);
-            int n = mX.n_rows;
+//            int n = mX.n_rows;
 //            double edf = n - 2 * mSHat(0) + mSHat(1);																														//edf
 //            double enp = 2 * mSHat(0) - mSHat(1);																																// enp
 //            double r2_adj = 1 - (1 - R2) * (n - 1) / (edf - 1);
@@ -335,6 +346,15 @@ bool GwmGGWRTaskThread::gwrBinomial(){
     double nulldev = glm->nullDev();
     double dev = glm->dev();
     double pseudor2 = 1- dev/nulldev;
+    double aic = dev + 2 * nVar;
+    double aicc = aic + 2 * nVar * (nVar + 1)/(nDp - nVar - 1);
+    vec vGLMDiags(5);
+    vGLMDiags(0) = aic;
+    vGLMDiags(1) = aicc;
+    vGLMDiags(2) = nulldev;
+    vGLMDiags(3) = dev;
+    vGLMDiags(4) = pseudor2;
+    mGLMDiagnostic = GwmGLMDiagnostic(vGLMDiags);
 
     while(1){
         //计算公式有调整
@@ -352,7 +372,7 @@ bool GwmGGWRTaskThread::gwrBinomial(){
         lLik = sum(lchoose(n,mY) + (n-mY)%log(1 - mu/n) + mY%log(mu/n));
         if (abs((oldLLik - lLik)/lLik) < mTol)
             break;
-        wt2 = mu;
+        wt2 = n%mu%(1-mu);
         itCount++;
         if (itCount == mMaxiter)
             break;
@@ -395,7 +415,7 @@ bool GwmGGWRTaskThread::gwrBinomial(){
             mYHat = exp(yhat)/(1+exp(yhat));
 
             mResidual = mY - mYHat;
-            vec Dev = log(1/((mY-n+exp(yhat)/(1+exp(yhat)))) % ((mY-n+exp(yhat)/(1+exp(yhat)))));
+            vec Dev = log(1/( (mY-n+exp(yhat)/(1+exp(yhat))) % (mY-n+exp(yhat)/(1+exp(yhat))) ) );
             double gwDev = sum(Dev);
             vec residual2 = mResidual % mResidual;
             double rss = sum(residual2);
@@ -403,15 +423,14 @@ bool GwmGGWRTaskThread::gwrBinomial(){
                 mBetasSE.col(i) = sqrt(mBetasSE.col(i));
     //            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
             }
-            mBetasTV = mBetas / mBetasSE;
             mBetasSE = trans(mBetasSE);
-            mBetasTV = trans(mBetasTV);
+            mBetasTV = mBetas / mBetasSE;
 
             double AIC = gwDev + 2 * trS;
             double AICc = AIC + 2*trS*(trS+1)/(nDp-trS-1);
             double R2 = 1 - gwDev/(nulldev);  // pseudo.R2 <- 1 - gw.dev/null.dev
             vec vDiags(4);
-            int n = mX.n_rows;
+//            int n = mX.n_rows;
 //            double edf = n - 2 * mSHat(0) + mSHat(1);																														//edf
 //            double enp = 2 * mSHat(0) - mSHat(1);																																// enp
 //            double r2_adj = 1 - (1 - R2) * (n - 1) / (edf - 1);
@@ -527,6 +546,11 @@ mat GwmGGWRTaskThread::getWtMat2() const
 GwmGGWRDiagnostic GwmGGWRTaskThread::getDiagnostic() const
 {
     return mDiagnostic;
+}
+
+GwmGLMDiagnostic GwmGGWRTaskThread::getGLMDiagnostic() const
+{
+    return mGLMDiagnostic;
 }
 
 bool GwmGGWRTaskThread::setFamily(Family family){
