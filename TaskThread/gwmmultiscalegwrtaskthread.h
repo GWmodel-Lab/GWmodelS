@@ -52,7 +52,7 @@ public:
 protected:
     double selectOptimizedBandwidth(GwmBandwidthSelectTaskThread& bwSelThread, bool verbose = true);
 
-    vec regressionVar(const mat& x, const vec& y, bool hatmatrix, mat& S);
+    vec regressionVar(const mat& x, const vec& y, double bw, bool hatmatrix, mat& S);
 
 protected:
     vec mBandwidthSizePS;

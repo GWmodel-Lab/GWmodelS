@@ -257,7 +257,6 @@ bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
     if (hatmatrix)
     {
         mat betas(nVar, nDp, fill::zeros), betasSE(nVar, nDp, fill::zeros);
-        mBetasSE = mBetasSE.t();
         bool isStoreS = hasFTest && (nDp <= 8192);
         mat ci, si;
         vec shat(2, fill::zeros), q(nDp, fill::zeros);

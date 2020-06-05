@@ -677,10 +677,10 @@ void MainWidget::onMultiscaleGWRBtnClicked()
     {
         gwrOptionDialog->updateFields();
         gwrTaskThread->setInitialBandwidthSize({100, 100, 100, 100});
-        gwrTaskThread->setBandwidthSeled({GwmMultiscaleGWRTaskThread::Null,
-                                          GwmMultiscaleGWRTaskThread::Null,
-                                          GwmMultiscaleGWRTaskThread::Null,
-                                          GwmMultiscaleGWRTaskThread::Null
+        gwrTaskThread->setBandwidthSeled({GwmMultiscaleGWRTaskThread::Initial,
+                                          GwmMultiscaleGWRTaskThread::Initial,
+                                          GwmMultiscaleGWRTaskThread::Initial,
+                                          GwmMultiscaleGWRTaskThread::Initial
                                          });
         gwrTaskThread->setPreditorCentered({true, true, true});
         gwrTaskThread->setBandwidthSelectThreshold({0.1, 0.1, 0.1, 0.1});

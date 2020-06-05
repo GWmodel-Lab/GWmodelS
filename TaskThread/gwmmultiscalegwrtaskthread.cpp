@@ -3,7 +3,23 @@
 #include <exception>
 #include "GWmodel/GWmodel.h"
 
+//#include <iomanip>
+
 using namespace std;
+
+void preview(string filename, const mat& obj, string title, bool append = false)
+{
+    ofstream fout(filename, append ? ios::app : ios::out);
+    if (fout.is_open())
+    {
+        fout.setf(ios::fixed);
+        fout.precision(3);
+        fout.width(12);
+        fout << title << std::endl;
+        obj.raw_print(fout);
+    }
+    fout.close();
+}
 
 GwmMultiscaleGWRTaskThread::GwmMultiscaleGWRTaskThread()
     : GwmGWRTaskThread()
@@ -31,12 +47,11 @@ void GwmMultiscaleGWRTaskThread::run()
             mX.col(i) = mX.col(i) - mean(mX.col(i));
         }
     }
+    preview("PSDM/x1.txt", mX, "x1");
 
     // ***********************
     // Intialize the bandwidth
     // ***********************
-    mInitialBandwidthSize = vec(mX.size());
-    mInitialBandwidthSize.fill(DBL_MAX);
     for (uword i = 0; i < nVar; i++)
     {
         if (mBandwidthSeled[i] == BandwidthSeledType::Null)
@@ -61,7 +76,7 @@ void GwmMultiscaleGWRTaskThread::run()
     // *****************************************************
     GwmBandwidthSelectTaskThread bwSelThread(*this);
     double bwInit0 = selectOptimizedBandwidth(bwSelThread);
-    mBandwidthSize = bwInit0;
+    mBandwidthSize = 31;
 
     bool isStoreS = hasFTest && (nDp <= 8192);
     mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
@@ -70,21 +85,27 @@ void GwmMultiscaleGWRTaskThread::run()
     if (!isAllCorrect)
         return;
 
+    preview("PSDM/betas.txt", mBetas, "betas");
+
     // ***********************************************************
     // Select the optimum bandwidths for each independent variable
     // ***********************************************************
     emit message(QString("-------- Select the Optimum Bandwidths for each Independent Varialbe --------"));
     uvec bwChangeNo(nVar, fill::zeros);
     vec resid = mY - fitted(mX, mBetas);
+    preview("PSDM/resid.txt", resid, "resid");
     double RSS0 = sum(resid % resid), RSS = DBL_MAX;
     double criterion = DBL_MAX;
     for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
     {
         for (int i = 0; i < nVar; i++)
         {
+            QString varName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i-1]->attributeName();
             double bwi = DBL_MAX;
             vec fi = mBetas.col(i) % mX.col(i);
+            preview("PSDM/fi.txt", fi, QString("Iteration %1 Variable %2").arg(iteration - 1).arg(varName).toStdString(), !(iteration == 1 && i == 0));
             vec yi = resid + fi;
+            preview("PSDM/yi.txt", yi, QString("Iteration %1 Variable %2").arg(iteration - 1).arg(varName).toStdString(), !(iteration == 1 && i == 0));
             if (mBandwidthSeled[i] == BandwidthSeledType::Specified)
             {
                 bwi = mInitialBandwidthSize[i];
@@ -121,9 +142,11 @@ void GwmMultiscaleGWRTaskThread::run()
                 }
             }
             mInitialBandwidthSize[i] = bwi;
-            mBetas.col(i) = regressionVar(mX.col(i), yi, hasHatMatrix, S);
+            mBetas.col(i) = regressionVar(mX.col(i), yi, bwi, hasHatMatrix, S);
             resid = mY - fitted(mX, mBetas);
+            preview("PSDM/resid.txt", resid, QString("Iteration %1 Variable %2").arg(iteration - 1).arg(varName).toStdString(), true);
         }
+        preview("PSDM/betas.txt", mBetas, QString("Iteration %1").arg(iteration - 1).toStdString(), true);
         RSS = rss(mY, mX, mBetas);
         criterion = (mCriterionType == CriterionType::CVR) ?
                     abs(RSS - RSS0) :
@@ -160,7 +183,7 @@ double GwmMultiscaleGWRTaskThread::selectOptimizedBandwidth(GwmBandwidthSelectTa
     return bwSelThread.getBandwidthSize();
 }
 
-vec GwmMultiscaleGWRTaskThread::regressionVar(const mat &x, const vec &y, bool hatmatrix, mat &S)
+vec GwmMultiscaleGWRTaskThread::regressionVar(const mat &x, const vec &y, double bw, bool hatmatrix, mat &S)
 {
     bool isAllCorrect = true;
     arma::uword nDp = x.n_rows, nVar = x.n_cols;
@@ -175,7 +198,7 @@ vec GwmMultiscaleGWRTaskThread::regressionVar(const mat &x, const vec &y, bool h
             try
             {
                 vec d = distance(i);
-                vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
+                vec w = gwWeight(d, bw, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
                 betas.col(i) = gwRegHatmatrix(x, y, w, i, ci, si);
 //                shat(0) += si(0, i);
 //                shat(1) += det(si * trans(si));
@@ -200,7 +223,7 @@ vec GwmMultiscaleGWRTaskThread::regressionVar(const mat &x, const vec &y, bool h
         {
             try {
                 vec d = distance(i);
-                vec w = gwWeight(d, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+                vec w = gwWeight(d, bw, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
                 betas.col(i) = gwReg(x, y, w, i);
             } catch (exception e) {
                 isAllCorrect = false;
