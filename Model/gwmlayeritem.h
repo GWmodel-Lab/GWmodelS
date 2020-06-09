@@ -23,7 +23,8 @@ public:
         GWR,
         Symbol,
         ScalableGWR,
-        GGWR
+        GGWR,
+        MultiscaleGWR
     };
 
 public:

@@ -41,6 +41,7 @@
 
 #include "gwmmultiscalegwroptionsdialog.h"
 #include "TaskThread/gwmmultiscalegwrtaskthread.h"
+#include "PropertyPanelTabs/gwmpropertymultiscalegwrtab.h"
 
 #include "gwmattributetabledialog.h"
 #include "Model/gwmlayergwritem.h"
@@ -230,6 +231,7 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+        case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -291,6 +293,7 @@ void MainWidget::onSaveLayer()
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+        case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -332,6 +335,7 @@ void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
     case GwmLayerItem::GwmLayerItemType::Origin:
     case GwmLayerItem::GwmLayerItemType::GWR:
     case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+    case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         layerItem = ((GwmLayerVectorItem*)item);
         break;
     default:
@@ -377,6 +381,7 @@ void MainWidget::onExportLayer(QString filetype)
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+        case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -683,7 +688,7 @@ void MainWidget::onMultiscaleGWRBtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
-            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrTaskThread);
+            GwmLayerMultiscaleGWRItem* gwrItem = new GwmLayerMultiscaleGWRItem(selectedItem, resultLayer, gwrTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }

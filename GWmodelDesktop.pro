@@ -42,13 +42,16 @@ SOURCES += \
     Model/gwmlayergwritem.cpp \
     Model/gwmlayeritem.cpp \
     Model/gwmlayeritemmodel.cpp \
+    Model/gwmlayermultiscalegwritem.cpp \
     Model/gwmlayeroriginitem.cpp \
     Model/gwmlayerscalablegwritem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     PropertyPanelTabs/gwmpropertyggwrtab.cpp \
     Model/gwmparameterspecifiedoptionsmodel.cpp \
+    Model/gwmpropertymultiscaleparameterspecifieditemmodel.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
+    PropertyPanelTabs/gwmpropertymultiscalegwrtab.cpp \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
@@ -125,13 +128,16 @@ HEADERS += \
     Model/gwmlayergwritem.h \
     Model/gwmlayeritem.h \
     Model/gwmlayeritemmodel.h \
+    Model/gwmlayermultiscalegwritem.h \
     Model/gwmlayeroriginitem.h \
     Model/gwmlayerscalablegwritem.h \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/gwmpropertyggwrtab.h \
     Model/gwmparameterspecifiedoptionsmodel.h \
+    Model/gwmpropertymultiscaleparameterspecifieditemmodel.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
+    PropertyPanelTabs/gwmpropertymultiscalegwrtab.h \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.h \
     PropertyPanelTabs/utils.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
@@ -199,6 +205,7 @@ HEADERS += \
 FORMS += \
     PropertyPanelTabs/gwmpropertyggwrtab.ui \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
+    PropertyPanelTabs/gwmpropertymultiscalegwrtab.ui \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.ui \
     gwmcoordtranssettingdialog.ui \
     gwmcsvtodatdialog.ui \
