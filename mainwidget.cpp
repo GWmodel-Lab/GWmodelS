@@ -39,6 +39,7 @@
 #include "TaskThread/gwmscalablegwrtaskthread.h"
 #include "Model/gwmlayerscalablegwritem.h"
 
+#include "gwmmultiscalegwroptionsdialog.h"
 #include "TaskThread/gwmmultiscalegwrtaskthread.h"
 
 #include "gwmattributetabledialog.h"
@@ -659,7 +660,7 @@ void MainWidget::onScalableGWRBtnClicked()
 void MainWidget::onMultiscaleGWRBtnClicked()
 {
     GwmMultiscaleGWRTaskThread* gwrTaskThread = new GwmMultiscaleGWRTaskThread();
-    GwmGWROptionsDialog* gwrOptionDialog = new GwmGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
+    GwmMultiscaleGWROptionsDialog* gwrOptionDialog = new GwmMultiscaleGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
     {
@@ -676,14 +677,6 @@ void MainWidget::onMultiscaleGWRBtnClicked()
     if (gwrOptionDialog->exec() == QDialog::Accepted)
     {
         gwrOptionDialog->updateFields();
-        gwrTaskThread->setInitialBandwidthSize({100, 100, 100, 100});
-        gwrTaskThread->setBandwidthSeled({GwmMultiscaleGWRTaskThread::Initial,
-                                          GwmMultiscaleGWRTaskThread::Initial,
-                                          GwmMultiscaleGWRTaskThread::Initial,
-                                          GwmMultiscaleGWRTaskThread::Initial
-                                         });
-        gwrTaskThread->setPreditorCentered({true, true, true});
-        gwrTaskThread->setBandwidthSelectThreshold({0.1, 0.1, 0.1, 0.1});
         GwmLayerGroupItem* selectedItem = gwrOptionDialog->selectedLayer();
         const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);

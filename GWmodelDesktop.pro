@@ -47,6 +47,7 @@ SOURCES += \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     PropertyPanelTabs/gwmpropertyggwrtab.cpp \
+    Model/gwmparameterspecifiedoptionsmodel.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
@@ -88,6 +89,7 @@ SOURCES += \
     gwmgwroptionsdialog.cpp \
     gwmindepvarselectorwidget.cpp \
     gwmmaptoolidentifyfeature.cpp \
+    gwmmultiscalegwroptionsdialog.cpp \
     gwmopenxyeventlayerdialog.cpp \
     gwmplot.cpp \
     gwmprogressdialog.cpp \
@@ -128,6 +130,7 @@ HEADERS += \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/gwmpropertyggwrtab.h \
+    Model/gwmparameterspecifiedoptionsmodel.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.h \
     PropertyPanelTabs/utils.h \
@@ -172,6 +175,7 @@ HEADERS += \
     gwmgwroptionsdialog.h \
     gwmindepvarselectorwidget.h \
     gwmmaptoolidentifyfeature.h \
+    gwmmultiscalegwroptionsdialog.h \
     gwmopenxyeventlayerdialog.h \
     gwmplot.h \
     gwmprogressdialog.h \
@@ -204,6 +208,7 @@ FORMS += \
     gwmggwroptionsdialog.ui \
     gwmgwroptionsdialog.ui \
     gwmindepvarselectorwidget.ui \
+    gwmmultiscalegwroptionsdialog.ui \
     gwmopenxyeventlayerdialog.ui \
     gwmprogressdialog.ui \
     gwmpropertypanel.ui \
