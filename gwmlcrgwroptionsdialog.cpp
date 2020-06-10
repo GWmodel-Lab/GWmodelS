@@ -30,8 +30,7 @@ GwmLcrGWROptionsDialog::GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originI
     ui->mDepVarComboBox->setCurrentIndex(-1);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmLcrGWROptionsDialog::onDepVarChanged);
 
-    //ui->mModelSelAICThreshold->setMaximum(DBL_MAX);
-    //connect(ui->mVariableAutoSelectionCheck, &QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::onVariableAutoSelectionToggled);
+    connect(ui->mLambdaAdjustCheck,&QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::onLambdaAdjustCheckToggled);
 
     QButtonGroup* bwTypeBtnGroup = new QButtonGroup(this);
     bwTypeBtnGroup->addButton(ui->mBwTypeAdaptiveRadio);
@@ -106,8 +105,7 @@ GwmLcrGWROptionsDialog::GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originI
     connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
     //connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
 
-    connect(ui->mLambdaAdjustFRadioButton,&QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mLambdaAdjustTRadioButton,&QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mLambdaAdjustCheck,&QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mLambdaSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mcnThreshSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
 
@@ -269,6 +267,11 @@ void GwmLcrGWROptionsDialog::onDmatFileOpenClicked()
 void GwmLcrGWROptionsDialog::onVariableAutoSelectionToggled(bool checked)
 {
     //ui->mModelSelAICThreshold->setEnabled(checked);
+}
+
+void GwmLcrGWROptionsDialog::onLambdaAdjustCheckToggled(bool checked)
+{
+    ui->mcnThreshSpinBox->setEnabled(checked);
 }
 
 void GwmLcrGWROptionsDialog::onCustomizeRaidoToggled(bool checked)
@@ -483,14 +486,7 @@ void GwmLcrGWROptionsDialog::updateFields()
     }
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
-    //mTaskThread->setHasFTest(ui->cbxFTest->isChecked());
-    if(ui->mLambdaAdjustFRadioButton->isChecked())
-    {
-        mTaskThread->mlambdaAdjust = false;
-    }else if(ui->mLambdaAdjustTRadioButton->isChecked())
-    {
-        mTaskThread->mlambdaAdjust = true;
-    }
+    mTaskThread->mlambdaAdjust = ui->mLambdaAdjustCheck->isChecked();
     mTaskThread->mcnThresh = ui->mcnThreshSpinBox->value();
     mTaskThread->mlambda = ui->mLambdaSpinBox->value();
 }

@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -57,6 +57,7 @@
     <addaction name="action_CsvToDat"/>
     <addaction name="actionRobustGWR"/>
     <addaction name="action_GGWR"/>
+    <addaction name="actionLocal_collinearity_GWR"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menuGWR"/>
@@ -110,6 +111,11 @@
   <action name="action_GGWR">
    <property name="text">
     <string>GGWR</string>
+   </property>
+  </action>
+  <action name="actionLocal_collinearity_GWR">
+   <property name="text">
+    <string>Local-collinearity GWR</string>
    </property>
   </action>
  </widget>

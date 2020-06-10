@@ -75,63 +75,56 @@
      <property name="title">
       <string>Argument Setting</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <layout class="QFormLayout" name="formLayout_8">
       <property name="topMargin">
-       <number>49</number>
+       <number>9</number>
       </property>
       <property name="bottomMargin">
        <number>1</number>
       </property>
-      <item>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_15">
-          <property name="text">
-           <string>lambda.adjust:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QRadioButton" name="mLambdaAdjustFRadioButton">
-          <property name="text">
-           <string>False</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QRadioButton" name="mLambdaAdjustTRadioButton">
-          <property name="text">
-           <string>True</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="label_10">
-          <property name="maximumSize">
-           <size>
-            <width>100</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>lambda:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_11">
-          <property name="text">
-           <string>CNThresh:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1" colspan="2">
-         <widget class="QSpinBox" name="mcnThreshSpinBox"/>
-        </item>
-        <item row="3" column="1" colspan="2">
-         <widget class="QSpinBox" name="mLambdaSpinBox"/>
-        </item>
-       </layout>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_15">
+        <property name="text">
+         <string>lambda.adjust</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>CNThresh</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QSpinBox" name="mcnThreshSpinBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>lambda</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="mLambdaSpinBox"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="mLambdaAdjustCheck">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

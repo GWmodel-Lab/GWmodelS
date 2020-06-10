@@ -43,6 +43,7 @@ public slots:
     void onDistTypeDmatToggled(bool checked);
     void onDmatFileOpenClicked();
     void onVariableAutoSelectionToggled(bool checked);
+    void onLambdaAdjustCheckToggled(bool checked);
 
 
 public:

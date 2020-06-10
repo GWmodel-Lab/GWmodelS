@@ -29,4 +29,5 @@ void MainWindow::setupMenus()
     connect(ui->actionRobustGWR,&QAction::triggered,ui->centralwidget,&MainWidget::onRobustGWR);
     connect(ui->actionScalable_GWR, &QAction::triggered,ui->centralwidget,&MainWidget::onScalableGWRBtnClicked);
     connect(ui->action_GGWR,&QAction::triggered, ui->centralwidget, &MainWidget::onGGWRBtnClicked);
+    connect(ui->actionLocal_collinearity_GWR,&QAction::triggered, ui->centralwidget, &MainWidget::onLcrGWRBtnClicked);
 }
