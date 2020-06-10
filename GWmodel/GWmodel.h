@@ -63,4 +63,11 @@ void scgwr_pre(const mat& x, const vec& y, int bw, int poly, double b0, const ma
 double scgwr_loocv(const vec& target, const mat& x, const vec& y, int bw, int poly, const mat& Mx0, const mat& My0);
 bool scgwr_reg(const mat& x, const vec& y, int bw, int poly, const mat& G0, const umat& neighbour, const vec& parameters, mat& Mx0, mat& My0, mat& betas, vec& s_hat, mat& betasSE);
 
+vec gwFitted(mat X, mat beta);
+mat diag(mat a);
+mat dpois(mat y,mat mu);
+mat dbinom(mat y,mat m,mat mu);
+mat lchoose(mat n,mat k);
+mat lgammafn(mat x);
+
 #endif // GWMODEL_H

@@ -2,6 +2,8 @@
 #include "GWmodel.h"
 #include <math.h>
 #include <omp.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 using namespace arma;
 
 //distance matrix calculation
@@ -423,7 +425,7 @@ vec AICcRss(const vec& y, const mat& x, const mat& beta, const vec& s_hat)
 }
 
 //Caculate the i row of
-mat CiMat(const mat& x, vec w)
+mat CiMat(const mat& x, const vec &w)
 {
 	return inv(trans(x) * diagmat(w) * x) * trans(x) * diagmat(w);
 }
@@ -830,4 +832,79 @@ bool scgwr_reg(const mat& x, const vec& y, int bw, int poly, const mat& G0, cons
   }
   s_hat = { trS, trStS };
   return isAllCorrect;
+}
+
+vec gwFitted(mat X, mat beta)
+{
+    vec fitted = sum(beta % X, 1);
+    return fitted;
+}
+
+mat diag(mat a){
+    int n = a.n_cols;
+    mat res = mat(uword(0), uword(0));
+    if(a.n_rows > 1){
+        for(int i = 0; i < 0; i++){
+            res[i] = a.col(i)[i];
+        }
+    }
+    else{
+        mat base = eye(n,n);
+        for(int i = 0; i < 0; i++){
+            res.col(i) = a[i] * base.col(i);
+        }
+    }
+    return res;
+}
+
+mat dpois(mat y,mat mu){
+    int n = y.n_rows;
+    mat res = vec(n);
+    mat pdf = lgammafn(y);
+    res = -mu + y%log(mu) - pdf;
+    return res;
+}
+
+mat lchoose(mat n,mat k){
+    int nrow = n.n_rows;
+    mat res = vec(nrow);
+    for(int i = 0;i < nrow; i++){
+//        double A = 1;
+//        for(int j = 1;j <= k[i]; j++){
+//            A = A * (n[i] - j + 1) / j ;
+//        }
+//        res.row(i) = log(A);
+        res.row(i) = lgamma(n[i]+1) - lgamma(n[i]-k[i]+1) - lgamma(k[i]+1);
+    }
+    return res;
+}
+
+mat dbinom(mat y,mat m,mat mu){
+    int n = y.n_rows;
+    mat res = vec(n);
+    for(int i = 0;i < n; i++){
+        double pdf = gsl_ran_binomial_pdf(int(y[i]), mu[i], int(m[i]));
+        res[i] = log(pdf);
+    }
+    return res;
+}
+
+mat lgammafn(mat x){
+    int n = x.n_rows;
+    mat res = vec(n,fill::zeros);   
+    for(int j = 0; j < n ; j++){
+//        double A = 1;
+//        double OldA = 1;
+//        for(int i = x[j]; i >= 1; i--){
+//            OldA = A;
+//            A = A * i ;
+//            if(A >= DBL_MAX){
+//                res[j] += log(OldA);
+//                A = i;
+//            }
+//        }
+//        res[j] += log(A);
+        res[j] = lgamma(x[j]);
+    }
+    return res;
 }

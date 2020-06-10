@@ -15,7 +15,7 @@
 int main(int argc, char *argv[])
 {
 #if (QT_VERSION >= QT_VERSION_CHECK(5,6,0))
-    QgsApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QgsApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
 #endif
     QgsApplication a(argc, argv, true);
     QgsApplication::initQgis();

@@ -7,7 +7,6 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , mainWidget(new MainWidget())
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
@@ -28,6 +27,7 @@ void MainWindow::setupMenus()
     connect(ui->action_CsvToDat, &QAction::triggered, mainWidget, &MainWidget::onCsvToDat);
     //鲁棒GWR
     connect(ui->actionRobustGWR,&QAction::triggered,mainWidget,&MainWidget::onRobustGWR);
+    connect(ui->action_GGWR,&QAction::triggered, ui->centralwidget, &MainWidget::onGGWRBtnClicked);
 }
 
 

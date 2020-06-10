@@ -1,5 +1,6 @@
 #include "gwmlayeritemmodel.h"
 #include "gwmlayergwritem.h"
+#include "gwmlayerggwritem.h"
 
 GwmLayerItemModel::GwmLayerItemModel(QObject *parent)
     : QAbstractItemModel(parent)
@@ -279,6 +280,7 @@ QgsVectorLayer *GwmLayerItemModel::layerFromItem(GwmLayerItem* item) const
     case GwmLayerItem::GwmLayerItemType::Origin:
     case GwmLayerItem::GwmLayerItemType::GWR:
     case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+    case GwmLayerItem::GwmLayerItemType::GGWR:
         return ((GwmLayerOriginItem*)item)->layer();
     default:
         return nullptr;
@@ -322,6 +324,7 @@ bool GwmLayerItemModel::canMoveUp(const QModelIndex &index)
     case GwmLayerItem::Group:
         return row > 0 && row < item->parentItem()->childCount();
     case GwmLayerItem::GWR:
+    case GwmLayerItem::GGWR:
     case GwmLayerItem::ScalableGWR:
         return row > 1 && row < (item->parentItem()->childCount() - 1);
     default:
@@ -338,6 +341,7 @@ bool GwmLayerItemModel::canMoveDown(const QModelIndex &index)
     case GwmLayerItem::Group:
         return row >= 0 && row < (item->parentItem()->childCount() - 1);
     case GwmLayerItem::GWR:
+    case GwmLayerItem::GGWR:
     case GwmLayerItem::ScalableGWR:
         return row >= 1 && row < (item->parentItem()->childCount() - 2);
     default:
@@ -352,6 +356,7 @@ bool GwmLayerItemModel::canRemove(const QModelIndex &index)
     {
     case GwmLayerItem::Group:
     case GwmLayerItem::GWR:
+    case GwmLayerItem::GGWR:
     case GwmLayerItem::ScalableGWR:
         return true;
     default:

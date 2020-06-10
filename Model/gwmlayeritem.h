@@ -22,7 +22,8 @@ public:
         Origin,
         GWR,
         Symbol,
-        ScalableGWR
+        ScalableGWR,
+        GGWR
     };
 
 public:

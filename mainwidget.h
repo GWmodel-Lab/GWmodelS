@@ -58,6 +58,7 @@ public slots:
     void onShowSymbolSetting(const QModelIndex &index);
     void onCsvToDat();
     void onRobustGWR();
+    void onGGWRBtnClicked();
 
 public:
     bool eventFilter(QObject* obj, QEvent* e);

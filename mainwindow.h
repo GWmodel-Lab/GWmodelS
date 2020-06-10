@@ -26,6 +26,6 @@ private:
     void openFileImportCsv();
     Ui::MainWindow *ui;
 
-    MainWidget* mainWidget;
+//    MainWidget* mainWidget;
 };
 #endif // MAINWINDOW_H

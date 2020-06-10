@@ -32,6 +32,8 @@
 #include <gwmsaveascsvdialog.h>
 #include <qgsvectorfilewriter.h>
 #include <TaskThread/gwmcsvtodatthread.h>
+#include "gwmggwroptionsdialog.h"
+#include "TaskThread/gwmggwrtaskthread.h"
 
 #include "gwmscalablegwroptionsdialog.h"
 #include "TaskThread/gwmscalablegwrtaskthread.h"
@@ -39,6 +41,7 @@
 
 #include "gwmattributetabledialog.h"
 #include "Model/gwmlayergwritem.h"
+#include "Model/gwmlayerggwritem.h"
 
 //鲁棒GWR
 MainWidget::MainWidget(QWidget *parent)
@@ -715,6 +718,37 @@ void MainWidget::onRobustGWRBtnClicked()
             QgsVectorLayer* resultLayer = gwrRobustTaskThread->getResultLayer();
             GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
+        }
+    }
+}
+
+void MainWidget::onGGWRBtnClicked(){
+    GwmGGWRTaskThread* ggwrTaskThread = new GwmGGWRTaskThread();
+    GwmGGWROptionsDialog* ggwrOptionDialog = new GwmGGWROptionsDialog(this->mapModel->rootChildren(), ggwrTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            ggwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            ggwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (ggwrOptionDialog->exec() == QDialog::Accepted)
+    {
+        ggwrOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = ggwrOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(ggwrTaskThread); //
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = ggwrTaskThread->getResultLayer();
+            GwmLayerGGWRItem* ggwrItem = new GwmLayerGGWRItem(selectedItem, resultLayer, ggwrTaskThread);
+            mapModel->appentItem(ggwrItem, selectedIndex);
         }
     }
 }

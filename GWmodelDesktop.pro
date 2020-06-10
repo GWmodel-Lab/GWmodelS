@@ -31,8 +31,13 @@ SOURCES += \
     DelimitedText/qgsdelimitedtextfile.cpp \
     DelimitedText/qgsdelimitedtextprovider.cpp \
     GWmodel/GWmodel.cpp \
+    GWmodel/gwmbinomialmodel.cpp \
+    GWmodel/gwmgeneralizedlinearmodel.cpp \
+    GWmodel/gwmlinearmodel.cpp \
+    GWmodel/gwmpoissonmodel.cpp \
     Model/gwmlayerattributeitem.cpp \
     Model/gwmlayerattributeitemmodel.cpp \
+    Model/gwmlayerggwritem.cpp \
     Model/gwmlayergroupitem.cpp \
     Model/gwmlayergwritem.cpp \
     Model/gwmlayeritem.cpp \
@@ -41,10 +46,13 @@ SOURCES += \
     Model/gwmlayerscalablegwritem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
+    PropertyPanelTabs/gwmpropertyggwrtab.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
+    TaskThread/gwmggwrbandwidthselectionthread.cpp \
+    TaskThread/gwmggwrtaskthread.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmrobustgwrtaskthread.cpp \
@@ -75,6 +83,7 @@ SOURCES += \
     gwmfeaturepanel.cpp \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
+    gwmggwroptionsdialog.cpp \
     gwmgwroptionsdialog.cpp \
     gwmindepvarselectorwidget.cpp \
     gwmmaptoolidentifyfeature.cpp \
@@ -102,8 +111,13 @@ HEADERS += \
     DelimitedText/qgsdelimitedtextfile.h \
     DelimitedText/qgsdelimitedtextprovider.h \
     GWmodel/GWmodel.h \
+    GWmodel/gwmbinomialmodel.h \
+    GWmodel/gwmgeneralizedlinearmodel.h \
+    GWmodel/gwmlinearmodel.h \
+    GWmodel/gwmpoissonmodel.h \
     Model/gwmlayerattributeitem.h \
     Model/gwmlayerattributeitemmodel.h \
+    Model/gwmlayerggwritem.h \
     Model/gwmlayergroupitem.h \
     Model/gwmlayergwritem.h \
     Model/gwmlayeritem.h \
@@ -112,10 +126,13 @@ HEADERS += \
     Model/gwmlayerscalablegwritem.h \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
+    PropertyPanelTabs/gwmpropertyggwrtab.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.h \
     PropertyPanelTabs/utils.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
+    TaskThread/gwmggwrbandwidthselectionthread.h \
+    TaskThread/gwmggwrtaskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmrobustgwrtaskthread.h \
@@ -149,6 +166,7 @@ HEADERS += \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
+    gwmggwroptionsdialog.h \
     gwmgwroptionsdialog.h \
     gwmindepvarselectorwidget.h \
     gwmmaptoolidentifyfeature.h \
@@ -173,6 +191,7 @@ HEADERS += \
     qgsattributetableviewextend.h
 
 FORMS += \
+    PropertyPanelTabs/gwmpropertyggwrtab.ui \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.ui \
     gwmcoordtranssettingdialog.ui \
@@ -180,6 +199,7 @@ FORMS += \
     gwmfeaturepanel.ui \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
+    gwmggwroptionsdialog.ui \
     gwmgwroptionsdialog.ui \
     gwmindepvarselectorwidget.ui \
     gwmopenxyeventlayerdialog.ui \
