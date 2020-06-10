@@ -148,10 +148,6 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::zoomToLayerBtnSignal,this,&MainWidget::onZoomToLayerBtn);
     connect(toolbar, &GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
     connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRBtnClicked);
-    connect(toolbar,&GwmToolbar::gwmScalableGWRBtnSignal,this,&MainWidget::onScalableGWRBtnClicked);
-
-    //
-    connect(toolbar,&GwmToolbar::gwmodelRobustGWRBtnSignal,this,&MainWidget::onRobustGWRBtnClicked);
 
 }
 

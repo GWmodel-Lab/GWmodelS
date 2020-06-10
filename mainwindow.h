@@ -16,9 +16,6 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-private slots:
-    void on_actionScalable_GWR_triggered();
-
 private:
     void setupMenus();
     void openFileImportShapefile();

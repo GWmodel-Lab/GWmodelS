@@ -19,8 +19,6 @@ GwmToolbar::GwmToolbar(QWidget *parent) :
     connect(ui->gwmodelGWRBtn, &QPushButton::clicked, this, &GwmToolbar::gwmodelGWRBtnSignal);
     connect(ui->gwmodelGWSSBtn, &QPushButton::clicked, this, &GwmToolbar::gwmodelGWSSBtnSignal);
     connect(ui->gwmodelGWPCABtn, &QPushButton::clicked, this, &GwmToolbar::gwmodelGWPCABtnSignal);
-    connect(ui->gwmScalableGWRBtn, &QPushButton::clicked, this, &GwmToolbar::gwmScalableGWRBtnSignal);
-    connect(ui->gwmodelRobustGWRBtn, &QPushButton::clicked,this,&GwmToolbar::gwmodelRobustGWRBtnSignal);
 }
 
 GwmToolbar::~GwmToolbar()

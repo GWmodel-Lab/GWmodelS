@@ -45,11 +45,8 @@ signals:
     void gwmodelGWRBtnSignal();
     void gwmodelGWSSBtnSignal();
     void gwmodelGWPCABtnSignal();
-    void gwmScalableGWRBtnSignal();
     void saveLayerBtnSignal();
     void exportLayerBtnSignal();
-
-    void gwmodelRobustGWRBtnSignal();
 
 public:
     void setBtnEnabled(bool flag);
