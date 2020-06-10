@@ -7,20 +7,6 @@
 
 using namespace std;
 
-void preview(string filename, const mat& obj, string title, bool append = false)
-{
-    ofstream fout(filename, append ? ios::app : ios::out);
-    if (fout.is_open())
-    {
-        fout.setf(ios::fixed);
-        fout.precision(3);
-        fout.width(12);
-        fout << title << std::endl;
-        obj.raw_print(fout);
-    }
-    fout.close();
-}
-
 GwmMultiscaleGWRTaskThread::GwmMultiscaleGWRTaskThread()
     : GwmGWRTaskThread()
 {
@@ -60,7 +46,6 @@ void GwmMultiscaleGWRTaskThread::run()
             mX.col(i) = mX.col(i) - mean(mX.col(i));
         }
     }
-    preview("PSDM/x1.txt", mX, "x1");
 
     // ***********************
     // Intialize the bandwidth
@@ -123,7 +108,6 @@ void GwmMultiscaleGWRTaskThread::run()
         }
     }
 
-    preview("PSDM/betas.txt", mBetas, "betas");
 
     // ***********************************************************
     // Select the optimum bandwidths for each independent variable
@@ -131,7 +115,6 @@ void GwmMultiscaleGWRTaskThread::run()
     emit message(QString("-------- Select the Optimum Bandwidths for each Independent Varialbe --------"));
     uvec bwChangeNo(nVar, fill::zeros);
     vec resid = mY - fitted(mX, mBetas);
-    preview("PSDM/resid.txt", resid, "resid");
     double RSS0 = sum(resid % resid), RSS = DBL_MAX;
     double criterion = DBL_MAX;
     for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
@@ -141,9 +124,7 @@ void GwmMultiscaleGWRTaskThread::run()
             QString varName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i-1]->attributeName();
             double bwi = DBL_MAX;
             vec fi = mBetas.col(i) % mX.col(i);
-            preview("PSDM/fi.txt", fi, QString("Iteration %1 Variable %2").arg(iteration - 1).arg(varName).toStdString(), !(iteration == 1 && i == 0));
             vec yi = resid + fi;
-            preview("PSDM/yi.txt", yi, QString("Iteration %1 Variable %2").arg(iteration - 1).arg(varName).toStdString(), !(iteration == 1 && i == 0));
             if (mBandwidthSeled[i] == BandwidthSeledType::Specified)
             {
                 bwi = mInitialBandwidthSize[i];
@@ -199,9 +180,7 @@ void GwmMultiscaleGWRTaskThread::run()
                 mS0 = mS0 - SArrayi + mSArray.slice(i);
             }
             resid = mY - fitted(mX, mBetas);
-            preview("PSDM/resid.txt", resid, QString("Iteration %1 Variable %2").arg(iteration - 1).arg(varName).toStdString(), true);
         }
-        preview("PSDM/betas.txt", mBetas, QString("Iteration %1").arg(iteration - 1).toStdString(), true);
         RSS = rss(mY, mX, mBetas);
         criterion = (mCriterionType == CriterionType::CVR) ?
                     abs(RSS - RSS0) :
