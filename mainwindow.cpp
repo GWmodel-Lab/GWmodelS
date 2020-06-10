@@ -25,8 +25,8 @@ void MainWindow::setupMenus()
     connect(ui->actionGeo_Json, &QAction::triggered, ui->centralwidget, &MainWidget::openFileImportJson);
     connect(ui->action_CSV, &QAction::triggered, ui->centralwidget, &MainWidget::openFileImportCsv);
     connect(ui->action_CsvToDat, &QAction::triggered, ui->centralwidget, &MainWidget::onCsvToDat);
-    //鲁棒GWR
     connect(ui->actionRobustGWR,&QAction::triggered,ui->centralwidget,&MainWidget::onRobustGWR);
     connect(ui->actionScalable_GWR, &QAction::triggered,ui->centralwidget,&MainWidget::onScalableGWRBtnClicked);
     connect(ui->action_GGWR,&QAction::triggered, ui->centralwidget, &MainWidget::onGGWRBtnClicked);
+    connect(ui->actionMultiscale_GWR,&QAction::triggered, ui->centralwidget, &MainWidget::onMultiscaleGWRBtnClicked);
 }
