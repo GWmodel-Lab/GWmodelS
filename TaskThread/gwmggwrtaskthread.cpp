@@ -75,6 +75,11 @@ void GwmGGWRTaskThread::run(){
 //    int nRp = mRegPoints.n_rows;
     int nDp = mLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
 //    mat betas1 = mBetas;
+    mBetas = mat(nVar, nRp, fill::zeros);
+    if (hasHatMatrix)
+    {
+        mBetasSE = mat( nVar,nDp, fill::zeros);
+    }
 
     emit message(tr("Calculating Distance Matrix..."));
     mWtMat1 = mat(nDp,nDp,fill::zeros);
@@ -197,7 +202,6 @@ bool GwmGGWRTaskThread::gwrPoisson(){
     vGLMDiags(3) = dev;
     vGLMDiags(4) = pseudor2;
     mGLMDiagnostic = GwmGLMDiagnostic(vGLMDiags);
-
     while(1){
         yAdj = nu + (mY - mu)/mu;
         for(int i = 0; i < nDp; i++){
