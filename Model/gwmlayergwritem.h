@@ -56,6 +56,8 @@ public:
 
     bool getHasFTest() const;
 
+    bool getIsRegressionPointGiven() const;
+
 protected:
     int mDataPointsSize;
     int mDepVarIndex;
@@ -72,6 +74,7 @@ protected:
     QMap<double, double> mBandwidthSelScores;
     QList<GwmFTestResult> mFTestResults;
 
+    bool isRegressionPointGiven;
     bool isModelOptimized;
     bool isBandwidthOptimized;
     bool hasHatmatrix;

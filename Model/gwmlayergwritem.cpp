@@ -26,6 +26,7 @@ GwmLayerGWRItem::GwmLayerGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, c
         mFTestResults = taskThread->fTestResults();
         hasHatmatrix = taskThread->getHasHatMatrix();
         hasFTest = taskThread->getHasFTest();
+        isRegressionPointGiven = !(taskThread->getRegressionLayer() == nullptr);
     }
 }
 
@@ -119,6 +120,11 @@ bool GwmLayerGWRItem::getHasHatmatrix() const
 bool GwmLayerGWRItem::getHasFTest() const
 {
     return hasFTest;
+}
+
+bool GwmLayerGWRItem::getIsRegressionPointGiven() const
+{
+    return isRegressionPointGiven;
 }
 
 GwmGWRTaskThread::KernelFunction GwmLayerGWRItem::bandwidthKernelFunction() const

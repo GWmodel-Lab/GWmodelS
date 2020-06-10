@@ -89,9 +89,13 @@ void GwmPropertyGWRTab::updateUI()
                 .arg(mLayerItem->bandwidthUnit());
         ui->lblBandwidthSize->setText(bwSizeString);
     }
-    if (true)
+    if (mLayerItem->getIsRegressionPointGiven())
     {
-        ui->lblRegressionPoints->setText(tr("the same location as observations are used."));
+        ui->lblRegressionPoints->setText(tr("A seperate set of regression points is used."));
+    }
+    else
+    {
+        ui->lblRegressionPoints->setText(tr("The same location as observations are used."));
     }
     if (true)
     {
