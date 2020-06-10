@@ -718,6 +718,38 @@ void MainWidget::onRobustGWRBtnClicked()
     }
 }
 
+void MainWidget::onLcrGWRBtnClicked()
+{
+    GwmLcrGWRTaskThread * lcrGWRTaskThread = new GwmLcrGWRTaskThread();
+    GwmLcrGWROptionsDialog* gwrLcrOptionDialog = new GwmLcrGWROptionsDialog(mapModel->rootChildren(), lcrGWRTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwrLcrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwrLcrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwrLcrOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwrLcrOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwrLcrOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(lcrGWRTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = lcrGWRTaskThread->getResultLayer();
+            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, lcrGWRTaskThread);
+            mapModel->appentItem(gwrItem, selectedIndex);
+        }
+    }
+}
+
 void MainWidget::onGGWRBtnClicked(){
     GwmGGWRTaskThread* ggwrTaskThread = new GwmGGWRTaskThread();
     GwmGGWROptionsDialog* ggwrOptionDialog = new GwmGGWROptionsDialog(this->mapModel->rootChildren(), ggwrTaskThread);
