@@ -174,7 +174,7 @@ protected:
     vec distanceMinkowski(int focus);
     vec distanceDmat(int focus);
 
-    virtual void diagnostic();
+    virtual void diagnostic(bool doLocalR2 = true);
 
     virtual void f1234Test(const GwmFTestParameters& params);
     virtual vec calcDiagBSerial(int i);
@@ -183,17 +183,17 @@ protected:
     virtual void createResultLayer();
 
 public:
-    bool isValid(QString& message);
+    virtual bool isValid(QString& message);
     void setBandwidth(BandwidthType type, double size, QString unit);
 
     QgsVectorLayer *layer() const;
     void setLayer(QgsVectorLayer *layer);
 
     QList<GwmLayerAttributeItem *> indepVars() const;
-    void setIndepVars(const QList<GwmLayerAttributeItem *> &indepVars);
+    virtual void setIndepVars(const QList<GwmLayerAttributeItem *> &indepVars);
 
     GwmLayerAttributeItem *depVar() const;
-    void setDepVar(GwmLayerAttributeItem *depVar);
+    virtual void setDepVar(GwmLayerAttributeItem *depVar);
 
     BandwidthType bandwidthType() const;
     void setBandwidthType(const BandwidthType &bandwidthType);

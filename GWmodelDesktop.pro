@@ -42,12 +42,16 @@ SOURCES += \
     Model/gwmlayergwritem.cpp \
     Model/gwmlayeritem.cpp \
     Model/gwmlayeritemmodel.cpp \
+    Model/gwmlayermultiscalegwritem.cpp \
     Model/gwmlayeroriginitem.cpp \
     Model/gwmlayerscalablegwritem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     PropertyPanelTabs/gwmpropertyggwrtab.cpp \
+    Model/gwmparameterspecifiedoptionsmodel.cpp \
+    Model/gwmpropertymultiscaleparameterspecifieditemmodel.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
+    PropertyPanelTabs/gwmpropertymultiscalegwrtab.cpp \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
@@ -56,6 +60,7 @@ SOURCES += \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmlcrgwrtaskthread.cpp \
+    TaskThread/gwmmultiscalegwrtaskthread.cpp \
     TaskThread/gwmrobustgwrtaskthread.cpp \
     TaskThread/gwmsavelayerthread.cpp \
 #    attributetable/qgsattributetabledelegate.cpp \
@@ -89,6 +94,7 @@ SOURCES += \
     gwmindepvarselectorwidget.cpp \
     gwmlcrgwroptionsdialog.cpp \
     gwmmaptoolidentifyfeature.cpp \
+    gwmmultiscalegwroptionsdialog.cpp \
     gwmopenxyeventlayerdialog.cpp \
     gwmplot.cpp \
     gwmprogressdialog.cpp \
@@ -124,12 +130,16 @@ HEADERS += \
     Model/gwmlayergwritem.h \
     Model/gwmlayeritem.h \
     Model/gwmlayeritemmodel.h \
+    Model/gwmlayermultiscalegwritem.h \
     Model/gwmlayeroriginitem.h \
     Model/gwmlayerscalablegwritem.h \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     PropertyPanelTabs/gwmpropertyggwrtab.h \
+    Model/gwmparameterspecifiedoptionsmodel.h \
+    Model/gwmpropertymultiscaleparameterspecifieditemmodel.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
+    PropertyPanelTabs/gwmpropertymultiscalegwrtab.h \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.h \
     PropertyPanelTabs/utils.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
@@ -138,6 +148,7 @@ HEADERS += \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmlcrgwrtaskthread.h \
+    TaskThread/gwmmultiscalegwrtaskthread.h \
     TaskThread/gwmrobustgwrtaskthread.h \
     TaskThread/gwmrobustgwrtaskthread.h \
     TaskThread/gwmsavelayerthread.h \
@@ -174,6 +185,7 @@ HEADERS += \
     gwmindepvarselectorwidget.h \
     gwmlcrgwroptionsdialog.h \
     gwmmaptoolidentifyfeature.h \
+    gwmmultiscalegwroptionsdialog.h \
     gwmopenxyeventlayerdialog.h \
     gwmplot.h \
     gwmprogressdialog.h \
@@ -197,6 +209,7 @@ HEADERS += \
 FORMS += \
     PropertyPanelTabs/gwmpropertyggwrtab.ui \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
+    PropertyPanelTabs/gwmpropertymultiscalegwrtab.ui \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.ui \
     gwmcoordtranssettingdialog.ui \
     gwmcsvtodatdialog.ui \
@@ -206,6 +219,7 @@ FORMS += \
     gwmggwroptionsdialog.ui \
     gwmgwroptionsdialog.ui \
     gwmindepvarselectorwidget.ui \
+    gwmmultiscalegwroptionsdialog.ui \
     gwmlcrgwroptionsdialog.ui \
     gwmopenxyeventlayerdialog.ui \
     gwmprogressdialog.ui \

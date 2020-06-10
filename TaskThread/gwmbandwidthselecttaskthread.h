@@ -19,11 +19,19 @@ public:
     static void plotBandwidthResult(QVariant data, QwtPlot *plot);
     // 获取bw和score
     QMap<double,double> getBwScore();
+
+    void setX(const mat& x);
+    void setY(const vec& y);
+
+    double getLower() const;
+    void setLower(double lower);
+
 protected:
     void run() override;
 
 protected:
     bool createdFromGWRTaskThread = false;
+    double mLower = DBL_MAX;
 
     double gold(pfApproach p,double xL, double xU, bool adaptBw,const mat& x, const vec& y, const mat& dp, int kernel, bool adaptive);
 

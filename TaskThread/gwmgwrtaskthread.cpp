@@ -256,23 +256,23 @@ bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     if (hatmatrix)
     {
-        mBetas = mBetas.t();
-        mBetasSE = mBetasSE.t();
+        mat betas(nVar, nDp, fill::zeros), betasSE(nVar, nDp, fill::zeros);
         bool isStoreS = hasFTest && (nDp <= 8192);
         mat ci, si;
+        vec shat(2, fill::zeros), q(nDp, fill::zeros);
         for (int i = 0; i < mFeatureList.size(); i++)
         {
             try
             {
                 vec dist = distance(i);
                 vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
-                mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
-                mBetasSE.col(i) = sum(ci % ci, 1);
-                mSHat(0) += si(0, i);
-                mSHat(1) += det(si * trans(si));
+                betas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
+                betasSE.col(i) = sum(ci % ci, 1);
+                shat(0) += si(0, i);
+                shat(1) += det(si * trans(si));
                 vec p = -trans(si);
                 p(i) += 1.0;
-                mQDiag += p % p;
+                q += p % p;
                 S.row(isStoreS ? i : 0) = si;
                 emit tick(i + 1, mFeatureList.size());
             } catch (exception e) {
@@ -280,25 +280,33 @@ bool GwmGWRTaskThread::regressionAllSerial(bool hatmatrix, mat& S)
                 emit error(e.what());
             }
         }
-        mBetas = mBetas.t();
-        mBetasSE = mBetasSE.t();
+        if (isAllCorrect)
+        {
+            mSHat = shat;
+            mQDiag = q;
+            mBetas = betas.t();
+            mBetasSE = betasSE.t();
+        }
     }
     else
     {
-        mBetas = mBetas.t();
+        mat betas(nVar, nDp, fill::zeros);
         for (int i = 0; i < mFeatureList.size(); i++)
         {
             try {
                 vec dist = distance(i);
                 vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                mBetas.col(i) = gwReg(mX, mY, weight, i);
+                betas.col(i) = gwReg(mX, mY, weight, i);
                 emit tick(i + 1, mFeatureList.size());
             } catch (exception e) {
                 isAllCorrect = false;
                 emit error(e.what());
             }
         }
-        mBetas = mBetas.t();
+        if (isAllCorrect)
+        {
+            mBetas = betas.t();
+        }
     }
     return isAllCorrect;
 }
@@ -310,8 +318,7 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     if (hatmatrix)
     {
-        mBetas = mBetas.t();
-        mBetasSE = mBetasSE.t();
+        mat betas(nVar, nDp, fill::zeros), betasSE(nVar, nDp, fill::zeros);
         bool isStoreS = hasFTest && (nDp <= 8192);
         mat qdiag_all(nDp, nThread, fill::zeros);
         vec s1(nDp, fill::zeros), s2(nDp, fill::zeros);
@@ -326,8 +333,8 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
             {
                 vec dist = distance(i);
                 vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive) % mWeightMask;
-                mBetas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
-                mBetasSE.col(i) = sum(ci % ci, 1);
+                betas.col(i) = gwRegHatmatrix(mX, mY, weight, i, ci, si);
+                betasSE.col(i) = sum(ci % ci, 1);
                 s1(i) = si(0, i);
                 s2(i) = det(si * trans(si));
                 vec p = -trans(si);
@@ -345,13 +352,13 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
             mSHat(0) = sum(s1);
             mSHat(1) = sum(s2);
             mQDiag = sum(qdiag_all, 1);
+            mBetas = betas.t();
+            mBetasSE = betasSE.t();
         }
-        mBetas = mBetas.t();
-        mBetasSE = mBetasSE.t();
     }
     else
     {
-        mBetas = mBetas.t();
+        mat betas(nVar, nDp, fill::zeros);
         int current = 0;
 #pragma omp parallel for num_threads(nThread)
         for (int i = 0; i < mFeatureList.size(); i++)
@@ -359,14 +366,17 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
             try {
                 vec dist = distance(i);
                 vec weight = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-                mBetas.col(i) = gwReg(mX, mY, weight, i);
+                betas.col(i) = gwReg(mX, mY, weight, i);
                 emit tick(++current, mFeatureList.size());
             } catch (exception e) {
                 isAllCorrect = false;
                 emit error(e.what());
             }
         }
-        mBetas = mBetas.t();
+        if (isAllCorrect)
+        {
+            mBetas = betas.t();
+        }
     }
     return isAllCorrect;
 }
@@ -958,7 +968,7 @@ vec GwmGWRTaskThread::distanceDmat(int focus)
     }
 }
 
-void GwmGWRTaskThread::diagnostic()
+void GwmGWRTaskThread::diagnostic(bool doLocalR2)
 {
     emit message(tr("Calculating diagnostic informations..."));
 
@@ -978,13 +988,16 @@ void GwmGWRTaskThread::diagnostic()
 
     // Local RSquare
     mLocalRSquare = vec(mFeatureList.size(), fill::zeros);
-    for (int i = 0; i < mFeatureList.size(); i++)
+    if (doLocalR2)
     {
-        vec dist = distance(i);
-        mat w = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
-        double tss = sum(dybar2 % w);
-        double rss = sum(dyhat2 % w);
-        mLocalRSquare(i) = (tss - rss) / tss;
+        for (int i = 0; i < mFeatureList.size(); i++)
+        {
+            vec dist = distance(i);
+            mat w = gwWeight(dist, mBandwidthSize, mBandwidthKernelFunction, mBandwidthType == BandwidthType::Adaptive);
+            double tss = sum(dybar2 % w);
+            double rss = sum(dyhat2 % w);
+            mLocalRSquare(i) = (tss - rss) / tss;
+        }
     }
 }
 
