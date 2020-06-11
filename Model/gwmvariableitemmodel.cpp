@@ -13,6 +13,7 @@ GwmVariableItemModel::GwmVariableItemModel(QgsVectorLayer *layer, QObject *paren
         variable.index = f;
         variable.name = fields[f].name();
         variable.type = fields[f].type();
+        variable.isNumeric = fields[f].isNumeric();
         mItems.append(variable);
     }
 }

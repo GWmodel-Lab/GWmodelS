@@ -9,6 +9,7 @@ struct GwmVariable
     int index;
     QString name;
     QVariant::Type type;
+    bool isNumeric;
 };
 
 class GwmVariableItemModel : public QAbstractListModel
