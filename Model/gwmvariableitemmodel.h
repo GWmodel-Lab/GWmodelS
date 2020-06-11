@@ -2,6 +2,7 @@
 #define GWMVARIABLEITEMMODEL_H
 
 #include <QAbstractListModel>
+#include <qgsvectorlayer.h>
 
 struct GwmVariable
 {
@@ -16,6 +17,7 @@ class GwmVariableItemModel : public QAbstractListModel
 
 public:
     explicit GwmVariableItemModel(QObject *parent = nullptr);
+    explicit GwmVariableItemModel(QgsVectorLayer* layer, QObject *parent = nullptr);
 
     // Header:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
@@ -28,6 +30,9 @@ public:
 
     bool insert(int row, GwmVariable variable);
     bool insert(int row, QList<GwmVariable> variables);
+
+    bool append(GwmVariable variable);
+    bool append(QList<GwmVariable> variables);
 
     bool remove(int row);
     bool remove(int row, int count);
@@ -42,7 +47,7 @@ protected:
 
 private:
     QStringList mHorizontalHeaderData = { "" };
-    QVector<GwmVariable> mItems;
+    QList<GwmVariable> mItems;
 };
 
 #endif // GWMVARIABLEITEMMODEL_H
