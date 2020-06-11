@@ -5,8 +5,9 @@
 
 #include "TaskThread/gwmspatialmonoscalealgorithm.h"
 #include "TaskThread/imultivariableanalysis.h"
+#include "TaskThread/iparallelable.h"
 
-class GwmGWSSTaskThread : public GwmSpatialMonoscaleAlgorithm, public IMultivariableAnalysis
+class GwmGWSSTaskThread : public GwmSpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IOpenmpParallelable
 {
     Q_OBJECT
 public:
@@ -14,17 +15,26 @@ public:
     bool quantile() const;
     void setQuantile(bool quantile);
 
-public:
+public:  // IMultivariableAnalysis interface
     QList<GwmVariable> getVariables() const;
     void setVariables(const QList<GwmVariable> &variables);
     void setVariables(const QList<GwmVariable> &&variables);
 
-protected:
+public:  // IParallelalbe interface
+    int parallelAbility() const;
+    virtual ParallelType parallelType() const;
+    virtual void setParallelType(const ParallelType& type);
+
+public:  // IOpenmpParallelable interface
+    void setThreadNum(const int threadNum);
+
+protected:  // GwmSpatialMonoscaleAlgorithm interface
     void createResultLayer();
 
 private:
     QList<GwmVariable> mVariables;
     bool mQuantile = false;
+
 };
 
 #endif // GWMGWSSTASKTHREAD_H

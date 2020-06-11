@@ -192,6 +192,7 @@ HEADERS += \
     TaskThread/gwmspatialmonoscalealgorithm.h \
     TaskThread/imonovariableanalysis.h \
     TaskThread/imultivariableanalysis.h \
+    TaskThread/iparallelable.h \
     TaskThread/iregressionanalysis.h \
     attributetable/gwmfeaturefilterwidget_p.h \
     attributetable/qgsaddattrdialog.h \
