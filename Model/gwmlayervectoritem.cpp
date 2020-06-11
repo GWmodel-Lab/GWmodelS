@@ -50,7 +50,7 @@ QString GwmLayerVectorItem::text()
 
 GwmLayerItem* GwmLayerVectorItem::child(int row)
 {
-    if (childCount() > 0)
+    if (row > 0 && row < childCount())
         return mSymbolChildren.at(row);
     else return nullptr;
 }

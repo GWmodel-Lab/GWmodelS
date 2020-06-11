@@ -45,13 +45,15 @@ public:
 
     bool insertItem(int row, GwmLayerItem *item, const QModelIndex& parent = QModelIndex());
     GwmLayerItem* takeItem(int row, const QModelIndex& parent = QModelIndex());
-
+    bool appentItem(GwmLayerItem* item, const QModelIndex& parent = QModelIndex());
     void appendItem(QgsVectorLayer* layer, const QString path, const QString provider);
 
     GwmLayerGroupItem* item(int i);
     GwmLayerItem* itemFromIndex(const QModelIndex& index) const;
     QModelIndex indexFromItem(GwmLayerItem* item) const;
     QgsVectorLayer* layerFromItem(GwmLayerItem* item) const;
+
+    QList<GwmLayerGroupItem*> rootChildren();
 
     QList<QgsMapLayer*> toMapLayerList();
 

@@ -1,5 +1,6 @@
 #include "gwmlayeritemmodel.h"
 #include "gwmlayergwritem.h"
+#include "gwmlayerggwritem.h"
 
 GwmLayerItemModel::GwmLayerItemModel(QObject *parent)
     : QAbstractItemModel(parent)
@@ -11,7 +12,7 @@ QVariant GwmLayerItemModel::headerData(int section, Qt::Orientation orientation,
 {
     switch (role) {
 //    case Qt::DisplayRole:
-//        return section == 0 ? QString(tr("Feature")) : QStringLiteral("");
+//        return QStringLiteral("");
     case Qt::TextAlignmentRole:
         return Qt::AlignLeft;
     default:
@@ -176,6 +177,20 @@ GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
 
 }
 
+bool GwmLayerItemModel::appentItem(GwmLayerItem *item, const QModelIndex &parent)
+{
+    GwmLayerItem* parentItem = itemFromIndex(parent);
+    int row = parentItem->childCount();
+    bool success = false;
+
+    beginInsertRows(parent, row, row + 1);
+    success = parentItem->appendChildren(QList<GwmLayerItem*>() << item);
+    endInsertRows();
+
+    emit layerAddedSignal();
+    return success;
+}
+
 QList<GwmLayerItem *> GwmLayerItemModel::takeRows(int row, int count, const QModelIndex &parent)
 {
     GwmLayerItem* parentItem = itemFromIndex(parent);
@@ -244,7 +259,7 @@ QModelIndex GwmLayerItemModel::indexFromItem(GwmLayerItem* item) const
                  << item->itemType() << item->text();
         GwmLayerItem* parentItem = item->parentItem();
         if (parentItem)
-            return createIndex(item->childNumber(), 0, parentItem);
+            return createIndex(item->childNumber(), 0, item);
         else
             return QModelIndex();
     }
@@ -255,15 +270,27 @@ QgsVectorLayer *GwmLayerItemModel::layerFromItem(GwmLayerItem* item) const
 {
     switch (item->itemType())
     {
+    case GwmLayerItem::GwmLayerItemType::Base:
+        return nullptr;
+    case GwmLayerItem::GwmLayerItemType::Symbol:
+        return  nullptr;
     case GwmLayerItem::GwmLayerItemType::Group:
         return ((GwmLayerGroupItem*)item)->originChild()->layer();
     case GwmLayerItem::GwmLayerItemType::Vector:
     case GwmLayerItem::GwmLayerItemType::Origin:
     case GwmLayerItem::GwmLayerItemType::GWR:
+    case GwmLayerItem::GwmLayerItemType::ScalableGWR:
+    case GwmLayerItem::GwmLayerItemType::GGWR:
+    case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         return ((GwmLayerOriginItem*)item)->layer();
     default:
         return nullptr;
     }
+}
+
+QList<GwmLayerGroupItem *> GwmLayerItemModel::rootChildren()
+{
+    return mRootItem->children();
 }
 
 QList<QgsMapLayer *> GwmLayerItemModel::toMapLayerList()
@@ -298,6 +325,9 @@ bool GwmLayerItemModel::canMoveUp(const QModelIndex &index)
     case GwmLayerItem::Group:
         return row > 0 && row < item->parentItem()->childCount();
     case GwmLayerItem::GWR:
+    case GwmLayerItem::GGWR:
+    case GwmLayerItem::ScalableGWR:
+    case GwmLayerItem::MultiscaleGWR:
         return row > 1 && row < (item->parentItem()->childCount() - 1);
     default:
         return false;
@@ -313,6 +343,9 @@ bool GwmLayerItemModel::canMoveDown(const QModelIndex &index)
     case GwmLayerItem::Group:
         return row >= 0 && row < (item->parentItem()->childCount() - 1);
     case GwmLayerItem::GWR:
+    case GwmLayerItem::GGWR:
+    case GwmLayerItem::ScalableGWR:
+    case GwmLayerItem::MultiscaleGWR:
         return row >= 1 && row < (item->parentItem()->childCount() - 2);
     default:
         return false;
@@ -326,6 +359,9 @@ bool GwmLayerItemModel::canRemove(const QModelIndex &index)
     {
     case GwmLayerItem::Group:
     case GwmLayerItem::GWR:
+    case GwmLayerItem::GGWR:
+    case GwmLayerItem::ScalableGWR:
+    case GwmLayerItem::MultiscaleGWR:
         return true;
     default:
         return false;
@@ -340,6 +376,8 @@ bool GwmLayerItemModel::canSetSymbol(const QModelIndex &index)
     case GwmLayerItem::Group:
     case GwmLayerItem::Origin:
     case GwmLayerItem::GWR:
+    case GwmLayerItem::ScalableGWR:
+    case GwmLayerItem::MultiscaleGWR:
         return true;
     default:
         return false;

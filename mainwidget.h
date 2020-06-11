@@ -19,6 +19,9 @@
 #include <gwmgwroptionsdialog.h>
 #include <gwmcsvtodatdialog.h>
 
+#include "gwmrobustgwroptionsdialog.h"
+#include "gwmlcrgwroptionsdialog.h"
+
 namespace Ui {
     class MainWidget;
 }
@@ -55,6 +58,8 @@ public slots:
     void openFileImportCsv();
     void onShowSymbolSetting(const QModelIndex &index);
     void onCsvToDat();
+    void onRobustGWR();
+    void onGGWRBtnClicked();
 
 public:
     bool eventFilter(QObject* obj, QEvent* e);
@@ -114,10 +119,16 @@ public slots:
     void refreshCanvas();
     void onShowCoordinateTransDlg(const QModelIndex &index);
     void onGWRBtnClicked();
+    void onScalableGWRBtnClicked();
+    void onMultiscaleGWRBtnClicked();
+
+    void onRobustGWRBtnClicked();
 
    // void transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index);
 
     //void setNewCoordinate(QgsCoordinateReferenceSystem,QString,QModelIndex);
+
+    void onLcrGWRBtnClicked();
 };
 
 #endif // MAINLAYOUT_H

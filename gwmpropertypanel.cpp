@@ -1,5 +1,9 @@
 #include "gwmpropertypanel.h"
 #include "PropertyPanelTabs/gwmpropertystatisticstab.h"
+#include "PropertyPanelTabs/gwmpropertygwrtab.h"
+#include "PropertyPanelTabs/gwmpropertyscalablegwrtab.h"
+#include "PropertyPanelTabs/gwmpropertyggwrtab.h"
+#include "PropertyPanelTabs/gwmpropertymultiscalegwrtab.h"
 
 GwmPropertyPanel::GwmPropertyPanel(QWidget *parent) :
     QTabWidget(parent),
@@ -65,11 +69,25 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
             switch (item->itemType())
             {
             case GwmLayerItem::Origin:
-                tabWidget = new GwmPropertyStatisticsTab(this, (GwmLayerOriginItem*)item);
+                tabWidget = new GwmPropertyStatisticsTab(this, static_cast<GwmLayerOriginItem*>(item));
                 tabName = ((GwmLayerOriginItem*)item)->parentItem()->text();
                 break;
             case GwmLayerItem::Group:
-                tabWidget = new GwmPropertyStatisticsTab(this, ((GwmLayerGroupItem*)item)->originChild());
+                tabWidget = new GwmPropertyStatisticsTab(this, (static_cast<GwmLayerGroupItem*>(item))->originChild());
+                break;
+            case GwmLayerItem::GWR:
+                tabWidget = new GwmPropertyGWRTab(this, static_cast<GwmLayerGWRItem*>(item));
+                (static_cast<GwmPropertyGWRTab*>(tabWidget))->updateUI();
+                break;
+            case GwmLayerItem::ScalableGWR:
+                tabWidget = new GwmPropertyScalableGWRTab(this, static_cast<GwmLayerScalableGWRItem*>(item));
+                (static_cast<GwmPropertyScalableGWRTab*>(tabWidget))->updateUI();
+            case GwmLayerItem::GGWR:
+                tabWidget = new GwmPropertyGGWRTab(this, static_cast<GwmLayerGGWRItem*>(item));
+                (static_cast<GwmPropertyGGWRTab*>(tabWidget))->updateUI();
+            case GwmLayerItem::MultiscaleGWR:
+                tabWidget = new GwmPropertyMultiscaleGWRTab(this, static_cast<GwmLayerMultiscaleGWRItem*>(item));
+                (static_cast<GwmPropertyMultiscaleGWRTab*>(tabWidget))->updateUI();
             default:
                 break;
             }

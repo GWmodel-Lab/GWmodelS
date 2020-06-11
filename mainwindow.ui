@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>29</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -53,6 +53,13 @@
     <property name="title">
      <string>GWR</string>
     </property>
+    <addaction name="actionBasic_GWR"/>
+    <addaction name="actionScalable_GWR"/>
+    <addaction name="actionRobustGWR"/>
+    <addaction name="actionLocal_collinearity_GWR"/>
+    <addaction name="action_GGWR"/>
+    <addaction name="actionMultiscale_GWR"/>
+    <addaction name="separator"/>
     <addaction name="action_CsvToDat"/>
    </widget>
    <addaction name="menu_File"/>
@@ -92,6 +99,36 @@
   <action name="action_CsvToDat">
    <property name="text">
     <string>CsvToDmat</string>
+   </property>
+  </action>
+  <action name="actionRobustGWR">
+   <property name="text">
+    <string>Robust GWR</string>
+   </property>
+  </action>
+  <action name="actionScalable_GWR">
+   <property name="text">
+    <string>Scalable GWR</string>
+   </property>
+  </action>
+  <action name="action_GGWR">
+   <property name="text">
+    <string>Generalized GWR</string>
+   </property>
+  </action>
+  <action name="actionLocal_collinearity_GWR">
+   <property name="text">
+    <string>Local-collinearity GWR</string>
+   </property>
+  </action>
+  <action name="actionMultiscale_GWR">
+   <property name="text">
+    <string>Multiscale GWR</string>
+   </property>
+  </action>
+  <action name="actionBasic_GWR">
+   <property name="text">
+    <string>Basic GWR</string>
    </property>
   </action>
  </widget>

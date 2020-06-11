@@ -2,6 +2,10 @@
 #define GWMTASKTHREAD_H
 
 #include <QThread>
+#include <QMetaType>
+#include <qwt_plot.h>
+
+typedef void (*PlotFunction)(QVariant data, QwtPlot* widget);
 
 class GwmTaskThread : public QThread
 {
@@ -14,6 +18,7 @@ signals:
     void message(QString message);
     void success();
     void error(QString e);
+    void plot(QVariant data, PlotFunction func);
 
 public:
     virtual QString name() const;

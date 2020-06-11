@@ -310,7 +310,7 @@ void GwmFeaturePanel::layerProperty()
 
 //void GwmFeaturePanel::mouseMoveEvent(QMouseEvent *e)
 //{
-////    qDebug() << "[GwmFeaturePanel - mouseMoveEvent]";
+//    qDebug() << "[GwmFeaturePanel - mouseMoveEvent]";
 //    if (mValidPress)
 //    {
 //        if (e->buttons() & Qt::LeftButton)
