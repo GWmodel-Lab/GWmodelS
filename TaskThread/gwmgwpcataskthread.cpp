@@ -1,6 +1,6 @@
 #include "gwmgwpcataskthread.h"
 
-GwmGWPCATaskThread::GwmGWPCATaskThread()
+GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm()
 {
 
 }

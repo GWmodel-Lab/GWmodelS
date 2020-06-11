@@ -64,8 +64,10 @@ SOURCES += \
     TaskThread/gwmcsvtodatthread.cpp \
     TaskThread/gwmggwrbandwidthselectionthread.cpp \
     TaskThread/gwmggwrtaskthread.cpp \
+    TaskThread/gwmgwpcataskthread.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
+    TaskThread/gwmgwsstaskthread.cpp \
     TaskThread/gwmlcrgwrtaskthread.cpp \
     TaskThread/gwmmultiscalegwrtaskthread.cpp \
     TaskThread/gwmrobustgwrtaskthread.cpp \
@@ -161,8 +163,10 @@ HEADERS += \
     TaskThread/gwmbandwidthselecttaskthread.h \
     TaskThread/gwmggwrbandwidthselectionthread.h \
     TaskThread/gwmggwrtaskthread.h \
+    TaskThread/gwmgwpcataskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
+    TaskThread/gwmgwsstaskthread.h \
     TaskThread/gwmlcrgwrtaskthread.h \
     TaskThread/gwmmultiscalegwrtaskthread.h \
     TaskThread/gwmrobustgwrtaskthread.h \
