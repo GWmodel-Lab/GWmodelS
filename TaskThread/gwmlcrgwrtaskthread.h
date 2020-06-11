@@ -5,7 +5,7 @@
 #include "GWmodel/GWmodel.h"
 
 class GwmLcrGWRTaskThread;
-typedef double (GwmLcrGWRTaskThread::*pfApproach)(double , int , bool, double, bool, double );
+typedef double (GwmLcrGWRTaskThread::*pfGwmLcrBandwidthSelectionApproach)(double , int , bool, double, bool, double );
 
 class GwmLcrGWRTaskThread:public GwmGWRTaskThread
 {
@@ -29,7 +29,7 @@ protected:
     //返回cv.contrib的函数
     vec LcrCVContrib(double bw, int kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
     //黄金分割函数
-    double gold(pfApproach p,double xL, double xU, bool adaptBw, int kernel, bool adaptive,double lambda, bool lambdaAdjust,double cnThreshd);
+    double gold(pfGwmLcrBandwidthSelectionApproach p,double xL, double xU, bool adaptBw, int kernel, bool adaptive,double lambda, bool lambdaAdjust,double cnThreshd);
     //带宽选择函数
     double LcrBandWidthSelect(int kernel, double lambda, bool lambdaAdjust, double cnThresh, bool adaptive);
     //

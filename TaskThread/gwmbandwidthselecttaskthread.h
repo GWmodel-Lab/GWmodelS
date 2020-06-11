@@ -6,7 +6,7 @@
 #include <armadillo>
 
 class GwmBandwidthSelectTaskThread;
-typedef double (GwmBandwidthSelectTaskThread::*pfApproach)(const mat& , const vec& , const mat& , double , int , bool );
+typedef double (GwmBandwidthSelectTaskThread::*pfGwmGWRBandwidthSelectionApproach)(const mat& , const vec& , const mat& , double , int , bool );
 
 class GwmBandwidthSelectTaskThread:public GwmGWRTaskThread
 {
@@ -33,7 +33,7 @@ protected:
     bool createdFromGWRTaskThread = false;
     double mLower = DBL_MAX;
 
-    double gold(pfApproach p,double xL, double xU, bool adaptBw,const mat& x, const vec& y, const mat& dp, int kernel, bool adaptive);
+    double gold(pfGwmGWRBandwidthSelectionApproach p,double xL, double xU, bool adaptBw,const mat& x, const vec& y, const mat& dp, int kernel, bool adaptive);
 
     double getFixedBwUpper();
 

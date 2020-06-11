@@ -287,7 +287,7 @@ vec GwmLcrGWRTaskThread::ridgelm(const vec &w, double lambda)
     return resultb;
 }
 
-double GwmLcrGWRTaskThread::gold(pfApproach p,double xL, double xU, bool adaptBw, int kernel, bool adaptive,double lambda, bool lambdaAdjust,double cnThresh)
+double GwmLcrGWRTaskThread::gold(pfGwmLcrBandwidthSelectionApproach p,double xL, double xU, bool adaptBw, int kernel, bool adaptive,double lambda, bool lambdaAdjust,double cnThresh)
 {
     const double eps = 1e-4;
     const double R = (sqrt(5)-1)/2;

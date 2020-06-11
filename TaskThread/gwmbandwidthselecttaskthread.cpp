@@ -117,7 +117,7 @@ double GwmBandwidthSelectTaskThread::aicAll(const mat& x, const vec& y, const ma
     return score;
 }
 
-double GwmBandwidthSelectTaskThread::gold(pfApproach p,double xL, double xU, bool adaptBw,const mat& x, const vec& y, const mat& dp, int kernel, bool adaptive)
+double GwmBandwidthSelectTaskThread::gold(pfGwmGWRBandwidthSelectionApproach p,double xL, double xU, bool adaptBw,const mat& x, const vec& y, const mat& dp, int kernel, bool adaptive)
 {
     const double eps = 1e-4;
     const double R = (sqrt(5)-1)/2;
