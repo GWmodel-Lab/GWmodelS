@@ -20,6 +20,7 @@ QMAKE_LFLAGS_RELEASE += /DEBUG
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += M_PI=3.14159265358979323846
 DEFINES += M_PI_2=1.57079632679489661923
+DEFINES += interface=struct
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -47,12 +48,18 @@ SOURCES += \
     Model/gwmlayerscalablegwritem.cpp \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
+    Model/gwmvariableitemmodel.cpp \
     PropertyPanelTabs/gwmpropertyggwrtab.cpp \
     Model/gwmparameterspecifiedoptionsmodel.cpp \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
     PropertyPanelTabs/gwmpropertymultiscalegwrtab.cpp \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.cpp \
+    SpatialWeight/gwmbandwidthweight.cpp \
+    SpatialWeight/gwmcrsdistance.cpp \
+    SpatialWeight/gwmdmatdistance.cpp \
+    SpatialWeight/gwmminkwoskidistance.cpp \
+    SpatialWeight/gwmspatialweight.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
     TaskThread/gwmggwrbandwidthselectionthread.cpp \
@@ -69,6 +76,8 @@ SOURCES += \
 #    attributetable/qgsattributetableview.cpp \
 #    attributetable/qgsdualview.cpp \
     TaskThread/gwmscalablegwrtaskthread.cpp \
+    TaskThread/gwmspatialalgorithm.cpp \
+    TaskThread/gwmspatialmonoscalealgorithm.cpp \
     attributetable/qgsaddattrdialog.cpp \
     attributetable/qgsfeaturefilterwidget.cpp \
 #    attributetable/qgsfeaturelistmodel.cpp \
@@ -135,6 +144,7 @@ HEADERS += \
     Model/gwmlayerscalablegwritem.h \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
+    Model/gwmvariableitemmodel.h \
     PropertyPanelTabs/gwmpropertyggwrtab.h \
     Model/gwmparameterspecifiedoptionsmodel.h \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.h \
@@ -142,6 +152,12 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertymultiscalegwrtab.h \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.h \
     PropertyPanelTabs/utils.h \
+    SpatialWeight/gwmbandwidthweight.h \
+    SpatialWeight/gwmcrsdistance.h \
+    SpatialWeight/gwmdistance.h \
+    SpatialWeight/gwmdmatdistance.h \
+    SpatialWeight/gwmminkwoskidistance.h \
+    SpatialWeight/gwmspatialweight.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
     TaskThread/gwmggwrbandwidthselectionthread.h \
     TaskThread/gwmggwrtaskthread.h \
@@ -168,6 +184,11 @@ HEADERS += \
 #    attributetable/qgsorganizetablecolumnsdialog.h \
 #    attributetable/qgsvectorlayerselectionmanager.h \
     TaskThread/gwmscalablegwrtaskthread.h \
+    TaskThread/gwmspatialalgorithm.h \
+    TaskThread/gwmspatialmonoscalealgorithm.h \
+    TaskThread/imonovariableanalysis.h \
+    TaskThread/imultivariableanalysis.h \
+    TaskThread/iregressionanalysis.h \
     attributetable/gwmfeaturefilterwidget_p.h \
     attributetable/qgsaddattrdialog.h \
     attributetable/qgsfieldcalculator.h \
@@ -177,6 +198,7 @@ HEADERS += \
     TaskThread/gwmcoordtransthread.h \
     gwmcsvtodatdialog.h \
     gwmdelimitedtextfile.h \
+    gwmenumvaluenamemapper.h \
     gwmfeaturepanel.h \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
@@ -199,6 +221,7 @@ HEADERS += \
     attributetable/qgsfeatureaction.h \
     attributetable/qgsfieldcalculator.h \
     gwmscalablegwroptionsdialog.h \
+    SpatialWeight/gwmweight.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     mainwidget.h \
