@@ -70,6 +70,7 @@ SOURCES += \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmgwsstaskthread.cpp \
+    TaskThread/gwmindependentvariableselector.cpp \
     TaskThread/gwmlcrgwrtaskthread.cpp \
     TaskThread/gwmmultiscalegwrtaskthread.cpp \
     TaskThread/gwmrobustgwrtaskthread.cpp \
@@ -171,6 +172,7 @@ HEADERS += \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmgwsstaskthread.h \
+    TaskThread/gwmindependentvariableselector.h \
     TaskThread/gwmlcrgwrtaskthread.h \
     TaskThread/gwmmultiscalegwrtaskthread.h \
     TaskThread/gwmrobustgwrtaskthread.h \

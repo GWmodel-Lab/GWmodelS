@@ -9,7 +9,21 @@ GwmGeographicalWeightedRegressionAlgorithm::GwmGeographicalWeightedRegressionAlg
 
 void GwmGeographicalWeightedRegressionAlgorithm::run()
 {
-    init(mX, mY);
+    // 点位初始化
+    initPoints();
+
+    // 优选模型
+    if (isAutoselectIndepVars)
+    {
+        QList<GwmVariable> selectedIndepVars = mIndepVarSelector.optimize(this);
+        if (selectedIndepVars.size() > 0)
+        {
+            mIndepVars = selectedIndepVars;
+        }
+    }
+
+    // 初始化
+    initXY(mX, mY, mDepVar, mIndepVars);
 
     // 优选带宽
     if (isAutoselectBandwidth)
@@ -42,12 +56,12 @@ void GwmGeographicalWeightedRegressionAlgorithm::run()
         mBetas = regression(mX, mY, betasSE, shat, qDiag, S);
         // 诊断
         mDiagnostic = calcDiagnostic(mX, mY, mBetas, shat);
-        vec yhat = Fitted(mX, mBetas);
-        vec res = mY - yhat;
         double trS = shat(0), trStS = shat(1);
         double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
-        vec stu_res = res / sqrt(sigmaHat * qDiag);
         betasSE = sqrt(sigmaHat * betasSE);
+        vec yhat = Fitted(mX, mBetas);
+        vec res = mY - yhat;
+        vec stu_res = res / sqrt(sigmaHat * qDiag);
         mat betasTV = mBetas / betasSE;
         vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
         vec dyhat2 = (mY - yhat) % (mY - yhat);
@@ -98,6 +112,37 @@ bool GwmGeographicalWeightedRegressionAlgorithm::isValid()
         return false;
 
     return true;
+}
+
+double GwmGeographicalWeightedRegressionAlgorithm::criterion(QList<GwmVariable> indepVars)
+{
+    mat x;
+    vec y;
+    initXY(x, y, mDepVar, indepVars);
+    uword nDp = x.n_rows, nVar = x.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    vec shat(2, fill::zeros);
+    for (uword i = 0; i < nDp; i++)
+    {
+        vec w = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+        mat xtw = trans(x.each_col() % w);
+        mat xtwx = xtw * x;
+        mat xtwy = xtw * y;
+        try
+        {
+            mat xtwx_inv = inv(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+            mat ci = xtwx_inv * xtw;
+            mat si = x.row(i) * ci;
+            shat(0) += si(0, i);
+            shat(1) += det(si * si.t());
+        }
+        catch (std::exception e)
+        {
+            return DBL_MAX;
+        }
+    }
+    return GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas, shat);
 }
 
 mat GwmGeographicalWeightedRegressionAlgorithm::regression(const mat &x, const vec &y)
@@ -162,15 +207,10 @@ mat GwmGeographicalWeightedRegressionAlgorithm::regression(const mat &x, const v
     return betas.t();
 }
 
-void GwmGeographicalWeightedRegressionAlgorithm::init(mat &x, mat &y)
+void GwmGeographicalWeightedRegressionAlgorithm::initPoints()
 {
     int nDp = mDataLayer->featureCount(), nRp = hasRegressionLayer() ? mRegressionLayer->featureCount() : nDp;
-    int nVar = mIndepVars.size() + 1;
-    // Data layer and X,Y
     mDataPoints = mat(nDp, 2, fill::zeros);
-    mBetas = mat(nRp, nVar, fill::zeros);
-    x = mat(nDp, nVar, fill::zeros);
-    y = vec(nDp, fill::zeros);
     QgsFeatureIterator iterator = mDataLayer->getFeatures();
     QgsFeature f;
     bool ok = false;
@@ -179,19 +219,6 @@ void GwmGeographicalWeightedRegressionAlgorithm::init(mat &x, mat &y)
         QgsPointXY centroPoint = f.geometry().centroid().asPoint();
         mDataPoints(i, 0) = centroPoint.x();
         mDataPoints(i, 1) = centroPoint.y();
-        double vY = f.attribute(mDepVar.index).toDouble(&ok);
-        if (ok)
-        {
-            y(i) = vY;
-            x(i, 0) = 1.0;
-            for (int k = 0; k < mIndepVars.size(); k++)
-            {
-                double vX = f.attribute(mIndepVars[k].index).toDouble(&ok);
-                if (ok) x(i, k + 1) = vX;
-                else emit error(tr("Independent variable value cannot convert to a number. Set to 0."));
-            }
-        }
-        emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
     }
     // Regression Layer
     if (hasRegressionLayer())
@@ -208,16 +235,44 @@ void GwmGeographicalWeightedRegressionAlgorithm::init(mat &x, mat &y)
     else mRegressionPoints = mDataPoints;
 }
 
+void GwmGeographicalWeightedRegressionAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
+{
+    int nDp = mDataLayer->featureCount(), nVar = indepVars.size() + 1;
+    // Data layer and X,Y
+    x = mat(nDp, nVar, fill::zeros);
+    y = vec(nDp, fill::zeros);
+    QgsFeatureIterator iterator = mDataLayer->getFeatures();
+    QgsFeature f;
+    bool ok = false;
+    for (int i = 0; iterator.nextFeature(f); i++)
+    {
+
+        double vY = f.attribute(depVar.index).toDouble(&ok);
+        if (ok)
+        {
+            y(i) = vY;
+            x(i, 0) = 1.0;
+            for (int k = 0; k < indepVars.size(); k++)
+            {
+                double vX = f.attribute(indepVars[k].index).toDouble(&ok);
+                if (ok) x(i, k + 1) = vX;
+                else emit error(tr("Independent variable value cannot convert to a number. Set to 0."));
+            }
+        }
+        emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
+    }
+}
+
 GwmDiagnostic GwmGeographicalWeightedRegressionAlgorithm::calcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
     int n = x.n_rows;
-    double AIC = n * log(rss / n) + n * log(2 * datum::pi) + n + shat(0);																//AIC
-    double AICc = n * log(rss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0))); //AICc
-    double edf = n - 2 * shat(0) + shat(1);																														//edf
-    double enp = 2 * shat(0) - shat(1);																																// enp
-    double yss = sum((y - mean(y)) % (y - mean(y)));																															//yss.g
+    double AIC = n * log(rss / n) + n * log(2 * datum::pi) + n + shat(0);
+    double AICc = n * log(rss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
+    double edf = n - 2 * shat(0) + shat(1);
+    double enp = 2 * shat(0) - shat(1);
+    double yss = sum((y - mean(y)) % (y - mean(y)));
     double r2 = 1 - rss / yss;
     double r2_adj = 1 - (1 - r2) * (n - 1) / (edf - 1);
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
@@ -305,10 +360,7 @@ double GwmGeographicalWeightedRegressionAlgorithm::bandwidthSizeCriterionAIC(Gwm
             return DBL_MAX;
         }
     }
-    vec r = mY - sum(betas % mX, 1);
-    double ss = sum(r % r), n = nDp;
-    double AICc = n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0))); //AICc
-    return AICc;
+    return GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas, shat);
 }
 
 double GwmGeographicalWeightedRegressionAlgorithm::bandwidthSizeCriterionCV(GwmBandwidthWeight *bandwidthWeight)
@@ -337,6 +389,26 @@ double GwmGeographicalWeightedRegressionAlgorithm::bandwidthSizeCriterionCV(GwmB
         }
     }
     return cv;
+}
+
+double GwmGeographicalWeightedRegressionAlgorithm::indepVarSelectionThreshold() const
+{
+    return mIndepVarSelectionThreshold;
+}
+
+void GwmGeographicalWeightedRegressionAlgorithm::setIndepVarSelectionThreshold(double indepVarSelectionThreshold)
+{
+    mIndepVarSelectionThreshold = indepVarSelectionThreshold;
+}
+
+bool GwmGeographicalWeightedRegressionAlgorithm::autoselectIndepVars() const
+{
+    return isAutoselectIndepVars;
+}
+
+void GwmGeographicalWeightedRegressionAlgorithm::setIsAutoselectIndepVars(bool value)
+{
+    isAutoselectIndepVars = value;
 }
 
 bool GwmGeographicalWeightedRegressionAlgorithm::autoselectBandwidth() const

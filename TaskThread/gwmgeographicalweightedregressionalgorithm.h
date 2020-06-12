@@ -7,10 +7,11 @@
 #include "TaskThread/iregressionanalysis.h"
 #include "TaskThread/gwmgwrtaskthread.h"
 #include "TaskThread/gwmbandwidthsizeselector.h"
+#include "TaskThread/gwmindependentvariableselector.h"
 
 using namespace arma;
 
-class GwmGeographicalWeightedRegressionAlgorithm : public GwmSpatialMonoscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable
+class GwmGeographicalWeightedRegressionAlgorithm : public GwmSpatialMonoscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable, public IIndependentVariableSelectable
 {
     Q_OBJECT
 
@@ -28,6 +29,18 @@ public:
         return sum(betas % x, 1);
     }
 
+    inline static double RSS(const mat& x, const mat& y, const mat& betas)
+    {
+        vec r = y - Fitted(x, betas);
+        return sum(r % r);
+    }
+
+    inline static double AICc(const mat& x, const mat& y, const mat& betas, const vec& shat)
+    {
+        double ss = RSS(x, y, betas), n = x.n_rows;
+        return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
+    }
+
 public:     // 构造和属性
     GwmGeographicalWeightedRegressionAlgorithm();
 
@@ -37,9 +50,15 @@ public:     // 构造和属性
     bool autoselectBandwidth() const;
     void setIsAutoselectBandwidth(bool value);
 
+    bool autoselectIndepVars() const;
+    void setIsAutoselectIndepVars(bool value);
+
+    double indepVarSelectionThreshold() const;
+    void setIndepVarSelectionThreshold(double indepVarSelectionThreshold);
+
 
 protected:  // QThread interface
-    void run();
+    void run() override;
 
 
 public:     // GwmTaskThread interface
@@ -47,14 +66,17 @@ public:     // GwmTaskThread interface
 
 
 protected:  // GwmSpatialAlgorithm interface
-    bool isValid();
+    bool isValid() override;
 
 
 public:     // IBandwidthSizeSelectable interface
-    inline double criterion(GwmBandwidthWeight* bandwidthWeight)
+    inline double criterion(GwmBandwidthWeight* bandwidthWeight) override
     {
         return (this->*mBandwidthSizeCriterion)(bandwidthWeight);
     }
+
+public:     // IIndependentVariableSelectable interface
+    inline double criterion(QList<GwmVariable> indepVars) override;
 
 
 public:     // IRegressionAnalysis interface
@@ -109,7 +131,8 @@ protected:
     }
 
 private:
-    void init(mat& x, mat& y);
+    void initPoints();
+    void initXY(mat& x, mat& y, const GwmVariable& depVar, const QList<GwmVariable>& indepVars);
     GwmDiagnostic calcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
     void createResultLayer(QList<QPair<QString, const mat&> > data);
     double bandwidthSizeCriterionAIC(GwmBandwidthWeight* bandwidthWeight);
@@ -141,6 +164,10 @@ private:
     bool isAutoselectBandwidth;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
     BandwidthSizeCriterionFunction mBandwidthSizeCriterion;
+
+    GwmIndependentVariableSelector mIndepVarSelector;
+    bool isAutoselectIndepVars;
+    double mIndepVarSelectionThreshold;
 
 };
 
