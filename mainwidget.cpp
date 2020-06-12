@@ -47,7 +47,7 @@
 #include "Model/gwmlayergwritem.h"
 #include "Model/gwmlayerggwritem.h"
 
-#include <TaskThread/gwmgeographicalweightedregressionalgorithm.h>
+#include <TaskThread/gwmbasicgwralgorithm.h>
 
 #include <SpatialWeight/gwmcrsdistance.h>
 
@@ -636,7 +636,7 @@ void MainWidget::onGWRBtnClicked()
 
 void MainWidget::onGWRNewBtnClicked()
 {
-    GwmGeographicalWeightedRegressionAlgorithm* algorithm = new GwmGeographicalWeightedRegressionAlgorithm();
+    GwmBasicGWRAlgorithm* algorithm = new GwmBasicGWRAlgorithm();
     QgsVectorLayer* dataLayer = static_cast<GwmLayerGroupItem*>(mapModel->rootChildren()[0])->originChild()->layer();
     algorithm->setDataLayer(dataLayer);
     QgsFields fields = dataLayer->fields();

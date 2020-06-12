@@ -6,22 +6,12 @@
 #include "TaskThread/gwmspatialmonoscalealgorithm.h"
 #include "TaskThread/iregressionanalysis.h"
 #include "TaskThread/gwmgwrtaskthread.h"
-#include "TaskThread/gwmbandwidthsizeselector.h"
-#include "TaskThread/gwmindependentvariableselector.h"
 
 using namespace arma;
 
-class GwmGeographicalWeightedRegressionAlgorithm : public GwmSpatialMonoscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable, public IIndependentVariableSelectable
+class GwmGeographicalWeightedRegressionAlgorithm : public GwmSpatialMonoscaleAlgorithm, public IRegressionAnalysis
 {
     Q_OBJECT
-
-    enum BandwidthSelectionCriterionType
-    {
-        AIC,
-        CV
-    };
-
-    typedef double (GwmGeographicalWeightedRegressionAlgorithm::*BandwidthSizeCriterionFunction)(GwmBandwidthWeight*);
 
 public:
     inline static vec Fitted(const mat& x, const mat& betas)
@@ -47,19 +37,6 @@ public:     // 构造和属性
     mat betas() const;
     void setBetas(const mat &betas);
 
-    bool autoselectBandwidth() const;
-    void setIsAutoselectBandwidth(bool value);
-
-    bool autoselectIndepVars() const;
-    void setIsAutoselectIndepVars(bool value);
-
-    double indepVarSelectionThreshold() const;
-    void setIndepVarSelectionThreshold(double indepVarSelectionThreshold);
-
-
-protected:  // QThread interface
-    void run() override;
-
 
 public:     // GwmTaskThread interface
     QString name() const override { return tr("GWR"); };
@@ -67,16 +44,6 @@ public:     // GwmTaskThread interface
 
 protected:  // GwmSpatialAlgorithm interface
     bool isValid() override;
-
-
-public:     // IBandwidthSizeSelectable interface
-    inline double criterion(GwmBandwidthWeight* bandwidthWeight) override
-    {
-        return (this->*mBandwidthSizeCriterion)(bandwidthWeight);
-    }
-
-public:     // IIndependentVariableSelectable interface
-    inline double criterion(QList<GwmVariable> indepVars) override;
 
 
 public:     // IRegressionAnalysis interface
@@ -115,28 +82,16 @@ public:     // IRegressionAnalysis interface
         return mDiagnostic;
     }
 
-    mat regression(const mat& x, const vec& y) override;
-
-protected:
-    mat regression(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+public:
 
     inline bool hasRegressionLayer()
     {
         return mRegressionLayer != nullptr;
     }
 
-    inline bool isStoreS()
-    {
-        return hasHatMatrix && (mDataPoints.n_rows < 8192);
-    }
-
-private:
+protected:
     void initPoints();
     void initXY(mat& x, mat& y, const GwmVariable& depVar, const QList<GwmVariable>& indepVars);
-    GwmDiagnostic calcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
-    void createResultLayer(QList<QPair<QString, const mat> > data);
-    double bandwidthSizeCriterionAIC(GwmBandwidthWeight* bandwidthWeight);
-    double bandwidthSizeCriterionCV(GwmBandwidthWeight* bandwidthWeight);
 
 protected:
     QgsVectorLayer* mRegressionLayer = nullptr;
@@ -146,29 +101,11 @@ protected:
     GwmVariable mDepVar;
     QList<GwmVariable> mIndepVars;
 
-    GwmDiagnostic mDiagnostic;
-    GwmFTestResult mF1TestResult;
-    GwmFTestResult mF2TestResult;
-    QList<GwmFTestResult> mF3TestResult;
-    GwmFTestResult mF4TestResult;
-
-    bool hasHatMatrix = true;
-    bool hasFTest = false;
-
     mat mX;
     vec mY;
     mat mBetas;
 
-private:
-    GwmBandwidthSizeSelector mBandwidthSizeSelector;
-    bool isAutoselectBandwidth;
-    BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
-    BandwidthSizeCriterionFunction mBandwidthSizeCriterion;
-
-    GwmIndependentVariableSelector mIndepVarSelector;
-    bool isAutoselectIndepVars;
-    double mIndepVarSelectionThreshold = 3.0;
-
+    GwmDiagnostic mDiagnostic;
 };
 
 #endif // GWMGEOGRAPHICALWEIGHTEDREGRESSIONALGORITHM_H
