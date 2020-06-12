@@ -14,6 +14,12 @@ public:
 public:
     GwmMinkwoskiDistance();
     GwmMinkwoskiDistance(double p, double theta);
+    GwmMinkwoskiDistance(const GwmMinkwoskiDistance& distance);
+
+    virtual GwmDistance * clone() override
+    {
+        return new GwmMinkwoskiDistance(*this);
+    }
 
     double poly() const;
     void setPoly(double poly);

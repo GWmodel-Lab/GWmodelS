@@ -20,6 +20,10 @@ void GwmIndependentVariableSelector::setIndepVars(const QList<GwmVariable> &inde
 QList<GwmVariable> GwmIndependentVariableSelector::optimize(IIndependentVariableSelectable *instance)
 {
     QList<int> curIndex, restIndex;
+    for (int i = 0; i < mIndepVars.size(); i++)
+    {
+        restIndex.append(i);
+    }
     QList<QPair<QList<int>, double> > modelCriterions;
     for (int i = 0; i < mIndepVars.size(); i++)
     {

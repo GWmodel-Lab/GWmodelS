@@ -54,30 +54,25 @@ double GwmCRSDistance::SpGcdist(double lon1, double lon2, double lat1, double la
     return D*( 1 + f*H1*sinF2*cosG2 - f*H2*cosF2*sinG2 );
 }
 
-vec GwmCRSDistance::SpatialDistance(rowvec in_loc, mat out_locs)
+vec GwmCRSDistance::SpatialDistance(rowvec out_loc, mat in_locs)
 {
-    int N = out_locs.n_rows, j;
+    int N = in_locs.n_rows, j;
     vec dists(N, fill::zeros);
-    double uout = in_loc(0), vout = in_loc(1);
+    double uout = out_loc(0), vout = out_loc(1);
 
     for (j = 0; j < N; j++) {
-      dists(j) = SpGcdist(out_locs(j, 0), uout, out_locs(j, 1), vout);
+      dists(j) = SpGcdist(in_locs(j, 0), uout, in_locs(j, 1), vout);
     }
     return dists;
 }
 
-vec GwmCRSDistance::EuclideanDistance(rowvec in_loc, mat out_locs)
+vec GwmCRSDistance::EuclideanDistance(rowvec out_loc, mat in_locs)
 {
-    int n_in = in_loc.n_rows;
-    int n_out = out_locs.n_rows;
-    mat eu_dist(n_in, n_out);
-    int i = 0, j = 0;
-    for (i = 0; i < n_in; i++)
+    int n_in = in_locs.n_rows;
+    vec eu_dist(n_in);
+    for (int i = 0; i < n_in; i++)
     {
-        for (j = 0; j < n_out; j++)
-        {
-          eu_dist(i,j) = sum(pow(in_loc.row(i) - out_locs.row(j),2));
-        }
+        eu_dist(i) = sum(pow(in_locs.row(i) - out_loc, 2));
     }
     return sqrt(eu_dist);
 }
@@ -85,6 +80,16 @@ vec GwmCRSDistance::EuclideanDistance(rowvec in_loc, mat out_locs)
 GwmCRSDistance::GwmCRSDistance() : GwmDistance()
 {
 
+}
+
+GwmCRSDistance::GwmCRSDistance(bool isGeographic)
+{
+    mGeographic = isGeographic;
+}
+
+GwmCRSDistance::GwmCRSDistance(const GwmCRSDistance &distance)
+{
+    mGeographic = distance.mGeographic;
 }
 
 bool GwmCRSDistance::geographic() const

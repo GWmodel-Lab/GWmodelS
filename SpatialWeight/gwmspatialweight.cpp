@@ -12,6 +12,12 @@ GwmSpatialWeight::GwmSpatialWeight(GwmWeight *weight, GwmDistance *distance)
     mDistance = distance;
 }
 
+GwmSpatialWeight::GwmSpatialWeight(const GwmSpatialWeight &spatialWeight)
+{
+    mWeight = spatialWeight.mWeight->clone();
+    mDistance = spatialWeight.mDistance->clone();
+}
+
 GwmSpatialWeight::~GwmSpatialWeight()
 {
     if (mWeight) delete mWeight;

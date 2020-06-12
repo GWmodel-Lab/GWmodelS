@@ -30,6 +30,11 @@ public:
     GwmBandwidthWeight(double size, bool adaptive, KernelFunctionType kernel);
     GwmBandwidthWeight(const GwmBandwidthWeight& bandwidthWeight);
 
+    virtual GwmWeight * clone() override
+    {
+        return new GwmBandwidthWeight(*this);
+    }
+
 public:
     virtual vec weight(vec dist) override;
 

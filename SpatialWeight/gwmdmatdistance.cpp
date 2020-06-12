@@ -12,6 +12,12 @@ GwmDMatDistance::GwmDMatDistance(QString dmatFile, int featureCount)
     mFeatureCount = featureCount;
 }
 
+GwmDMatDistance::GwmDMatDistance(const GwmDMatDistance &distance)
+{
+    mDMatFile = distance.mDMatFile;
+    mFeatureCount = distance.mFeatureCount;
+}
+
 QString GwmDMatDistance::dMatFile() const
 {
     return mDMatFile;

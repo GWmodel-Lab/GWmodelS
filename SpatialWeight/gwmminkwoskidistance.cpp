@@ -15,7 +15,7 @@ vec GwmMinkwoskiDistance::ChessDistance(rowvec out_loc, mat in_locs)
     vec cd_dist(n_in);
     for (int i = 0; i < n_in; i++)
     {
-        cd_dist(i) = max(abs(in_locs.row(i) - trans(out_loc)));
+        cd_dist(i) = max(abs(in_locs.row(i) - out_loc));
     }
     return cd_dist;
 }
@@ -26,7 +26,7 @@ vec GwmMinkwoskiDistance::ManhattonDistance(rowvec out_loc, mat in_locs)
     vec md_dist(n_in);
     for (int i = 0; i < n_in; i++)
     {
-        md_dist(i) = sum(abs(in_locs.row(i) - trans(out_loc)));
+        md_dist(i) = sum(abs(in_locs.row(i) - out_loc));
     }
     return md_dist;
 }
@@ -37,7 +37,7 @@ vec GwmMinkwoskiDistance::MinkwoskiDistance(rowvec out_loc, mat in_locs, double 
     vec mk_dist(n_in);
     for (int i = 0; i < n_in; i++)
     {
-        mk_dist(i) = pow(sum(pow(abs(in_locs.row(i) - trans(out_loc)), p)), 1.0 / p);
+        mk_dist(i) = pow(sum(pow(abs(in_locs.row(i) - out_loc), p)), 1.0 / p);
     }
     return mk_dist;
 }
@@ -51,6 +51,13 @@ GwmMinkwoskiDistance::GwmMinkwoskiDistance(double p, double theta)
 {
     mPoly = p;
     mTheta = theta;
+}
+
+GwmMinkwoskiDistance::GwmMinkwoskiDistance(const GwmMinkwoskiDistance &distance)
+{
+
+    mPoly = distance.mPoly;
+    mTheta = distance.mTheta;
 }
 
 double GwmMinkwoskiDistance::poly() const

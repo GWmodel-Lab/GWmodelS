@@ -15,6 +15,8 @@ void GwmGeographicalWeightedRegressionAlgorithm::run()
     // 优选模型
     if (isAutoselectIndepVars)
     {
+        mIndepVarSelector.setIndepVars(mIndepVars);
+        mIndepVarSelector.setThreshold(mIndepVarSelectionThreshold);
         QList<GwmVariable> selectedIndepVars = mIndepVarSelector.optimize(this);
         if (selectedIndepVars.size() > 0)
         {
@@ -28,6 +30,10 @@ void GwmGeographicalWeightedRegressionAlgorithm::run()
     // 优选带宽
     if (isAutoselectBandwidth)
     {
+        GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+        mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
+        mBandwidthSizeSelector.setLower(bandwidthWeight0->adaptive() ? 20 : 0.0);
+        mBandwidthSizeSelector.setUpper(bandwidthWeight0->adaptive() ? mDataPoints.n_rows : DBL_MAX);
         switch (mBandwidthSelectionCriterionType)
         {
         case BandwidthSelectionCriterionType::CV:
@@ -74,7 +80,7 @@ void GwmGeographicalWeightedRegressionAlgorithm::run()
             localR2(i) = (tss - rss) / tss;
         }
 
-        QList<QPair<QString, const mat&> > resultLayerData = {
+        QList<QPair<QString, const mat> > resultLayerData = {
             qMakePair(QString("%1"), mBetas),
             qMakePair(QString("y"), mY),
             qMakePair(QString("yhat"), yhat),
@@ -90,11 +96,13 @@ void GwmGeographicalWeightedRegressionAlgorithm::run()
     else
     {
         mBetas = regression(mX, mY);
-        QList<QPair<QString, const mat&> > resultLayerData = {
+        QList<QPair<QString, const mat> > resultLayerData = {
             qMakePair(QString("%1"), mBetas)
         };
         createResultLayer(resultLayerData);
     }
+
+    emit success();
 }
 
 bool GwmGeographicalWeightedRegressionAlgorithm::isValid()
@@ -124,7 +132,7 @@ double GwmGeographicalWeightedRegressionAlgorithm::criterion(QList<GwmVariable> 
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec w = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+        vec w(nDp, fill::ones);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -142,7 +150,7 @@ double GwmGeographicalWeightedRegressionAlgorithm::criterion(QList<GwmVariable> 
             return DBL_MAX;
         }
     }
-    return GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas, shat);
+    return GwmGeographicalWeightedRegressionAlgorithm::AICc(x, y, betas.t(), shat);
 }
 
 mat GwmGeographicalWeightedRegressionAlgorithm::regression(const mat &x, const vec &y)
@@ -247,19 +255,19 @@ void GwmGeographicalWeightedRegressionAlgorithm::initXY(mat &x, mat &y, const Gw
     for (int i = 0; iterator.nextFeature(f); i++)
     {
 
-        double vY = f.attribute(depVar.index).toDouble(&ok);
+        double vY = f.attribute(depVar.name).toDouble(&ok);
         if (ok)
         {
             y(i) = vY;
             x(i, 0) = 1.0;
             for (int k = 0; k < indepVars.size(); k++)
             {
-                double vX = f.attribute(indepVars[k].index).toDouble(&ok);
+                double vX = f.attribute(indepVars[k].name).toDouble(&ok);
                 if (ok) x(i, k + 1) = vX;
                 else emit error(tr("Independent variable value cannot convert to a number. Set to 0."));
             }
         }
-        emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
+        else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
     }
 }
 
@@ -278,7 +286,7 @@ GwmDiagnostic GwmGeographicalWeightedRegressionAlgorithm::calcDiagnostic(const m
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-void GwmGeographicalWeightedRegressionAlgorithm::createResultLayer(QList<QPair<QString, const mat &> > data)
+void GwmGeographicalWeightedRegressionAlgorithm::createResultLayer(QList<QPair<QString, const mat> > data)
 {
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
@@ -311,6 +319,7 @@ void GwmGeographicalWeightedRegressionAlgorithm::createResultLayer(QList<QPair<Q
     mResultLayer->updateFields();
 
     // 设置要素几何
+    mResultLayer->startEditing();
     QgsFeatureIterator iterator = srcLayer->getFeatures();
     QgsFeature f;
     for (int i = 0; iterator.nextFeature(f); i++)
@@ -360,7 +369,7 @@ double GwmGeographicalWeightedRegressionAlgorithm::bandwidthSizeCriterionAIC(Gwm
             return DBL_MAX;
         }
     }
-    return GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas, shat);
+    return GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas.t(), shat);
 }
 
 double GwmGeographicalWeightedRegressionAlgorithm::bandwidthSizeCriterionCV(GwmBandwidthWeight *bandwidthWeight)

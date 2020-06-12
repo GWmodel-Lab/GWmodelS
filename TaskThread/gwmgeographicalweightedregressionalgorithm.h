@@ -134,12 +134,12 @@ private:
     void initPoints();
     void initXY(mat& x, mat& y, const GwmVariable& depVar, const QList<GwmVariable>& indepVars);
     GwmDiagnostic calcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
-    void createResultLayer(QList<QPair<QString, const mat&> > data);
+    void createResultLayer(QList<QPair<QString, const mat> > data);
     double bandwidthSizeCriterionAIC(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionCV(GwmBandwidthWeight* bandwidthWeight);
 
 protected:
-    QgsVectorLayer* mRegressionLayer;
+    QgsVectorLayer* mRegressionLayer = nullptr;
     mat mDataPoints;
     mat mRegressionPoints;
 
@@ -167,7 +167,7 @@ private:
 
     GwmIndependentVariableSelector mIndepVarSelector;
     bool isAutoselectIndepVars;
-    double mIndepVarSelectionThreshold;
+    double mIndepVarSelectionThreshold = 3.0;
 
 };
 

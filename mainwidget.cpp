@@ -49,6 +49,8 @@
 
 #include <TaskThread/gwmgeographicalweightedregressionalgorithm.h>
 
+#include <SpatialWeight/gwmcrsdistance.h>
+
 //鲁棒GWR
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -153,7 +155,7 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::exportLayerBtnSignal, this, &MainWidget::onExportLayerAsShpfile);
     connect(toolbar, &GwmToolbar::zoomToLayerBtnSignal,this,&MainWidget::onZoomToLayerBtn);
     connect(toolbar, &GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
-    connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRBtnClicked);
+    connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRNewBtnClicked);
 
 }
 
@@ -635,7 +637,30 @@ void MainWidget::onGWRBtnClicked()
 void MainWidget::onGWRNewBtnClicked()
 {
     GwmGeographicalWeightedRegressionAlgorithm* algorithm = new GwmGeographicalWeightedRegressionAlgorithm();
+    QgsVectorLayer* dataLayer = static_cast<GwmLayerGroupItem*>(mapModel->rootChildren()[0])->originChild()->layer();
+    algorithm->setDataLayer(dataLayer);
+    QgsFields fields = dataLayer->fields();
+    GwmVariable depVar = {0, fields[0].name(), fields[0].type(), fields[0].isNumeric()};
+    QList<GwmVariable> indepVars;
+    for (int i = 0; i < fields.size(); i++)
+    {
+        indepVars.append({ i, fields[i].name(), fields[i].type(), fields[i].isNumeric()});
+    }
+    algorithm->setDependentVariable(depVar);
+    algorithm->setIndependentVariables(indepVars);
+    algorithm->setIsAutoselectIndepVars(true);
+    GwmSpatialWeight spatialWeight;
+    spatialWeight.setDistance(new GwmCRSDistance(false));
+    spatialWeight.setWeight(new GwmBandwidthWeight(100, true, GwmBandwidthWeight::Gaussian));
+    algorithm->setSpatialWeight(spatialWeight);
+    algorithm->setIsAutoselectBandwidth(true);
 
+    GwmProgressDialog* progressDlg = new GwmProgressDialog(algorithm);
+    if (progressDlg->exec() == QDialog::Accepted)
+    {
+        QgsVectorLayer* resultLayer = algorithm->resultLayer();
+        addLayerToModel(resultLayer);
+    }
 }
 
 void MainWidget::onScalableGWRBtnClicked()

@@ -21,6 +21,8 @@ public:
     GwmWeight() {}
     virtual ~GwmWeight() {}
 
+    virtual GwmWeight* clone() = 0;
+
 public:
     virtual vec weight(vec dist) = 0;
 };

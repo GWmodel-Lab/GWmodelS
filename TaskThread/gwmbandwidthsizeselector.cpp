@@ -92,5 +92,6 @@ GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable 
     delete w1;
     delete w2;
     GwmBandwidthWeight* wopt = new GwmBandwidthWeight(*mBandwidth);
+    wopt->setBandwidth(xopt);
     return wopt;
 }

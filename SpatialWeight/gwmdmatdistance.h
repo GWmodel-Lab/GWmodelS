@@ -9,6 +9,12 @@ class GwmDMatDistance : public GwmDistance
 public:
     GwmDMatDistance();
     GwmDMatDistance(QString dmatFile, int featureCount);
+    GwmDMatDistance(const GwmDMatDistance& distance);
+
+    virtual GwmDistance * clone() override
+    {
+        return new GwmDMatDistance(*this);
+    }
 
     QString dMatFile() const;
     void setDMatFile(const QString &dMatFile);
