@@ -61,6 +61,7 @@ SOURCES += \
     SpatialWeight/gwmminkwoskidistance.cpp \
     SpatialWeight/gwmspatialweight.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
+    TaskThread/gwmbandwidthsizeselector.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
     TaskThread/gwmgeographicalweightedregressionalgorithm.cpp \
     TaskThread/gwmggwrbandwidthselectionthread.cpp \
@@ -162,6 +163,7 @@ HEADERS += \
     SpatialWeight/gwmminkwoskidistance.h \
     SpatialWeight/gwmspatialweight.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
+    TaskThread/gwmbandwidthsizeselector.h \
     TaskThread/gwmgeographicalweightedregressionalgorithm.h \
     TaskThread/gwmggwrbandwidthselectionthread.h \
     TaskThread/gwmggwrtaskthread.h \

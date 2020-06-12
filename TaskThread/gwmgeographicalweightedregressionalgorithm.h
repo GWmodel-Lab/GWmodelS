@@ -6,12 +6,21 @@
 #include "TaskThread/gwmspatialmonoscalealgorithm.h"
 #include "TaskThread/iregressionanalysis.h"
 #include "TaskThread/gwmgwrtaskthread.h"
+#include "TaskThread/gwmbandwidthsizeselector.h"
 
 using namespace arma;
 
-class GwmGeographicalWeightedRegressionAlgorithm : public GwmSpatialMonoscaleAlgorithm, public IRegressionAnalysis
+class GwmGeographicalWeightedRegressionAlgorithm : public GwmSpatialMonoscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable
 {
     Q_OBJECT
+
+    enum BandwidthSelectionCriterionType
+    {
+        AIC,
+        CV
+    };
+
+    typedef double (GwmGeographicalWeightedRegressionAlgorithm::*BandwidthSizeCriterionFunction)(GwmBandwidthWeight*);
 
 public:
     inline static vec Fitted(const mat& x, const mat& betas)
@@ -25,6 +34,9 @@ public:     // 构造和属性
     mat betas() const;
     void setBetas(const mat &betas);
 
+    bool autoselectBandwidth() const;
+    void setIsAutoselectBandwidth(bool value);
+
 
 protected:  // QThread interface
     void run();
@@ -36,6 +48,13 @@ public:     // GwmTaskThread interface
 
 protected:  // GwmSpatialAlgorithm interface
     bool isValid();
+
+
+public:     // IBandwidthSizeSelectable interface
+    inline double criterion(GwmBandwidthWeight* bandwidthWeight)
+    {
+        return (this->*mBandwidthSizeCriterion)(bandwidthWeight);
+    }
 
 
 public:     // IRegressionAnalysis interface
@@ -93,6 +112,8 @@ private:
     void init(mat& x, mat& y);
     GwmDiagnostic calcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
     void createResultLayer(QList<QPair<QString, const mat&> > data);
+    double bandwidthSizeCriterionAIC(GwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCV(GwmBandwidthWeight* bandwidthWeight);
 
 protected:
     QgsVectorLayer* mRegressionLayer;
@@ -111,7 +132,15 @@ protected:
     bool hasHatMatrix = true;
     bool hasFTest = false;
 
+    mat mX;
+    vec mY;
     mat mBetas;
+
+private:
+    GwmBandwidthSizeSelector mBandwidthSizeSelector;
+    bool isAutoselectBandwidth;
+    BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
+    BandwidthSizeCriterionFunction mBandwidthSizeCriterion;
 
 };
 

@@ -41,6 +41,13 @@ GwmBandwidthWeight::GwmBandwidthWeight(double size, bool adaptive, GwmBandwidthW
     mKernel = kernel;
 }
 
+GwmBandwidthWeight::GwmBandwidthWeight(const GwmBandwidthWeight &bandwidthWeight)
+{
+    mBandwidth = bandwidthWeight.mBandwidth;
+    mAdaptive = bandwidthWeight.mAdaptive;
+    mKernel = bandwidthWeight.mKernel;
+}
+
 vec GwmBandwidthWeight::weight(vec dist)
 {
     const KernelFunction *kerf = Kernel + mKernel;

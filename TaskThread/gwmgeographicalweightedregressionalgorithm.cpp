@@ -9,27 +9,48 @@ GwmGeographicalWeightedRegressionAlgorithm::GwmGeographicalWeightedRegressionAlg
 
 void GwmGeographicalWeightedRegressionAlgorithm::run()
 {
-    mat x;
-    vec y;
-    init(x, y);
+    init(mX, mY);
+
+    // 优选带宽
+    if (isAutoselectBandwidth)
+    {
+        switch (mBandwidthSelectionCriterionType)
+        {
+        case BandwidthSelectionCriterionType::CV:
+            mBandwidthSizeCriterion = &GwmGeographicalWeightedRegressionAlgorithm::bandwidthSizeCriterionCV;
+            break;
+        case BandwidthSelectionCriterionType::AIC:
+            mBandwidthSizeCriterion = &GwmGeographicalWeightedRegressionAlgorithm::bandwidthSizeCriterionAIC;
+            break;
+        default:
+            mBandwidthSizeCriterion = &GwmGeographicalWeightedRegressionAlgorithm::bandwidthSizeCriterionCV;
+            break;
+        }
+        GwmBandwidthWeight* bandwidthWeight = mBandwidthSizeSelector.optimize(this);
+        if (bandwidthWeight)
+        {
+            mSpatialWeight.setWeight(bandwidthWeight);
+        }
+    }
+
     // 解算模型
     if (hasHatMatrix)
     {
         uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
         mat betasSE, S(isStoreS() ? nDp : 1, nDp, fill::zeros);
         vec shat, qDiag;
-        mBetas = regression(x, y, betasSE, shat, qDiag, S);
+        mBetas = regression(mX, mY, betasSE, shat, qDiag, S);
         // 诊断
-        mDiagnostic = calcDiagnostic(x, y, mBetas, shat);
-        vec yhat = Fitted(x, mBetas);
-        vec res = y - yhat;
+        mDiagnostic = calcDiagnostic(mX, mY, mBetas, shat);
+        vec yhat = Fitted(mX, mBetas);
+        vec res = mY - yhat;
         double trS = shat(0), trStS = shat(1);
         double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
         vec stu_res = res / sqrt(sigmaHat * qDiag);
         betasSE = sqrt(sigmaHat * betasSE);
         mat betasTV = mBetas / betasSE;
-        vec dybar2 = (y - mean(y)) % (y - mean(y));
-        vec dyhat2 = (y - yhat) % (y - yhat);
+        vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
+        vec dyhat2 = (mY - yhat) % (mY - yhat);
         vec localR2 = vec(nDp, fill::zeros);
         for (int i = 0; i < nDp; i++)
         {
@@ -41,7 +62,7 @@ void GwmGeographicalWeightedRegressionAlgorithm::run()
 
         QList<QPair<QString, const mat&> > resultLayerData = {
             qMakePair(QString("%1"), mBetas),
-            qMakePair(QString("y"), y),
+            qMakePair(QString("y"), mY),
             qMakePair(QString("yhat"), yhat),
             qMakePair(QString("residual"), res),
             qMakePair(QString("Stud_residual"), stu_res),
@@ -54,7 +75,7 @@ void GwmGeographicalWeightedRegressionAlgorithm::run()
     }
     else
     {
-        mBetas = regression(x, y);
+        mBetas = regression(mX, mY);
         QList<QPair<QString, const mat&> > resultLayerData = {
             qMakePair(QString("%1"), mBetas)
         };
@@ -256,4 +277,84 @@ void GwmGeographicalWeightedRegressionAlgorithm::createResultLayer(QList<QPair<Q
         mResultLayer->addFeature(feature);
     }
     mResultLayer->commitChanges();
+}
+
+double GwmGeographicalWeightedRegressionAlgorithm::bandwidthSizeCriterionAIC(GwmBandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
+    mat betas(nDp, nVar, fill::zeros);
+    vec shat(2, fill::zeros);
+    for (uword i = 0; i < nDp; i++)
+    {
+        vec d = mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+        vec w = bandwidthWeight->weight(d);
+        mat xtw = trans(mX.each_col() % w);
+        mat xtwx = xtw * mX;
+        mat xtwy = xtw * mY;
+        try
+        {
+            mat xtwx_inv = inv(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+            mat ci = xtwx_inv * xtw;
+            mat si = mX.row(i) * ci;
+            shat(0) += si(0, i);
+            shat(1) += det(si * si.t());
+        }
+        catch (std::exception e)
+        {
+            return DBL_MAX;
+        }
+    }
+    vec r = mY - sum(betas % mX, 1);
+    double ss = sum(r % r), n = nDp;
+    double AICc = n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0))); //AICc
+    return AICc;
+}
+
+double GwmGeographicalWeightedRegressionAlgorithm::bandwidthSizeCriterionCV(GwmBandwidthWeight *bandwidthWeight)
+{
+    uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
+    vec shat(2, fill::zeros);
+    double cv = 0.0;
+    for (uword i = 0; i < nDp; i++)
+    {
+        vec d = mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+        vec w = bandwidthWeight->weight(d);
+        w(i) = 0.0;
+        mat xtw = trans(mX.each_col() % w);
+        mat xtwx = xtw * mX;
+        mat xtwy = xtw * mY;
+        try
+        {
+            mat xtwx_inv = inv(xtwx);
+            vec beta = xtwx_inv * xtwy;
+            double res = mY(i) - det(mX.row(i) * beta);
+            cv += res * res;
+        }
+        catch (std::exception e)
+        {
+            return DBL_MAX;
+        }
+    }
+    return cv;
+}
+
+bool GwmGeographicalWeightedRegressionAlgorithm::autoselectBandwidth() const
+{
+    return isAutoselectBandwidth;
+}
+
+void GwmGeographicalWeightedRegressionAlgorithm::setIsAutoselectBandwidth(bool value)
+{
+    isAutoselectBandwidth = value;
+}
+
+mat GwmGeographicalWeightedRegressionAlgorithm::betas() const
+{
+    return mBetas;
+}
+
+void GwmGeographicalWeightedRegressionAlgorithm::setBetas(const mat &betas)
+{
+    mBetas = betas;
 }

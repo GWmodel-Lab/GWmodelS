@@ -25,6 +25,7 @@ GwmWeight *GwmSpatialWeight::weight() const
 
 void GwmSpatialWeight::setWeight(GwmWeight *weight)
 {
+    if (mWeight) delete mWeight;
     mWeight = weight;
 }
 
@@ -35,6 +36,7 @@ GwmDistance *GwmSpatialWeight::distance() const
 
 void GwmSpatialWeight::setDistance(GwmDistance *distance)
 {
+    if (mDistance) delete mDistance;
     mDistance = distance;
 }
 
