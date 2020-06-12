@@ -5,7 +5,7 @@
 
 interface IMultivariableAnalysis
 {
-    virtual QList<GwmVariable> getVariables() const = 0;
+    virtual QList<GwmVariable> variables() const = 0;
     virtual void setVariables(const QList<GwmVariable>& variables) = 0;
     virtual void setVariables(const QList<GwmVariable>&& variables) = 0;
 };

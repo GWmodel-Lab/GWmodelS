@@ -5,7 +5,7 @@
 
 interface IMonovariableAnalysis
 {
-    virtual GwmVariable getVariable() const = 0;
+    virtual GwmVariable variable() const = 0;
     virtual void setVariable(const GwmVariable& variable) = 0;
     virtual void setVariable(const GwmVariable&& variable) = 0;
 };

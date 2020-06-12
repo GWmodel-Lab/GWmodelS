@@ -19,12 +19,3 @@ QgsVectorLayer *GwmSpatialAlgorithm::resultLayer() const
 {
     return mResultLayer;
 }
-
-bool GwmSpatialAlgorithm::isValid()
-{
-    if (mDataLayer == nullptr)
-    {
-        return false;
-    }
-    return true;
-}

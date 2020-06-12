@@ -19,8 +19,7 @@ public:  // 构造与属性
     QgsVectorLayer *resultLayer() const;
 
 protected:  // 方法
-    virtual void createResultLayer() = 0;
-    virtual bool isValid();
+    virtual bool isValid() = 0;
 
 protected:  // 成员
     QgsVectorLayer* mDataLayer = nullptr;

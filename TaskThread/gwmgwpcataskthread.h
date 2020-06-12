@@ -13,7 +13,7 @@ public:
     GwmGWPCATaskThread();
 
 public:
-    QList<GwmVariable> getVariables() const;
+    QList<GwmVariable> variables() const;
     void setVariables(const QList<GwmVariable> &variables);
     void setVariables(const QList<GwmVariable> &&variables);
 
