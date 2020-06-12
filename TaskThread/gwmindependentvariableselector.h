@@ -1,19 +1,16 @@
 #ifndef GWMINDEPENDENTVARIABLESELECTOR_H
 #define GWMINDEPENDENTVARIABLESELECTOR_H
 
-#include <QObject>
-
 #include <Model/gwmvariableitemmodel.h>
 #include <armadillo>
 
-interface IIndependentVariableSelectable
+struct IIndependentVariableSelectable
 {
     virtual double criterion(QList<GwmVariable> variables) = 0;
 };
 
 class GwmIndependentVariableSelector
 {
-    Q_OBJECT
 public:
     GwmIndependentVariableSelector();
 

@@ -8,6 +8,7 @@ class GwmCRSDistance : public GwmDistance
 public:
     static vec SpatialDistance(rowvec in_loc, mat out_locs);
     static vec EuclideanDistance(rowvec in_loc, mat out_locs);
+    static double SpGcdist(double lon1, double lon2, double lat1, double lat2);
 
 public:
     GwmCRSDistance();

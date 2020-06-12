@@ -1,19 +1,16 @@
 #ifndef GWMBANDWIDTHSIZESELECTOR_H
 #define GWMBANDWIDTHSIZESELECTOR_H
 
-#include <QObject>
-
 #include "SpatialWeight/gwmspatialweight.h"
 #include "SpatialWeight/gwmbandwidthweight.h"
 
-interface IBandwidthSizeSelectable
+struct IBandwidthSizeSelectable
 {
     virtual double criterion(GwmBandwidthWeight* weight) = 0;
 };
 
 class GwmBandwidthSizeSelector
 {
-    Q_OBJECT
 public:
     GwmBandwidthSizeSelector();
 

@@ -1,7 +1,7 @@
 #ifndef IPARALLELABLE_H
 #define IPARALLELABLE_H
 
-interface IParallelalbe
+struct IParallelalbe
 {
     enum ParallelType
     {
@@ -15,12 +15,12 @@ interface IParallelalbe
     virtual void setParallelType(const ParallelType& type) = 0;
 };
 
-interface IOpenmpParallelable : public IParallelalbe
+struct IOpenmpParallelable : public IParallelalbe
 {
     virtual void setThreadNum(const int threadNum) = 0;
 };
 
-interface ICudaParallelable : public IParallelalbe
+struct ICudaParallelable : public IParallelalbe
 {
     virtual void setGPUId(const int gpuId) = 0;
 };

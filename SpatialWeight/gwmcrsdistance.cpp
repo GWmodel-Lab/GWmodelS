@@ -3,7 +3,7 @@
 #define POWDI(x,i) pow(x,i)
 #define DOUBLE_EPS (1e-8)
 
-double spGcdist(double lon1, double lon2, double lat1, double lat2) {
+double GwmCRSDistance::SpGcdist(double lon1, double lon2, double lat1, double lat2) {
 
   double F, G, L, sinG2, cosG2, sinF2, cosF2, sinL2, cosL2, S, C;
   double w, R, a, f, D, H1, H2;
@@ -61,7 +61,7 @@ vec GwmCRSDistance::SpatialDistance(rowvec in_loc, mat out_locs)
     double uout = in_loc(0), vout = in_loc(1);
 
     for (j = 0; j < N; j++) {
-      dists(j) = spGcdist(out_locs(j, 0), uout, out_locs(j, 1), vout);
+      dists(j) = SpGcdist(out_locs(j, 0), uout, out_locs(j, 1), vout);
     }
     return dists;
 }

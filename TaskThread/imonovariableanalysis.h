@@ -3,7 +3,7 @@
 
 #include "Model/gwmvariableitemmodel.h"
 
-interface IMonovariableAnalysis
+struct IMonovariableAnalysis
 {
     virtual GwmVariable variable() const = 0;
     virtual void setVariable(const GwmVariable& variable) = 0;

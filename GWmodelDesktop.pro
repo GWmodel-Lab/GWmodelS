@@ -20,7 +20,6 @@ QMAKE_LFLAGS_RELEASE += /DEBUG
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += M_PI=3.14159265358979323846
 DEFINES += M_PI_2=1.57079632679489661923
-DEFINES += interface=struct
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -57,19 +56,21 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.cpp \
     SpatialWeight/gwmbandwidthweight.cpp \
     SpatialWeight/gwmcrsdistance.cpp \
+    SpatialWeight/gwmdistance.cpp \
     SpatialWeight/gwmdmatdistance.cpp \
     SpatialWeight/gwmminkwoskidistance.cpp \
     SpatialWeight/gwmspatialweight.cpp \
+    SpatialWeight/gwmweight.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmbandwidthsizeselector.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
     TaskThread/gwmgeographicalweightedregressionalgorithm.cpp \
     TaskThread/gwmggwrbandwidthselectionthread.cpp \
     TaskThread/gwmggwrtaskthread.cpp \
-    TaskThread/gwmgwpcataskthread.cpp \
+#    TaskThread/gwmgwpcataskthread.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
-    TaskThread/gwmgwsstaskthread.cpp \
+#    TaskThread/gwmgwsstaskthread.cpp \
     TaskThread/gwmindependentvariableselector.cpp \
     TaskThread/gwmlcrgwrtaskthread.cpp \
     TaskThread/gwmmultiscalegwrtaskthread.cpp \
@@ -168,10 +169,10 @@ HEADERS += \
     TaskThread/gwmgeographicalweightedregressionalgorithm.h \
     TaskThread/gwmggwrbandwidthselectionthread.h \
     TaskThread/gwmggwrtaskthread.h \
-    TaskThread/gwmgwpcataskthread.h \
+#    TaskThread/gwmgwpcataskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
-    TaskThread/gwmgwsstaskthread.h \
+#    TaskThread/gwmgwsstaskthread.h \
     TaskThread/gwmindependentvariableselector.h \
     TaskThread/gwmlcrgwrtaskthread.h \
     TaskThread/gwmmultiscalegwrtaskthread.h \

@@ -47,6 +47,8 @@
 #include "Model/gwmlayergwritem.h"
 #include "Model/gwmlayerggwritem.h"
 
+#include <TaskThread/gwmgeographicalweightedregressionalgorithm.h>
+
 //鲁棒GWR
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -628,6 +630,12 @@ void MainWidget::onGWRBtnClicked()
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
+}
+
+void MainWidget::onGWRNewBtnClicked()
+{
+    GwmGeographicalWeightedRegressionAlgorithm* algorithm = new GwmGeographicalWeightedRegressionAlgorithm();
+
 }
 
 void MainWidget::onScalableGWRBtnClicked()

@@ -16,7 +16,7 @@ struct GwmDiagnostic
 };
 
 
-interface IRegressionAnalysis
+struct IRegressionAnalysis
 {
     virtual GwmVariable dependentVariable() const = 0;
     virtual void setDependentVariable(const GwmVariable& variable) = 0;

@@ -6,10 +6,10 @@
 class GwmMinkwoskiDistance : public GwmDistance
 {
 public:
-    static mat CoordinateRotate(mat locs, double theta);
-    static vec ChessDistance(rowvec in_loc, mat out_locs);
-    static vec ManhattonDistance(rowvec in_loc, mat out_locs);
-    static vec MinkwoskiDistance(rowvec in_loc, mat out_locs);
+    static mat CoordinateRotate(mat coords, double theta);
+    static vec ChessDistance(rowvec out_loc, mat in_locs);
+    static vec ManhattonDistance(rowvec out_loc, mat in_locs);
+    static vec MinkwoskiDistance(rowvec out_loc, mat in_locs, double p);
 
 public:
     GwmMinkwoskiDistance();
