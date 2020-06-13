@@ -5,7 +5,7 @@ struct IParallelalbe
 {
     enum ParallelType
     {
-        Unable = 0,
+        Serial = 0,
         OpenMP = 1 << 0,
         CUDA = 1 << 1
     };
@@ -17,7 +17,7 @@ struct IParallelalbe
 
 struct IOpenmpParallelable : public IParallelalbe
 {
-    virtual void setThreadNum(const int threadNum) = 0;
+    virtual void setOmpThreadNum(const int threadNum) = 0;
 };
 
 struct ICudaParallelable : public IParallelalbe

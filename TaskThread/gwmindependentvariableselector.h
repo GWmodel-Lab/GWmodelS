@@ -8,7 +8,7 @@
 
 struct IIndependentVariableSelectable
 {
-    virtual double criterion(QList<GwmVariable> variables) = 0;
+    virtual double criterion(const QList<GwmVariable>& variables) = 0;
 };
 
 typedef  QList<QPair<QList<GwmVariable>, double> > IndepVarsCriterionList;

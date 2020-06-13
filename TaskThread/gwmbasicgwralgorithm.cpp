@@ -1,5 +1,6 @@
 #include "gwmbasicgwralgorithm.h"
 #include <gsl/gsl_cdf.h>
+#include <omp.h>
 
 
 GwmEnumValueNameMapper<GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType> GwmBasicGWRAlgorithm::BandwidthSelectionCriterionTypeNameMapper = {
@@ -24,6 +25,14 @@ void GwmBasicGWRAlgorithm::run()
     if (mIsAutoselectIndepVars)
     {
         emit message(QString(tr("Automatically selecting independent variables ...")));
+        switch (mParallelType) {
+        case IParallelalbe::Serial:
+            mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial;
+        case IParallelalbe::OpenMP:
+        default:
+            mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial;
+            break;
+        }
         mIndepVarSelector.setIndepVars(mIndepVars);
         mIndepVarSelector.setThreshold(mIndepVarSelectionThreshold);
         QList<GwmVariable> selectedIndepVars = mIndepVarSelector.optimize(this);
@@ -45,7 +54,6 @@ void GwmBasicGWRAlgorithm::run()
     if (mIsAutoselectBandwidth)
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
-        emit message(QString(tr("Setting X and Y.")));
         GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
         mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
@@ -55,13 +63,13 @@ void GwmBasicGWRAlgorithm::run()
         switch (mBandwidthSelectionCriterionType)
         {
         case BandwidthSelectionCriterionType::CV:
-            mBandwidthSizeCriterion = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCV;
+            mBandwidthSelectCriterionFunction = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCV;
             break;
         case BandwidthSelectionCriterionType::AIC:
-            mBandwidthSizeCriterion = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAIC;
+            mBandwidthSelectCriterionFunction = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAIC;
             break;
         default:
-            mBandwidthSizeCriterion = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCV;
+            mBandwidthSelectCriterionFunction = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCV;
             break;
         }
         GwmBandwidthWeight* bandwidthWeight = mBandwidthSizeSelector.optimize(this);
@@ -149,7 +157,7 @@ void GwmBasicGWRAlgorithm::run()
     emit success();
 }
 
-double GwmBasicGWRAlgorithm::criterion(QList<GwmVariable> indepVars)
+double GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial(const QList<GwmVariable>& indepVars)
 {
     mat x;
     vec y;
@@ -178,6 +186,45 @@ double GwmBasicGWRAlgorithm::criterion(QList<GwmVariable> indepVars)
         }
     }
     double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(x, y, betas.t(), shat);
+    QStringList names;
+    for (const GwmVariable& v : indepVars)
+        names << v.name;
+    QString msg = QString("Model: %1 ~ %2 (AICc Value: %3)").arg(mDepVar.name).arg(names.join(" + ")).arg(value);
+    emit message(msg);
+    return value;
+}
+
+double GwmBasicGWRAlgorithm::indepVarsSelectCriterionOmp(const QList<GwmVariable> &indepVars)
+{
+    mat x;
+    vec y;
+    initXY(x, y, mDepVar, indepVars);
+    uword nDp = x.n_rows, nVar = x.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    mat shat(2, mOmpThreadNum, fill::zeros);
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (uword i = 0; i < nDp; i++)
+    {
+        int thread = omp_get_thread_num();
+        vec w(nDp, fill::ones);
+        mat xtw = trans(x.each_col() % w);
+        mat xtwx = xtw * x;
+        mat xtwy = xtw * y;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+            mat ci = xtwx_inv * xtw;
+            mat si = x.row(i) * ci;
+            shat(0, thread) += si(0, i);
+            shat(1, thread) += det(si * si.t());
+        }
+        catch (...)
+        {
+            return DBL_MAX;
+        }
+    }
+    double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(x, y, betas.t(), sum(shat, 1));
     QStringList names;
     for (const GwmVariable& v : indepVars)
         names << v.name;
