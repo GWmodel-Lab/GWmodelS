@@ -10,7 +10,7 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     QDialog(parent),
     ui(new Ui::GwmGWROptionsDialog),
     mMapLayerList(originItemList),
-    mDepVarModel(new GwmLayerAttributeItemModel),
+    mDepVarModel(new GwmVariableItemModel),
     mTaskThread(thread)
 {
     ui->setupUi(this);
@@ -155,11 +155,16 @@ void GwmGWROptionsDialog::layerChanged(int index)
         QgsField field = fieldList[i];
         if (isNumeric(field.type()))
         {
-            GwmLayerAttributeItem* item = new GwmLayerAttributeItem();
-            item->setAttributeName(field.name());
-            item->setAttributeType(field.type());
-            item->setAttributeIndex(i);
-            mDepVarModel->appendRow(item);
+//            GwmLayerAttributeItem* item = new GwmLayerAttributeItem();
+//            item->setAttributeName(field.name());
+//            item->setAttributeType(field.type());
+//            item->setAttributeIndex(i);
+            GwmVariable item;
+            item.name = field.name();
+            item.type = field.type();
+            item.index = i;
+            item.isNumeric = field.isNumeric();
+            mDepVarModel->append(item);
             ui->mDepVarComboBox->addItem(field.name());
         }
     }
@@ -433,22 +438,23 @@ void GwmGWROptionsDialog::updateFields()
     // 因变量设置
     if (ui->mDepVarComboBox->currentIndex() > -1)
     {
-        mTaskThread->setDepVar(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
+//        mTaskThread->setDepVar(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
     }
     // 自变量设置
-    GwmLayerAttributeItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
+//    GwmLayerAttributeItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
+    GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
     if (selectedIndepVarModel)
     {
         if (selectedIndepVarModel->rowCount() > 0)
         {
-            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
+//            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
         }
         else if (ui->mVariableAutoSelectionCheck->isChecked())
         {
-            GwmLayerAttributeItemModel* indepVarModel = ui->mIndepVarSelector->indepVarModel();
+            GwmVariableItemModel* indepVarModel = ui->mIndepVarSelector->indepVarModel();
             if (indepVarModel)
             {
-                mTaskThread->setIndepVars(indepVarModel->attributeItemList());
+//                mTaskThread->setIndepVars(indepVarModel->attributeItemList());
             }
         }
         mTaskThread->setEnableIndepVarAutosel(ui->mVariableAutoSelectionCheck->isChecked());

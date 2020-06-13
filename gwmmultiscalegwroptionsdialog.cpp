@@ -5,6 +5,7 @@
 #include <QButtonGroup>
 #include <QFileDialog>
 
+#include <Model/gwmvariableitemmodel.h>
 
 GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmMultiscaleGWRTaskThread* thread,QWidget *parent) :
     QDialog(parent),
@@ -321,7 +322,7 @@ void GwmMultiscaleGWROptionsDialog::onDmatFileOpenClicked()
 
 void GwmMultiscaleGWROptionsDialog::onSelectedIndenpendentVariablesChanged()
 {
-    mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector->selectedIndepVarModel());
+//    mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector->selectedIndepVarModel());
 }
 
 void GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged(const QModelIndex& currnet, const QModelIndex& previous)
@@ -613,12 +614,12 @@ void GwmMultiscaleGWROptionsDialog::updateFields()
         mTaskThread->setDepVar(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
     }
     // 自变量设置
-    GwmLayerAttributeItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
+    GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
     if (selectedIndepVarModel)
     {
         if (selectedIndepVarModel->rowCount() > 0)
         {
-            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
+//            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
         }
     }
     // 参数设置

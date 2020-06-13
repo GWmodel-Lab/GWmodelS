@@ -6,8 +6,8 @@ GwmIndepVarSelectorWidget::GwmIndepVarSelectorWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::GwmIndepVarSelectorWidget)
 {
-    mIndepVarModel = new GwmLayerAttributeItemModel(this);
-    mSelectedIndepVarModel= new GwmLayerAttributeItemModel(this);
+    mIndepVarModel = new GwmVariableItemModel(this);
+    mSelectedIndepVarModel= new GwmVariableItemModel(this);
     ui->setupUi(this);
     ui->mIndepVarView->setModel(mIndepVarModel);
     ui->mSelectedIndepVarView->setModel(mSelectedIndepVarModel);
@@ -21,7 +21,7 @@ GwmIndepVarSelectorWidget::~GwmIndepVarSelectorWidget()
     delete ui;
 }
 
-GwmLayerAttributeItemModel *GwmIndepVarSelectorWidget::selectedIndepVarModel() const
+GwmVariableItemModel *GwmIndepVarSelectorWidget::selectedIndepVarModel() const
 {
     return mSelectedIndepVarModel;
 }
@@ -41,7 +41,7 @@ bool GwmIndepVarSelectorWidget::isNumeric(QVariant::Type type)
     }
 }
 
-GwmLayerAttributeItemModel *GwmIndepVarSelectorWidget::indepVarModel() const
+GwmVariableItemModel *GwmIndepVarSelectorWidget::indepVarModel() const
 {
     return mIndepVarModel;
 }
@@ -75,7 +75,7 @@ void GwmIndepVarSelectorWidget::onDepVarChanged(QString depVarName)
         mIndepVarModel->clear();
     }
     else{
-        mIndepVarModel = new GwmLayerAttributeItemModel(this);
+        mIndepVarModel = new GwmVariableItemModel(this);
     }
 //    QList<int> attributeList = mLayer->attributeList();
     QgsFields fields = mLayer->fields();
@@ -88,9 +88,10 @@ void GwmIndepVarSelectorWidget::onDepVarChanged(QString depVarName)
             QgsField field = fields.at(index);
             if (isNumeric(field.type()))
             {
-                GwmLayerAttributeItem *item = new GwmLayerAttributeItem(index,fieldName,fields.field(index).type());
+//                GwmLayerAttributeItem *item = new GwmLayerAttributeItem(index,fieldName,fields.field(index).type());
+                GwmVariable item = {index,fieldName,fields.field(index).type(),true};
     //            item->setData(index);
-                mIndepVarModel->appendRow(item);
+                mIndepVarModel->append(item);
     //            qDebug() << mIndepVarModel->indexFromItem(item).internalPointer();
             }
         }
@@ -111,21 +112,22 @@ void GwmIndepVarSelectorWidget::onDepVarChanged(QString depVarName)
 void GwmIndepVarSelectorWidget::onAddIndepVarBtn()
 {
     if(!mSelectedIndepVarModel){
-        mSelectedIndepVarModel = new GwmLayerAttributeItemModel(this);
+        mSelectedIndepVarModel = new GwmVariableItemModel(this);
 //        qDebug() << "mSelectedAttributeModel";
     }
     QModelIndexList selected = ui->mIndepVarView->selectionModel()->selectedIndexes();
     for(QModelIndex index : selected){
         if(index.isValid()){
-            GwmLayerAttributeItem *item = mIndepVarModel->itemFromIndex(index)->clone();
-            mSelectedIndepVarModel->appendRow(item);
+//            GwmLayerAttributeItem *item = mIndepVarModel->itemFromIndex(index)->clone();
+            GwmVariable item = mIndepVarModel->itemFromIndex(index);
+            mSelectedIndepVarModel->append(item);
 //            qDebug() << index;
         }
     }
     for(QModelIndex index : selected)
     {
         if(index.isValid()){
-            mIndepVarModel->removeRows(index.row(),1);
+            mIndepVarModel->remove(index.row(),1);
         }
     }
     ui->mSelectedIndepVarView->setModel(mSelectedIndepVarModel);
@@ -137,14 +139,15 @@ void GwmIndepVarSelectorWidget::onDelIndepVarBtn()
     QModelIndexList selected = ui->mSelectedIndepVarView->selectionModel()->selectedIndexes();
     for(QModelIndex index:selected){
         if(index.isValid()){
-            GwmLayerAttributeItem *item = mSelectedIndepVarModel->itemFromIndex(index)->clone();
-            mIndepVarModel->appendRow(item);
+//            GwmLayerAttributeItem *item = mSelectedIndepVarModel->itemFromIndex(index)->clone();
+            GwmVariable item = mSelectedIndepVarModel->itemFromIndex(index);
+            mIndepVarModel->append(item);
         }
     }
     for(QModelIndex index:selected)
     {
         if(index.isValid()){
-            mSelectedIndepVarModel->removeRows(index.row(),1);
+            mSelectedIndepVarModel->remove(index.row(),1);
         }
     }
     emit selectedIndepVarChangedSignal();

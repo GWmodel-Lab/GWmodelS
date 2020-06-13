@@ -292,12 +292,12 @@ void GwmScalableGWROptionsDialog::updateFields()
         mTaskThread->setDepVar(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
     }
     // 自变量设置
-    GwmLayerAttributeItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
+    GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
     if (selectedIndepVarModel)
     {
         if (selectedIndepVarModel->rowCount() > 0)
         {
-            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
+//            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
         }
     }
     // 带宽设置

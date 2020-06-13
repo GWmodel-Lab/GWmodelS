@@ -8,6 +8,8 @@
 #include "Model/gwmlayerattributeitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
 
+#include "Model/gwmvariableitemmodel.h"
+
 namespace Ui {
 class GwmGWROptionsDialog;
 }
@@ -25,7 +27,7 @@ private:
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
     GwmGWRTaskThread* mTaskThread = nullptr;
-    GwmLayerAttributeItemModel* mDepVarModel;
+    GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
 
 public slots:

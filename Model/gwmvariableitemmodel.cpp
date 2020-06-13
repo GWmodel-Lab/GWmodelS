@@ -108,6 +108,31 @@ bool GwmVariableItemModel::remove(int row, int count)
     return true;
 }
 
+bool GwmVariableItemModel::clear(){
+    if (rowCount() <= 0) return true;
+    beginRemoveRows(QModelIndex(),0,rowCount()-1);
+    mItems.clear();
+    endRemoveRows();
+    return true;
+}
+
+GwmVariable GwmVariableItemModel::itemFromIndex(const QModelIndex &index) const{
+    if(index.isValid()){
+        return mItems[index.row()];
+    }
+    return *(new GwmVariable);
+}
+
+QList<GwmVariable> GwmVariableItemModel::attributeItemList() const
+{
+    return mItems;
+}
+
+GwmVariable GwmVariableItemModel::item(int i) const
+{
+    return mItems[i];
+}
+
 bool GwmVariableItemModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     beginInsertRows(parent, row, row + count - 1);

@@ -7,6 +7,8 @@
 #include <Model/gwmlayerattributeitemmodel.h>
 #include <Model/gwmlayerattributeitem.h>
 
+#include <Model/gwmvariableitemmodel.h>
+
 namespace Ui {
 class GwmIndepVarSelectorWidget;
 }
@@ -25,16 +27,16 @@ signals:
 private:
     Ui::GwmIndepVarSelectorWidget *ui;
     QgsVectorLayer* mLayer = nullptr;
-    GwmLayerAttributeItemModel *mIndepVarModel = nullptr;
-    GwmLayerAttributeItemModel *mSelectedIndepVarModel = nullptr;
+    GwmVariableItemModel *mIndepVarModel = nullptr;
+    GwmVariableItemModel *mSelectedIndepVarModel = nullptr;
 
 public:
     void layerChanged(QgsVectorLayer* layer = nullptr);
     void onDepVarChanged(QString depVarName);
     void onAddIndepVarBtn();
     void onDelIndepVarBtn();
-    GwmLayerAttributeItemModel *indepVarModel() const;
-    GwmLayerAttributeItemModel *selectedIndepVarModel() const;
+    GwmVariableItemModel *indepVarModel() const;
+    GwmVariableItemModel *selectedIndepVarModel() const;
 
 private:
     bool isNumeric(QVariant::Type type);

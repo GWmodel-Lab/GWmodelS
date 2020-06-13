@@ -38,6 +38,13 @@ public:
     bool remove(int row);
     bool remove(int row, int count);
 
+    GwmVariable itemFromIndex(const QModelIndex& index) const;
+    QList<GwmVariable> attributeItemList() const;
+
+    GwmVariable item(int i) const;
+
+    bool clear();
+
 protected:
 
     // Add data:
