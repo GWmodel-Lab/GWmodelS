@@ -5,6 +5,7 @@
 #include <QButtonGroup>
 #include <QFileDialog>
 
+#include <Model/gwmvariableitemmodel.h>
 
 GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmRobustGWRTaskThread* thread,QWidget *parent) :
     QDialog(parent),
@@ -398,19 +399,19 @@ void GwmRobustGWROptionsDialog::updateFields()
         mTaskThread->setDepVar(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
     }
     // 自变量设置
-    GwmLayerAttributeItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
+    GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
     if (selectedIndepVarModel)
     {
         if (selectedIndepVarModel->rowCount() > 0)
         {
-            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
+//            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
         }
         else
         {
-            GwmLayerAttributeItemModel* indepVarModel = ui->mIndepVarSelector->indepVarModel();
+            GwmVariableItemModel* indepVarModel = ui->mIndepVarSelector->indepVarModel();
             if (indepVarModel)
             {
-                mTaskThread->setIndepVars(indepVarModel->attributeItemList());
+//                mTaskThread->setIndepVars(indepVarModel->attributeItemList());
             }
         }
     }

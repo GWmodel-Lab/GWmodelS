@@ -155,7 +155,7 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::exportLayerBtnSignal, this, &MainWidget::onExportLayerAsShpfile);
     connect(toolbar, &GwmToolbar::zoomToLayerBtnSignal,this,&MainWidget::onZoomToLayerBtn);
     connect(toolbar, &GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
-    connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRNewBtnClicked);
+    connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRBtnClicked);
 
 }
 
