@@ -7,16 +7,6 @@ GwmIndependentVariableSelector::GwmIndependentVariableSelector()
 
 }
 
-QList<GwmVariable> GwmIndependentVariableSelector::indepVars() const
-{
-    return mIndepVars;
-}
-
-void GwmIndependentVariableSelector::setIndepVars(const QList<GwmVariable> &indepVars)
-{
-    mIndepVars = indepVars;
-}
-
 QList<GwmVariable> GwmIndependentVariableSelector::optimize(IIndependentVariableSelectable *instance)
 {
     QList<int> curIndex, restIndex;
@@ -88,14 +78,4 @@ QPair<QList<int>, double> GwmIndependentVariableSelector::select(QList<QPair<QLi
             return models[i];
         }
     }
-}
-
-double GwmIndependentVariableSelector::getThreshold() const
-{
-    return mThreshold;
-}
-
-void GwmIndependentVariableSelector::setThreshold(double threshold)
-{
-    mThreshold = threshold;
 }

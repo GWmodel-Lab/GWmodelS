@@ -25,7 +25,7 @@ public:
     virtual GwmDistance* clone() = 0;
 
 public:
-    virtual vec distance(rowvec target, mat dataPoints) = 0;
+    virtual vec distance(const rowvec& target, const mat& dataPoints) = 0;
 };
 
 

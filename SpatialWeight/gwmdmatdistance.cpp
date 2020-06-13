@@ -18,17 +18,7 @@ GwmDMatDistance::GwmDMatDistance(const GwmDMatDistance &distance)
     mFeatureCount = distance.mFeatureCount;
 }
 
-QString GwmDMatDistance::dMatFile() const
-{
-    return mDMatFile;
-}
-
-void GwmDMatDistance::setDMatFile(const QString &dMatFile)
-{
-    mDMatFile = dMatFile;
-}
-
-vec GwmDMatDistance::distance(rowvec params, mat dataPoints)
+vec GwmDMatDistance::distance(const rowvec& params, const mat& dataPoints)
 {
     QFile dmat(mDMatFile);
     int focus = params(0);
@@ -43,14 +33,4 @@ vec GwmDMatDistance::distance(rowvec params, mat dataPoints)
     {
         return vec(mFeatureCount, fill::zeros);
     }
-}
-
-int GwmDMatDistance::featureCount() const
-{
-    return mFeatureCount;
-}
-
-void GwmDMatDistance::setFeatureCount(int featureCount)
-{
-    mFeatureCount = featureCount;
 }

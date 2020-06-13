@@ -20,7 +20,7 @@ public:
     void setDMatFile(const QString &dMatFile);
 
 public:
-    virtual vec distance(rowvec params, mat dataPoints) override;
+    virtual vec distance(const rowvec& params, const mat& dataPoints) override;
 
     int featureCount() const;
     void setFeatureCount(int featureCount);
@@ -29,5 +29,25 @@ private:
     QString mDMatFile;
     int mFeatureCount;
 };
+
+inline int GwmDMatDistance::featureCount() const
+{
+    return mFeatureCount;
+}
+
+inline void GwmDMatDistance::setFeatureCount(int featureCount)
+{
+    mFeatureCount = featureCount;
+}
+
+inline QString GwmDMatDistance::dMatFile() const
+{
+    return mDMatFile;
+}
+
+inline void GwmDMatDistance::setDMatFile(const QString &dMatFile)
+{
+    mDMatFile = dMatFile;
+}
 
 #endif // GWMDMATDISTANCE_H

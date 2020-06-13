@@ -7,7 +7,6 @@ struct IMultivariableAnalysis
 {
     virtual QList<GwmVariable> variables() const = 0;
     virtual void setVariables(const QList<GwmVariable>& variables) = 0;
-    virtual void setVariables(const QList<GwmVariable>&& variables) = 0;
 };
 
 #endif // GWMMULTIVARIABLEANALYSIS_H

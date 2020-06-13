@@ -6,10 +6,10 @@
 class GwmMinkwoskiDistance : public GwmDistance
 {
 public:
-    static mat CoordinateRotate(mat coords, double theta);
-    static vec ChessDistance(rowvec out_loc, mat in_locs);
-    static vec ManhattonDistance(rowvec out_loc, mat in_locs);
-    static vec MinkwoskiDistance(rowvec out_loc, mat in_locs, double p);
+    static mat CoordinateRotate(const mat& coords, double theta);
+    static vec ChessDistance(const rowvec& out_loc, const mat& in_locs);
+    static vec ManhattonDistance(const rowvec& out_loc, const mat& in_locs);
+    static vec MinkwoskiDistance(const rowvec& out_loc, const mat& in_locs, double p);
 
 public:
     GwmMinkwoskiDistance();
@@ -28,11 +28,47 @@ public:
     void setTheta(double theta);
 
 public:
-    virtual vec distance(rowvec target, mat dataPoints) override;
+    virtual vec distance(const rowvec& target, const mat& dataPoints) override;
 
 private:
     double mPoly;
     double mTheta;
 };
+
+inline vec GwmMinkwoskiDistance::ChessDistance(const rowvec& out_loc, const mat& in_locs)
+{
+    return max(abs(in_locs.each_row() - out_loc), 1);
+}
+
+inline vec GwmMinkwoskiDistance::ManhattonDistance(const rowvec& out_loc, const mat& in_locs)
+{
+    return sum(abs(in_locs.each_row() - out_loc), 1);
+}
+
+inline vec GwmMinkwoskiDistance::MinkwoskiDistance(const rowvec& out_loc, const mat& in_locs, double p)
+{
+    vec temp = abs(in_locs.each_row() - out_loc);
+    return pow(sum(pow(temp, p), 1), 1.0 / p);
+}
+
+inline double GwmMinkwoskiDistance::poly() const
+{
+    return mPoly;
+}
+
+inline void GwmMinkwoskiDistance::setPoly(double poly)
+{
+    mPoly = poly;
+}
+
+inline double GwmMinkwoskiDistance::theta() const
+{
+    return mTheta;
+}
+
+inline void GwmMinkwoskiDistance::setTheta(double theta)
+{
+    mTheta = theta;
+}
 
 #endif // GWMMINKWOSKIDISTANCE_H

@@ -642,24 +642,32 @@ void MainWidget::onGWRNewBtnClicked()
     QgsFields fields = dataLayer->fields();
     GwmVariable depVar = {0, fields[0].name(), fields[0].type(), fields[0].isNumeric()};
     QList<GwmVariable> indepVars;
-    for (int i = 0; i < fields.size(); i++)
+    for (int i : {1, 10, 12, 13, 15})
     {
         indepVars.append({ i, fields[i].name(), fields[i].type(), fields[i].isNumeric()});
     }
     algorithm->setDependentVariable(depVar);
     algorithm->setIndependentVariables(indepVars);
     algorithm->setIsAutoselectIndepVars(true);
+    algorithm->setIndepVarSelectionThreshold(150.0);
     GwmSpatialWeight spatialWeight;
-    spatialWeight.setDistance(new GwmCRSDistance(false));
-    spatialWeight.setWeight(new GwmBandwidthWeight(100, true, GwmBandwidthWeight::Gaussian));
+    spatialWeight.setDistance(GwmCRSDistance(false));
+    spatialWeight.setWeight(GwmBandwidthWeight(36, true, GwmBandwidthWeight::Gaussian));
     algorithm->setSpatialWeight(spatialWeight);
     algorithm->setIsAutoselectBandwidth(true);
+    algorithm->setBandwidthSelectionCriterionType(GwmBasicGWRAlgorithm::CV);
+    algorithm->setHasHatMatrix(true);
+    algorithm->setHasFTest(true);
+
 
     GwmProgressDialog* progressDlg = new GwmProgressDialog(algorithm);
     if (progressDlg->exec() == QDialog::Accepted)
     {
         QgsVectorLayer* resultLayer = algorithm->resultLayer();
         addLayerToModel(resultLayer);
+
+        GwmDiagnostic diagnostic = algorithm->diagnostic();
+        GwmBasicGWRAlgorithm::FTestResultPack fTestResult = algorithm->fTestResult();
     }
 }
 

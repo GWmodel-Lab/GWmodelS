@@ -7,7 +7,6 @@ struct IMonovariableAnalysis
 {
     virtual GwmVariable variable() const = 0;
     virtual void setVariable(const GwmVariable& variable) = 0;
-    virtual void setVariable(const GwmVariable&& variable) = 0;
 };
 
 #endif // GWMMONOVARIABLEANALYSIS_H

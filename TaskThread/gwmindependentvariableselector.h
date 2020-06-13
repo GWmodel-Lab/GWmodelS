@@ -34,4 +34,24 @@ private:
     double mThreshold;
 };
 
+inline QList<GwmVariable> GwmIndependentVariableSelector::indepVars() const
+{
+    return mIndepVars;
+}
+
+inline void GwmIndependentVariableSelector::setIndepVars(const QList<GwmVariable> &indepVars)
+{
+    mIndepVars = indepVars;
+}
+
+inline double GwmIndependentVariableSelector::getThreshold() const
+{
+    return mThreshold;
+}
+
+inline void GwmIndependentVariableSelector::setThreshold(double threshold)
+{
+    mThreshold = threshold;
+}
+
 #endif // GWMINDEPENDENTVARIABLESELECTOR_H

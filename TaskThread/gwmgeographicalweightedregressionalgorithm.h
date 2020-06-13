@@ -57,22 +57,12 @@ public:     // IRegressionAnalysis interface
         mDepVar = variable;
     }
 
-    inline void setDependentVariable(const GwmVariable &&variable) override
-    {
-        mDepVar = variable;
-    }
-
     inline QList<GwmVariable> independentVariables() const override
     {
         return mIndepVars;
     }
 
     inline void setIndependentVariables(const QList<GwmVariable> &variables) override
-    {
-        mIndepVars = variables;
-    }
-
-    inline void setIndependentVariables(const QList<GwmVariable> &&variables) override
     {
         mIndepVars = variables;
     }
@@ -107,5 +97,15 @@ protected:
 
     GwmDiagnostic mDiagnostic;
 };
+
+inline mat GwmGeographicalWeightedRegressionAlgorithm::betas() const
+{
+    return mBetas;
+}
+
+inline void GwmGeographicalWeightedRegressionAlgorithm::setBetas(const mat &betas)
+{
+    mBetas = betas;
+}
 
 #endif // GWMGEOGRAPHICALWEIGHTEDREGRESSIONALGORITHM_H

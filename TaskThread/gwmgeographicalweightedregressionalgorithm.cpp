@@ -75,14 +75,3 @@ void GwmGeographicalWeightedRegressionAlgorithm::initXY(mat &x, mat &y, const Gw
         else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
     }
 }
-
-
-mat GwmGeographicalWeightedRegressionAlgorithm::betas() const
-{
-    return mBetas;
-}
-
-void GwmGeographicalWeightedRegressionAlgorithm::setBetas(const mat &betas)
-{
-    mBetas = betas;
-}

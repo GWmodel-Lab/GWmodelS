@@ -1,4 +1,12 @@
 #include "gwmbasicgwralgorithm.h"
+#include <gsl/gsl_cdf.h>
+
+
+GwmEnumValueNameMapper<GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType> GwmBasicGWRAlgorithm::BandwidthSelectionCriterionTypeNameMapper = {
+    std::make_pair(GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType::CV, "CV"),
+    std::make_pair(GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType::AIC, "AIC")
+};
+
 
 GwmBasicGWRAlgorithm::GwmBasicGWRAlgorithm() : GwmGeographicalWeightedRegressionAlgorithm()
 {
@@ -9,11 +17,13 @@ GwmBasicGWRAlgorithm::GwmBasicGWRAlgorithm() : GwmGeographicalWeightedRegression
 void GwmBasicGWRAlgorithm::run()
 {
     // 点位初始化
+    emit message(QString(tr("Setting data points")) + (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
     initPoints();
 
     // 优选模型
-    if (isAutoselectIndepVars)
+    if (mIsAutoselectIndepVars)
     {
+        emit message(QString(tr("Automatically selecting independent variables ...")));
         mIndepVarSelector.setIndepVars(mIndepVars);
         mIndepVarSelector.setThreshold(mIndepVarSelectionThreshold);
         QList<GwmVariable> selectedIndepVars = mIndepVarSelector.optimize(this);
@@ -24,11 +34,14 @@ void GwmBasicGWRAlgorithm::run()
     }
 
     // 初始化
+    emit message(QString(tr("Setting X and Y.")));
     initXY(mX, mY, mDepVar, mIndepVars);
 
     // 优选带宽
-    if (isAutoselectBandwidth)
+    if (mIsAutoselectBandwidth)
     {
+        emit message(QString(tr("Automatically selecting bandwidth ...")));
+        emit message(QString(tr("Setting X and Y.")));
         GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
         mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
         mBandwidthSizeSelector.setLower(bandwidthWeight0->adaptive() ? 20 : 0.0);
@@ -53,9 +66,9 @@ void GwmBasicGWRAlgorithm::run()
     }
 
     // 解算模型
-    if (hasHatMatrix)
+    if (mHasHatMatrix)
     {
-        uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
+        uword nDp = mDataPoints.n_rows;
         mat betasSE, S(isStoreS() ? nDp : 1, nDp, fill::zeros);
         vec shat, qDiag;
         mBetas = regression(mX, mY, betasSE, shat, qDiag, S);
@@ -71,7 +84,7 @@ void GwmBasicGWRAlgorithm::run()
         vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
         vec dyhat2 = (mY - yhat) % (mY - yhat);
         vec localR2 = vec(nDp, fill::zeros);
-        for (int i = 0; i < nDp; i++)
+        for (uword i = 0; i < nDp; i++)
         {
             vec w = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
             double tss = sum(dybar2 % w);
@@ -89,8 +102,31 @@ void GwmBasicGWRAlgorithm::run()
             qMakePair(QString("%1_TV"), betasTV),
             qMakePair(QString("localR2"), localR2)
         };
-
         createResultLayer(resultLayerData);
+
+        if (mHasHatMatrix && mHasFTest)
+        {
+            double trQtQ = DBL_MAX;
+            if (isStoreS())
+            {
+                mat EmS = eye(nDp, nDp) - S;
+                mat Q = trans(EmS) * EmS;
+                trQtQ = sum(diagvec(trans(Q) * Q));
+            }
+            else
+            {
+                trQtQ = (this->*calcTrQtQ())();
+            }
+            FTestParameters fTestParams;
+            fTestParams.nDp = mDataLayer->featureCount();
+            fTestParams.nVar = mIndepVars.size() + 1;
+            fTestParams.trS = shat(0);
+            fTestParams.trStS = shat(1);
+            fTestParams.trQ = sum(qDiag);
+            fTestParams.trQtQ = trQtQ;
+            fTestParams.gwrRSS = sum(res % res);
+            fTest(fTestParams);
+        }
     }
     else
     {
@@ -132,11 +168,18 @@ double GwmBasicGWRAlgorithm::criterion(QList<GwmVariable> indepVars)
             return DBL_MAX;
         }
     }
-    return GwmGeographicalWeightedRegressionAlgorithm::AICc(x, y, betas.t(), shat);
+    double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(x, y, betas.t(), shat);
+    QStringList names;
+    for (const GwmVariable& v : indepVars)
+        names << v.name;
+    QString msg = QString("Model: %1 ~ %2 (AICc Value: %3)").arg(mDepVar.name).arg(names.join(" + ")).arg(value);
+    emit message(msg);
+    return value;
 }
 
 mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y)
 {
+    emit message("Regression ...");
     uword nRp = mRegressionPoints.n_rows, nVar = x.n_cols;
     const mat& points = hasRegressionLayer() ? mRegressionPoints : mDataPoints;
     mat betas(nVar, nRp, fill::zeros);
@@ -162,6 +205,7 @@ mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y)
 
 mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
+    emit message("Regression ...");
     uword nDp = x.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     betasSE = mat(nVar, nDp, fill::zeros);
@@ -272,7 +316,7 @@ void GwmBasicGWRAlgorithm::createResultLayer(QList<QPair<QString, const mat> > d
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAIC(GwmBandwidthWeight* bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
-    mat betas(nDp, nVar, fill::zeros);
+    mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
@@ -295,12 +339,18 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAIC(GwmBandwidthWeight* bandw
             return DBL_MAX;
         }
     }
-    return GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas.t(), shat);
+    double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas.t(), shat);
+    QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
+            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+            .arg(bandwidthWeight->bandwidth())
+            .arg(value);
+    emit message(msg);
+    return value;
 }
 
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCV(GwmBandwidthWeight *bandwidthWeight)
 {
-    uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
+    uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
@@ -323,58 +373,200 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCV(GwmBandwidthWeight *bandwi
             return DBL_MAX;
         }
     }
+    QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+            .arg(bandwidthWeight->bandwidth())
+            .arg(cv);
+    emit message(msg);
     return cv;
 }
 
-double GwmBasicGWRAlgorithm::indepVarSelectionThreshold() const
+void GwmBasicGWRAlgorithm::fTest(GwmBasicGWRAlgorithm::FTestParameters params)
 {
-    return mIndepVarSelectionThreshold;
+    emit message("F Test");
+    GwmFTestResult f1, f2, f4;
+    double v1 = params.trS, v2 = params.trStS;
+    int nDp = params.nDp, nVar = params.nVar;
+    emit tick(0, nVar + 3);
+//    double edf = 1.0 * nDp - 2 * v1 + v2;
+    double RSSg = params.gwrRSS;
+    vec betao = solve(mX, mY);
+    vec residual = mY - mX * betao;
+    double RSSo = sum(residual % residual);
+    double DFo = nDp - nVar;
+    double delta1 = 1.0 * nDp - 2 * v1 + v2;
+    double sigma2delta1 = RSSg / delta1;
+//    double sigma2 = RSSg / nDp;
+    double trQ = params.trQ, trQtQ = params.trQtQ;
+    double lDelta1 = trQ;
+    double lDelta2 = trQtQ;
+
+    // F1 Test
+    f1.s = (RSSg/lDelta1)/(RSSo/DFo);
+    f1.df1 = lDelta1 * lDelta1 / lDelta2;
+    f1.df2 = DFo;
+    f1.p = gsl_cdf_fdist_P(f1.s, f1.df1, f1.df2);
+    emit tick(1, nVar + 3);
+
+    // F2 Test
+    f2.s = ((RSSo-RSSg)/(DFo-lDelta1))/(RSSo/DFo);
+    f2.df1 = (DFo-lDelta1) * (DFo-lDelta1) / (DFo - 2 * lDelta1 + lDelta2);
+    f2.df2 = DFo;
+    f2.p = gsl_cdf_fdist_Q(f2.s, f2.df1, f2.df2);
+    emit tick(2, nVar + 3);
+
+    // F3 Test
+    vec vk2(nVar, fill::zeros);
+    for (int i = 0; i < nVar; i++)
+    {
+        vec betasi = mBetas.col(i);
+        vec betasJndp = vec(nDp, fill::ones) * (sum(betasi) * 1.0 / nDp);
+        vk2(i) = (1.0 / nDp) * det(trans(betasi - betasJndp) * betasi);
+    }
+    QList<GwmFTestResult> f3;
+    f3.reserve(nVar);
+    for (int i = 0; i < nVar; i++)
+    {
+        double g1 = 0.0, g2 = 0.0, numdf = 0.0;
+        if (isStoreS())
+        {
+            mat B(nDp, nDp, fill::zeros);
+            mat ek = eye(nVar, nVar);
+            mat wspan(1, nVar, fill::ones);
+            for (int j = 0; j < nDp; j++)
+            {
+                vec w = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
+                mat xtw = trans(mX % (w * wspan));
+                B.row(j) = ek.row(i) * inv(xtw * mX) * xtw;
+            }
+            mat Bj = 1.0 / nDp * (B.t() * (eye(nDp, nDp) - (1.0 / nDp) * mat(nDp, nDp, fill::ones)) * B);
+            vec b = diagvec(Bj);
+            g1 = sum(b);
+            g2 = sum(b % b);
+            qDebug("Var %d tr(B)   = %lf", i, g1);
+            qDebug("Var %d tr(B.B) = %lf", i, g2);
+            numdf = g1 * g1 / g2;
+        }
+        else
+        {
+            vec diagB = (this->*calcDiagB())(i);
+            g1 = diagB(0);
+            g2 = diagB(1);
+            numdf = g1 * g1 / g2;
+        }
+        GwmFTestResult f3i;
+        f3i.s = (vk2(i) / g1) / sigma2delta1;
+        f3i.df1 = numdf;
+        f3i.df2 = f1.df1;
+        f3i.p = gsl_cdf_fdist_Q(f3i.s, numdf, f1.df1);
+        f3.append(f3i);
+        emit tick(3 + i, nVar + 3);
+    }
+
+    // F4 Test
+    f4.s = RSSg / RSSo;
+    f4.df1 = delta1;
+    f4.df2 = DFo;
+    f4.p = gsl_cdf_fdist_P(f4.s, f4.df1, f4.df2);
+    emit tick(nVar + 3, nVar + 3);
+    // 保存结果
+    mF1TestResult = f1;
+    mF2TestResult = f2;
+    mF3TestResult = f3;
+    mF4TestResult = f4;
 }
 
-void GwmBasicGWRAlgorithm::setIndepVarSelectionThreshold(double indepVarSelectionThreshold)
+double GwmBasicGWRAlgorithm::calcTrQtQSerial()
 {
-    mIndepVarSelectionThreshold = indepVarSelectionThreshold;
+    double trQtQ = 0.0;
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    emit message(tr("Calculating the trace of matrix Q..."));
+    emit tick(0, nDp);
+    mat wspan(1, nVar, fill::ones);
+    for (arma::uword i = 0; i < nDp; i++)
+    {
+        vec wi = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+        mat xtwi = trans(mX % (wi * wspan));
+        try {
+            mat xtwxR = inv(xtwi * mX);
+            mat ci = xtwxR * xtwi;
+            mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+            vec pi = -trans(si);
+            pi(i) += 1.0;
+            double qi = sum(pi % pi);
+            trQtQ += qi * qi;
+            for (arma::uword j = i + 1; j < nDp; j++)
+            {
+                vec wj = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
+                mat xtwj = trans(mX % (wj * wspan));
+                try {
+                    mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
+                    vec pj = -trans(sj);
+                    pj(j) += 1.0;
+                    double qj = sum(pi % pj);
+                    trQtQ += qj * qj * 2.0;
+                } catch (...) {
+                    emit error("Matrix seems to be singular.");
+                    emit tick(nDp, nDp);
+                    return DBL_MAX;
+                }
+            }
+        } catch (...) {
+            emit error("Matrix seems to be singular.");
+            emit tick(nDp, nDp);
+            return DBL_MAX;
+        }
+        emit tick(i + 1, nDp);
+    }
+    return trQtQ;
 }
 
-QgsVectorLayer *GwmBasicGWRAlgorithm::regressionLayer() const
+vec GwmBasicGWRAlgorithm::calcDiagBSerial(int i)
 {
-    return mRegressionLayer;
-}
-
-void GwmBasicGWRAlgorithm::setRegressionLayer(QgsVectorLayer *layer)
-{
-    mRegressionLayer = layer;
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
+    mat ek = eye(nVar, nVar);
+    mat wspan(1, nVar, fill::ones);
+    for (arma::uword j = 0; j < nDp; j++)
+    {
+        vec w = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
+        mat xtw = trans(mX % (w * wspan));
+        try {
+            mat C = trans(xtw) * inv(xtw * mX);
+            c += C.col(i);
+        } catch (...) {
+            emit error("Matrix seems to be singular.");
+            return { DBL_MAX, DBL_MAX };
+        }
+    }
+    for (arma::uword k = 0; k < nDp; k++)
+    {
+        vec w = mSpatialWeight.spatialWeight(mDataPoints.row(k), mDataPoints);
+        mat xtw = trans(mX % (w * wspan));
+        try {
+            mat C = trans(xtw) * inv(xtw * mX);
+            vec b = C.col(i);
+            diagB += (b % b - (1.0 / nDp) * (b % c));
+        } catch (...) {
+            emit error("Matrix seems to be singular.");
+            return { DBL_MAX, DBL_MAX };
+        }
+    }
+    diagB = 1.0 / nDp * diagB;
+    return { sum(diagB), sum(diagB % diagB) };
 }
 
 bool GwmBasicGWRAlgorithm::isValid()
 {
     if (GwmGeographicalWeightedRegressionAlgorithm::isValid())
     {
-        if (mRegressionLayer && hasHatMatrix)
+        if (mRegressionLayer && mHasHatMatrix)
             return false;
 
-        if (mRegressionLayer && hasFTest)
+        if (mRegressionLayer && mHasFTest)
             return false;
+
+        return true;
     }
     else return false;
-}
-
-bool GwmBasicGWRAlgorithm::autoselectIndepVars() const
-{
-    return isAutoselectIndepVars;
-}
-
-void GwmBasicGWRAlgorithm::setIsAutoselectIndepVars(bool value)
-{
-    isAutoselectIndepVars = value;
-}
-
-bool GwmBasicGWRAlgorithm::autoselectBandwidth() const
-{
-    return isAutoselectBandwidth;
-}
-
-void GwmBasicGWRAlgorithm::setIsAutoselectBandwidth(bool value)
-{
-    isAutoselectBandwidth = value;
 }

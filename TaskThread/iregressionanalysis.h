@@ -20,11 +20,9 @@ struct IRegressionAnalysis
 {
     virtual GwmVariable dependentVariable() const = 0;
     virtual void setDependentVariable(const GwmVariable& variable) = 0;
-    virtual void setDependentVariable(const GwmVariable&& variable) = 0;
 
     virtual QList<GwmVariable> independentVariables() const = 0;
     virtual void setIndependentVariables(const QList<GwmVariable>& variables) = 0;
-    virtual void setIndependentVariables(const QList<GwmVariable>&& variables) = 0;
 
     virtual GwmDiagnostic diagnostic() const = 0;
 

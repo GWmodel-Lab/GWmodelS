@@ -53,4 +53,58 @@ private:
     KernelFunctionType mKernel;
 };
 
+inline double GwmBandwidthWeight::GaussianKernelFunction(double dist, double bw) {
+  return exp((dist * dist)/((-2)*(bw * bw)));
+}
+
+inline double GwmBandwidthWeight::ExponentialKernelFunction(double dist, double bw) {
+  return exp(-dist/bw);
+}
+
+inline double GwmBandwidthWeight::BisquareKernelFunction(double dist, double bw) {
+  return dist > bw ? 0 : (1 - (dist * dist)/(bw * bw)) * (1 - (dist * dist)/(bw * bw));
+}
+
+inline double GwmBandwidthWeight::TricubeKernelFunction(double dist, double bw) {
+  return dist > bw ?
+              0 :
+              (1 - (dist * dist * dist)/(bw * bw * bw)) *
+              (1 - (dist * dist * dist)/(bw * bw * bw)) *
+              (1 - (dist * dist * dist)/(bw * bw * bw));
+}
+
+inline double GwmBandwidthWeight::BoxcarKernelFunction(double dist, double bw) {
+  return dist > bw ? 0 : 1;
+}
+
+inline double GwmBandwidthWeight::bandwidth() const
+{
+    return mBandwidth;
+}
+
+inline void GwmBandwidthWeight::setBandwidth(double bandwidth)
+{
+    mBandwidth = bandwidth;
+}
+
+inline double GwmBandwidthWeight::adaptive() const
+{
+    return mAdaptive;
+}
+
+inline void GwmBandwidthWeight::setAdaptive(double adaptive)
+{
+    mAdaptive = adaptive;
+}
+
+inline GwmBandwidthWeight::KernelFunctionType GwmBandwidthWeight::kernel() const
+{
+    return mKernel;
+}
+
+inline void GwmBandwidthWeight::setKernel(const KernelFunctionType &kernel)
+{
+    mKernel = kernel;
+}
+
 #endif // GWMBANDWIDTHWEIGHT_H

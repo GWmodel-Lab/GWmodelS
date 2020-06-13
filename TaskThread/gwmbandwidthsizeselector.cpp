@@ -5,46 +5,6 @@ GwmBandwidthSizeSelector::GwmBandwidthSizeSelector()
 
 }
 
-GwmBandwidthWeight *GwmBandwidthSizeSelector::bandwidth() const
-{
-    return mBandwidth;
-}
-
-void GwmBandwidthSizeSelector::setBandwidth(GwmBandwidthWeight *bandwidth)
-{
-    mBandwidth = bandwidth;
-}
-
-double GwmBandwidthSizeSelector::lower() const
-{
-    return mLower;
-}
-
-void GwmBandwidthSizeSelector::setLower(double lower)
-{
-    mLower = lower;
-}
-
-double GwmBandwidthSizeSelector::upper() const
-{
-    return mUpper;
-}
-
-void GwmBandwidthSizeSelector::setUpper(double upper)
-{
-    mUpper = upper;
-}
-
-QList<QPair<double, double> > GwmBandwidthSizeSelector::bandwidthCriterion() const
-{
-    return mBandwidthCriterion;
-}
-
-void GwmBandwidthSizeSelector::setBandwidthCriterion(const QList<QPair<double, double> > &bandwidthCriterion)
-{
-    mBandwidthCriterion = bandwidthCriterion;
-}
-
 GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable *instance)
 {
     GwmBandwidthWeight* w1 = new GwmBandwidthWeight(*mBandwidth);

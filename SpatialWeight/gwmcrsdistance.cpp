@@ -54,27 +54,15 @@ double GwmCRSDistance::SpGcdist(double lon1, double lon2, double lat1, double la
     return D*( 1 + f*H1*sinF2*cosG2 - f*H2*cosF2*sinG2 );
 }
 
-vec GwmCRSDistance::SpatialDistance(rowvec out_loc, mat in_locs)
+vec GwmCRSDistance::SpatialDistance(const rowvec& out_loc, const mat& in_locs)
 {
     int N = in_locs.n_rows, j;
     vec dists(N, fill::zeros);
     double uout = out_loc(0), vout = out_loc(1);
-
     for (j = 0; j < N; j++) {
       dists(j) = SpGcdist(in_locs(j, 0), uout, in_locs(j, 1), vout);
     }
     return dists;
-}
-
-vec GwmCRSDistance::EuclideanDistance(rowvec out_loc, mat in_locs)
-{
-    int n_in = in_locs.n_rows;
-    vec eu_dist(n_in);
-    for (int i = 0; i < n_in; i++)
-    {
-        eu_dist(i) = sum(pow(in_locs.row(i) - out_loc, 2));
-    }
-    return sqrt(eu_dist);
 }
 
 GwmCRSDistance::GwmCRSDistance() : GwmDistance()
@@ -90,21 +78,4 @@ GwmCRSDistance::GwmCRSDistance(bool isGeographic)
 GwmCRSDistance::GwmCRSDistance(const GwmCRSDistance &distance)
 {
     mGeographic = distance.mGeographic;
-}
-
-bool GwmCRSDistance::geographic() const
-{
-    return mGeographic;
-}
-
-void GwmCRSDistance::setGeographic(bool geographic)
-{
-    mGeographic = geographic;
-}
-
-vec GwmCRSDistance::distance(rowvec target, mat dataPoints)
-{
-    return mGeographic ?
-                SpatialDistance(target, dataPoints) :
-                EuclideanDistance(target, dataPoints);
 }
