@@ -4,13 +4,3 @@ GwmSpatialMonoscaleAlgorithm::GwmSpatialMonoscaleAlgorithm() : GwmSpatialAlgorit
 {
 
 }
-
-GwmSpatialWeight GwmSpatialMonoscaleAlgorithm::spatialWeight() const
-{
-    return mSpatialWeight;
-}
-
-void GwmSpatialMonoscaleAlgorithm::setSpatialWeight(const GwmSpatialWeight &spatialWeight)
-{
-    mSpatialWeight = spatialWeight;
-}

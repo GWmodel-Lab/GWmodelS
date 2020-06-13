@@ -30,6 +30,10 @@ void GwmBasicGWRAlgorithm::run()
         if (selectedIndepVars.size() > 0)
         {
             mIndepVars = selectedIndepVars;
+            // 绘图
+            QVariant data = QVariant::fromValue(mIndepVarSelector.indepVarsCriterion());
+            emit plot(data, &GwmIndependentVariableSelector::PlotModelOrder);
+            emit plot(data, &GwmIndependentVariableSelector::PlotModelAICcs);
         }
     }
 
@@ -44,8 +48,10 @@ void GwmBasicGWRAlgorithm::run()
         emit message(QString(tr("Setting X and Y.")));
         GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
         mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
-        mBandwidthSizeSelector.setLower(bandwidthWeight0->adaptive() ? 20 : 0.0);
-        mBandwidthSizeSelector.setUpper(bandwidthWeight0->adaptive() ? mDataPoints.n_rows : DBL_MAX);
+        double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
+        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : findMaxDistance();
+        mBandwidthSizeSelector.setLower(lower);
+        mBandwidthSizeSelector.setUpper(upper);
         switch (mBandwidthSelectionCriterionType)
         {
         case BandwidthSelectionCriterionType::CV:
@@ -62,6 +68,9 @@ void GwmBasicGWRAlgorithm::run()
         if (bandwidthWeight)
         {
             mSpatialWeight.setWeight(bandwidthWeight);
+            // 绘图
+            QVariant data = QVariant::fromValue(mBandwidthSizeSelector.bandwidthCriterion());
+            emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
         }
     }
 
@@ -156,14 +165,14 @@ double GwmBasicGWRAlgorithm::criterion(QList<GwmVariable> indepVars)
         mat xtwy = xtw * y;
         try
         {
-            mat xtwx_inv = inv(xtwx);
+            mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
             mat ci = xtwx_inv * xtw;
             mat si = x.row(i) * ci;
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (std::exception e)
+        catch (...)
         {
             return DBL_MAX;
         }
@@ -191,7 +200,7 @@ mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y)
         mat xtwy = xtw * y;
         try
         {
-            mat xtwx_inv = inv(xtwx);
+            mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
             emit tick(i + 1, nRp);
         }
@@ -219,7 +228,7 @@ mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y, mat &betasSE, v
         mat xtwy = xtw * y;
         try
         {
-            mat xtwx_inv = inv(xtwx);
+            mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
             mat ci = xtwx_inv * xtw;
             betasSE.col(i) = sum(ci % ci, 1);
@@ -327,7 +336,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAIC(GwmBandwidthWeight* bandw
         mat xtwy = xtw * mY;
         try
         {
-            mat xtwx_inv = inv(xtwx);
+            mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
             mat ci = xtwx_inv * xtw;
             mat si = mX.row(i) * ci;
@@ -363,7 +372,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCV(GwmBandwidthWeight *bandwi
         mat xtwy = xtw * mY;
         try
         {
-            mat xtwx_inv = inv(xtwx);
+            mat xtwx_inv = inv_sympd(xtwx);
             vec beta = xtwx_inv * xtwy;
             double res = mY(i) - det(mX.row(i) * beta);
             cv += res * res;
@@ -437,7 +446,7 @@ void GwmBasicGWRAlgorithm::fTest(GwmBasicGWRAlgorithm::FTestParameters params)
             {
                 vec w = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
                 mat xtw = trans(mX % (w * wspan));
-                B.row(j) = ek.row(i) * inv(xtw * mX) * xtw;
+                B.row(j) = ek.row(i) * inv_sympd(xtw * mX) * xtw;
             }
             mat Bj = 1.0 / nDp * (B.t() * (eye(nDp, nDp) - (1.0 / nDp) * mat(nDp, nDp, fill::ones)) * B);
             vec b = diagvec(Bj);
@@ -476,6 +485,18 @@ void GwmBasicGWRAlgorithm::fTest(GwmBasicGWRAlgorithm::FTestParameters params)
     mF4TestResult = f4;
 }
 
+double GwmBasicGWRAlgorithm::findMaxDistance()
+{
+    int nDp = mDataPoints.n_rows;
+    double maxD = 0.0;
+    for (int i = 0; i < nDp; i++)
+    {
+        double d = max(mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints));
+        maxD = d > maxD ? d : maxD;
+    }
+    return maxD;
+}
+
 double GwmBasicGWRAlgorithm::calcTrQtQSerial()
 {
     double trQtQ = 0.0;
@@ -488,7 +509,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQSerial()
         vec wi = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
         mat xtwi = trans(mX % (wi * wspan));
         try {
-            mat xtwxR = inv(xtwi * mX);
+            mat xtwxR = inv_sympd(xtwi * mX);
             mat ci = xtwxR * xtwi;
             mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
             vec pi = -trans(si);
@@ -500,7 +521,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQSerial()
                 vec wj = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
                 mat xtwj = trans(mX % (wj * wspan));
                 try {
-                    mat sj = mX.row(j) * inv(xtwj * mX) * xtwj;
+                    mat sj = mX.row(j) * inv_sympd(xtwj * mX) * xtwj;
                     vec pj = -trans(sj);
                     pj(j) += 1.0;
                     double qj = sum(pi % pj);
@@ -532,7 +553,7 @@ vec GwmBasicGWRAlgorithm::calcDiagBSerial(int i)
         vec w = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
         mat xtw = trans(mX % (w * wspan));
         try {
-            mat C = trans(xtw) * inv(xtw * mX);
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
             c += C.col(i);
         } catch (...) {
             emit error("Matrix seems to be singular.");
@@ -544,7 +565,7 @@ vec GwmBasicGWRAlgorithm::calcDiagBSerial(int i)
         vec w = mSpatialWeight.spatialWeight(mDataPoints.row(k), mDataPoints);
         mat xtw = trans(mX % (w * wspan));
         try {
-            mat C = trans(xtw) * inv(xtw * mX);
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
             vec b = C.col(i);
             diagB += (b % b - (1.0 / nDp) * (b % c));
         } catch (...) {

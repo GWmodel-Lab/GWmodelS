@@ -66,17 +66,20 @@ public:
     BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 
-
-public:     // GwmTaskThread interface
-    QString name() const override { return tr("Basic GWR"); };
-
-    FTestResultPack fTestResult()
+    FTestResultPack fTestResult() const
     {
         return { mF1TestResult, mF2TestResult, mF3TestResult, mF4TestResult };
     }
 
+    BandwidthCriterionList bandwidthSelectorCriterions() const;
 
-protected:  // GwmSpatialAlgorithm interface
+    IndepVarsCriterionList indepVarSelectorCriterions() const;
+
+public:     // GwmTaskThread interface
+    QString name() const override { return tr("Basic GWR"); };
+
+
+public:  // GwmSpatialAlgorithm interface
     bool isValid() override;
 
 
@@ -105,12 +108,13 @@ protected:
     mat regression(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
 
 private:
-
     GwmDiagnostic calcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
     void createResultLayer(QList<QPair<QString, const mat> > data);
     double bandwidthSizeCriterionAIC(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionCV(GwmBandwidthWeight* bandwidthWeight);
     void fTest(FTestParameters params);
+
+    double findMaxDistance();
 
     CalcTrQtQFunction calcTrQtQ()
     {
@@ -213,6 +217,16 @@ inline bool GwmBasicGWRAlgorithm::autoselectBandwidth() const
 inline void GwmBasicGWRAlgorithm::setIsAutoselectBandwidth(bool value)
 {
     mIsAutoselectBandwidth = value;
+}
+
+inline IndepVarsCriterionList GwmBasicGWRAlgorithm::indepVarSelectorCriterions() const
+{
+    return mIndepVarSelector.indepVarsCriterion();
+}
+
+inline BandwidthCriterionList GwmBasicGWRAlgorithm::bandwidthSelectorCriterions() const
+{
+    return mBandwidthSizeSelector.bandwidthCriterion();
 }
 
 #endif // GWMBASICGWRALGORITHM_H

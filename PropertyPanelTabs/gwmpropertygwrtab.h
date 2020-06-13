@@ -5,7 +5,7 @@
 #include <QTableWidgetItem>
 
 #include "gwmplot.h"
-#include "Model/gwmlayergwritem.h"
+#include "Model/gwmlayerbasicgwritem.h"
 
 namespace Ui {
 class GwmPropertyGWRTab;
@@ -29,12 +29,12 @@ public:
     static QMap<GwmGWRTaskThread::BandwidthType, QString> bandwidthTypeNameDict;
 
 public:
-    explicit GwmPropertyGWRTab(QWidget *parent = nullptr, GwmLayerGWRItem* item = nullptr);
+    explicit GwmPropertyGWRTab(QWidget *parent = nullptr, GwmLayerBasicGWRItem* item = nullptr);
     ~GwmPropertyGWRTab();
 
 private:
     Ui::GwmPropertyGWRTab *ui;
-    GwmLayerGWRItem* mLayerItem;
+    GwmLayerBasicGWRItem* mLayerItem;
 
     GwmPlot* mModelSelVarsPlot;
     GwmPlot* mModelSelAICsPlot;

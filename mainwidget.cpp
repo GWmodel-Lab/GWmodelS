@@ -51,6 +51,8 @@
 
 #include <SpatialWeight/gwmcrsdistance.h>
 
+#include <Model/gwmlayerbasicgwritem.h>
+
 //鲁棒GWR
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -604,7 +606,7 @@ void MainWidget::onShowCoordinateTransDlg(const QModelIndex &index)
 
 void MainWidget::onGWRBtnClicked()
 {
-    GwmGWRTaskThread* gwrTaskThread = new GwmGWRTaskThread();
+    GwmBasicGWRAlgorithm* gwrTaskThread = new GwmBasicGWRAlgorithm();
     GwmGWROptionsDialog* gwrOptionDialog = new GwmGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
@@ -627,8 +629,8 @@ void MainWidget::onGWRBtnClicked()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
-            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrTaskThread);
+            QgsVectorLayer* resultLayer = gwrTaskThread->resultLayer();
+            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer, gwrTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }

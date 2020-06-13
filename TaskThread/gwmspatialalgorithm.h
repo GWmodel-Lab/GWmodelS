@@ -18,7 +18,7 @@ public:  // 构造与属性
 
     QgsVectorLayer *resultLayer() const;
 
-protected:  // 方法
+public:  // 方法
     virtual bool isValid() = 0;
 
 protected:  // 成员

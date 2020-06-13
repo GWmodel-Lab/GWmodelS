@@ -42,7 +42,7 @@ public:     // GwmTaskThread interface
     QString name() const override { return tr("GWR"); };
 
 
-protected:  // GwmSpatialAlgorithm interface
+public:  // GwmSpatialAlgorithm interface
     bool isValid() override;
 
 

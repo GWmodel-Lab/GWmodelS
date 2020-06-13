@@ -1,8 +1,13 @@
 #ifndef GWMBANDWIDTHSIZESELECTOR_H
 #define GWMBANDWIDTHSIZESELECTOR_H
 
+#include <QMetaType>
+#include <qwt_plot.h>
 #include "SpatialWeight/gwmspatialweight.h"
 #include "SpatialWeight/gwmbandwidthweight.h"
+
+typedef  QList<QPair<double, double> >  BandwidthCriterionList;
+Q_DECLARE_METATYPE(BandwidthCriterionList)
 
 struct IBandwidthSizeSelectable
 {
@@ -11,6 +16,9 @@ struct IBandwidthSizeSelectable
 
 class GwmBandwidthSizeSelector
 {
+public:
+    static void PlotBandwidthResult(QVariant data, QwtPlot* plot);
+
 public:
     GwmBandwidthSizeSelector();
 
@@ -23,8 +31,7 @@ public:
     double upper() const;
     void setUpper(double upper);
 
-    QList<QPair<double, double> > bandwidthCriterion() const;
-    void setBandwidthCriterion(const QList<QPair<double, double> > &bandwidthCriterion);
+    BandwidthCriterionList bandwidthCriterion() const;
 
 public:
     GwmBandwidthWeight* optimize(IBandwidthSizeSelectable* instance);
@@ -33,7 +40,7 @@ private:
     GwmBandwidthWeight* mBandwidth;
     double mLower;
     double mUpper;
-    QList<QPair<double, double> > mBandwidthCriterion;
+    QHash<double, double> mBandwidthCriterion;
 };
 
 inline GwmBandwidthWeight *GwmBandwidthSizeSelector::bandwidth() const
@@ -64,16 +71,6 @@ inline double GwmBandwidthSizeSelector::upper() const
 inline void GwmBandwidthSizeSelector::setUpper(double upper)
 {
     mUpper = upper;
-}
-
-inline QList<QPair<double, double> > GwmBandwidthSizeSelector::bandwidthCriterion() const
-{
-    return mBandwidthCriterion;
-}
-
-inline void GwmBandwidthSizeSelector::setBandwidthCriterion(const QList<QPair<double, double> > &bandwidthCriterion)
-{
-    mBandwidthCriterion = bandwidthCriterion;
 }
 
 #endif // GWMBANDWIDTHSIZESELECTOR_H

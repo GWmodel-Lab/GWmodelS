@@ -37,6 +37,7 @@ SOURCES += \
     GWmodel/gwmpoissonmodel.cpp \
     Model/gwmlayerattributeitem.cpp \
     Model/gwmlayerattributeitemmodel.cpp \
+    Model/gwmlayerbasicgwritem.cpp \
     Model/gwmlayerggwritem.cpp \
     Model/gwmlayergroupitem.cpp \
     Model/gwmlayergwritem.cpp \
@@ -141,6 +142,7 @@ HEADERS += \
     GWmodel/gwmpoissonmodel.h \
     Model/gwmlayerattributeitem.h \
     Model/gwmlayerattributeitemmodel.h \
+    Model/gwmlayerbasicgwritem.h \
     Model/gwmlayerggwritem.h \
     Model/gwmlayergroupitem.h \
     Model/gwmlayergwritem.h \

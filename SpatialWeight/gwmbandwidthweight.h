@@ -14,6 +14,7 @@ public:
         Tricube,
         Boxcar
     };
+    static GwmEnumValueNameMapper<KernelFunctionType> KernelFunctionTypeNameMapper;
 
     typedef double (*KernelFunction)(double, double);
 

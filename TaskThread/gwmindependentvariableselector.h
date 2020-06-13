@@ -1,27 +1,38 @@
 #ifndef GWMINDEPENDENTVARIABLESELECTOR_H
 #define GWMINDEPENDENTVARIABLESELECTOR_H
 
+#include <QMetaType>
 #include <Model/gwmvariableitemmodel.h>
 #include <armadillo>
+#include <qwt_plot.h>
 
 struct IIndependentVariableSelectable
 {
     virtual double criterion(QList<GwmVariable> variables) = 0;
 };
 
+typedef  QList<QPair<QList<GwmVariable>, double> > IndepVarsCriterionList;
+Q_DECLARE_METATYPE(IndepVarsCriterionList)
+
 class GwmIndependentVariableSelector
 {
+public:
+    static void PlotModelOrder(QVariant data, QwtPlot* plot);
+    static void PlotModelAICcs(QVariant data, QwtPlot* plot);
+
 public:
     GwmIndependentVariableSelector();
 
     QList<GwmVariable> indepVars() const;
     void setIndepVars(const QList<GwmVariable> &indepVars);
 
-    double getThreshold() const;
+    double threshold() const;
     void setThreshold(double threshold);
 
 public:
     QList<GwmVariable> optimize(IIndependentVariableSelectable* instance);
+
+    IndepVarsCriterionList indepVarsCriterion() const;
 
 private:
     QList<GwmVariable> getVariables(QList<int> index);
@@ -44,7 +55,7 @@ inline void GwmIndependentVariableSelector::setIndepVars(const QList<GwmVariable
     mIndepVars = indepVars;
 }
 
-inline double GwmIndependentVariableSelector::getThreshold() const
+inline double GwmIndependentVariableSelector::threshold() const
 {
     return mThreshold;
 }

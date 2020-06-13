@@ -19,4 +19,16 @@ protected:
     GwmSpatialWeight mSpatialWeight;
 };
 
+
+inline GwmSpatialWeight GwmSpatialMonoscaleAlgorithm::spatialWeight() const
+{
+    return mSpatialWeight;
+}
+
+inline void GwmSpatialMonoscaleAlgorithm::setSpatialWeight(const GwmSpatialWeight &spatialWeight)
+{
+    mSpatialWeight = spatialWeight;
+}
+
+
 #endif // GWMSPATIALMONOSCALEALGORITHM_H

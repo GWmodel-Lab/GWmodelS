@@ -1,5 +1,13 @@
 #include "gwmbandwidthweight.h"
 
+GwmEnumValueNameMapper<GwmBandwidthWeight::KernelFunctionType> GwmBandwidthWeight::KernelFunctionTypeNameMapper = {
+    std::make_pair(GwmBandwidthWeight::KernelFunctionType::Boxcar, "Boxcar"),
+    std::make_pair(GwmBandwidthWeight::KernelFunctionType::Tricube, "Tricube"),
+    std::make_pair(GwmBandwidthWeight::KernelFunctionType::Bisquare, "Bisquare"),
+    std::make_pair(GwmBandwidthWeight::KernelFunctionType::Gaussian, "Gaussian"),
+    std::make_pair(GwmBandwidthWeight::KernelFunctionType::Exponential, "Exponential")
+};
+
 GwmBandwidthWeight::KernelFunction GwmBandwidthWeight::Kernel[] =
 {
     &GwmBandwidthWeight::GaussianKernelFunction,
