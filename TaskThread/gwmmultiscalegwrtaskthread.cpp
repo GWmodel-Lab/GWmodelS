@@ -3,9 +3,32 @@
 #include <exception>
 #include "GWmodel/GWmodel.h"
 
-//#include <iomanip>
-
 using namespace std;
+
+GwmDiagnostic GwmMultiscaleGWRTaskThread::CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS)
+{
+    // 诊断信息
+    double nDp = x.n_rows;
+    double RSSg = RSS;
+    double sigmaHat21 = RSSg / nDp;
+    double TSS = sum((y - mean(y)) % (y - mean(y)));
+    double Rsquare = 1 - RSSg / TSS;
+
+    double trS = trace(S0);
+    double trStS = trace(S0.t() * S0);
+    double edf = nDp - 2 * trS + trStS;
+    double AICc = nDp * log(sigmaHat21) + nDp * log(2 * M_PI) + nDp * ((nDp + trS) / (nDp - 2 - trS));
+    double adjustRsquare = 1 - (1 - Rsquare) * (nDp - 1) / (edf - 1);
+
+    // 保存结果
+    GwmDiagnostic diagnostic;
+    diagnostic.RSS = RSSg;
+    diagnostic.AICc = AICc;
+    diagnostic.EDF = edf;
+    diagnostic.RSquareAdjust = adjustRsquare;
+    diagnostic.RSquare = Rsquare;
+    return diagnostic;
+}
 
 GwmMultiscaleGWRTaskThread::GwmMultiscaleGWRTaskThread()
     : GwmSpatialMultiscaleAlgorithm()
@@ -80,7 +103,33 @@ void GwmMultiscaleGWRTaskThread::run()
         mC = cube(nVar, nDp, nDp, fill::zeros);
     }
 
-    mBetas = (this->*mRegressionAll)(mX, mY);
+    mBetas = regression(mX, mY);
+
+    if (mHasHatMatrix)
+    {
+        mDiagnostic = CalcDiagnostic(mX, mY, mS0, mRSS0);
+        vec yhat = fitted(mX, mBetas);
+        vec residual = mY - yhat;
+        createResultLayer({
+            qMakePair(QString("%1"), mBetas),
+            qMakePair(QString("yhat"), yhat),
+            qMakePair(QString("residual"), residual)
+        });
+    }
+    else
+    {
+        createResultLayer({
+            qMakePair(QString("%1"), mBetas)
+        });
+    }
+
+    emit success();
+}
+
+mat GwmMultiscaleGWRTaskThread::regression(const mat &x, const vec &y)
+{
+    uword nDp = x.n_rows, nVar = x.n_cols;
+    mat betas = (this->*mRegressionAll)(x, y);
 
     if (mHasHatMatrix)
     {
@@ -89,19 +138,18 @@ void GwmMultiscaleGWRTaskThread::run()
         {
             for (uword j = 0; j < nDp; ++j)
             {
-                mSArray.slice(i).row(j) = mX(j, i) * (idm.row(i) * mC.slice(j));
+                mSArray.slice(i).row(j) = x(j, i) * (idm.row(i) * mC.slice(j));
             }
         }
     }
-
 
     // ***********************************************************
     // Select the optimum bandwidths for each independent variable
     // ***********************************************************
     emit message(QString("-------- Select the Optimum Bandwidths for each Independent Varialbe --------"));
     uvec bwChangeNo(nVar, fill::zeros);
-    vec resid = mY - fitted(mX, mBetas);
-    double RSS0 = sum(resid % resid), RSS = DBL_MAX;
+    vec resid = y - fitted(x, betas);
+    double RSS0 = sum(resid % resid), RSS1 = DBL_MAX;
     double criterion = DBL_MAX;
     for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
     {
@@ -109,7 +157,7 @@ void GwmMultiscaleGWRTaskThread::run()
         {
             QString varName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i-1].name;
             GwmBandwidthWeight* bwi;
-            vec fi = mBetas.col(i) % mX.col(i);
+            vec fi = betas.col(i) % x.col(i);
             vec yi = resid + fi;
             if (mBandwidthInitilize[i] == BandwidthInitilizeType::Specified)
             {
@@ -118,18 +166,19 @@ void GwmMultiscaleGWRTaskThread::run()
             else
             {
                 emit message(QString("Now select an optimum bandwidth for the variable: %1").arg(varName));
-                bool adaptive = bw0->adaptive();
+                GwmBandwidthWeight* bwi0 = bandwidth(i);
+                bool adaptive = bwi0->adaptive();
                 GwmBandwidthSizeSelector selector;
-                selector.setBandwidth(bw0);
+                selector.setBandwidth(bwi0);
                 selector.setLower(adaptive ? mAdaptiveLower : 0.0);
                 selector.setUpper(adaptive ? mDataLayer->featureCount() : findMaxDistance(i));
                 mBandwidthSizeCriterion = &GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionVarCVSerial;
                 mBandwidthSelectionCurrentIndex = i;
                 bwi = selector.optimize(this);
-                double bwi0 = bandwidth(i)->bandwidth(), bwi1 = bwi->bandwidth();
+                double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
                 emit message(QString("The newly selected bandwidth for variable %1 is %2 (last is %3, difference is %4)")
-                             .arg(varName).arg(bwi1).arg(bwi0).arg(abs(bwi1 - bwi0)));
-                if (abs(bwi1 - bwi0) > mBandwidthSelectThreshold[i])
+                             .arg(varName).arg(bwi1s).arg(bwi0s).arg(abs(bwi1s - bwi0s)));
+                if (abs(bwi1s - bwi0s) > mBandwidthSelectThreshold[i])
                 {
                     bwChangeNo(i) = 0;
                     emit message(QString("The bandwidth for variable %1 will be continually selected in the next iteration").arg(varName));
@@ -152,33 +201,27 @@ void GwmMultiscaleGWRTaskThread::run()
             mSpatialWeights[i].setWeight(bwi);
 
             mat S;
-            mBetas.col(i) = (this->*mRegressionVar)(mX.col(i), yi, i, S);
+            mBetas.col(i) = (this->*mRegressionVar)(x.col(i), yi, i, S);
             if (mHasHatMatrix)
             {
                 mat SArrayi = mSArray.slice(i);
                 mSArray.slice(i) = S * SArrayi + S - S * mS0;
                 mS0 = mS0 - SArrayi + mSArray.slice(i);
             }
-            resid = mY - fitted(mX, mBetas);
+            resid = betas - fitted(x, betas);
         }
-        RSS = rss(mY, mX, mBetas);
+        RSS1 = RSS(y, x, betas);
         criterion = (mCriterionType == BackFittingCriterionType::CVR) ?
-                    abs(RSS - RSS0) :
-                    sqrt(abs(RSS - RSS0) / RSS);
+                    abs(RSS1 - RSS0) :
+                    sqrt(abs(RSS1 - RSS0) / RSS1);
         QString criterionName = mCriterionType == BackFittingCriterionType::CVR ? "change value of RSS (CVR)" : "differential change value of RSS (dCVR)";
         emit message(QString("Iteration %1 the %2 is %3").arg(iteration).arg(criterionName).arg(criterion));
-        RSS0 = RSS;
+        RSS0 = RSS1;
         emit message(QString("---- End of Iteration %1 ----").arg(iteration));
     }
     emit message(QString("-------- [End] Select the Optimum Bandwidths for each Independent Varialbe --------"));
-
-    if (mHasHatMatrix)
-    {
-        mDiagnostic = CalcDiagnostic(mX, mY, mS0, RSS0);
-    }
-    createResultLayer({});
-
-    emit success();
+    mRSS0 = RSS0;
+    return betas;
 }
 
 bool GwmMultiscaleGWRTaskThread::isValid()
@@ -257,33 +300,6 @@ void GwmMultiscaleGWRTaskThread::initXY(mat &x, mat &y, const GwmVariable &depVa
         }
         else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
     }
-}
-
-GwmDiagnostic GwmMultiscaleGWRTaskThread::CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS)
-{
-    // 诊断信息
-    double nDp = x.n_rows;
-//    mYHat = fitted(mX, mBetas);
-//    mResidual = mY - mYHat;
-    double RSSg = RSS;
-    double sigmaHat21 = RSSg / nDp;
-    double TSS = sum((y - mean(y)) % (y - mean(y)));
-    double Rsquare = 1 - RSSg / TSS;
-
-    double trS = trace(S0);
-    double trStS = trace(S0.t() * S0);
-    double edf = nDp - 2 * trS + trStS;
-    double AICc = nDp * log(sigmaHat21) + nDp * log(2 * M_PI) + nDp * ((nDp + trS) / (nDp - 2 - trS));
-    double adjustRsquare = 1 - (1 - Rsquare) * (nDp - 1) / (edf - 1);
-
-    // 保存结果
-    GwmDiagnostic diagnostic;
-    diagnostic.RSS = RSSg;
-    diagnostic.AICc = AICc;
-    diagnostic.EDF = edf;
-    diagnostic.RSquareAdjust = adjustRsquare;
-    diagnostic.RSquare = Rsquare;
-    return diagnostic;
 }
 
 void GwmMultiscaleGWRTaskThread::createResultLayer(initializer_list<CreateResultLayerDataItem> data)

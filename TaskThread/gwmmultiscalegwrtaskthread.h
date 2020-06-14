@@ -34,6 +34,7 @@ public:
     typedef vec (GwmMultiscaleGWRTaskThread::*RegressionVarFunction)(const arma::mat&, const arma::vec&, int, mat&);
     typedef QPair<QString, const mat> CreateResultLayerDataItem;
 
+private:
     static vec Fitted(const mat& x, const mat& betas)
     {
         return sum(betas % x, 1);
@@ -106,10 +107,7 @@ public:     // IRegressionAnalysis interface
 
     GwmDiagnostic diagnostic() const override;
 
-    arma::mat regression(const arma::mat &x, const arma::vec &y) override
-    {
-        return regressionAllSerial(x, y);
-    }
+    mat regression(const mat &x, const vec &y) override;
 
     QList<BandwidthInitilizeType> bandwidthInitilize() const;
     void setBandwidthInitilize(const QList<BandwidthInitilizeType> &bandwidthInitilize);
@@ -183,6 +181,8 @@ private:
     cube mC;
     mat mX0;
     vec mY0;
+
+    double mRSS0;
 
     GwmDiagnostic mDiagnostic;
 };
