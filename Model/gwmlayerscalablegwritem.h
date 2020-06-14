@@ -2,7 +2,7 @@
 #define GWMLAYERSCALABLEGWRITEM_H
 
 #include "Model/gwmlayergwritem.h"
-#include "TaskThread/gwmscalablegwrtaskthread.h"
+#include "TaskThread/gwmscalablegwralgorithm.h"
 
 #include <SpatialWeight/gwmbandwidthweight.h>
 
@@ -10,7 +10,7 @@ class GwmLayerScalableGWRItem : public GwmLayerVectorItem
 {
     Q_OBJECT
 public:
-    GwmLayerScalableGWRItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmScalableGWRTaskThread* taskThread = nullptr);
+    GwmLayerScalableGWRItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmScalableGWRAlgorithm* taskThread = nullptr);
 
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::ScalableGWR; }
 

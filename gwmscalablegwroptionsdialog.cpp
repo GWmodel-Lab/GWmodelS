@@ -10,7 +10,7 @@
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
 
-GwmScalableGWROptionsDialog::GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmScalableGWRTaskThread* thread,QWidget *parent) :
+GwmScalableGWROptionsDialog::GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmScalableGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmScalableGWROptionsDialog),
     mMapLayerList(originItemList),

@@ -1,4 +1,4 @@
-#include "gwmscalablegwrtaskthread.h"
+#include "gwmscalablegwralgorithm.h"
 
 #include <QPair>
 #include "gsl/gsl_multimin.h"
@@ -6,7 +6,7 @@
 #include <SpatialWeight/gwmbandwidthweight.h>
 
 
-double GwmScalableGWRTaskThread::Loocv(const vec &target, const mat &x, const vec &y, int bw, int poly, const mat &Mx0, const mat &My0)
+double GwmScalableGWRAlgorithm::Loocv(const vec &target, const mat &x, const vec &y, int bw, int poly, const mat &Mx0, const mat &My0)
 {
     int n = x.n_rows, k = x.n_cols, poly1 = poly + 1;
     double b = target(0) * target(0), a = target(1) * target(1);
@@ -52,7 +52,7 @@ double GwmScalableGWRTaskThread::Loocv(const vec &target, const mat &x, const ve
     return sum((y - yhat) % (y - yhat));
 }
 
-GwmDiagnostic GwmScalableGWRTaskThread::CalcDiagnostic(const vec &y, const mat &x, const mat &betas, const vec &shat)
+GwmDiagnostic GwmScalableGWRAlgorithm::CalcDiagnostic(const vec &y, const mat &x, const mat &betas, const vec &shat)
 {
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
@@ -67,12 +67,12 @@ GwmDiagnostic GwmScalableGWRTaskThread::CalcDiagnostic(const vec &y, const mat &
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-GwmScalableGWRTaskThread::GwmScalableGWRTaskThread() : GwmGeographicalWeightedRegressionAlgorithm()
+GwmScalableGWRAlgorithm::GwmScalableGWRAlgorithm() : GwmGeographicalWeightedRegressionAlgorithm()
 {
 
 }
 
-void GwmScalableGWRTaskThread::run()
+void GwmScalableGWRAlgorithm::run()
 {
     initPoints();
     initXY(mX, mY, mDepVar, mIndepVars);
@@ -132,7 +132,7 @@ void GwmScalableGWRTaskThread::run()
     emit success();
 }
 
-void GwmScalableGWRTaskThread::getNeighbours()
+void GwmScalableGWRAlgorithm::getNeighbours()
 {
     GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
     uword nDp = mDataPoints.n_rows, nBw = bandwidth->bandwidth();
@@ -154,15 +154,15 @@ double scagwr_loocv_multimin_function(const gsl_vector* vars, void* params)
 {
     double b_tilde = gsl_vector_get(vars, 0), alpha = gsl_vector_get(vars, 1);
     vec target = { b_tilde, alpha };
-    const GwmScalableGWRTaskThread::LoocvParams *p = (GwmScalableGWRTaskThread::LoocvParams*) params;
+    const GwmScalableGWRAlgorithm::LoocvParams *p = (GwmScalableGWRAlgorithm::LoocvParams*) params;
     const mat *x = p->x, *y = p->y;
     int bw = p->bw;
     double polynomial = p->polynomial;
     const mat *Mx0 = p->Mx0, *My0 = p->My0;
-    return GwmScalableGWRTaskThread::Loocv(target, *x, *y, bw, polynomial, *Mx0, *My0);
+    return GwmScalableGWRAlgorithm::Loocv(target, *x, *y, bw, polynomial, *Mx0, *My0);
 }
 
-double GwmScalableGWRTaskThread::optimize(const mat &Mx0, const mat &My0, double& b_tilde, double& alpha)
+double GwmScalableGWRAlgorithm::optimize(const mat &Mx0, const mat &My0, double& b_tilde, double& alpha)
 {
     GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
     gsl_multimin_fminimizer* minizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex, 2);
@@ -204,7 +204,7 @@ double GwmScalableGWRTaskThread::optimize(const mat &Mx0, const mat &My0, double
     return  cv;
 }
 
-void GwmScalableGWRTaskThread::prepare()
+void GwmScalableGWRAlgorithm::prepare()
 {
     GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
     int bw = bandwidth->bandwidth();
@@ -251,7 +251,7 @@ void GwmScalableGWRTaskThread::prepare()
     }
 }
 
-arma::mat GwmScalableGWRTaskThread::regression(const arma::mat &x, const arma::vec &y)
+arma::mat GwmScalableGWRAlgorithm::regression(const arma::mat &x, const arma::vec &y)
 {
     GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
     int bw = bandwidth->bandwidth();
@@ -382,7 +382,7 @@ arma::mat GwmScalableGWRTaskThread::regression(const arma::mat &x, const arma::v
     return betas;
 }
 
-void GwmScalableGWRTaskThread::createResultLayer(initializer_list<CreateResultLayerDataItem> data)
+void GwmScalableGWRAlgorithm::createResultLayer(initializer_list<CreateResultLayerDataItem> data)
 {
     QgsVectorLayer* srcLayer = mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
@@ -439,7 +439,7 @@ void GwmScalableGWRTaskThread::createResultLayer(initializer_list<CreateResultLa
     mResultLayer->commitChanges();
 }
 
-bool GwmScalableGWRTaskThread::isValid()
+bool GwmScalableGWRAlgorithm::isValid()
 {
     if (GwmGeographicalWeightedRegressionAlgorithm::isValid())
     {

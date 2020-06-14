@@ -5,7 +5,7 @@
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
 #include <SpatialWeight/gwmbandwidthweight.h>
-#include "TaskThread/gwmscalablegwrtaskthread.h"
+#include "TaskThread/gwmscalablegwralgorithm.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
 
@@ -18,14 +18,14 @@ class GwmScalableGWROptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmScalableGWRTaskThread* thread,QWidget *parent = nullptr);
+    explicit GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmScalableGWRAlgorithm* thread,QWidget *parent = nullptr);
     ~GwmScalableGWROptionsDialog();
 
 private:
     Ui::GwmScalableGWROptionsDialog *ui;
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
-    GwmScalableGWRTaskThread* mTaskThread = nullptr;
+    GwmScalableGWRAlgorithm* mTaskThread = nullptr;
     GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
 

@@ -3,7 +3,7 @@
 
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 
-class GwmScalableGWRTaskThread : public GwmGeographicalWeightedRegressionAlgorithm
+class GwmScalableGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorithm
 {
     Q_OBJECT
 
@@ -26,7 +26,7 @@ private:
 
 
 public:
-    GwmScalableGWRTaskThread();
+    GwmScalableGWRAlgorithm();
 
     void run() override;
 
@@ -73,27 +73,27 @@ private:
     mat mBetasSE;
 };
 
-inline void GwmScalableGWRTaskThread::setPolynomial(int polynomial)
+inline void GwmScalableGWRAlgorithm::setPolynomial(int polynomial)
 {
     mPolynomial = polynomial;
 }
 
-inline double GwmScalableGWRTaskThread::getPenalty() const
+inline double GwmScalableGWRAlgorithm::getPenalty() const
 {
     return mPenalty;
 }
 
-inline double GwmScalableGWRTaskThread::getScale() const
+inline double GwmScalableGWRAlgorithm::getScale() const
 {
     return mScale;
 }
 
-inline double GwmScalableGWRTaskThread::getCV() const
+inline double GwmScalableGWRAlgorithm::getCV() const
 {
     return mCV;
 }
 
-inline int GwmScalableGWRTaskThread::getPolynomial() const
+inline int GwmScalableGWRAlgorithm::getPolynomial() const
 {
     return mPolynomial;
 }

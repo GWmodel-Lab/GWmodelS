@@ -1,6 +1,6 @@
 #include "gwmlayerscalablegwritem.h"
 
-GwmLayerScalableGWRItem::GwmLayerScalableGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmScalableGWRTaskThread* taskThread)
+GwmLayerScalableGWRItem::GwmLayerScalableGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmScalableGWRAlgorithm* taskThread)
     : GwmLayerVectorItem(parent, vector)
 {
     mDataPointsSize = taskThread->dataLayer()->featureCount();

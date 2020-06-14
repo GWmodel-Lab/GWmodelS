@@ -83,7 +83,7 @@ SOURCES += \
 #    attributetable/qgsattributetablemodel.cpp \
 #    attributetable/qgsattributetableview.cpp \
 #    attributetable/qgsdualview.cpp \
-    TaskThread/gwmscalablegwrtaskthread.cpp \
+    TaskThread/gwmscalablegwralgorithm.cpp \
     TaskThread/gwmspatialalgorithm.cpp \
     TaskThread/gwmspatialmonoscalealgorithm.cpp \
     attributetable/qgsaddattrdialog.cpp \
@@ -198,7 +198,7 @@ HEADERS += \
 #    attributetable/qgsifeatureselectionmanager.h \
 #    attributetable/qgsorganizetablecolumnsdialog.h \
 #    attributetable/qgsvectorlayerselectionmanager.h \
-    TaskThread/gwmscalablegwrtaskthread.h \
+    TaskThread/gwmscalablegwralgorithm.h \
     TaskThread/gwmspatialalgorithm.h \
     TaskThread/gwmspatialmonoscalealgorithm.h \
     TaskThread/imonovariableanalysis.h \

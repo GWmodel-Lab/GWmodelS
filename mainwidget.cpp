@@ -36,7 +36,7 @@
 #include "TaskThread/gwmggwrtaskthread.h"
 
 #include "gwmscalablegwroptionsdialog.h"
-#include "TaskThread/gwmscalablegwrtaskthread.h"
+#include "TaskThread/gwmscalablegwralgorithm.h"
 #include "Model/gwmlayerscalablegwritem.h"
 
 #include "gwmmultiscalegwroptionsdialog.h"
@@ -675,7 +675,7 @@ void MainWidget::onGWRNewBtnClicked()
 
 void MainWidget::onScalableGWRBtnClicked()
 {
-    GwmScalableGWRTaskThread* gwrTaskThread = new GwmScalableGWRTaskThread();
+    GwmScalableGWRAlgorithm* gwrTaskThread = new GwmScalableGWRAlgorithm();
     GwmScalableGWROptionsDialog* gwrOptionDialog = new GwmScalableGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
