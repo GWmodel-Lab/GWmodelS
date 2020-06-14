@@ -274,6 +274,7 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
     int nRp = mRegressionPoints.n_rows, nVar = x.n_cols;
     const mat& points = hasRegressionLayer() ? mRegressionPoints : mDataPoints;
     mat betas(nVar, nRp, fill::zeros);
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nRp; i++)
     {
@@ -285,12 +286,13 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
         {
             mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
-            emit tick(i + 1, nRp);
+            emit tick(current + 1, nRp);
         }
         catch (exception e)
         {
             emit error(e.what());
         }
+        emit tick(++current, nRp);
     }
     return betas.t();
 }
@@ -343,6 +345,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     mat qDiag_all(nDp, mOmpThreadNum, fill::zeros);
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
@@ -369,7 +372,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat
         {
             emit error(e.what());
         }
-        emit tick(i + 1, nDp);
+        emit tick(++current, nDp);
     }
     shat = sum(shat_all, 1);
     qDiag = sum(qDiag_all, 1);
