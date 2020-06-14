@@ -506,6 +506,23 @@ void GwmGWROptionsDialog::updateFields()
 //        mTaskThread->setParallelMethodType(this->parallelMethod());
 //        mTaskThread->setParallelParameter(this->parallelParameters());
 //    }
+    if (ui->mCalcParallelNoneRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
+    else if (ui->mCalcParallelMultithreadRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
+    }
+    else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::CUDA);
+    }
+    else
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
     mTaskThread->setHasFTest(ui->cbxFTest->isChecked());

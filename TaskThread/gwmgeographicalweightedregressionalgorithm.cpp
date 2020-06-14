@@ -22,11 +22,11 @@ bool GwmGeographicalWeightedRegressionAlgorithm::isValid()
 
 void GwmGeographicalWeightedRegressionAlgorithm::initPoints()
 {
-    int nDp = mDataLayer->featureCount(), nRp = hasRegressionLayer() ? mRegressionLayer->featureCount() : nDp;
+    int nDp = mDataLayer->featureCount();
     mDataPoints = mat(nDp, 2, fill::zeros);
     QgsFeatureIterator iterator = mDataLayer->getFeatures();
     QgsFeature f;
-    for (int i = 0; iterator.nextFeature(f); i++)
+    for (int i = 0; i < nDp && iterator.nextFeature(f); i++)
     {
         QgsPointXY centroPoint = f.geometry().centroid().asPoint();
         mDataPoints(i, 0) = centroPoint.x();
@@ -35,10 +35,11 @@ void GwmGeographicalWeightedRegressionAlgorithm::initPoints()
     // Regression Layer
     if (hasRegressionLayer())
     {
+        int nRp = mRegressionLayer->featureCount();
         mRegressionPoints = mat(nRp, 2, fill::zeros);
         QgsFeatureIterator iterator = mRegressionLayer->getFeatures();
         QgsFeature f;
-        for (int i = 0; iterator.nextFeature(f); i++)
+        for (int i = 0; i < nRp && iterator.nextFeature(f); i++)
         {
             QgsPointXY centroPoint = f.geometry().centroid().asPoint();
             mRegressionPoints(i, 0) = centroPoint.x();
