@@ -41,8 +41,10 @@ void GwmBasicGWRAlgorithm::run()
     if (mIsAutoselectIndepVars)
     {
         emit message(QString(tr("Automatically selecting independent variables ...")));
+        mIndepVarSelectModelsTotalNum = (mIndepVars.size() + 1) * (mIndepVars.size()) / 2;
         mIndepVarSelector.setIndepVars(mIndepVars);
         mIndepVarSelector.setThreshold(mIndepVarSelectionThreshold);
+        emit tick(mIndepVarSelectModelsCurrent, mIndepVarSelectModelsTotalNum);
         QList<GwmVariable> selectedIndepVars = mIndepVarSelector.optimize(this);
         if (selectedIndepVars.size() > 0)
         {
@@ -62,6 +64,7 @@ void GwmBasicGWRAlgorithm::run()
     if (mIsAutoselectBandwidth)
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
+        emit tick(0, 0);
         GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
         mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
@@ -186,6 +189,7 @@ double GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial(const QList<GwmVaria
             return DBL_MAX;
         }
     }
+    emit tick(++mIndepVarSelectModelsCurrent, mIndepVarSelectModelsTotalNum);
     double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(x, y, betas.t(), shat);
     QStringList names;
     for (const GwmVariable& v : indepVars)
@@ -229,6 +233,7 @@ double GwmBasicGWRAlgorithm::indepVarsSelectCriterionOmp(const QList<GwmVariable
             }
         }
     }
+    emit tick(++mIndepVarSelectModelsCurrent, mIndepVarSelectModelsTotalNum);
     if (flag)
     {
         double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(x, y, betas.t(), sum(shat, 1));

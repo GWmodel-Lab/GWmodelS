@@ -178,6 +178,8 @@ private:
     bool mIsAutoselectIndepVars = false;
     double mIndepVarSelectionThreshold = 3.0;
     IndepVarsSelectCriterionFunction mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial;
+    int mIndepVarSelectModelsTotalNum = 0;
+    int mIndepVarSelectModelsCurrent = 0;
 
     Regression mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
     RegressionHatmatrix mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixSerial;
