@@ -20,6 +20,8 @@ public:
         return new GwmCRSDistance(*this);
     }
 
+    DistanceType type() override { return DistanceType::CRSDistance; }
+
     bool geographic() const;
     void setGeographic(bool geographic);
 

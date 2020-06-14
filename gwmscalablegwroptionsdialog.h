@@ -4,7 +4,8 @@
 #include <QDialog>
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
-#include "TaskThread/gwmscalablegwrtaskthread.h"
+#include <SpatialWeight/gwmbandwidthweight.h>
+#include "TaskThread/gwmscalablegwralgorithm.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
 
@@ -17,15 +18,15 @@ class GwmScalableGWROptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmScalableGWRTaskThread* thread,QWidget *parent = nullptr);
+    explicit GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmScalableGWRAlgorithm* thread,QWidget *parent = nullptr);
     ~GwmScalableGWROptionsDialog();
 
 private:
     Ui::GwmScalableGWROptionsDialog *ui;
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
-    GwmScalableGWRTaskThread* mTaskThread = nullptr;
-    GwmLayerAttributeItemModel* mDepVarModel;
+    GwmScalableGWRAlgorithm* mTaskThread = nullptr;
+    GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
 
 public slots:
@@ -43,10 +44,10 @@ public slots:
 public:
     QString crsRotateTheta();
     QString crsRotateP();
-    GwmGWRTaskThread::BandwidthType bandwidthType();
+    bool bandwidthType();
     double bandwidthSize();
     QString bandWidthUnit();
-    GwmGWRTaskThread::KernelFunction bandwidthKernelFunction();
+    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     GwmGWRTaskThread::DistanceSourceType distanceSourceType();
     QVariant distanceSourceParameters();
 

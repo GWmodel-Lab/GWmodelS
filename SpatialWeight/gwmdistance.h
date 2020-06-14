@@ -24,6 +24,8 @@ public:
 
     virtual GwmDistance* clone() = 0;
 
+    virtual DistanceType type() = 0;
+
 public:
     virtual vec distance(const rowvec& target, const mat& dataPoints) = 0;
 };

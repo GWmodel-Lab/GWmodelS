@@ -4,13 +4,17 @@
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QFileDialog>
+#include <SpatialWeight/gwmbandwidthweight.h>
+#include <SpatialWeight/gwmcrsdistance.h>
+#include <SpatialWeight/gwmdmatdistance.h>
+#include <SpatialWeight/gwmminkwoskidistance.h>
 
 
-GwmScalableGWROptionsDialog::GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmScalableGWRTaskThread* thread,QWidget *parent) :
+GwmScalableGWROptionsDialog::GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmScalableGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmScalableGWROptionsDialog),
     mMapLayerList(originItemList),
-    mDepVarModel(new GwmLayerAttributeItemModel),
+    mDepVarModel(new GwmVariableItemModel),
     mTaskThread(thread)
 {
     ui->setupUi(this);
@@ -115,11 +119,12 @@ void GwmScalableGWROptionsDialog::layerChanged(int index)
         QgsField field = fieldList[i];
         if (isNumeric(field.type()))
         {
-            GwmLayerAttributeItem* item = new GwmLayerAttributeItem();
-            item->setAttributeName(field.name());
-            item->setAttributeType(field.type());
-            item->setAttributeIndex(i);
-            mDepVarModel->appendRow(item);
+            GwmVariable item;
+            item.name = field.name();
+            item.type = field.type();
+            item.index = i;
+            item.isNumeric = field.isNumeric();
+            mDepVarModel->append(item);
             ui->mDepVarComboBox->addItem(field.name());
         }
     }
@@ -140,12 +145,9 @@ QString GwmScalableGWROptionsDialog::crsRotateP()
     return ui->mPValue->text();
 }
 
-GwmGWRTaskThread::BandwidthType GwmScalableGWROptionsDialog::bandwidthType()
+bool GwmScalableGWROptionsDialog::bandwidthType()
 {
-    if(ui->mBwTypeAdaptiveRadio->isChecked()){
-        return GwmGWRTaskThread::BandwidthType::Adaptive;
-    }
-    else return GwmGWRTaskThread::BandwidthType::Fixed;
+    return true;
 }
 
 void GwmScalableGWROptionsDialog::onAutomaticRadioToggled(bool checked)
@@ -195,13 +197,11 @@ void GwmScalableGWROptionsDialog::onCustomizeRaidoToggled(bool checked)
 void GwmScalableGWROptionsDialog::onFixedRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(1);
-    mTaskThread->setBandwidthType(GwmGWRTaskThread::BandwidthType::Fixed);
 }
 
 void GwmScalableGWROptionsDialog::onVariableRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(0);
-    mTaskThread->setBandwidthType(GwmGWRTaskThread::BandwidthType::Adaptive);
 }
 
 double GwmScalableGWROptionsDialog::bandwidthSize(){
@@ -226,10 +226,10 @@ QString GwmScalableGWROptionsDialog::bandWidthUnit(){
     }
 }
 
-GwmGWRTaskThread::KernelFunction GwmScalableGWROptionsDialog::bandwidthKernelFunction()
+GwmBandwidthWeight::KernelFunctionType GwmScalableGWROptionsDialog::bandwidthKernelFunction()
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
-    return GwmGWRTaskThread::KernelFunction(kernelSelected);
+    return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
 GwmGWRTaskThread::DistanceSourceType GwmScalableGWROptionsDialog::distanceSourceType()
@@ -281,15 +281,18 @@ void GwmScalableGWROptionsDialog::updateFieldsAndEnable()
 
 void GwmScalableGWROptionsDialog::updateFields()
 {
+    QgsVectorLayer* dataLayer;
     // 图层设置
     if (ui->mLayerComboBox->currentIndex() > -1)
     {
-        mTaskThread->setLayer(mSelectedLayer->originChild()->layer());
+        dataLayer = mSelectedLayer->originChild()->layer();
+        mTaskThread->setDataLayer(dataLayer);
     }
+    else return;
     // 因变量设置
     if (ui->mDepVarComboBox->currentIndex() > -1)
     {
-        mTaskThread->setDepVar(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
+        mTaskThread->setDependentVariable(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
     }
     // 自变量设置
     GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
@@ -297,20 +300,34 @@ void GwmScalableGWROptionsDialog::updateFields()
     {
         if (selectedIndepVarModel->rowCount() > 0)
         {
-//            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
+            mTaskThread->setIndependentVariables(selectedIndepVarModel->attributeItemList());
         }
     }
     // 带宽设置
-    if (ui->mBwSizeCustomizeRadio->isChecked())
-    {
-        mTaskThread->setIsBandwidthSizeAutoSel(false);
-        mTaskThread->setBandwidth(this->bandwidthType(), this->bandwidthSize(), this->bandWidthUnit());
-    }
-    mTaskThread->setBandwidthKernelFunction(this->bandwidthKernelFunction());
+    GwmSpatialWeight spatialWeight;
+    GwmBandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
+    spatialWeight.setWeight(weight);
     // 距离设置
-    auto distSrcType = this->distanceSourceType();
-    mTaskThread->setDistSrcType(distSrcType);
-    mTaskThread->setDistSrcParameters(this->distanceSourceParameters());
+    if (ui->mDistTypeDmatRadio->isChecked())
+    {
+        QString filename = ui->mDistMatrixFileNameEdit->text();
+        int featureCount = dataLayer->featureCount();
+        GwmDMatDistance distance(filename, featureCount);
+        spatialWeight.setDistance(distance);
+    }
+    else if (ui->mDistTypeMinkowskiRadio->isChecked())
+    {
+        double theta = ui->mThetaValue->value();
+        double p = ui->mPValue->value();
+        GwmMinkwoskiDistance distance(p, theta);
+        spatialWeight.setDistance(distance);
+    }
+    else
+    {
+        GwmCRSDistance distance(dataLayer->crs().isGeographic());
+        spatialWeight.setDistance(distance);
+    }
+    mTaskThread->setSpatialWeight(spatialWeight);
     // 参数设置
     mTaskThread->setPolynomial(ui->mPolynomialSpin->value());
 }
@@ -318,7 +335,7 @@ void GwmScalableGWROptionsDialog::updateFields()
 void GwmScalableGWROptionsDialog::enableAccept()
 {
     QString message;
-    if (mTaskThread->isValid(message))
+    if (mTaskThread->isValid())
     {
         ui->mCheckMessage->setText(tr("Valid."));
         ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
