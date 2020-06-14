@@ -3,6 +3,22 @@
 #include <omp.h>
 
 
+GwmDiagnostic GwmBasicGWRAlgorithm::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
+{
+    vec r = y - sum(betas % x, 1);
+    double rss = sum(r % r);
+    int n = x.n_rows;
+    double AIC = n * log(rss / n) + n * log(2 * datum::pi) + n + shat(0);
+    double AICc = n * log(rss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
+    double edf = n - 2 * shat(0) + shat(1);
+    double enp = 2 * shat(0) - shat(1);
+    double yss = sum((y - mean(y)) % (y - mean(y)));
+    double r2 = 1 - rss / yss;
+    double r2_adj = 1 - (1 - r2) * (n - 1) / (edf - 1);
+    return { rss, AIC, AICc, enp, edf, r2, r2_adj };
+}
+
+
 GwmEnumValueNameMapper<GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType> GwmBasicGWRAlgorithm::BandwidthSelectionCriterionTypeNameMapper = {
     std::make_pair(GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType::CV, "CV"),
     std::make_pair(GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType::AIC, "AIC")
@@ -25,14 +41,6 @@ void GwmBasicGWRAlgorithm::run()
     if (mIsAutoselectIndepVars)
     {
         emit message(QString(tr("Automatically selecting independent variables ...")));
-        switch (mParallelType) {
-        case IParallelalbe::SerialOnly:
-            mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial;
-        case IParallelalbe::OpenMP:
-        default:
-            mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial;
-            break;
-        }
         mIndepVarSelector.setIndepVars(mIndepVars);
         mIndepVarSelector.setThreshold(mIndepVarSelectionThreshold);
         QList<GwmVariable> selectedIndepVars = mIndepVarSelector.optimize(this);
@@ -60,18 +68,6 @@ void GwmBasicGWRAlgorithm::run()
         double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : findMaxDistance();
         mBandwidthSizeSelector.setLower(lower);
         mBandwidthSizeSelector.setUpper(upper);
-        switch (mBandwidthSelectionCriterionType)
-        {
-        case BandwidthSelectionCriterionType::CV:
-            mBandwidthSelectCriterionFunction = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCV;
-            break;
-        case BandwidthSelectionCriterionType::AIC:
-            mBandwidthSelectCriterionFunction = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAIC;
-            break;
-        default:
-            mBandwidthSelectCriterionFunction = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCV;
-            break;
-        }
         GwmBandwidthWeight* bandwidthWeight = mBandwidthSizeSelector.optimize(this);
         if (bandwidthWeight)
         {
@@ -90,7 +86,7 @@ void GwmBasicGWRAlgorithm::run()
         vec shat, qDiag;
         mBetas = regression(mX, mY, betasSE, shat, qDiag, S);
         // 诊断
-        mDiagnostic = calcDiagnostic(mX, mY, mBetas, shat);
+        mDiagnostic = CalcDiagnostic(mX, mY, mBetas, shat);
         double trS = shat(0), trStS = shat(1);
         double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
         betasSE = sqrt(sigmaHat * betasSE);
@@ -109,7 +105,7 @@ void GwmBasicGWRAlgorithm::run()
             localR2(i) = (tss - rss) / tss;
         }
 
-        QList<QPair<QString, const mat> > resultLayerData = {
+        CreateResultLayerData resultLayerData = {
             qMakePair(QString("%1"), mBetas),
             qMakePair(QString("y"), mY),
             qMakePair(QString("yhat"), yhat),
@@ -132,7 +128,7 @@ void GwmBasicGWRAlgorithm::run()
             }
             else
             {
-                trQtQ = (this->*calcTrQtQ())();
+                trQtQ = calcTrQtQ();
             }
             FTestParameters fTestParams;
             fTestParams.nDp = mDataLayer->featureCount();
@@ -148,7 +144,7 @@ void GwmBasicGWRAlgorithm::run()
     else
     {
         mBetas = regression(mX, mY);
-        QList<QPair<QString, const mat> > resultLayerData = {
+        CreateResultLayerData resultLayerData = {
             qMakePair(QString("%1"), mBetas)
         };
         createResultLayer(resultLayerData);
@@ -199,41 +195,49 @@ double GwmBasicGWRAlgorithm::indepVarsSelectCriterionOmp(const QList<GwmVariable
     mat x;
     vec y;
     initXY(x, y, mDepVar, indepVars);
-    uword nDp = x.n_rows, nVar = x.n_cols;
+    int nDp = x.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     mat shat(2, mOmpThreadNum, fill::zeros);
+    int flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (uword i = 0; i < nDp; i++)
+    for (int i = 0; i < nDp; i++)
     {
-        int thread = omp_get_thread_num();
-        vec w(nDp, fill::ones);
-        mat xtw = trans(x.each_col() % w);
-        mat xtwx = xtw * x;
-        mat xtwy = xtw * y;
-        try
+        if (flag)
         {
-            mat xtwx_inv = inv_sympd(xtwx);
-            betas.col(i) = xtwx_inv * xtwy;
-            mat ci = xtwx_inv * xtw;
-            mat si = x.row(i) * ci;
-            shat(0, thread) += si(0, i);
-            shat(1, thread) += det(si * si.t());
-        }
-        catch (...)
-        {
-            return DBL_MAX;
+            int thread = omp_get_thread_num();
+            vec w(nDp, fill::ones);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                mat si = x.row(i) * ci;
+                shat(0, thread) += si(0, i);
+                shat(1, thread) += det(si * si.t());
+            }
+            catch (...)
+            {
+                flag = false;
+            }
         }
     }
-    double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(x, y, betas.t(), sum(shat, 1));
-    QStringList names;
-    for (const GwmVariable& v : indepVars)
-        names << v.name;
-    QString msg = QString("Model: %1 ~ %2 (AICc Value: %3)").arg(mDepVar.name).arg(names.join(" + ")).arg(value);
-    emit message(msg);
-    return value;
+    if (flag)
+    {
+        double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(x, y, betas.t(), sum(shat, 1));
+        QStringList names;
+        for (const GwmVariable& v : indepVars)
+            names << v.name;
+        QString msg = QString("Model: %1 ~ %2 (AICc Value: %3)").arg(mDepVar.name).arg(names.join(" + ")).arg(value);
+        emit message(msg);
+        return value;
+    }
+    else return DBL_MAX;
 }
 
-mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y)
+mat GwmBasicGWRAlgorithm::regressionSerial(const mat &x, const vec &y)
 {
     emit message("Regression ...");
     uword nRp = mRegressionPoints.n_rows, nVar = x.n_cols;
@@ -259,7 +263,34 @@ mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y)
     return betas.t();
 }
 
-mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
+mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
+{
+    emit message("Regression ...");
+    int nRp = mRegressionPoints.n_rows, nVar = x.n_cols;
+    const mat& points = hasRegressionLayer() ? mRegressionPoints : mDataPoints;
+    mat betas(nVar, nRp, fill::zeros);
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; i < nRp; i++)
+    {
+        vec w = mSpatialWeight.spatialWeight(points.row(i), mDataPoints);
+        mat xtw = trans(x.each_col() % w);
+        mat xtwx = xtw * x;
+        mat xtwy = xtw * y;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+            emit tick(i + 1, nRp);
+        }
+        catch (exception e)
+        {
+            emit error(e.what());
+        }
+    }
+    return betas.t();
+}
+
+mat GwmBasicGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
     emit message("Regression ...");
     uword nDp = x.n_rows, nVar = x.n_cols;
@@ -297,22 +328,49 @@ mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y, mat &betasSE, v
     return betas.t();
 }
 
-GwmDiagnostic GwmBasicGWRAlgorithm::calcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
+mat GwmBasicGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
-    vec r = y - sum(betas % x, 1);
-    double rss = sum(r % r);
-    int n = x.n_rows;
-    double AIC = n * log(rss / n) + n * log(2 * datum::pi) + n + shat(0);
-    double AICc = n * log(rss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
-    double edf = n - 2 * shat(0) + shat(1);
-    double enp = 2 * shat(0) - shat(1);
-    double yss = sum((y - mean(y)) % (y - mean(y)));
-    double r2 = 1 - rss / yss;
-    double r2_adj = 1 - (1 - r2) * (n - 1) / (edf - 1);
-    return { rss, AIC, AICc, enp, edf, r2, r2_adj };
+    emit message("Regression ...");
+    int nDp = x.n_rows, nVar = x.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    betasSE = mat(nVar, nDp, fill::zeros);
+    mat shat_all(2, mOmpThreadNum, fill::zeros);
+    mat qDiag_all(nDp, mOmpThreadNum, fill::zeros);
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; i < nDp; i++)
+    {
+        int thread = omp_get_thread_num();
+        vec w = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+        mat xtw = trans(x.each_col() % w);
+        mat xtwx = xtw * x;
+        mat xtwy = xtw * y;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+            mat ci = xtwx_inv * xtw;
+            betasSE.col(i) = sum(ci % ci, 1);
+            mat si = x.row(i) * ci;
+            shat_all(0, thread) += si(0, i);
+            shat_all(1, thread) += det(si * si.t());
+            vec p = - si.t();
+            p(i) += 1.0;
+            qDiag_all.col(thread) += p % p;
+            S.row(isStoreS() ? i : 0) = si;
+        }
+        catch (std::exception e)
+        {
+            emit error(e.what());
+        }
+        emit tick(i + 1, nDp);
+    }
+    shat = sum(shat_all, 1);
+    qDiag = sum(qDiag_all, 1);
+    betasSE = betasSE.t();
+    return betas.t();
 }
 
-void GwmBasicGWRAlgorithm::createResultLayer(QList<QPair<QString, const mat> > data)
+void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data)
 {
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
@@ -369,7 +427,7 @@ void GwmBasicGWRAlgorithm::createResultLayer(QList<QPair<QString, const mat> > d
     mResultLayer->commitChanges();
 }
 
-double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAIC(GwmBandwidthWeight* bandwidthWeight)
+double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
@@ -404,7 +462,53 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAIC(GwmBandwidthWeight* bandw
     return value;
 }
 
-double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCV(GwmBandwidthWeight *bandwidthWeight)
+double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *bandwidthWeight)
+{
+    int nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
+    mat betas(nVar, nDp, fill::zeros);
+    mat shat_all(2, mOmpThreadNum, fill::zeros);
+    bool flag = true;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; i < nDp; i++)
+    {
+        if (flag)
+        {
+            int thread = omp_get_thread_num();
+            vec d = mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+            vec w = bandwidthWeight->weight(d);
+            mat xtw = trans(mX.each_col() % w);
+            mat xtwx = xtw * mX;
+            mat xtwy = xtw * mY;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                mat si = mX.row(i) * ci;
+                shat_all(0, thread) += si(0, i);
+                shat_all(1, thread) += det(si * si.t());
+            }
+            catch (std::exception e)
+            {
+                flag = false;
+            }
+        }
+    }
+    if (flag)
+    {
+        vec shat = sum(shat_all, 1);
+        double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas.t(), shat);
+        QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
+                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                .arg(bandwidthWeight->bandwidth())
+                .arg(value);
+        emit message(msg);
+        return value;
+    }
+    else return DBL_MAX;
+}
+
+double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
@@ -435,6 +539,50 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCV(GwmBandwidthWeight *bandwi
             .arg(cv);
     emit message(msg);
     return cv;
+}
+
+double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *bandwidthWeight)
+{
+    int nDp = mDataPoints.n_rows;
+    vec shat(2, fill::zeros);
+    vec cv_all(mOmpThreadNum, fill::zeros);
+    bool flag = true;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; i < nDp; i++)
+    {
+        if (flag)
+        {
+            int thread = omp_get_thread_num();
+            vec d = mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+            vec w = bandwidthWeight->weight(d);
+            w(i) = 0.0;
+            mat xtw = trans(mX.each_col() % w);
+            mat xtwx = xtw * mX;
+            mat xtwy = xtw * mY;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                vec beta = xtwx_inv * xtwy;
+                double res = mY(i) - det(mX.row(i) * beta);
+                cv_all(thread) += res * res;
+            }
+            catch (std::exception e)
+            {
+                flag = false;
+            }
+        }
+    }
+    if (flag)
+    {
+        double cv = sum(cv_all);
+        QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                .arg(bandwidthWeight->bandwidth())
+                .arg(cv);
+        emit message(msg);
+        return cv;
+    }
+    else return DBL_MAX;
 }
 
 void GwmBasicGWRAlgorithm::fTest(GwmBasicGWRAlgorithm::FTestParameters params)
@@ -480,36 +628,12 @@ void GwmBasicGWRAlgorithm::fTest(GwmBasicGWRAlgorithm::FTestParameters params)
         vk2(i) = (1.0 / nDp) * det(trans(betasi - betasJndp) * betasi);
     }
     QList<GwmFTestResult> f3;
-    f3.reserve(nVar);
     for (int i = 0; i < nVar; i++)
     {
-        double g1 = 0.0, g2 = 0.0, numdf = 0.0;
-        if (isStoreS())
-        {
-            mat B(nDp, nDp, fill::zeros);
-            mat ek = eye(nVar, nVar);
-            mat wspan(1, nVar, fill::ones);
-            for (int j = 0; j < nDp; j++)
-            {
-                vec w = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
-                mat xtw = trans(mX % (w * wspan));
-                B.row(j) = ek.row(i) * inv_sympd(xtw * mX) * xtw;
-            }
-            mat Bj = 1.0 / nDp * (B.t() * (eye(nDp, nDp) - (1.0 / nDp) * mat(nDp, nDp, fill::ones)) * B);
-            vec b = diagvec(Bj);
-            g1 = sum(b);
-            g2 = sum(b % b);
-            qDebug("Var %d tr(B)   = %lf", i, g1);
-            qDebug("Var %d tr(B.B) = %lf", i, g2);
-            numdf = g1 * g1 / g2;
-        }
-        else
-        {
-            vec diagB = (this->*calcDiagB())(i);
-            g1 = diagB(0);
-            g2 = diagB(1);
-            numdf = g1 * g1 / g2;
-        }
+        vec diagB = calcDiagB(i);
+        double g1 = diagB(0);
+        double g2 = diagB(1);
+        double numdf = g1 * g1 / g2;
         GwmFTestResult f3i;
         f3i.s = (vk2(i) / g1) / sigma2delta1;
         f3i.df1 = numdf;
@@ -589,6 +713,57 @@ double GwmBasicGWRAlgorithm::calcTrQtQSerial()
     return trQtQ;
 }
 
+double GwmBasicGWRAlgorithm::calcTrQtQOmp()
+{
+    vec trQtQ(mOmpThreadNum, fill::zeros);
+    int nDp = mX.n_rows, nVar = mX.n_cols;
+    emit message(tr("Calculating the trace of matrix Q..."));
+    emit tick(0, nDp);
+    mat wspan(1, nVar, fill::ones);
+    bool flag = true;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; i < nDp; i++)
+    {
+        if (flag)
+        {
+            int thread = omp_get_thread_num();
+            vec wi = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+            mat xtwi = trans(mX % (wi * wspan));
+            try {
+                mat xtwxR = inv_sympd(xtwi * mX);
+                mat ci = xtwxR * xtwi;
+                mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+                vec pi = -trans(si);
+                pi(i) += 1.0;
+                double qi = sum(pi % pi);
+                trQtQ(thread) += qi * qi;
+                for (arma::uword j = i + 1; j < nDp && flag; j++)
+                {
+                    vec wj = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
+                    mat xtwj = trans(mX % (wj * wspan));
+                    try {
+                        mat sj = mX.row(j) * inv_sympd(xtwj * mX) * xtwj;
+                        vec pj = -trans(sj);
+                        pj(j) += 1.0;
+                        double qj = sum(pi % pj);
+                        trQtQ(thread) += qj * qj * 2.0;
+                    } catch (...) {
+                        emit error("Matrix seems to be singular.");
+                        emit tick(nDp, nDp);
+                        flag = false;
+                    }
+                }
+            } catch (...) {
+                emit error("Matrix seems to be singular.");
+                emit tick(nDp, nDp);
+                flag = false;
+            }
+        }
+        emit tick(i + 1, nDp);
+    }
+    return flag ? sum(trQtQ) : DBL_MAX;
+}
+
 vec GwmBasicGWRAlgorithm::calcDiagBSerial(int i)
 {
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
@@ -624,6 +799,53 @@ vec GwmBasicGWRAlgorithm::calcDiagBSerial(int i)
     return { sum(diagB), sum(diagB % diagB) };
 }
 
+vec GwmBasicGWRAlgorithm::calcDiagBOmp(int i)
+{
+    int nDp = mX.n_rows, nVar = mX.n_cols;
+    mat diagB_all(nDp, mOmpThreadNum, fill::zeros), c_all(nDp, mOmpThreadNum, fill::zeros);
+    mat ek = eye(nVar, nVar);
+    mat wspan(1, nVar, fill::ones);
+    bool flag = true;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int j = 0; j < nDp; j++)
+    {
+        if (flag)
+        {
+            int thread = omp_get_thread_num();
+            vec w = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
+            mat xtw = trans(mX % (w * wspan));
+            try {
+                mat C = trans(xtw) * inv_sympd(xtw * mX);
+                c_all.col(thread) += C.col(i);
+            } catch (...) {
+                emit error("Matrix seems to be singular.");
+                flag = false;
+            }
+        }
+    }
+    vec c = sum(c_all, 1);
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int k = 0; k < nDp; k++)
+    {
+        if (flag)
+        {
+            int thread = omp_get_thread_num();
+            vec w = mSpatialWeight.spatialWeight(mDataPoints.row(k), mDataPoints);
+            mat xtw = trans(mX % (w * wspan));
+            try {
+                mat C = trans(xtw) * inv_sympd(xtw * mX);
+                vec b = C.col(i);
+                diagB_all.col(thread) += (b % b - (1.0 / nDp) * (b % c));
+            } catch (...) {
+                emit error("Matrix seems to be singular.");
+                flag = false;
+            }
+        }
+    }
+    vec diagB = 1.0 / nDp * sum(diagB_all, 1);
+    return { sum(diagB), sum(diagB % diagB) };
+}
+
 bool GwmBasicGWRAlgorithm::isValid()
 {
     if (GwmGeographicalWeightedRegressionAlgorithm::isValid())
@@ -637,4 +859,54 @@ bool GwmBasicGWRAlgorithm::isValid()
         return true;
     }
     else return false;
+}
+
+void GwmBasicGWRAlgorithm::setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
+{
+    mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
+    QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::CUDA), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial)
+    };
+    mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
+}
+
+void GwmBasicGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &type)
+{
+    if (type & parallelAbility())
+    {
+        mParallelType = type;
+        switch (type) {
+        case IParallelalbe::ParallelType::SerialOnly:
+            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
+            mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixSerial;
+            mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial;
+            mCalcTrQtQFunction = &GwmBasicGWRAlgorithm::calcTrQtQSerial;
+            mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBSerial;
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            break;
+        case IParallelalbe::ParallelType::OpenMP:
+            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionOmp;
+            mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixOmp;
+            mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionOmp;
+            mCalcTrQtQFunction = &GwmBasicGWRAlgorithm::calcTrQtQOmp;
+            mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBOmp;
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            break;
+        case IParallelalbe::ParallelType::CUDA:
+            break;
+        default:
+            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
+            mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixSerial;
+            mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial;
+            mCalcTrQtQFunction = &GwmBasicGWRAlgorithm::calcTrQtQSerial;
+            mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBSerial;
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            break;
+        }
+    }
 }
