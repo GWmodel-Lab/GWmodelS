@@ -41,8 +41,10 @@ void GwmBasicGWRAlgorithm::run()
     if (mIsAutoselectIndepVars)
     {
         emit message(QString(tr("Automatically selecting independent variables ...")));
+        mIndepVarSelectModelsTotalNum = (mIndepVars.size() + 1) * (mIndepVars.size()) / 2;
         mIndepVarSelector.setIndepVars(mIndepVars);
         mIndepVarSelector.setThreshold(mIndepVarSelectionThreshold);
+        emit tick(mIndepVarSelectModelsCurrent, mIndepVarSelectModelsTotalNum);
         QList<GwmVariable> selectedIndepVars = mIndepVarSelector.optimize(this);
         if (selectedIndepVars.size() > 0)
         {
@@ -62,6 +64,7 @@ void GwmBasicGWRAlgorithm::run()
     if (mIsAutoselectBandwidth)
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
+        emit tick(0, 0);
         GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
         mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
@@ -82,18 +85,16 @@ void GwmBasicGWRAlgorithm::run()
     if (mHasHatMatrix)
     {
         uword nDp = mDataPoints.n_rows;
-        mat betasSE, S(isStoreS() ? nDp : 1, nDp, fill::zeros);
-        vec shat, qDiag;
-        mBetas = regression(mX, mY, betasSE, shat, qDiag, S);
+        mBetas = regression(mX, mY);
         // 诊断
-        mDiagnostic = CalcDiagnostic(mX, mY, mBetas, shat);
-        double trS = shat(0), trStS = shat(1);
+        mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mShat);
+        double trS = mShat(0), trStS = mShat(1);
         double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
-        betasSE = sqrt(sigmaHat * betasSE);
+        mBetasSE = sqrt(sigmaHat * mBetasSE);
         vec yhat = Fitted(mX, mBetas);
         vec res = mY - yhat;
-        vec stu_res = res / sqrt(sigmaHat * qDiag);
-        mat betasTV = mBetas / betasSE;
+        vec stu_res = res / sqrt(sigmaHat * mQDiag);
+        mat betasTV = mBetas / mBetasSE;
         vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
         vec dyhat2 = (mY - yhat) % (mY - yhat);
         vec localR2 = vec(nDp, fill::zeros);
@@ -111,7 +112,7 @@ void GwmBasicGWRAlgorithm::run()
             qMakePair(QString("yhat"), yhat),
             qMakePair(QString("residual"), res),
             qMakePair(QString("Stud_residual"), stu_res),
-            qMakePair(QString("%1_SE"), betasSE),
+            qMakePair(QString("%1_SE"), mBetasSE),
             qMakePair(QString("%1_TV"), betasTV),
             qMakePair(QString("localR2"), localR2)
         };
@@ -122,7 +123,7 @@ void GwmBasicGWRAlgorithm::run()
             double trQtQ = DBL_MAX;
             if (isStoreS())
             {
-                mat EmS = eye(nDp, nDp) - S;
+                mat EmS = eye(nDp, nDp) - mS;
                 mat Q = trans(EmS) * EmS;
                 trQtQ = sum(diagvec(trans(Q) * Q));
             }
@@ -133,9 +134,9 @@ void GwmBasicGWRAlgorithm::run()
             FTestParameters fTestParams;
             fTestParams.nDp = mDataLayer->featureCount();
             fTestParams.nVar = mIndepVars.size() + 1;
-            fTestParams.trS = shat(0);
-            fTestParams.trStS = shat(1);
-            fTestParams.trQ = sum(qDiag);
+            fTestParams.trS = mShat(0);
+            fTestParams.trStS = mShat(1);
+            fTestParams.trQ = sum(mQDiag);
             fTestParams.trQtQ = trQtQ;
             fTestParams.gwrRSS = sum(res % res);
             fTest(fTestParams);
@@ -151,6 +152,13 @@ void GwmBasicGWRAlgorithm::run()
     }
 
     emit success();
+}
+
+mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y)
+{
+    if (hasHatMatrix())
+        return (this->*mRegressionHatmatrixFunction)(x, y, mBetasSE, mShat, mQDiag, mS);
+    else return (this->*mRegressionFunction)(x, y);
 }
 
 double GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial(const QList<GwmVariable>& indepVars)
@@ -181,6 +189,7 @@ double GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial(const QList<GwmVaria
             return DBL_MAX;
         }
     }
+    emit tick(++mIndepVarSelectModelsCurrent, mIndepVarSelectModelsTotalNum);
     double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(x, y, betas.t(), shat);
     QStringList names;
     for (const GwmVariable& v : indepVars)
@@ -224,6 +233,7 @@ double GwmBasicGWRAlgorithm::indepVarsSelectCriterionOmp(const QList<GwmVariable
             }
         }
     }
+    emit tick(++mIndepVarSelectModelsCurrent, mIndepVarSelectModelsTotalNum);
     if (flag)
     {
         double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(x, y, betas.t(), sum(shat, 1));
@@ -269,6 +279,7 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
     int nRp = mRegressionPoints.n_rows, nVar = x.n_cols;
     const mat& points = hasRegressionLayer() ? mRegressionPoints : mDataPoints;
     mat betas(nVar, nRp, fill::zeros);
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nRp; i++)
     {
@@ -280,12 +291,13 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
         {
             mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
-            emit tick(i + 1, nRp);
+            emit tick(current + 1, nRp);
         }
         catch (exception e)
         {
             emit error(e.what());
         }
+        emit tick(++current, nRp);
     }
     return betas.t();
 }
@@ -298,6 +310,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, 
     betasSE = mat(nVar, nDp, fill::zeros);
     shat = vec(2, fill::zeros);
     qDiag = vec(nDp, fill::zeros);
+    S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
         vec w = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
@@ -334,8 +347,10 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat
     int nDp = x.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     betasSE = mat(nVar, nDp, fill::zeros);
+    S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     mat qDiag_all(nDp, mOmpThreadNum, fill::zeros);
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
@@ -362,7 +377,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat
         {
             emit error(e.what());
         }
-        emit tick(i + 1, nDp);
+        emit tick(++current, nDp);
     }
     shat = sum(shat_all, 1);
     qDiag = sum(qDiag_all, 1);

@@ -108,14 +108,7 @@ public:     // IIndependentVariableSelectable interface
     }
 
 protected:  // IRegressionAnalysis interface
-    mat regression(const mat& x, const vec& y) override
-    {
-        return (this->*mRegressionFunction)(x, y);
-    }
-    mat regression(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
-    {
-        return (this->*mRegressionHatmatrixFunction)(x, y, betasSE, shat, qDiag, S);
-    }
+    mat regression(const mat& x, const vec& y) override;
 
 public:     // IParallelalbe interface
     int parallelAbility() const override;
@@ -171,6 +164,11 @@ private:
     bool mHasHatMatrix = true;
     bool mHasFTest = false;
 
+    mat mBetasSE;
+    vec mShat;
+    vec mQDiag;
+    mat mS;
+
     GwmBandwidthSizeSelector mBandwidthSizeSelector;
     bool mIsAutoselectBandwidth = false;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
@@ -180,6 +178,8 @@ private:
     bool mIsAutoselectIndepVars = false;
     double mIndepVarSelectionThreshold = 3.0;
     IndepVarsSelectCriterionFunction mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial;
+    int mIndepVarSelectModelsTotalNum = 0;
+    int mIndepVarSelectModelsCurrent = 0;
 
     Regression mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
     RegressionHatmatrix mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixSerial;
