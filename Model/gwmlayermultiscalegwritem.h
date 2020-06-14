@@ -32,7 +32,7 @@ public:
 
     QList<QString> bandwidthUnit() const;
 
-    QList<GwmMultiscaleGWRTaskThread::BandwidthSeledType> bandwidthSeled() const;
+    QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> bandwidthSeled() const;
 
     QList<GwmGWRTaskThread::BandwidthType> bandwidthType() const;
 
@@ -61,7 +61,7 @@ private:
     QList<GwmLayerAttributeItem*> mIndepVarsOrigin;
     vec mBandwidthSize;
     QList<QString> mBandwidthUnit;
-    QList<GwmMultiscaleGWRTaskThread::BandwidthSeledType> mBandwidthSeled;
+    QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> mBandwidthSeled;
     QList<GwmGWRTaskThread::BandwidthType> mBandwidthType;
     QList<GwmGWRTaskThread::BandwidthSelectionApproach> mBandwidthSelectionApproach;
     QList<GwmGWRTaskThread::KernelFunction> mBandwidthKernelFunction;

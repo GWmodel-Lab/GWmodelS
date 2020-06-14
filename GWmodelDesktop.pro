@@ -86,6 +86,7 @@ SOURCES += \
     TaskThread/gwmscalablegwralgorithm.cpp \
     TaskThread/gwmspatialalgorithm.cpp \
     TaskThread/gwmspatialmonoscalealgorithm.cpp \
+    TaskThread/gwmspatialmultiscalealgorithm.cpp \
     attributetable/qgsaddattrdialog.cpp \
     attributetable/qgsfeaturefilterwidget.cpp \
 #    attributetable/qgsfeaturelistmodel.cpp \
@@ -201,6 +202,7 @@ HEADERS += \
     TaskThread/gwmscalablegwralgorithm.h \
     TaskThread/gwmspatialalgorithm.h \
     TaskThread/gwmspatialmonoscalealgorithm.h \
+    TaskThread/gwmspatialmultiscalealgorithm.h \
     TaskThread/imonovariableanalysis.h \
     TaskThread/imultivariableanalysis.h \
     TaskThread/iparallelable.h \

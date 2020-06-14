@@ -15,7 +15,7 @@ struct GwmParameterSpecifiedOption
     QString bandwidthUnit = "x1";
     GwmGWRTaskThread::BandwidthType bandwidthType = GwmGWRTaskThread::Adaptive;
     GwmGWRTaskThread::KernelFunction kernel = GwmGWRTaskThread::Gaussian;
-    GwmMultiscaleGWRTaskThread::BandwidthSeledType bandwidthSeledType = GwmMultiscaleGWRTaskThread::Null;
+    GwmMultiscaleGWRTaskThread::BandwidthInitilizeType bandwidthSeledType = GwmMultiscaleGWRTaskThread::Null;
     GwmGWRTaskThread::BandwidthSelectionApproach approach = GwmGWRTaskThread::CV;
 
     GwmGWRTaskThread::DistanceSourceType distanceType = GwmGWRTaskThread::CRS;

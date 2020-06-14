@@ -14,18 +14,18 @@ class GwmGeographicalWeightedRegressionAlgorithm : public GwmSpatialMonoscaleAlg
     Q_OBJECT
 
 public:
-    inline static vec Fitted(const mat& x, const mat& betas)
+    static vec Fitted(const mat& x, const mat& betas)
     {
         return sum(betas % x, 1);
     }
 
-    inline static double RSS(const mat& x, const mat& y, const mat& betas)
+    static double RSS(const mat& x, const mat& y, const mat& betas)
     {
         vec r = y - Fitted(x, betas);
         return sum(r % r);
     }
 
-    inline static double AICc(const mat& x, const mat& y, const mat& betas, const vec& shat)
+    static double AICc(const mat& x, const mat& y, const mat& betas, const vec& shat)
     {
         double ss = RSS(x, y, betas), n = x.n_rows;
         return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));

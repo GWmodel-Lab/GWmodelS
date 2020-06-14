@@ -1,9 +1,9 @@
 #include "gwmpropertymultiscaleparameterspecifieditemmodel.h"
 
-QMap<GwmMultiscaleGWRTaskThread::BandwidthSeledType, QString> GwmPropertyMultiscaleParameterSpecifiedItemModel::BandwidthSeledTypeName = {
-    std::make_pair(GwmMultiscaleGWRTaskThread::BandwidthSeledType::Null, "Not initizlied"),
-    std::make_pair(GwmMultiscaleGWRTaskThread::BandwidthSeledType::Initial, "Initizlied"),
-    std::make_pair(GwmMultiscaleGWRTaskThread::BandwidthSeledType::Specified, "Specified")
+QMap<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType, QString> GwmPropertyMultiscaleParameterSpecifiedItemModel::BandwidthSeledTypeName = {
+    std::make_pair(GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Null, "Not initizlied"),
+    std::make_pair(GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Initial, "Initizlied"),
+    std::make_pair(GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Specified, "Specified")
 };
 
 QMap<GwmGWRTaskThread::BandwidthSelectionApproach, QString> GwmPropertyMultiscaleParameterSpecifiedItemModel::BandwidthSelectionApproachName = {

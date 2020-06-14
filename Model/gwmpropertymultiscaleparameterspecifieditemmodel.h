@@ -11,7 +11,7 @@ class GwmPropertyMultiscaleParameterSpecifiedItemModel : public QAbstractItemMod
     Q_OBJECT
 
 public:
-    static QMap<GwmMultiscaleGWRTaskThread::BandwidthSeledType, QString> BandwidthSeledTypeName;
+    static QMap<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType, QString> BandwidthSeledTypeName;
     static QMap<GwmGWRTaskThread::BandwidthSelectionApproach, QString> BandwidthSelectionApproachName;
     static QMap<GwmGWRTaskThread::BandwidthType, QString> BandwidthTypeName;
     static QMap<GwmGWRTaskThread::KernelFunction, QString> KernelFunctionName;

@@ -62,7 +62,7 @@ QList<QString> GwmLayerMultiscaleGWRItem::bandwidthUnit() const
     return mBandwidthUnit;
 }
 
-QList<GwmMultiscaleGWRTaskThread::BandwidthSeledType> GwmLayerMultiscaleGWRItem::bandwidthSeled() const
+QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> GwmLayerMultiscaleGWRItem::bandwidthSeled() const
 {
     return mBandwidthSeled;
 }

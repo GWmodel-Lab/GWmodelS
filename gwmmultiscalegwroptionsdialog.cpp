@@ -334,13 +334,13 @@ void GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged(const QMo
     if (option)
     {
         switch (option->bandwidthSeledType) {
-        case GwmMultiscaleGWRTaskThread::BandwidthSeledType::Null:
+        case GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Null:
             ui->mBwSizeAutomaticRadio->setChecked(true);
             break;
-        case GwmMultiscaleGWRTaskThread::BandwidthSeledType::Initial:
+        case GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Initial:
             ui->mBwSizeInitialRadio->setChecked(true);
             break;
-        case GwmMultiscaleGWRTaskThread::BandwidthSeledType::Specified:
+        case GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Specified:
             ui->mBwSizeCustomizeRadio->setChecked(true);
             break;
         default:
