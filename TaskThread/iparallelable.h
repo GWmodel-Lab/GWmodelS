@@ -5,9 +5,9 @@ struct IParallelalbe
 {
     enum ParallelType
     {
-        Serial = 0,
-        OpenMP = 1 << 0,
-        CUDA = 1 << 1
+        SerialOnly = 1 << 0,
+        OpenMP = 1 << 1,
+        CUDA = 1 << 2
     };
 
     virtual int parallelAbility() const = 0;

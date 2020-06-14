@@ -26,7 +26,7 @@ void GwmBasicGWRAlgorithm::run()
     {
         emit message(QString(tr("Automatically selecting independent variables ...")));
         switch (mParallelType) {
-        case IParallelalbe::Serial:
+        case IParallelalbe::SerialOnly:
             mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial;
         case IParallelalbe::OpenMP:
         default:

@@ -245,7 +245,7 @@ inline IndepVarsCriterionList GwmBasicGWRAlgorithm::indepVarSelectorCriterions()
 
 inline int GwmBasicGWRAlgorithm::parallelAbility() const
 {
-    return IParallelalbe::Serial | IParallelalbe::OpenMP;
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
 }
 
 inline IParallelalbe::ParallelType GwmBasicGWRAlgorithm::parallelType() const
