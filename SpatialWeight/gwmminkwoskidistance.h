@@ -21,6 +21,8 @@ public:
         return new GwmMinkwoskiDistance(*this);
     }
 
+    DistanceType type() override { return DistanceType::MinkwoskiDistance; }
+
     double poly() const;
     void setPoly(double poly);
 

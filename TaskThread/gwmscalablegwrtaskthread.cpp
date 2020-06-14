@@ -76,8 +76,7 @@ void GwmScalableGWRTaskThread::run()
 {
     initPoints();
     initXY(mX, mY, mDepVar, mIndepVars);
-    mat neighbourDists;
-    umat neighbour = getNeighbours(neighbourDists);
+    getNeighbours();
 
     // 解算模型
     GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
@@ -87,12 +86,12 @@ void GwmScalableGWRTaskThread::run()
     switch (bandwidth->kernel())
     {
     case GwmBandwidthWeight::KernelFunctionType::Gaussian:
-        band0 = median(neighbourDists.col(qMin<uword>(50, nBw))) / sqrt(3);
-        mG0 = exp(-pow(neighbourDists / band0, 2));
+        band0 = median(mNeighbourDists.col(qMin<uword>(50, nBw) - 1)) / sqrt(3);
+        mG0 = exp(-pow(mNeighbourDists / band0, 2));
         break;
     case GwmBandwidthWeight::KernelFunctionType::Exponential:
-        band0 = median(neighbourDists.col(qMin<uword>(50, nBw))) / 3;
-        mG0 = exp(-pow(neighbourDists / band0, 2));
+        band0 = median(mNeighbourDists.col(qMin<uword>(50, nBw) - 1)) / 3;
+        mG0 = exp(-pow(mNeighbourDists / band0, 2));
         break;
     default:
         return;
@@ -115,7 +114,7 @@ void GwmScalableGWRTaskThread::run()
         vec yhat = sum(mX % mBetas, 1);
         vec residual = mY - yhat;
         mBetasSE = sqrt(sigmaHat * mBetasSE);
-        vec betasTV = mBetas / mBetasSE;
+        mat betasTV = mBetas / mBetasSE;
         createResultLayer({
             qMakePair(QString("%1"), mBetas),
             qMakePair(QString("y"), mY),
@@ -133,7 +132,7 @@ void GwmScalableGWRTaskThread::run()
     emit success();
 }
 
-umat GwmScalableGWRTaskThread::getNeighbours(mat& dists)
+void GwmScalableGWRTaskThread::getNeighbours()
 {
     GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
     uword nDp = mDataPoints.n_rows, nBw = bandwidth->bandwidth();
@@ -145,10 +144,10 @@ umat GwmScalableGWRTaskThread::getNeighbours(mat& dists)
         uvec indices = sort_index(d);
         vec d_sorted = sort(d);
         neighboursIndex.col(i) = indices(span(1, nBw));
-        dists.col(i) = d_sorted(span(1, nBw));
+        neighboursDists.col(i) = d_sorted(span(1, nBw));
     }
-    dists = trans(neighboursDists);
-    return trans(neighboursIndex);
+    mNeighbourDists = trans(neighboursDists);
+    mNeighbours = trans(neighboursIndex);
 }
 
 double scagwr_loocv_multimin_function(const gsl_vector* vars, void* params)
@@ -258,7 +257,6 @@ arma::mat GwmScalableGWRTaskThread::regression(const arma::mat &x, const arma::v
     int bw = bandwidth->bandwidth();
     int n = x.n_rows, k = x.n_cols, poly1 = mPolynomial + 1;
     double b = mScale, a = mPenalty;
-    mat Mx0 = mat(mMx0), My0 = mat(mMy0);
     mat XtX = x.t() * x, XtY = x.t() * y;
     /**
      * Calculate Rx, Ry, and R0.
@@ -298,13 +296,13 @@ arma::mat GwmScalableGWRTaskThread::regression(const arma::mat &x, const arma::v
         for (int k1 = 0; k1 < k; k1++) {
             for (int p = 0; p < poly1; p++) {
                 for (int k2 = 0; k2 < k; k2++) {
-                    Mx0((k1 * (mPolynomial + 1) + p) * k + k2, i) += x(i, k1) * x(i, k2);
+                    mMx0((k1 * (mPolynomial + 1) + p) * k + k2, i) += x(i, k1) * x(i, k2);
                 }
-                My0(p * k + k1, i) += x(i, k1) * y(i);
+                mMy0(p * k + k1, i) += x(i, k1) * y(i);
             }
         }
     }
-    mat Mx = (Rx * mat(1, n, fill::ones)) % Mx0, My = (Ry * mat(1, n, fill::ones)) % My0;
+    mat Mx = (Rx * mat(1, n, fill::ones)) % mMx0, My = (Ry * mat(1, n, fill::ones)) % mMy0;
     /**
      * Regression.
      */
@@ -315,7 +313,7 @@ arma::mat GwmScalableGWRTaskThread::regression(const arma::mat &x, const arma::v
     mat spanG(1, k, fill::ones);
     mat spanX(1, poly1, fill::ones);
     mat betas = mat(n, k, fill::zeros);
-    mat betasSE = mat(n, k, fill::zeros);
+    mBetasSE = mat(n, k, fill::zeros);
     double trS = 0.0, trStS = 0.0;
     bool isAllCorrect = true;
     for (int i = 0; i < n; i++) {
@@ -375,15 +373,12 @@ arma::mat GwmScalableGWRTaskThread::regression(const arma::mat &x, const arma::v
             mat XX = invMx * XG2X * invMx;
             mat xi = x.row(i);
             trStS += det(sum(xi * XX * trans(xi)));
-            betasSE.row(i) = trans(sqrt(XX.diag()));
+            mBetasSE.row(i) = trans(sqrt(XX.diag()));
         } catch (...) {
             isAllCorrect = false;
         }
     }
     mShat = { trS, trStS };
-    mBetasSE = betasSE;
-    mMx0 = Mx0;
-    mMy0 = My0;
     return betas;
 }
 

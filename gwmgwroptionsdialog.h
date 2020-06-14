@@ -72,7 +72,6 @@ public:
 private slots:
     void on_cbxHatmatrix_toggled(bool checked);
     void on_cbkRegressionPoints_toggled(bool checked);
-    void on_cmbRegressionLayerSelect_currentIndexChanged(int index);
 };
 
 #endif // GWMGWROPTIONSDIALOG_H

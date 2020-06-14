@@ -12,12 +12,22 @@ class GwmEnumValueNameMapper
 public:
     GwmEnumValueNameMapper(initializer_list<pair<EnumT, QString> > values);
 
-    QString name(EnumT value)
+    QString name(const EnumT& value)
     {
         return mValueToNameMap[value];
     }
 
-    EnumT value(QString name)
+    EnumT value(const QString& name)
+    {
+        return mNameToValueMap[name];
+    }
+
+    QString operator[](const EnumT& value)
+    {
+        return mValueToNameMap[value];
+    }
+
+    EnumT operator[](const QString& name)
     {
         return mNameToValueMap[name];
     }

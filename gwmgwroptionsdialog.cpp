@@ -28,7 +28,6 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     ui->cmbRegressionLayerSelect->setCurrentIndex(-1);
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::layerChanged);
     connect(ui->ckbRegressionPoints, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::on_cbkRegressionPoints_toggled);
-    connect(ui->cmbRegressionLayerSelect, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::on_cmbRegressionLayerSelect_currentIndexChanged);
 
     ui->mDepVarComboBox->setCurrentIndex(-1);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::onDepVarChanged);
@@ -501,11 +500,6 @@ void GwmGWROptionsDialog::updateFields()
     }
     mTaskThread->setSpatialWeight(spatialWeight);
     // 并行设置
-//    if (distSrcType != GwmGWRTaskThread::DistanceSourceType::DMatFile)
-//    {
-//        mTaskThread->setParallelMethodType(this->parallelMethod());
-//        mTaskThread->setParallelParameter(this->parallelParameters());
-//    }
     if (ui->mCalcParallelNoneRadio->isChecked())
     {
         mTaskThread->setParallelType(IParallelalbe::SerialOnly);
@@ -576,9 +570,4 @@ void GwmGWROptionsDialog::on_cbkRegressionPoints_toggled(bool checked)
     }
     ui->cbxHatmatrix->setEnabled(!checked);
     ui->cbxHatmatrix->setChecked(!checked);
-}
-
-void GwmGWROptionsDialog::on_cmbRegressionLayerSelect_currentIndexChanged(int index)
-{
-
 }

@@ -4,7 +4,9 @@
 #include "Model/gwmlayergwritem.h"
 #include "TaskThread/gwmscalablegwrtaskthread.h"
 
-class GwmLayerScalableGWRItem : public GwmLayerGWRItem
+#include <SpatialWeight/gwmbandwidthweight.h>
+
+class GwmLayerScalableGWRItem : public GwmLayerVectorItem
 {
     Q_OBJECT
 public:
@@ -12,15 +14,37 @@ public:
 
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::ScalableGWR; }
 
-    double getCV() const;
+    double cv() const;
 
-    double getScale() const;
+    double scale() const;
 
-    double getPenalty() const;
+    double penalty() const;
 
-    int getPolynomial() const;
+    int polynomial() const;
+
+    int dataPointsSize() const;
+
+    GwmVariable depVar() const;
+
+    QList<GwmVariable> indepVars() const;
+
+    GwmBandwidthWeight weight() const;
+
+    GwmDiagnostic diagnostic() const;
+
+    arma::mat betas() const;
+
+    GwmDistance::DistanceType distanceType() const;
 
 private:
+    int mDataPointsSize;
+    GwmVariable mDepVar;
+    QList<GwmVariable> mIndepVars;
+    GwmBandwidthWeight mWeight;
+    GwmDistance::DistanceType mDistanceType;
+    GwmDiagnostic mDiagnostic;
+    arma::mat mBetas;
+
     int mPolynomial;
     double mCV;
     double mScale;

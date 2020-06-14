@@ -16,6 +16,8 @@ public:
         return new GwmDMatDistance(*this);
     }
 
+    DistanceType type() override { return DistanceType::DMatDistance; }
+
     QString dMatFile() const;
     void setDMatFile(const QString &dMatFile);
 

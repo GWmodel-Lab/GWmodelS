@@ -40,33 +40,29 @@ void GwmPropertyScalableGWRTab::updateUI()
 {
     if (!mLayerItem)
         return;
-    ui->lblKernelFunction->setText(kernelFunctionNameDict[mLayerItem->bandwidthKernelFunction()]);
-    ui->lblBandwidthType->setText(bandwidthTypeNameDict[mLayerItem->bandwidthType()]);
-    if (mLayerItem->bandwidthType() == GwmGWRTaskThread::BandwidthType::Adaptive)
+
+    GwmBandwidthWeight weight = mLayerItem->weight();
+    ui->lblKernelFunction->setText(GwmBandwidthWeight::KernelFunctionTypeNameMapper.name(weight.kernel()));
+    ui->lblBandwidthType->setText(weight.adaptive() ? tr("Adaptive") : tr("Fixed"));
+    if (weight.adaptive())
     {
-        QString bwSizeString = QString("%1 (number of nearest neighbours)").arg(int(mLayerItem->bandwidthSize()));
+        QString bwSizeString = QString("%1 (number of nearest neighbours)").arg(int(weight.bandwidth()));
         ui->lblBandwidthSize->setText(bwSizeString);
     }
     else
     {
         QString bwSizeString = QString("%1 %2")
-                .arg(mLayerItem->bandwidthSize(), 0, 'f', 12)
-                .arg(mLayerItem->bandwidthUnit());
+                .arg(weight.bandwidth(), 0, 'f', 12)
+                .arg(weight.bandwidth());
         ui->lblBandwidthSize->setText(bwSizeString);
     }
-    if (true)
-    {
-        ui->lblRegressionPoints->setText(tr("the same location as observations are used."));
-    }
-    if (true)
-    {
-        ui->lblDistanceMetric->setText(tr("Edclidean distance metric is used."));
-    }
-    ui->lblNumberDataPoints->setText(QString().sprintf("%d", mLayerItem->dataPointsSize()));
+    ui->lblRegressionPoints->setText(tr("The same location as observations are used."));
+    ui->lblDistanceMetric->setText(tr("%1 distance metric is used.").arg(GwmDistance::TypeNameMapper[mLayerItem->distanceType()]));
+    ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
 
-    if (mLayerItem->getHasHatmatrix())
+    if (true)
     {
-        GwmGWRDiagnostic diagnostic = mLayerItem->diagnostic();
+        GwmDiagnostic diagnostic = mLayerItem->diagnostic();
         ui->lblENP->setText(QString("%1").arg(diagnostic.ENP, 0, 'f', 6));
         ui->lblEDF->setText(QString("%1").arg(diagnostic.EDF, 0, 'f', 6));
         ui->lblAIC->setText(QString("%1").arg(diagnostic.AIC, 0, 'f', 6));
@@ -77,17 +73,8 @@ void GwmPropertyScalableGWRTab::updateUI()
     }
 
     // 计算四分位数
-    QList<int> indepVarsIndex = mLayerItem->getIndepVarIndex();
-    QList<GwmLayerAttributeItem*> indepVars, originIndepVars = mLayerItem->getIndepVarsOrigin();
-    for (int index : indepVarsIndex)
-    {
-        for (GwmLayerAttributeItem* item : originIndepVars)
-        {
-            if (item->attributeIndex() == index)
-                indepVars.append(item);
-        }
-    }
-    ui->tbwCoefficient->setRowCount(indepVarsIndex.size() + 1);
+    QList<GwmVariable> indepVars = mLayerItem->indepVars();
+    ui->tbwCoefficient->setRowCount(indepVars.size() + 1);
     ui->tbwCoefficient->setColumnCount(6);
     ui->tbwCoefficient->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     QStringList headers = QStringList() << tr("Name") << tr("Min") << tr("1st Qu") << tr("Median") << tr("3rd Qu") << tr("Max");
@@ -97,7 +84,7 @@ void GwmPropertyScalableGWRTab::updateUI()
     for (uword r = 0; r < betas.n_cols; r++)
     {
         vec q = quantile(betas.col(r), p);
-        QString name = (r == 0) ? QStringLiteral("Intercept") : indepVars[r - 1]->attributeName();
+        QString name = (r == 0) ? QStringLiteral("Intercept") : indepVars[r - 1].name;
         QTableWidgetItem* nameItem = new QTableWidgetItem(name);
         nameItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
         ui->tbwCoefficient->setItem(r, 0, nameItem);
@@ -111,7 +98,7 @@ void GwmPropertyScalableGWRTab::updateUI()
     }
 
     // LOOCV 结果
-    ui->lblBtilde->setText(QString().sprintf("%.6lf", mLayerItem->getScale()));
-    ui->lblAlpha->setText(QString().sprintf("%.6lf", mLayerItem->getPenalty()));
-    ui->lblCV->setText(QString().sprintf("%.6lf", mLayerItem->getCV()));
+    ui->lblBtilde->setText(QString().sprintf("%.6lf", mLayerItem->scale()));
+    ui->lblAlpha->setText(QString().sprintf("%.6lf", mLayerItem->penalty()));
+    ui->lblCV->setText(QString().sprintf("%.6lf", mLayerItem->cv()));
 }

@@ -698,7 +698,7 @@ void MainWidget::onScalableGWRBtnClicked()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
+            QgsVectorLayer* resultLayer = gwrTaskThread->resultLayer();
             GwmLayerScalableGWRItem* gwrItem = new GwmLayerScalableGWRItem(selectedItem, resultLayer, gwrTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }

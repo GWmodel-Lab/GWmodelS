@@ -82,6 +82,7 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
             case GwmLayerItem::ScalableGWR:
                 tabWidget = new GwmPropertyScalableGWRTab(this, static_cast<GwmLayerScalableGWRItem*>(item));
                 (static_cast<GwmPropertyScalableGWRTab*>(tabWidget))->updateUI();
+                break;
             case GwmLayerItem::GGWR:
                 tabWidget = new GwmPropertyGGWRTab(this, static_cast<GwmLayerGGWRItem*>(item));
                 (static_cast<GwmPropertyGGWRTab*>(tabWidget))->updateUI();
