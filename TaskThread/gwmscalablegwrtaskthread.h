@@ -49,11 +49,9 @@ public:     // GwmSpatialAlgorithm interface
 public:     // IRegressionAnalysis interface
     arma::mat regression(const arma::mat &x, const arma::vec &y) override;
 
-protected:
+private:
     umat getNeighbours(mat& dists);
     double optimize(const mat& Mx0, const mat& My0, double& b_tilde, double& alpha);
-
-private:
     void prepare();
 
     void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
@@ -83,11 +81,6 @@ inline void GwmScalableGWRTaskThread::setPolynomial(int polynomial)
 inline double GwmScalableGWRTaskThread::getPenalty() const
 {
     return mPenalty;
-}
-
-inline bool GwmScalableGWRTaskThread::isValid()
-{
-    return GwmGeographicalWeightedRegressionAlgorithm::isValid();
 }
 
 inline double GwmScalableGWRTaskThread::getScale() const

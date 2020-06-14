@@ -443,3 +443,16 @@ void GwmScalableGWRTaskThread::createResultLayer(initializer_list<CreateResultLa
     }
     mResultLayer->commitChanges();
 }
+
+bool GwmScalableGWRTaskThread::isValid()
+{
+    if (GwmGeographicalWeightedRegressionAlgorithm::isValid())
+    {
+        GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+        if (!(bandwidth->kernel() == GwmBandwidthWeight::Gaussian || bandwidth->kernel() == GwmBandwidthWeight::Exponential))
+            return false;
+
+        return true;
+    }
+    else return false;
+}
