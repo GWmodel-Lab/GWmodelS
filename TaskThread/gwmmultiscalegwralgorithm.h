@@ -4,8 +4,9 @@
 #include "gwmbandwidthsizeselector.h"
 #include "gwmspatialmultiscalealgorithm.h"
 #include "iregressionanalysis.h"
+#include "iparallelable.h"
 
-class GwmMultiscaleGWRAlgorithm : public GwmSpatialMultiscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable
+class GwmMultiscaleGWRAlgorithm : public GwmSpatialMultiscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable, public IOpenmpParallelable
 {
     Q_OBJECT
 
@@ -63,6 +64,21 @@ public:
 public:
     void run() override;
 
+    QList<BandwidthInitilizeType> bandwidthInitilize() const;
+    void setBandwidthInitilize(const QList<BandwidthInitilizeType> &bandwidthInitilize);
+
+    QList<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const;
+    void setBandwidthSelectionApproach(const QList<BandwidthSelectionCriterionType> &bandwidthSelectionApproach);
+
+    QList<bool> preditorCentered() const;
+    void setPreditorCentered(const QList<bool> &preditorCentered);
+
+    QList<double> bandwidthSelectThreshold() const;
+    void setBandwidthSelectThreshold(const QList<double> &bandwidthSelectThreshold);
+
+    bool hasHatMatrix() const;
+    void setHasHatMatrix(bool hasHatMatrix);
+
     int bandwidthSelectRetryTimes() const;
     void setBandwidthSelectRetryTimes(int bandwidthSelectRetryTimes);
 
@@ -77,6 +93,8 @@ public:
 
     int adaptiveLower() const;
     void setAdaptiveLower(int adaptiveLower);
+
+    mat betas() const;
 
     bool hasRegressionLayer()
     {
@@ -112,22 +130,15 @@ public:     // IRegressionAnalysis interface
 
     mat regression(const mat &x, const vec &y) override;
 
-    QList<BandwidthInitilizeType> bandwidthInitilize() const;
-    void setBandwidthInitilize(const QList<BandwidthInitilizeType> &bandwidthInitilize);
 
-    QList<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const;
-    void setBandwidthSelectionApproach(const QList<BandwidthSelectionCriterionType> &bandwidthSelectionApproach);
+public:     // IParallelalbe interface
+    int parallelAbility() const override;
+    ParallelType parallelType() const override;
+    void setParallelType(const ParallelType &type) override;
 
-    QList<bool> preditorCentered() const;
-    void setPreditorCentered(const QList<bool> &preditorCentered);
 
-    QList<double> bandwidthSelectThreshold() const;
-    void setBandwidthSelectThreshold(const QList<double> &bandwidthSelectThreshold);
-
-    bool hasHatMatrix() const;
-    void setHasHatMatrix(bool hasHatMatrix);
-
-    mat betas() const;
+public:     // IOpenmpParallelable interface
+    void setOmpThreadNum(const int threadNum) override;
 
 protected:
     void initPoints();
@@ -139,7 +150,21 @@ protected:
     }
 
     mat regressionAllSerial(const mat& x, const vec& y);
+    mat regressionAllOmp(const mat& x, const vec& y);
     vec regressionVarSerial(const vec& x, const vec& y, const int var, mat& S);
+    vec regressionVarOmp(const vec& x, const vec& y, const int var, mat& S);
+
+    BandwidthSizeCriterionFunction bandwidthSizeCriterionAll(BandwidthSelectionCriterionType type);
+    double mBandwidthSizeCriterionAllCVSerial(GwmBandwidthWeight* bandwidthWeight);
+    double mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWeight* bandwidthWeight);
+    double mBandwidthSizeCriterionAllAICSerial(GwmBandwidthWeight* bandwidthWeight);
+    double mBandwidthSizeCriterionAllAICOmp(GwmBandwidthWeight* bandwidthWeight);
+
+    BandwidthSizeCriterionFunction bandwidthSizeCriterionVar(BandwidthSelectionCriterionType type);
+    double mBandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight* bandwidthWeight);
+    double mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWeight* bandwidthWeight);
+    double mBandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight* bandwidthWeight);
+    double mBandwidthSizeCriterionVarAICOmp(GwmBandwidthWeight* bandwidthWeight);
 
     double findMaxDistance(int var);
 
@@ -157,12 +182,10 @@ private:
     QList<GwmVariable> mIndepVars;
 
     GwmSpatialWeight mInitSpatialWeight;
+//    BandwidthSizeCriterionFunction mBandwidthSizeCriterionAll = &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial;
+//    BandwidthSizeCriterionFunction mBandwidthSizeCriterionVar = &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial;
     BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial;
-    double mBandwidthSizeCriterionAllCVSerial(GwmBandwidthWeight* bandwidthWeight);
-    double mBandwidthSizeCriterionAllAICSerial(GwmBandwidthWeight* bandwidthWeight);
     int mBandwidthSelectionCurrentIndex = 0;
-    double mBandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight* bandwidthWeight);
-    double mBandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight* bandwidthWeight);
 
     QList<BandwidthInitilizeType> mBandwidthInitilize;
     QList<BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
@@ -186,10 +209,15 @@ private:
     cube mC;
     mat mX0;
     vec mY0;
+    vec mXi;
+    vec mYi;
 
     double mRSS0;
 
     GwmDiagnostic mDiagnostic;
+
+    IParallelalbe::ParallelType mParallelType = IParallelalbe::SerialOnly;
+    int mOmpThreadNum = 8;
 };
 
 inline GwmVariable GwmMultiscaleGWRAlgorithm::dependentVariable() const
@@ -321,5 +349,22 @@ inline mat GwmMultiscaleGWRAlgorithm::betas() const
 {
     return mBetas;
 }
+
+inline int GwmMultiscaleGWRAlgorithm::parallelAbility() const
+{
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
+}
+
+inline IParallelalbe::ParallelType GwmMultiscaleGWRAlgorithm::parallelType() const
+{
+    return mParallelType;
+}
+
+inline void GwmMultiscaleGWRAlgorithm::setOmpThreadNum(const int threadNum)
+{
+    mOmpThreadNum = threadNum;
+}
+
+
 
 #endif // GWMMULTISCALEGWRTASKTHREAD_H
