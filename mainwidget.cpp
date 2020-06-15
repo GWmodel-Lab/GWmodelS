@@ -40,7 +40,7 @@
 #include "Model/gwmlayerscalablegwritem.h"
 
 #include "gwmmultiscalegwroptionsdialog.h"
-#include "TaskThread/gwmmultiscalegwrtaskthread.h"
+#include "TaskThread/gwmmultiscalegwralgorithm.h"
 #include "PropertyPanelTabs/gwmpropertymultiscalegwrtab.h"
 
 #include "gwmattributetabledialog.h"
@@ -707,7 +707,7 @@ void MainWidget::onScalableGWRBtnClicked()
 
 void MainWidget::onMultiscaleGWRBtnClicked()
 {
-    GwmMultiscaleGWRTaskThread* gwrTaskThread = new GwmMultiscaleGWRTaskThread();
+    GwmMultiscaleGWRAlgorithm* gwrTaskThread = new GwmMultiscaleGWRAlgorithm();
     GwmMultiscaleGWROptionsDialog* gwrOptionDialog = new GwmMultiscaleGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)

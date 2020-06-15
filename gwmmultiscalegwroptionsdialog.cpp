@@ -11,7 +11,7 @@
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
-GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmMultiscaleGWRTaskThread* thread,QWidget *parent) :
+GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmMultiscaleGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmMultiscaleGWROptionsDialog),
     mMapLayerList(originItemList),
@@ -264,7 +264,7 @@ void GwmMultiscaleGWROptionsDialog::onAutomaticRadioToggled(bool checked)
         GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
         if (option)
         {
-            option->bandwidthSeledType = GwmMultiscaleGWRTaskThread::Null;
+            option->bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Null;
         }
     }
 }
@@ -336,13 +336,13 @@ void GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged(const QMo
     if (option)
     {
         switch (option->bandwidthSeledType) {
-        case GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Null:
+        case GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Null:
             ui->mBwSizeAutomaticRadio->setChecked(true);
             break;
-        case GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Initial:
+        case GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Initial:
             ui->mBwSizeInitialRadio->setChecked(true);
             break;
-        case GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Specified:
+        case GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Specified:
             ui->mBwSizeCustomizeRadio->setChecked(true);
             break;
         default:
@@ -391,7 +391,7 @@ void GwmMultiscaleGWROptionsDialog::onBwSizeAutomaticApprochChanged(int index)
 {
     // 记录数据
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
-    option->approach = (GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType)index;
+    option->approach = (GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType)index;
 }
 
 void GwmMultiscaleGWROptionsDialog::onBwSizeAdaptiveSizeChanged(int size)
@@ -443,7 +443,7 @@ void GwmMultiscaleGWROptionsDialog::onCustomizeRaidoToggled(bool checked)
         GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
         if (option)
         {
-            option->bandwidthSeledType = GwmMultiscaleGWRTaskThread::Specified;
+            option->bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Specified;
         }
     }
 }
@@ -461,7 +461,7 @@ void GwmMultiscaleGWROptionsDialog::onInitializeRadioToggled(bool checked)
         GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
         if (option)
         {
-            option->bandwidthSeledType = GwmMultiscaleGWRTaskThread::Initial;
+            option->bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Initial;
         }
     }
 }
@@ -497,14 +497,14 @@ double GwmMultiscaleGWROptionsDialog::bandwidthSize(){
     }
 }
 
-GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType GwmMultiscaleGWROptionsDialog::bandwidthSelectionApproach()
+GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType GwmMultiscaleGWROptionsDialog::bandwidthSelectionApproach()
 {
     switch (ui->mBwSizeAutomaticApprochCombo->currentIndex())
     {
     case 0:
-        return GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType::CV;
+        return GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV;
     default:
-        return GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType::AIC;
+        return GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC;
     }
 }
 
@@ -576,7 +576,7 @@ QVariant GwmMultiscaleGWROptionsDialog::parallelParameters()
     }
 }
 
-void GwmMultiscaleGWROptionsDialog::setTaskThread(GwmMultiscaleGWRTaskThread* taskThread)
+void GwmMultiscaleGWROptionsDialog::setTaskThread(GwmMultiscaleGWRAlgorithm* taskThread)
 {
     mTaskThread = taskThread;
 }
@@ -621,11 +621,11 @@ void GwmMultiscaleGWROptionsDialog::updateFields()
     // 参数设置
     if (ui->mCriterionCVRckb->isChecked())
     {
-        mTaskThread->setCriterionType(GwmMultiscaleGWRTaskThread::CVR);
+        mTaskThread->setCriterionType(GwmMultiscaleGWRAlgorithm::CVR);
     }
     else
     {
-        mTaskThread->setCriterionType(GwmMultiscaleGWRTaskThread::dCVR);
+        mTaskThread->setCriterionType(GwmMultiscaleGWRAlgorithm::dCVR);
     }
     mTaskThread->setMaxIteration(ui->mMaxIterationSpb->value());
     mTaskThread->setCriterionThreshold(pow(10.0, -1.0 * ui->mIterationThresholdSpb->value()));
@@ -633,8 +633,8 @@ void GwmMultiscaleGWROptionsDialog::updateFields()
     mTaskThread->setAdaptiveLower(ui->mNLowerSpb->value());
     // Parameter Specified 设置
     QList<GwmSpatialWeight> spatialWeights;
-    QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> initilize;
-    QList<GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType> approach;
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> initilize;
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> approach;
     QList<bool> preditorCentered;
     QList<double> threshold;
     for (int i = 0; i < mParameterSpecifiedOptionsModel->rowCount(); ++i)

@@ -1,27 +1,27 @@
-#include "gwmmultiscalegwrtaskthread.h"
+#include "gwmmultiscalegwralgorithm.h"
 
 #include <exception>
 #include "GWmodel/GWmodel.h"
 
 using namespace std;
 
-GwmEnumValueNameMapper<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> GwmMultiscaleGWRTaskThread::BandwidthInitilizeTypeNameMapper = {
-    make_pair(GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Null, tr("Not initilized, not specified")),
-    make_pair(GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Initial, tr("Initilized")),
-    make_pair(GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Specified, tr("Specified"))
+GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> GwmMultiscaleGWRAlgorithm::BandwidthInitilizeTypeNameMapper = {
+    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Null, tr("Not initilized, not specified")),
+    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Initial, tr("Initilized")),
+    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Specified, tr("Specified"))
 };
 
-GwmEnumValueNameMapper<GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType> GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionTypeNameMapper = {
-    make_pair(GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType::CV, tr("CV")),
-    make_pair(GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType::AIC, tr("AIC"))
+GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionTypeNameMapper = {
+    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV, tr("CV")),
+    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC, tr("AIC"))
 };
 
-GwmEnumValueNameMapper<GwmMultiscaleGWRTaskThread::BackFittingCriterionType> GwmMultiscaleGWRTaskThread::BackFittingCriterionTypeNameMapper = {
-    make_pair(GwmMultiscaleGWRTaskThread::BackFittingCriterionType::CVR, tr("CVR")),
-    make_pair(GwmMultiscaleGWRTaskThread::BackFittingCriterionType::dCVR, tr("dCVR"))
+GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BackFittingCriterionType> GwmMultiscaleGWRAlgorithm::BackFittingCriterionTypeNameMapper = {
+    make_pair(GwmMultiscaleGWRAlgorithm::BackFittingCriterionType::CVR, tr("CVR")),
+    make_pair(GwmMultiscaleGWRAlgorithm::BackFittingCriterionType::dCVR, tr("dCVR"))
 };
 
-GwmDiagnostic GwmMultiscaleGWRTaskThread::CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS)
+GwmDiagnostic GwmMultiscaleGWRAlgorithm::CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS)
 {
     // 诊断信息
     double nDp = x.n_rows;
@@ -46,12 +46,12 @@ GwmDiagnostic GwmMultiscaleGWRTaskThread::CalcDiagnostic(const mat &x, const vec
     return diagnostic;
 }
 
-GwmMultiscaleGWRTaskThread::GwmMultiscaleGWRTaskThread()
+GwmMultiscaleGWRAlgorithm::GwmMultiscaleGWRAlgorithm()
     : GwmSpatialMultiscaleAlgorithm()
 {
 }
 
-void GwmMultiscaleGWRTaskThread::run()
+void GwmMultiscaleGWRAlgorithm::run()
 {
     initPoints();
     initXY(mX, mY, mDepVar, mIndepVars);
@@ -77,13 +77,14 @@ void GwmMultiscaleGWRTaskThread::run()
     {
         if (mBandwidthInitilize[i] == BandwidthInitilizeType::Null)
         {
+            emit message(tr("Calculating the initial bandwidth for %1 ...").arg(i == 0 ? "Intercept" : mIndepVars[i-1].name));
             GwmBandwidthWeight* bw0 = bandwidth(i);
             bool adaptive = bw0->adaptive();
             GwmBandwidthSizeSelector selector;
             selector.setBandwidth(bw0);
             selector.setLower(adaptive ? mAdaptiveLower : 0.0);
             selector.setUpper(adaptive ? mDataLayer->featureCount() : findMaxDistance(i));
-            mBandwidthSizeCriterion = &GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionVarCVSerial;
+            mBandwidthSizeCriterion = &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial;
             mBandwidthSelectionCurrentIndex = i;
             GwmBandwidthWeight* bw = selector.optimize(this);
             if (bw)
@@ -96,10 +97,11 @@ void GwmMultiscaleGWRTaskThread::run()
     // *****************************************************
     // Calculate the initial beta0 from the above bandwidths
     // *****************************************************
+    emit message(tr("Calculating the initial beta0 from the above bandwidths ..."));
     mInitSpatialWeight.setDistance(mSpatialWeights[0].distance());
     GwmBandwidthWeight* bw0 = bandwidth(0);
     bool adaptive = bw0->adaptive();
-    mBandwidthSizeCriterion = &GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionAllCVSerial;
+    mBandwidthSizeCriterion = &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial;
     GwmBandwidthSizeSelector initBwSelector;
     initBwSelector.setBandwidth(bw0);
     initBwSelector.setLower(adaptive ? mAdaptiveLower : 0.0);
@@ -143,7 +145,7 @@ void GwmMultiscaleGWRTaskThread::run()
     emit success();
 }
 
-mat GwmMultiscaleGWRTaskThread::regression(const mat &x, const vec &y)
+mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
 {
     uword nDp = x.n_rows, nVar = x.n_cols;
     mat betas = (this->*mRegressionAll)(x, y);
@@ -184,7 +186,7 @@ mat GwmMultiscaleGWRTaskThread::regression(const mat &x, const vec &y)
                 selector.setBandwidth(bwi0);
                 selector.setLower(adaptive ? mAdaptiveLower : 0.0);
                 selector.setUpper(adaptive ? mDataLayer->featureCount() : findMaxDistance(i));
-                mBandwidthSizeCriterion = &GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionVarCVSerial;
+                mBandwidthSizeCriterion = &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial;
                 mBandwidthSelectionCurrentIndex = i;
                 GwmBandwidthWeight* bwi = selector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
@@ -236,7 +238,7 @@ mat GwmMultiscaleGWRTaskThread::regression(const mat &x, const vec &y)
     return betas;
 }
 
-bool GwmMultiscaleGWRTaskThread::isValid()
+bool GwmMultiscaleGWRAlgorithm::isValid()
 {
     int nVar = mIndepVars.size() + 1;
     if (mSpatialWeights.size() != nVar)
@@ -257,7 +259,7 @@ bool GwmMultiscaleGWRTaskThread::isValid()
     return true;
 }
 
-void GwmMultiscaleGWRTaskThread::initPoints()
+void GwmMultiscaleGWRAlgorithm::initPoints()
 {
     int nDp = mDataLayer->featureCount();
     mDataPoints = mat(nDp, 2, fill::zeros);
@@ -286,7 +288,7 @@ void GwmMultiscaleGWRTaskThread::initPoints()
     else mRegressionPoints = mDataPoints;
 }
 
-void GwmMultiscaleGWRTaskThread::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
+void GwmMultiscaleGWRAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
 {
     int nDp = mDataLayer->featureCount(), nVar = indepVars.size() + 1;
     // Data layer and X,Y
@@ -314,7 +316,7 @@ void GwmMultiscaleGWRTaskThread::initXY(mat &x, mat &y, const GwmVariable &depVa
     }
 }
 
-void GwmMultiscaleGWRTaskThread::createResultLayer(initializer_list<CreateResultLayerDataItem> data)
+void GwmMultiscaleGWRAlgorithm::createResultLayer(initializer_list<CreateResultLayerDataItem> data)
 {
     emit message("Creating result layer...");
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
@@ -373,7 +375,7 @@ void GwmMultiscaleGWRTaskThread::createResultLayer(initializer_list<CreateResult
 }
 
 
-mat GwmMultiscaleGWRTaskThread::regressionAllSerial(const mat& x, const vec& y)
+mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
 {
     int nDp = x.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -423,7 +425,7 @@ mat GwmMultiscaleGWRTaskThread::regressionAllSerial(const mat& x, const vec& y)
     return betas.t();
 }
 
-vec GwmMultiscaleGWRTaskThread::regressionVarSerial(const vec &x, const vec &y, const int var, mat &S)
+vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, const int var, mat &S)
 {
     int nDp = x.n_rows;
     mat betas(1, nDp, fill::zeros);
@@ -471,7 +473,7 @@ vec GwmMultiscaleGWRTaskThread::regressionVarSerial(const vec &x, const vec &y, 
     return betas.t();
 }
 
-double GwmMultiscaleGWRTaskThread::findMaxDistance(int var)
+double GwmMultiscaleGWRAlgorithm::findMaxDistance(int var)
 {
     int nDp = mDataPoints.n_rows;
     double maxD = 0.0;
@@ -483,7 +485,7 @@ double GwmMultiscaleGWRTaskThread::findMaxDistance(int var)
     return maxD;
 }
 
-double GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionAllCVSerial(GwmBandwidthWeight *bandwidthWeight)
+double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
@@ -508,15 +510,15 @@ double GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionAllCVSerial(GwmBandwid
             return DBL_MAX;
         }
     }
-    QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
-            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-            .arg(bandwidthWeight->bandwidth())
-            .arg(cv);
-    emit message(msg);
+//    QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+//            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+//            .arg(bandwidthWeight->bandwidth())
+//            .arg(cv);
+//    emit message(msg);
     return cv;
 }
 
-double GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionAllAICSerial(GwmBandwidthWeight *bandwidthWeight)
+double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
@@ -542,16 +544,16 @@ double GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionAllAICSerial(GwmBandwi
             return DBL_MAX;
         }
     }
-    double value = GwmMultiscaleGWRTaskThread::AICc(mX, mY, betas.t(), shat);
-    QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
-            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-            .arg(bandwidthWeight->bandwidth())
-            .arg(value);
-    emit message(msg);
+    double value = GwmMultiscaleGWRAlgorithm::AICc(mX, mY, betas.t(), shat);
+//    QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
+//            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+//            .arg(bandwidthWeight->bandwidth())
+//            .arg(value);
+//    emit message(msg);
     return value;
 }
 
-double GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight *bandwidthWeight)
+double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     uword nDp = mDataPoints.n_rows;
@@ -577,15 +579,15 @@ double GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionVarCVSerial(GwmBandwid
             return DBL_MAX;
         }
     }
-    QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
-            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-            .arg(bandwidthWeight->bandwidth())
-            .arg(cv);
-    emit message(msg);
+//    QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+//            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+//            .arg(bandwidthWeight->bandwidth())
+//            .arg(cv);
+//    emit message(msg);
     return cv;
 }
 
-double GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight *bandwidthWeight)
+double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
@@ -612,11 +614,11 @@ double GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionVarAICSerial(GwmBandwi
             return DBL_MAX;
         }
     }
-    double value = GwmMultiscaleGWRTaskThread::AICc(mX.col(var), mY, betas.t(), shat);
-    QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
-            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-            .arg(bandwidthWeight->bandwidth())
-            .arg(value);
-    emit message(msg);
+    double value = GwmMultiscaleGWRAlgorithm::AICc(mX.col(var), mY, betas.t(), shat);
+//    QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
+//            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+//            .arg(bandwidthWeight->bandwidth())
+//            .arg(value);
+//    emit message(msg);
     return value;
 }

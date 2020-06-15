@@ -2,7 +2,7 @@
 #define GWMPARAMETERSPECIFIEDOPTIONSMODEL_H
 
 #include <QAbstractListModel>
-#include "TaskThread/gwmmultiscalegwrtaskthread.h"
+#include "TaskThread/gwmmultiscalegwralgorithm.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 
 struct GwmParameterSpecifiedOption
@@ -14,8 +14,8 @@ struct GwmParameterSpecifiedOption
     double bandwidthSize = 0;
     bool adaptive;
     GwmBandwidthWeight::KernelFunctionType kernel = GwmBandwidthWeight::KernelFunctionType::Gaussian;
-    GwmMultiscaleGWRTaskThread::BandwidthInitilizeType bandwidthSeledType = GwmMultiscaleGWRTaskThread::Null;
-    GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType approach = GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType::CV;
+    GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Null;
+    GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType approach = GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV;
     double threshold = 0.01;
 
     GwmDistance::DistanceType distanceType = GwmDistance::DistanceType::CRSDistance;

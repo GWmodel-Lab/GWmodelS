@@ -1,7 +1,7 @@
 #include "gwmlayermultiscalegwritem.h"
 #include "gwmlayergroupitem.h"
 
-GwmLayerMultiscaleGWRItem::GwmLayerMultiscaleGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmMultiscaleGWRTaskThread* taskThread)
+GwmLayerMultiscaleGWRItem::GwmLayerMultiscaleGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmMultiscaleGWRAlgorithm* taskThread)
     : GwmLayerVectorItem(parent, vector)
 {
     if (taskThread)
@@ -59,12 +59,12 @@ bool GwmLayerMultiscaleGWRItem::hasHatmatrix() const
     return mHasHatmatrix;
 }
 
-QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> GwmLayerMultiscaleGWRItem::bandwidthInitilize() const
+QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> GwmLayerMultiscaleGWRItem::bandwidthInitilize() const
 {
     return mBandwidthInitilize;
 }
 
-QList<GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType> GwmLayerMultiscaleGWRItem::bandwidthSelectionApproach() const
+QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmLayerMultiscaleGWRItem::bandwidthSelectionApproach() const
 {
     return mBandwidthSelectionApproach;
 }
@@ -74,7 +74,7 @@ QList<double> GwmLayerMultiscaleGWRItem::bandwidthSelectThreshold() const
     return mBandwidthSelectThreshold;
 }
 
-GwmMultiscaleGWRTaskThread::BackFittingCriterionType GwmLayerMultiscaleGWRItem::criterionType() const
+GwmMultiscaleGWRAlgorithm::BackFittingCriterionType GwmLayerMultiscaleGWRItem::criterionType() const
 {
     return mCriterionType;
 }

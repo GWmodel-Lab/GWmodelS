@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
-#include "TaskThread/gwmmultiscalegwrtaskthread.h"
+#include "TaskThread/gwmmultiscalegwralgorithm.h"
 #include "TaskThread/iparallelable.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
@@ -19,14 +19,14 @@ class GwmMultiscaleGWROptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmMultiscaleGWRTaskThread* thread,QWidget *parent = nullptr);
+    explicit GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmMultiscaleGWRAlgorithm* thread,QWidget *parent = nullptr);
     ~GwmMultiscaleGWROptionsDialog();
 
 private:
     Ui::GwmMultiscaleGWROptionsDialog *ui;
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
-    GwmMultiscaleGWRTaskThread* mTaskThread = nullptr;
+    GwmMultiscaleGWRAlgorithm* mTaskThread = nullptr;
     GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
     GwmParameterSpecifiedOptionsModel* mParameterSpecifiedOptionsModel = nullptr;
@@ -63,14 +63,14 @@ public:
     bool bandwidthType();
     IParallelalbe::ParallelType parallelType();
     double bandwidthSize();
-    GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType bandwidthSelectionApproach();
+    GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
     GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     GwmDistance::DistanceType distanceSourceType();
     QVariant distanceSourceParameters();
     QVariant parallelParameters();
 
-    void setTaskThread(GwmMultiscaleGWRTaskThread* taskThread);
+    void setTaskThread(GwmMultiscaleGWRAlgorithm* taskThread);
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();

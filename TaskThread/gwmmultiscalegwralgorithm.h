@@ -5,7 +5,7 @@
 #include "gwmspatialmultiscalealgorithm.h"
 #include "iregressionanalysis.h"
 
-class GwmMultiscaleGWRTaskThread : public GwmSpatialMultiscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable
+class GwmMultiscaleGWRAlgorithm : public GwmSpatialMultiscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable
 {
     Q_OBJECT
 
@@ -32,9 +32,9 @@ public:
     };
     static GwmEnumValueNameMapper<BackFittingCriterionType> BackFittingCriterionTypeNameMapper;
 
-    typedef double (GwmMultiscaleGWRTaskThread::*BandwidthSizeCriterionFunction)(GwmBandwidthWeight*);
-    typedef mat (GwmMultiscaleGWRTaskThread::*RegressionAllFunction)(const arma::mat&, const arma::vec&);
-    typedef vec (GwmMultiscaleGWRTaskThread::*RegressionVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
+    typedef double (GwmMultiscaleGWRAlgorithm::*BandwidthSizeCriterionFunction)(GwmBandwidthWeight*);
+    typedef mat (GwmMultiscaleGWRAlgorithm::*RegressionAllFunction)(const arma::mat&, const arma::vec&);
+    typedef vec (GwmMultiscaleGWRAlgorithm::*RegressionVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
     typedef QPair<QString, const mat> CreateResultLayerDataItem;
 
 private:
@@ -58,7 +58,7 @@ private:
     static GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& S0, double RSS0);
 
 public:
-    GwmMultiscaleGWRTaskThread();
+    GwmMultiscaleGWRAlgorithm();
 
 public:
     void run() override;
@@ -150,14 +150,14 @@ private:
     mat mDataPoints;
     mat mRegressionPoints;
 
-    RegressionAllFunction mRegressionAll = &GwmMultiscaleGWRTaskThread::regressionAllSerial;
-    RegressionVarFunction mRegressionVar = &GwmMultiscaleGWRTaskThread::regressionVarSerial;
+    RegressionAllFunction mRegressionAll = &GwmMultiscaleGWRAlgorithm::regressionAllSerial;
+    RegressionVarFunction mRegressionVar = &GwmMultiscaleGWRAlgorithm::regressionVarSerial;
 
     GwmVariable mDepVar;
     QList<GwmVariable> mIndepVars;
 
     GwmSpatialWeight mInitSpatialWeight;
-    BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionAllCVSerial;
+    BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial;
     double mBandwidthSizeCriterionAllCVSerial(GwmBandwidthWeight* bandwidthWeight);
     double mBandwidthSizeCriterionAllAICSerial(GwmBandwidthWeight* bandwidthWeight);
     int mBandwidthSelectionCurrentIndex = 0;
@@ -192,132 +192,132 @@ private:
     GwmDiagnostic mDiagnostic;
 };
 
-inline GwmVariable GwmMultiscaleGWRTaskThread::dependentVariable() const
+inline GwmVariable GwmMultiscaleGWRAlgorithm::dependentVariable() const
 {
     return mDepVar;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setDependentVariable(const GwmVariable &variable)
+inline void GwmMultiscaleGWRAlgorithm::setDependentVariable(const GwmVariable &variable)
 {
     mDepVar = variable;
 }
 
-inline QList<GwmVariable> GwmMultiscaleGWRTaskThread::independentVariables() const
+inline QList<GwmVariable> GwmMultiscaleGWRAlgorithm::independentVariables() const
 {
     return mIndepVars;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setIndependentVariables(const QList<GwmVariable> &variables)
+inline void GwmMultiscaleGWRAlgorithm::setIndependentVariables(const QList<GwmVariable> &variables)
 {
     mIndepVars = variables;
 }
 
-inline GwmDiagnostic GwmMultiscaleGWRTaskThread::diagnostic() const
+inline GwmDiagnostic GwmMultiscaleGWRAlgorithm::diagnostic() const
 {
     return mDiagnostic;
 }
 
-inline int GwmMultiscaleGWRTaskThread::adaptiveLower() const
+inline int GwmMultiscaleGWRAlgorithm::adaptiveLower() const
 {
     return mAdaptiveLower;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setAdaptiveLower(int adaptiveLower)
+inline void GwmMultiscaleGWRAlgorithm::setAdaptiveLower(int adaptiveLower)
 {
     mAdaptiveLower = adaptiveLower;
 }
 
-inline double GwmMultiscaleGWRTaskThread::criterionThreshold() const
+inline double GwmMultiscaleGWRAlgorithm::criterionThreshold() const
 {
     return mCriterionThreshold;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setCriterionThreshold(double criterionThreshold)
+inline void GwmMultiscaleGWRAlgorithm::setCriterionThreshold(double criterionThreshold)
 {
     mCriterionThreshold = criterionThreshold;
 }
 
-inline GwmMultiscaleGWRTaskThread::BackFittingCriterionType GwmMultiscaleGWRTaskThread::criterionType() const
+inline GwmMultiscaleGWRAlgorithm::BackFittingCriterionType GwmMultiscaleGWRAlgorithm::criterionType() const
 {
     return mCriterionType;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setCriterionType(const BackFittingCriterionType &criterionType)
+inline void GwmMultiscaleGWRAlgorithm::setCriterionType(const BackFittingCriterionType &criterionType)
 {
     mCriterionType = criterionType;
 }
 
-inline int GwmMultiscaleGWRTaskThread::maxIteration() const
+inline int GwmMultiscaleGWRAlgorithm::maxIteration() const
 {
     return mMaxIteration;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setMaxIteration(int maxIteration)
+inline void GwmMultiscaleGWRAlgorithm::setMaxIteration(int maxIteration)
 {
     mMaxIteration = maxIteration;
 }
 
-inline int GwmMultiscaleGWRTaskThread::bandwidthSelectRetryTimes() const
+inline int GwmMultiscaleGWRAlgorithm::bandwidthSelectRetryTimes() const
 {
     return mBandwidthSelectRetryTimes;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setBandwidthSelectRetryTimes(int bandwidthSelectRetryTimes)
+inline void GwmMultiscaleGWRAlgorithm::setBandwidthSelectRetryTimes(int bandwidthSelectRetryTimes)
 {
     mBandwidthSelectRetryTimes = bandwidthSelectRetryTimes;
 }
 
-inline QList<bool> GwmMultiscaleGWRTaskThread::preditorCentered() const
+inline QList<bool> GwmMultiscaleGWRAlgorithm::preditorCentered() const
 {
     return mPreditorCentered;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setPreditorCentered(const QList<bool> &preditorCentered)
+inline void GwmMultiscaleGWRAlgorithm::setPreditorCentered(const QList<bool> &preditorCentered)
 {
     mPreditorCentered = preditorCentered;
 }
 
-inline QList<GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType> GwmMultiscaleGWRTaskThread::bandwidthSelectionApproach() const
+inline QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmMultiscaleGWRAlgorithm::bandwidthSelectionApproach() const
 {
-    return GwmMultiscaleGWRTaskThread::mBandwidthSelectionApproach;
+    return GwmMultiscaleGWRAlgorithm::mBandwidthSelectionApproach;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setBandwidthSelectionApproach(const QList<BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
+inline void GwmMultiscaleGWRAlgorithm::setBandwidthSelectionApproach(const QList<BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
 {
     mBandwidthSelectionApproach = bandwidthSelectionApproach;
 }
 
-inline QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> GwmMultiscaleGWRTaskThread::bandwidthInitilize() const
+inline QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> GwmMultiscaleGWRAlgorithm::bandwidthInitilize() const
 {
-    return GwmMultiscaleGWRTaskThread::mBandwidthInitilize;
+    return GwmMultiscaleGWRAlgorithm::mBandwidthInitilize;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setBandwidthInitilize(const QList<BandwidthInitilizeType> &bandwidthInitilize)
+inline void GwmMultiscaleGWRAlgorithm::setBandwidthInitilize(const QList<BandwidthInitilizeType> &bandwidthInitilize)
 {
     mBandwidthInitilize = bandwidthInitilize;
 }
 
-inline QList<double> GwmMultiscaleGWRTaskThread::bandwidthSelectThreshold() const
+inline QList<double> GwmMultiscaleGWRAlgorithm::bandwidthSelectThreshold() const
 {
     return mBandwidthSelectThreshold;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setBandwidthSelectThreshold(const QList<double> &bandwidthSelectThreshold)
+inline void GwmMultiscaleGWRAlgorithm::setBandwidthSelectThreshold(const QList<double> &bandwidthSelectThreshold)
 {
     mBandwidthSelectThreshold = bandwidthSelectThreshold;
 }
 
-inline bool GwmMultiscaleGWRTaskThread::hasHatMatrix() const
+inline bool GwmMultiscaleGWRAlgorithm::hasHatMatrix() const
 {
     return mHasHatMatrix;
 }
 
-inline void GwmMultiscaleGWRTaskThread::setHasHatMatrix(bool hasHatMatrix)
+inline void GwmMultiscaleGWRAlgorithm::setHasHatMatrix(bool hasHatMatrix)
 {
     mHasHatMatrix = hasHatMatrix;
 }
 
-inline mat GwmMultiscaleGWRTaskThread::betas() const
+inline mat GwmMultiscaleGWRAlgorithm::betas() const
 {
     return mBetas;
 }

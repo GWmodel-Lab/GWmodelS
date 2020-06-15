@@ -87,8 +87,8 @@ QVariant GwmPropertyMultiscaleParameterSpecifiedItemModel::data(const QModelInde
                 { "Size", option->bandwidthSize },
                 { "Type", GwmBandwidthWeight::BandwidthTypeNameMapper[option->adaptive] },
                 { "Kernel", GwmBandwidthWeight::KernelFunctionTypeNameMapper[option->kernel] },
-                { "Seled", GwmMultiscaleGWRTaskThread::BandwidthInitilizeTypeNameMapper[option->bandwidthSeledType] },
-                { "Approach", GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionTypeNameMapper[option->approach] },
+                { "Seled", GwmMultiscaleGWRAlgorithm::BandwidthInitilizeTypeNameMapper[option->bandwidthSeledType] },
+                { "Approach", GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionTypeNameMapper[option->approach] },
                 { "Distance", GwmDistance::TypeNameMapper[option->distanceType] }
             };
             return dataArray[index.row()][index.column()];

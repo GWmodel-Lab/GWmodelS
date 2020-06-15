@@ -8,13 +8,13 @@
 #include <armadillo>
 #include "gwmlayervectoritem.h"
 #include "Model/gwmlayerattributeitem.h"
-#include "TaskThread/gwmmultiscalegwrtaskthread.h"
+#include "TaskThread/gwmmultiscalegwralgorithm.h"
 
 class GwmLayerMultiscaleGWRItem : public GwmLayerVectorItem
 {
     Q_OBJECT
 public:
-    explicit GwmLayerMultiscaleGWRItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmMultiscaleGWRTaskThread* taskThread = nullptr);
+    explicit GwmLayerMultiscaleGWRItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmMultiscaleGWRAlgorithm* taskThread = nullptr);
 
     virtual int childNumber() override;
 
@@ -30,13 +30,13 @@ public:
 
     bool hasHatmatrix() const;
 
-    QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> bandwidthInitilize() const;
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> bandwidthInitilize() const;
 
-    QList<GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType> bandwidthSelectionApproach() const;
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> bandwidthSelectionApproach() const;
 
     QList<double> bandwidthSelectThreshold() const;
 
-    GwmMultiscaleGWRTaskThread::BackFittingCriterionType criterionType() const;
+    GwmMultiscaleGWRAlgorithm::BackFittingCriterionType criterionType() const;
 
     QList<GwmBandwidthWeight> bandwidthWeights() const;
 
@@ -52,11 +52,11 @@ private:
     QList<GwmVariable> mIndepVars;
     QList<GwmBandwidthWeight> mBandwidthWeights;
     QList<GwmDistance::DistanceType> mDistaneTypes;
-    QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> mBandwidthInitilize;
-    QList<GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> mBandwidthInitilize;
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
     QList<bool> mPreditorCentered;
     QList<double> mBandwidthSelectThreshold;
-    GwmMultiscaleGWRTaskThread::BackFittingCriterionType mCriterionType;
+    GwmMultiscaleGWRAlgorithm::BackFittingCriterionType mCriterionType;
 
     GwmDiagnostic mDiagnostic;
     arma::mat mBetas;

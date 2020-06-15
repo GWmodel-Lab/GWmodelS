@@ -75,7 +75,7 @@ SOURCES += \
 #    TaskThread/gwmgwsstaskthread.cpp \
     TaskThread/gwmindependentvariableselector.cpp \
     TaskThread/gwmlcrgwrtaskthread.cpp \
-    TaskThread/gwmmultiscalegwrtaskthread.cpp \
+    TaskThread/gwmmultiscalegwralgorithm.cpp \
     TaskThread/gwmrobustgwrtaskthread.cpp \
     TaskThread/gwmsavelayerthread.cpp \
 #    attributetable/qgsattributetabledelegate.cpp \
@@ -180,7 +180,7 @@ HEADERS += \
 #    TaskThread/gwmgwsstaskthread.h \
     TaskThread/gwmindependentvariableselector.h \
     TaskThread/gwmlcrgwrtaskthread.h \
-    TaskThread/gwmmultiscalegwrtaskthread.h \
+    TaskThread/gwmmultiscalegwralgorithm.h \
     TaskThread/gwmrobustgwrtaskthread.h \
     TaskThread/gwmrobustgwrtaskthread.h \
     TaskThread/gwmsavelayerthread.h \
