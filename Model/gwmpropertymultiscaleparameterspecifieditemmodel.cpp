@@ -1,51 +1,20 @@
 #include "gwmpropertymultiscaleparameterspecifieditemmodel.h"
 
-QMap<GwmMultiscaleGWRTaskThread::BandwidthSeledType, QString> GwmPropertyMultiscaleParameterSpecifiedItemModel::BandwidthSeledTypeName = {
-    std::make_pair(GwmMultiscaleGWRTaskThread::BandwidthSeledType::Null, "Not initizlied"),
-    std::make_pair(GwmMultiscaleGWRTaskThread::BandwidthSeledType::Initial, "Initizlied"),
-    std::make_pair(GwmMultiscaleGWRTaskThread::BandwidthSeledType::Specified, "Specified")
-};
-
-QMap<GwmGWRTaskThread::BandwidthSelectionApproach, QString> GwmPropertyMultiscaleParameterSpecifiedItemModel::BandwidthSelectionApproachName = {
-    std::make_pair(GwmGWRTaskThread::BandwidthSelectionApproach::CV, "CV"),
-    std::make_pair(GwmGWRTaskThread::BandwidthSelectionApproach::AIC, "AIC")
-};
-
-QMap<GwmGWRTaskThread::BandwidthType, QString> GwmPropertyMultiscaleParameterSpecifiedItemModel::BandwidthTypeName = {
-    std::make_pair(GwmGWRTaskThread::BandwidthType::Fixed, "Fixed"),
-    std::make_pair(GwmGWRTaskThread::BandwidthType::Adaptive, "Adaptive")
-};
-
-QMap<GwmGWRTaskThread::KernelFunction, QString> GwmPropertyMultiscaleParameterSpecifiedItemModel::KernelFunctionName = {
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Gaussian, "Gaussian"),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Exponential, "Exponential"),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Boxcar, "Boxcar"),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Bisquare, "Bisquare"),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Tricube, "Tricube")
-};
-
-QMap<GwmGWRTaskThread::DistanceSourceType, QString> GwmPropertyMultiscaleParameterSpecifiedItemModel::DistanceTypeName = {
-    std::make_pair(GwmGWRTaskThread::DistanceSourceType::CRS, "CRS"),
-    std::make_pair(GwmGWRTaskThread::DistanceSourceType::Minkowski, "Minkowski"),
-    std::make_pair(GwmGWRTaskThread::DistanceSourceType::DMatFile, "Distance Matrix")
-};
-
 GwmPropertyMultiscaleParameterSpecifiedItemModel::GwmPropertyMultiscaleParameterSpecifiedItemModel(GwmLayerMultiscaleGWRItem* layerItem, QObject *parent)
     : QAbstractItemModel(parent)
 {
-    QList<GwmLayerAttributeItem*> indepVars = layerItem->indepVarsOrigin();
+    QList<GwmVariable> indepVars = layerItem->indepVars();
     for (int i = 0; i < indepVars.size() + 1; ++i)
     {
-        GwmParameterSpecifiedOption* option = new GwmParameterSpecifiedOption();
-        option->attributeName = i == 0 ? tr("Intercept") : indepVars[i - 1]->attributeName();
-        option->bandwidthSize = layerItem->bandwidthSize()[i];
-        option->bandwidthUnit = layerItem->bandwidthUnit()[i];
-        option->bandwidthType = layerItem->bandwidthType()[i];
-        option->kernel = layerItem->bandwidthKernelFunction()[i];
-        option->bandwidthSeledType = layerItem->bandwidthSeled()[i];
+        GwmParameterSpecifiedOption* option = new GwmParameterSpecifiedOption ();
+        GwmBandwidthWeight bw = layerItem->bandwidthWeights()[i];
+        option->attributeName = i == 0 ? tr("Intercept") : indepVars[i - 1].name;
+        option->bandwidthSize = bw.bandwidth();
+        option->adaptive = bw.adaptive();
+        option->kernel = bw.kernel();
+        option->bandwidthSeledType = layerItem->bandwidthInitilize()[i];
         option->approach = layerItem->bandwidthSelectionApproach()[i];
-        option->distanceType = layerItem->distanceSource()[i];
-        option->distanceParameters = layerItem->distSrcParameters()[i];
+        option->distanceType = layerItem->distaneTypes()[i];
         mItems.append(option);
     }
 }
@@ -94,7 +63,7 @@ QModelIndex GwmPropertyMultiscaleParameterSpecifiedItemModel::parent(const QMode
 int GwmPropertyMultiscaleParameterSpecifiedItemModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
-        return parent.internalPointer() ? 0 : 7;
+        return parent.internalPointer() ? 0 : 6;
     else return mItems.size();
 }
 
@@ -116,12 +85,11 @@ QVariant GwmPropertyMultiscaleParameterSpecifiedItemModel::data(const QModelInde
         case Qt::ItemDataRole::DisplayRole:
             dataArray = {
                 { "Size", option->bandwidthSize },
-                { "Unit", option->bandwidthUnit },
-                { "Type", BandwidthTypeName[option->bandwidthType] },
-                { "Kernel", KernelFunctionName[option->kernel] },
-                { "Seled", BandwidthSeledTypeName[option->bandwidthSeledType] },
-                { "Approach", BandwidthSelectionApproachName[option->approach] },
-                { "Distance", DistanceTypeName[option->distanceType] }
+                { "Type", GwmBandwidthWeight::BandwidthTypeNameMapper[option->adaptive] },
+                { "Kernel", GwmBandwidthWeight::KernelFunctionTypeNameMapper[option->kernel] },
+                { "Seled", GwmMultiscaleGWRAlgorithm::BandwidthInitilizeTypeNameMapper[option->bandwidthSeledType] },
+                { "Approach", GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionTypeNameMapper[option->approach] },
+                { "Distance", GwmDistance::TypeNameMapper[option->distanceType] }
             };
             return dataArray[index.row()][index.column()];
         default:
@@ -136,7 +104,7 @@ QVariant GwmPropertyMultiscaleParameterSpecifiedItemModel::data(const QModelInde
         case Qt::ItemDataRole::DisplayRole:
             dataArray = {
                 option->attributeName,
-                QString("%1 %2").arg(BandwidthTypeName[option->bandwidthType]).arg(option->bandwidthSize)
+                QString("%1 %2").arg(GwmBandwidthWeight::BandwidthTypeNameMapper[option->adaptive]).arg(option->bandwidthSize)
             };
             return dataArray[index.column()];
         default:

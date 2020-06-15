@@ -1,4 +1,5 @@
 #include "gwmbandwidthweight.h"
+#include <QObject>
 
 GwmEnumValueNameMapper<GwmBandwidthWeight::KernelFunctionType> GwmBandwidthWeight::KernelFunctionTypeNameMapper = {
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Boxcar, "Boxcar"),
@@ -6,6 +7,11 @@ GwmEnumValueNameMapper<GwmBandwidthWeight::KernelFunctionType> GwmBandwidthWeigh
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Bisquare, "Bisquare"),
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Gaussian, "Gaussian"),
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Exponential, "Exponential")
+};
+
+GwmEnumValueNameMapper<bool> GwmBandwidthWeight::BandwidthTypeNameMapper = {
+    std::make_pair(true, "Adaptive"),
+    std::make_pair(false, "Fixed")
 };
 
 GwmBandwidthWeight::KernelFunction GwmBandwidthWeight::Kernel[] =
@@ -34,6 +40,13 @@ GwmBandwidthWeight::GwmBandwidthWeight(const GwmBandwidthWeight &bandwidthWeight
     mBandwidth = bandwidthWeight.mBandwidth;
     mAdaptive = bandwidthWeight.mAdaptive;
     mKernel = bandwidthWeight.mKernel;
+}
+
+GwmBandwidthWeight::GwmBandwidthWeight(const GwmBandwidthWeight *bandwidthWeight)
+{
+    mBandwidth = bandwidthWeight->bandwidth();
+    mAdaptive = bandwidthWeight->adaptive();
+    mKernel = bandwidthWeight->kernel();
 }
 
 vec GwmBandwidthWeight::weight(vec dist)

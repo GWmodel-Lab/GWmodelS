@@ -73,8 +73,8 @@ QList<QPair<double, double> > GwmBandwidthSizeSelector::bandwidthCriterion() con
 
 GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable *instance)
 {
-    GwmBandwidthWeight* w1 = new GwmBandwidthWeight(*mBandwidth);
-    GwmBandwidthWeight* w2 = new GwmBandwidthWeight(*mBandwidth);
+    GwmBandwidthWeight* w1 = static_cast<GwmBandwidthWeight*>(mBandwidth->clone());
+    GwmBandwidthWeight* w2 = static_cast<GwmBandwidthWeight*>(mBandwidth->clone());
     double xU = mUpper, xL = mLower;
     bool adaptBw = mBandwidth->adaptive();
     const double eps = 1e-4;
@@ -121,7 +121,9 @@ GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable 
     }
     delete w1;
     delete w2;
-    GwmBandwidthWeight* wopt = new GwmBandwidthWeight(*mBandwidth);
+    GwmBandwidthWeight* wopt = new GwmBandwidthWeight();
+    wopt->setKernel(mBandwidth->kernel());
+    wopt->setAdaptive(mBandwidth->adaptive());
     wopt->setBandwidth(xopt);
     return wopt;
 }
