@@ -12,14 +12,16 @@ struct GwmParameterSpecifiedOption
     bool checkState = false;
 
     double bandwidthSize = 0;
-    QString bandwidthUnit = "x1";
-    GwmGWRTaskThread::BandwidthType bandwidthType = GwmGWRTaskThread::Adaptive;
-    GwmGWRTaskThread::KernelFunction kernel = GwmGWRTaskThread::Gaussian;
+    bool adaptive;
+    GwmBandwidthWeight::KernelFunctionType kernel = GwmBandwidthWeight::KernelFunctionType::Gaussian;
     GwmMultiscaleGWRTaskThread::BandwidthInitilizeType bandwidthSeledType = GwmMultiscaleGWRTaskThread::Null;
-    GwmGWRTaskThread::BandwidthSelectionApproach approach = GwmGWRTaskThread::CV;
+    GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType approach = GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType::CV;
+    double threshold = 0.01;
 
-    GwmGWRTaskThread::DistanceSourceType distanceType = GwmGWRTaskThread::CRS;
-    QVariant distanceParameters = QVariant();
+    GwmDistance::DistanceType distanceType = GwmDistance::DistanceType::CRSDistance;
+    double p;
+    double theta;
+    QString dmatFile;
 
     bool predictorCentralization = true;
 };
@@ -46,7 +48,7 @@ public:
     GwmParameterSpecifiedOption* item(const QModelIndex &index);
     GwmParameterSpecifiedOption* item(const int row);
 
-    void syncWithAttributes(GwmLayerAttributeItemModel* attributeModel);
+    void syncWithAttributes(const GwmVariableItemModel* attributeModel);
 
 private:
     QList<GwmParameterSpecifiedOption> mItems;

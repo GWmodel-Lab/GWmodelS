@@ -11,11 +11,6 @@ class GwmPropertyMultiscaleParameterSpecifiedItemModel : public QAbstractItemMod
     Q_OBJECT
 
 public:
-    static QMap<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType, QString> BandwidthSeledTypeName;
-    static QMap<GwmGWRTaskThread::BandwidthSelectionApproach, QString> BandwidthSelectionApproachName;
-    static QMap<GwmGWRTaskThread::BandwidthType, QString> BandwidthTypeName;
-    static QMap<GwmGWRTaskThread::KernelFunction, QString> KernelFunctionName;
-    static QMap<GwmGWRTaskThread::DistanceSourceType, QString> DistanceTypeName;
 
 public:
     explicit GwmPropertyMultiscaleParameterSpecifiedItemModel(GwmLayerMultiscaleGWRItem* layerItem, QObject *parent = nullptr);
@@ -35,7 +30,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
 private:
-    QVector<GwmParameterSpecifiedOption*> mItems;
+    QList<GwmParameterSpecifiedOption*> mItems;
 };
 
 #endif // GWMPROPERTYMUULTISCALEPARAMETERSPECIFIEDITEMMODEL_H

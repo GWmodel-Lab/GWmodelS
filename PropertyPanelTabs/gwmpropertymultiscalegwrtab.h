@@ -17,10 +17,6 @@ class GwmPropertyMultiscaleGWRTab : public QWidget
     Q_OBJECT
 
 public:
-    static QMap<GwmGWRTaskThread::KernelFunction, QString> kernelFunctionNameDict;
-    static QMap<GwmGWRTaskThread::BandwidthType, QString> bandwidthTypeNameDict;
-
-public:
     explicit GwmPropertyMultiscaleGWRTab(QWidget *parent = nullptr, GwmLayerMultiscaleGWRItem* item = nullptr);
     ~GwmPropertyMultiscaleGWRTab();
 

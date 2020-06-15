@@ -72,7 +72,7 @@ GwmParameterSpecifiedOption *GwmParameterSpecifiedOptionsModel::item(const int r
     else return nullptr;
 }
 
-void GwmParameterSpecifiedOptionsModel::syncWithAttributes(GwmLayerAttributeItemModel *attributeModel)
+void GwmParameterSpecifiedOptionsModel::syncWithAttributes(const GwmVariableItemModel *attributeModel)
 {
     // 保存截距项
     if (mItems.size() > 1)
@@ -87,10 +87,10 @@ void GwmParameterSpecifiedOptionsModel::syncWithAttributes(GwmLayerAttributeItem
     int nAttribute = attributeModel->rowCount();
     for (int i = 0; i < nAttribute; i++)
     {
-        GwmLayerAttributeItem* item = attributeModel->item(i);
+        GwmVariable item = attributeModel->item(i);
         GwmParameterSpecifiedOption option;
-        option.attributeName = item->attributeName();
-        option.attributeIndex = item->attributeIndex();
+        option.attributeName = item.name;
+        option.attributeIndex = item.index;
         mItems.append(option);
     }
     endInsertRows();

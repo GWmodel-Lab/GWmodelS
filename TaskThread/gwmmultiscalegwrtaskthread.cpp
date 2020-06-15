@@ -5,6 +5,22 @@
 
 using namespace std;
 
+GwmEnumValueNameMapper<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> GwmMultiscaleGWRTaskThread::BandwidthInitilizeTypeNameMapper = {
+    make_pair(GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Null, tr("Not initilized, not specified")),
+    make_pair(GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Initial, tr("Initilized")),
+    make_pair(GwmMultiscaleGWRTaskThread::BandwidthInitilizeType::Specified, tr("Specified"))
+};
+
+GwmEnumValueNameMapper<GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType> GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionTypeNameMapper = {
+    make_pair(GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType::CV, tr("CV")),
+    make_pair(GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType::AIC, tr("AIC"))
+};
+
+GwmEnumValueNameMapper<GwmMultiscaleGWRTaskThread::BackFittingCriterionType> GwmMultiscaleGWRTaskThread::BackFittingCriterionTypeNameMapper = {
+    make_pair(GwmMultiscaleGWRTaskThread::BackFittingCriterionType::CVR, tr("CVR")),
+    make_pair(GwmMultiscaleGWRTaskThread::BackFittingCriterionType::dCVR, tr("dCVR"))
+};
+
 GwmDiagnostic GwmMultiscaleGWRTaskThread::CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS)
 {
     // 诊断信息
@@ -37,7 +53,8 @@ GwmMultiscaleGWRTaskThread::GwmMultiscaleGWRTaskThread()
 
 void GwmMultiscaleGWRTaskThread::run()
 {
-
+    initPoints();
+    initXY(mX, mY, mDepVar, mIndepVars);
     uword nDp = mX.n_rows, nVar = mX.n_cols;
 
     // ********************************
@@ -156,14 +173,9 @@ mat GwmMultiscaleGWRTaskThread::regression(const mat &x, const vec &y)
         for (uword i = 0; i < nVar; i++)
         {
             QString varName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i-1].name;
-            GwmBandwidthWeight* bwi;
             vec fi = betas.col(i) % x.col(i);
             vec yi = resid + fi;
-            if (mBandwidthInitilize[i] == BandwidthInitilizeType::Specified)
-            {
-                bwi = bandwidth(i);
-            }
-            else
+            if (mBandwidthInitilize[i] != BandwidthInitilizeType::Specified)
             {
                 emit message(QString("Now select an optimum bandwidth for the variable: %1").arg(varName));
                 GwmBandwidthWeight* bwi0 = bandwidth(i);
@@ -174,7 +186,7 @@ mat GwmMultiscaleGWRTaskThread::regression(const mat &x, const vec &y)
                 selector.setUpper(adaptive ? mDataLayer->featureCount() : findMaxDistance(i));
                 mBandwidthSizeCriterion = &GwmMultiscaleGWRTaskThread::mBandwidthSizeCriterionVarCVSerial;
                 mBandwidthSelectionCurrentIndex = i;
-                bwi = selector.optimize(this);
+                GwmBandwidthWeight* bwi = selector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
                 emit message(QString("The newly selected bandwidth for variable %1 is %2 (last is %3, difference is %4)")
                              .arg(varName).arg(bwi1s).arg(bwi0s).arg(abs(bwi1s - bwi0s)));
@@ -197,20 +209,20 @@ mat GwmMultiscaleGWRTaskThread::regression(const mat &x, const vec &y)
                                      .arg(varName).arg(bwChangeNo(i)).arg(mBandwidthSelectRetryTimes - bwChangeNo(i)));
                     }
                 }
+                mSpatialWeights[i].setWeight(bwi);
             }
-            mSpatialWeights[i].setWeight(bwi);
 
             mat S;
-            mBetas.col(i) = (this->*mRegressionVar)(x.col(i), yi, i, S);
+            betas.col(i) = (this->*mRegressionVar)(x.col(i), yi, i, S);
             if (mHasHatMatrix)
             {
                 mat SArrayi = mSArray.slice(i);
                 mSArray.slice(i) = S * SArrayi + S - S * mS0;
                 mS0 = mS0 - SArrayi + mSArray.slice(i);
             }
-            resid = betas - fitted(x, betas);
+            resid = y - Fitted(x, betas);
         }
-        RSS1 = RSS(y, x, betas);
+        RSS1 = RSS(x, y, betas);
         criterion = (mCriterionType == BackFittingCriterionType::CVR) ?
                     abs(RSS1 - RSS0) :
                     sqrt(abs(RSS1 - RSS0) / RSS1);
@@ -383,7 +395,7 @@ mat GwmMultiscaleGWRTaskThread::regressionAllSerial(const mat& x, const vec& y)
                 mat si = x.row(i) * ci;
                 mS0.row(i) = si;
                 mC.slice(i) = ci;
-                emit tick(i + 1, nDp);
+//                emit tick(i + 1, nDp);
             } catch (exception e) {
                 emit error(e.what());
             }
@@ -402,20 +414,19 @@ mat GwmMultiscaleGWRTaskThread::regressionAllSerial(const mat& x, const vec& y)
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
-                emit tick(i + 1, nDp);
+//                emit tick(i + 1, nDp);
             } catch (exception e) {
                 emit error(e.what());
             }
         }
     }
-    mBetas = betas.t();
-    return betas;
+    return betas.t();
 }
 
-vec GwmMultiscaleGWRTaskThread::regressionVarSerial(const mat &x, const vec &y, const int var, mat &S)
+vec GwmMultiscaleGWRTaskThread::regressionVarSerial(const vec &x, const vec &y, const int var, mat &S)
 {
-    int nDp = x.n_rows, nVar = x.n_cols;
-    mat betas(nVar, nDp, fill::zeros);
+    int nDp = x.n_rows;
+    mat betas(1, nDp, fill::zeros);
     if (mHasHatMatrix)
     {
         mat ci, si;
@@ -423,17 +434,17 @@ vec GwmMultiscaleGWRTaskThread::regressionVarSerial(const mat &x, const vec &y, 
         for (int i = 0; i < nDp; i++)
         {
             vec w = mSpatialWeights[var].spatialWeight(mDataPoints.row(i), mDataPoints);
-            mat xtw = trans(x.col(var) % w);
-            mat xtwx = xtw * x.col(var);
+            mat xtw = trans(x % w);
+            mat xtwx = xtw * x;
             mat xtwy = xtw * y;
             try
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
                 mat ci = xtwx_inv * xtw;
-                mat si = x(i, var) * ci;
+                mat si = x(i) * ci;
                 S.row(i) = si;
-                emit tick(i + 1, nDp);
+//                emit tick(i + 1, nDp);
             } catch (exception e) {
                 emit error(e.what());
             }
@@ -444,14 +455,14 @@ vec GwmMultiscaleGWRTaskThread::regressionVarSerial(const mat &x, const vec &y, 
         for (int i = 0; i < nDp; i++)
         {
             vec w = mSpatialWeights[var].spatialWeight(mDataPoints.row(i), mDataPoints);
-            mat xtw = trans(x.col(var) % w);
-            mat xtwx = xtw * x.col(var);
+            mat xtw = trans(x % w);
+            mat xtwx = xtw * x;
             mat xtwy = xtw * y;
             try
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
-                emit tick(i + 1, nDp);
+//                emit tick(i + 1, nDp);
             } catch (exception e) {
                 emit error(e.what());
             }

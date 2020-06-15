@@ -16,22 +16,25 @@ public:
         Initial,
         Specified
     };
+    static GwmEnumValueNameMapper<BandwidthInitilizeType> BandwidthInitilizeTypeNameMapper;
 
     enum BandwidthSelectionCriterionType
     {
         CV,
         AIC
     };
+    static GwmEnumValueNameMapper<BandwidthSelectionCriterionType> BandwidthSelectionCriterionTypeNameMapper;
 
     enum BackFittingCriterionType
     {
         CVR,
         dCVR
     };
+    static GwmEnumValueNameMapper<BackFittingCriterionType> BackFittingCriterionTypeNameMapper;
 
     typedef double (GwmMultiscaleGWRTaskThread::*BandwidthSizeCriterionFunction)(GwmBandwidthWeight*);
     typedef mat (GwmMultiscaleGWRTaskThread::*RegressionAllFunction)(const arma::mat&, const arma::vec&);
-    typedef vec (GwmMultiscaleGWRTaskThread::*RegressionVarFunction)(const arma::mat&, const arma::vec&, int, mat&);
+    typedef vec (GwmMultiscaleGWRTaskThread::*RegressionVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
     typedef QPair<QString, const mat> CreateResultLayerDataItem;
 
 private:
@@ -124,6 +127,8 @@ public:     // IRegressionAnalysis interface
     bool hasHatMatrix() const;
     void setHasHatMatrix(bool hasHatMatrix);
 
+    mat betas() const;
+
 protected:
     void initPoints();
     void initXY(mat& x, mat& y, const GwmVariable& depVar, const QList<GwmVariable>& indepVars);
@@ -134,7 +139,7 @@ protected:
     }
 
     mat regressionAllSerial(const mat& x, const vec& y);
-    vec regressionVarSerial(const mat& x, const vec& y, const int var, mat& S);
+    vec regressionVarSerial(const vec& x, const vec& y, const int var, mat& S);
 
     double findMaxDistance(int var);
 
@@ -310,6 +315,11 @@ inline bool GwmMultiscaleGWRTaskThread::hasHatMatrix() const
 inline void GwmMultiscaleGWRTaskThread::setHasHatMatrix(bool hasHatMatrix)
 {
     mHasHatMatrix = hasHatMatrix;
+}
+
+inline mat GwmMultiscaleGWRTaskThread::betas() const
+{
+    return mBetas;
 }
 
 #endif // GWMMULTISCALEGWRTASKTHREAD_H

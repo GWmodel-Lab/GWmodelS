@@ -730,7 +730,7 @@ void MainWidget::onMultiscaleGWRBtnClicked()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
+            QgsVectorLayer* resultLayer = gwrTaskThread->resultLayer();
             GwmLayerMultiscaleGWRItem* gwrItem = new GwmLayerMultiscaleGWRItem(selectedItem, resultLayer, gwrTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }

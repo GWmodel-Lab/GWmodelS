@@ -6,22 +6,24 @@ GwmLayerMultiscaleGWRItem::GwmLayerMultiscaleGWRItem(GwmLayerItem* parent, QgsVe
 {
     if (taskThread)
     {
-        mDataPointsSize = taskThread->getFeatureList().size();
-        mDepVarIndex = taskThread->getDepVarIndex();
-        mIndepVarsIndex = taskThread->getIndepVarsIndex();
-        mIndepVarsOrigin = taskThread->indepVars();
-        mBandwidthSize = taskThread->initialBandwidthSize();
-        mBandwidthUnit = taskThread->bandwidthUnit();
-        mBandwidthSeled = taskThread->bandwidthSeled();
-        mBandwidthType = taskThread->bandwidthType();
+        mDataPointsSize = taskThread->dataLayer()->featureCount();
+        mDepVar = taskThread->dependentVariable();
+        mIndepVars = taskThread->independentVariables();
+        for (const GwmSpatialWeight& sp : taskThread->spatialWeights())
+        {
+            GwmBandwidthWeight* pBw = static_cast<GwmBandwidthWeight*>(sp.weight()->clone());
+            GwmBandwidthWeight bw(pBw);
+            mBandwidthWeights.append(bw);
+            mDistaneTypes.append(sp.distance()->type());
+        }
+        mBandwidthInitilize = taskThread->bandwidthInitilize();
         mBandwidthSelectionApproach = taskThread->bandwidthSelectionApproach();
-        mBandwidthKernelFunction = taskThread->bandwidthKernel();
-        mDistanceSource = taskThread->distanceSource();
-        mDistSrcParameters = taskThread->distanceParameter();
         mPreditorCentered = taskThread->preditorCentered();
-        mDiagnostic = taskThread->getDiagnostic();
-        mBetas = mat(taskThread->getBetas());
-        hasHatmatrix = taskThread->getHasHatMatrix();
+        mBandwidthSelectThreshold = taskThread->bandwidthSelectThreshold();
+        mCriterionType = taskThread->criterionType();
+        mDiagnostic = taskThread->diagnostic();
+        mBetas = mat(taskThread->betas());
+        mHasHatmatrix = taskThread->hasHatMatrix();
     }
 }
 
@@ -37,72 +39,12 @@ int GwmLayerMultiscaleGWRItem::dataPointsSize() const
     return mDataPointsSize;
 }
 
-int GwmLayerMultiscaleGWRItem::depVarIndex() const
-{
-    return mDepVarIndex;
-}
-
-QList<int> GwmLayerMultiscaleGWRItem::indepVarsIndex() const
-{
-    return mIndepVarsIndex;
-}
-
-QList<GwmLayerAttributeItem *> GwmLayerMultiscaleGWRItem::indepVarsOrigin() const
-{
-    return mIndepVarsOrigin;
-}
-
-vec GwmLayerMultiscaleGWRItem::bandwidthSize() const
-{
-    return mBandwidthSize;
-}
-
-QList<QString> GwmLayerMultiscaleGWRItem::bandwidthUnit() const
-{
-    return mBandwidthUnit;
-}
-
-QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> GwmLayerMultiscaleGWRItem::bandwidthSeled() const
-{
-    return mBandwidthSeled;
-}
-
-QList<GwmGWRTaskThread::BandwidthType> GwmLayerMultiscaleGWRItem::bandwidthType() const
-{
-    return mBandwidthType;
-}
-
-QList<GwmGWRTaskThread::BandwidthSelectionApproach> GwmLayerMultiscaleGWRItem::bandwidthSelectionApproach() const
-{
-    return mBandwidthSelectionApproach;
-}
-
-QList<GwmGWRTaskThread::KernelFunction> GwmLayerMultiscaleGWRItem::bandwidthKernelFunction() const
-{
-    return mBandwidthKernelFunction;
-}
-
-QList<GwmGWRTaskThread::DistanceSourceType> GwmLayerMultiscaleGWRItem::distanceSource() const
-{
-    return mDistanceSource;
-}
-
-QList<QVariant> GwmLayerMultiscaleGWRItem::distSrcParameters() const
-{
-    return mDistSrcParameters;
-}
-
 QList<bool> GwmLayerMultiscaleGWRItem::preditorCentered() const
 {
     return mPreditorCentered;
 }
 
-vec GwmLayerMultiscaleGWRItem::bandwidthSelectThreshold() const
-{
-    return mBandwidthSelectThreshold;
-}
-
-GwmGWRDiagnostic GwmLayerMultiscaleGWRItem::diagnostic() const
+GwmDiagnostic GwmLayerMultiscaleGWRItem::diagnostic() const
 {
     return mDiagnostic;
 }
@@ -112,7 +54,47 @@ arma::mat GwmLayerMultiscaleGWRItem::betas() const
     return mBetas;
 }
 
-bool GwmLayerMultiscaleGWRItem::getHasHatmatrix() const
+bool GwmLayerMultiscaleGWRItem::hasHatmatrix() const
 {
-    return hasHatmatrix;
+    return mHasHatmatrix;
+}
+
+QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> GwmLayerMultiscaleGWRItem::bandwidthInitilize() const
+{
+    return mBandwidthInitilize;
+}
+
+QList<GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType> GwmLayerMultiscaleGWRItem::bandwidthSelectionApproach() const
+{
+    return mBandwidthSelectionApproach;
+}
+
+QList<double> GwmLayerMultiscaleGWRItem::bandwidthSelectThreshold() const
+{
+    return mBandwidthSelectThreshold;
+}
+
+GwmMultiscaleGWRTaskThread::BackFittingCriterionType GwmLayerMultiscaleGWRItem::criterionType() const
+{
+    return mCriterionType;
+}
+
+QList<GwmBandwidthWeight> GwmLayerMultiscaleGWRItem::bandwidthWeights() const
+{
+    return mBandwidthWeights;
+}
+
+QList<GwmDistance::DistanceType> GwmLayerMultiscaleGWRItem::distaneTypes() const
+{
+    return mDistaneTypes;
+}
+
+GwmVariable GwmLayerMultiscaleGWRItem::depVar() const
+{
+    return mDepVar;
+}
+
+QList<GwmVariable> GwmLayerMultiscaleGWRItem::indepVars() const
+{
+    return mIndepVars;
 }

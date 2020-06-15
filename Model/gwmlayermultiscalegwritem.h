@@ -22,58 +22,46 @@ public:
 
     int dataPointsSize() const;
 
-    int depVarIndex() const;
-
-    QList<int> indepVarsIndex() const;
-
-    QList<GwmLayerAttributeItem *> indepVarsOrigin() const;
-
-    vec bandwidthSize() const;
-
-    QList<QString> bandwidthUnit() const;
-
-    QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> bandwidthSeled() const;
-
-    QList<GwmGWRTaskThread::BandwidthType> bandwidthType() const;
-
-    QList<GwmGWRTaskThread::BandwidthSelectionApproach> bandwidthSelectionApproach() const;
-
-    QList<GwmGWRTaskThread::KernelFunction> bandwidthKernelFunction() const;
-
-    QList<GwmGWRTaskThread::DistanceSourceType> distanceSource() const;
-
-    QList<QVariant> distSrcParameters() const;
-
     QList<bool> preditorCentered() const;
 
-    vec bandwidthSelectThreshold() const;
-
-    GwmGWRDiagnostic diagnostic() const;
+    GwmDiagnostic diagnostic() const;
 
     arma::mat betas() const;
 
-    bool getHasHatmatrix() const;
+    bool hasHatmatrix() const;
+
+    QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> bandwidthInitilize() const;
+
+    QList<GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType> bandwidthSelectionApproach() const;
+
+    QList<double> bandwidthSelectThreshold() const;
+
+    GwmMultiscaleGWRTaskThread::BackFittingCriterionType criterionType() const;
+
+    QList<GwmBandwidthWeight> bandwidthWeights() const;
+
+    QList<GwmDistance::DistanceType> distaneTypes() const;
+
+    GwmVariable depVar() const;
+
+    QList<GwmVariable> indepVars() const;
 
 private:
     int mDataPointsSize;
-    int mDepVarIndex;
-    QList<int> mIndepVarsIndex;
-    QList<GwmLayerAttributeItem*> mIndepVarsOrigin;
-    vec mBandwidthSize;
-    QList<QString> mBandwidthUnit;
-    QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> mBandwidthSeled;
-    QList<GwmGWRTaskThread::BandwidthType> mBandwidthType;
-    QList<GwmGWRTaskThread::BandwidthSelectionApproach> mBandwidthSelectionApproach;
-    QList<GwmGWRTaskThread::KernelFunction> mBandwidthKernelFunction;
-    QList<GwmGWRTaskThread::DistanceSourceType> mDistanceSource;
-    QList<QVariant> mDistSrcParameters;
+    GwmVariable mDepVar;
+    QList<GwmVariable> mIndepVars;
+    QList<GwmBandwidthWeight> mBandwidthWeights;
+    QList<GwmDistance::DistanceType> mDistaneTypes;
+    QList<GwmMultiscaleGWRTaskThread::BandwidthInitilizeType> mBandwidthInitilize;
+    QList<GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
     QList<bool> mPreditorCentered;
-    vec mBandwidthSelectThreshold;
+    QList<double> mBandwidthSelectThreshold;
+    GwmMultiscaleGWRTaskThread::BackFittingCriterionType mCriterionType;
 
-    GwmGWRDiagnostic mDiagnostic;
+    GwmDiagnostic mDiagnostic;
     arma::mat mBetas;
 
-    bool hasHatmatrix;
+    bool mHasHatmatrix;
 };
 
 #endif // GWMLAYERGWRITEM_H

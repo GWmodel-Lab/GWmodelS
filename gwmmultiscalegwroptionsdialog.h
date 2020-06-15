@@ -5,6 +5,7 @@
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
 #include "TaskThread/gwmmultiscalegwrtaskthread.h"
+#include "TaskThread/iparallelable.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
 #include "Model/gwmparameterspecifiedoptionsmodel.h"
@@ -26,7 +27,7 @@ private:
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
     GwmMultiscaleGWRTaskThread* mTaskThread = nullptr;
-    GwmLayerAttributeItemModel* mDepVarModel;
+    GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
     GwmParameterSpecifiedOptionsModel* mParameterSpecifiedOptionsModel = nullptr;
     QItemSelectionModel* mParameterSpecifiedOoptionsSelectionModel = nullptr;
@@ -59,18 +60,17 @@ public slots:
 public:
     QString crsRotateTheta();
     QString crsRotateP();
-    GwmGWRTaskThread::BandwidthType bandwidthType();
-    GwmGWRTaskThread::ParallelMethod approachType();
+    bool bandwidthType();
+    IParallelalbe::ParallelType parallelType();
     double bandwidthSize();
-    GwmGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
+    GwmMultiscaleGWRTaskThread::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
-    GwmGWRTaskThread::KernelFunction bandwidthKernelFunction();
-    GwmGWRTaskThread::DistanceSourceType distanceSourceType();
+    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
+    GwmDistance::DistanceType distanceSourceType();
     QVariant distanceSourceParameters();
-    GwmGWRTaskThread::ParallelMethod parallelMethod();
     QVariant parallelParameters();
 
-    void setTaskThread(GwmGWRTaskThread* taskThread);
+    void setTaskThread(GwmMultiscaleGWRTaskThread* taskThread);
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
@@ -78,6 +78,7 @@ public:
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
 private slots:
+    void onBwSelecionThresholdSpbChanged(int arg1);
 };
 
 #endif // GWMMULTISCALEGWROPTIONSDIALOG_H

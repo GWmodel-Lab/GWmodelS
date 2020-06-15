@@ -16,6 +16,8 @@ public:
     };
     static GwmEnumValueNameMapper<KernelFunctionType> KernelFunctionTypeNameMapper;
 
+    static GwmEnumValueNameMapper<bool> BandwidthTypeNameMapper;
+
     typedef double (*KernelFunction)(double, double);
 
     static KernelFunction Kernel[];
@@ -30,6 +32,7 @@ public:
     GwmBandwidthWeight();
     GwmBandwidthWeight(double size, bool adaptive, KernelFunctionType kernel);
     GwmBandwidthWeight(const GwmBandwidthWeight& bandwidthWeight);
+    GwmBandwidthWeight(const GwmBandwidthWeight* bandwidthWeight);
 
     virtual GwmWeight * clone() override
     {
