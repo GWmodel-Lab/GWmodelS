@@ -30,7 +30,7 @@ private:
     GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
     GwmParameterSpecifiedOptionsModel* mParameterSpecifiedOptionsModel = nullptr;
-    QItemSelectionModel* mParameterSpecifiedOoptionsSelectionModel = nullptr;
+    QItemSelectionModel* mParameterSpecifiedOptionsSelectionModel = nullptr;
 
 public slots:
     void layerChanged(const int index);
