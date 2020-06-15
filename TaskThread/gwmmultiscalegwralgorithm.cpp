@@ -244,7 +244,11 @@ mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
 
 bool GwmMultiscaleGWRAlgorithm::isValid()
 {
+    if (mIndepVars.size() < 1)
+        return false;
+
     int nVar = mIndepVars.size() + 1;
+
     if (mSpatialWeights.size() != nVar)
         return false;
 
@@ -259,6 +263,24 @@ bool GwmMultiscaleGWRAlgorithm::isValid()
 
     if (mBandwidthSelectThreshold.size() != nVar)
         return false;
+
+    for (int i = 0; i < nVar; i++)
+    {
+        GwmBandwidthWeight* bw = static_cast<GwmBandwidthWeight*>(mSpatialWeights[i].weight());
+        if (mBandwidthInitilize[i] == GwmMultiscaleGWRAlgorithm::Specified || mBandwidthInitilize[i] == GwmMultiscaleGWRAlgorithm::Initial)
+        {
+            if (bw->adaptive())
+            {
+                if (bw->bandwidth() <= 1)
+                    return false;
+            }
+            else
+            {
+                if (bw->bandwidth() < 0.0)
+                    return false;
+            }
+        }
+    }
 
     return true;
 }

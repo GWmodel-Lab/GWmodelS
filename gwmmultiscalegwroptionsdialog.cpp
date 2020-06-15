@@ -35,6 +35,7 @@ GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroup
 
     ui->mMaxIterationSpb->setMaximum(INT_MAX);
     ui->mNLowerSpb->setMaximum(INT_MAX);
+    ui->mBandwidthOptimizeRetrySpb->setMaximum(INT_MAX);
 
     // Parameter Specified 参数设置
     mParameterSpecifiedOptionsSelectionModel = new QItemSelectionModel(mParameterSpecifiedOptionsModel);
@@ -183,6 +184,8 @@ void GwmMultiscaleGWROptionsDialog::layerChanged(int index)
             ui->mDepVarComboBox->addItem(field.name());
         }
     }
+    // 选带宽下限最小值
+    ui->mNLowerSpb->setMaximum(mSelectedLayer->originChild()->layer()->featureCount());
 }
 
 void GwmMultiscaleGWROptionsDialog::onDepVarChanged(const int index)
@@ -320,14 +323,20 @@ void GwmMultiscaleGWROptionsDialog::onDmatFileOpenClicked()
 void GwmMultiscaleGWROptionsDialog::onSelectedIndenpendentVariablesChanged()
 {
     mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector->selectedIndepVarModel());
+    ui->mNLowerSpb->setMinimum(ui->mIndepVarSelector->selectedIndepVarModel()->rowCount() + 1);
 }
 
-void GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged(const QModelIndex& currnet, const QModelIndex& previous)
+void GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged(const QModelIndex& current, const QModelIndex& previous)
 {
-    ui->mParameterSpecifiedOptionsLayout->setEnabled(currnet.isValid());
-    if (!currnet.isValid())
+    ui->mParameterSpecifiedOptionsLayout->setEnabled(current.isValid());
+    ui->mPSBandwidthSettingGroup->setEnabled(current.isValid());
+    ui->mPSDistanceSettingGroup->setEnabled(current.isValid());
+    ui->mPSOtherSettingGroup->setEnabled(current.isValid());
+
+    if (!current.isValid())
         return;
-    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(currnet);
+
+    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(current);
     if (option)
     {
         switch (option->bandwidthSeledType) {
@@ -369,7 +378,7 @@ void GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged(const QMo
         default:
             break;
         }
-        if (currnet.row() == 0)
+        if (current.row() == 0)
         {
             ui->ckbPredictorCentralization->setChecked(false);
             ui->ckbPredictorCentralization->setEnabled(false);
@@ -386,43 +395,64 @@ void GwmMultiscaleGWROptionsDialog::onBwSizeAutomaticApprochChanged(int index)
 {
     // 记录数据
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
-    option->approach = (GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType)index;
+    if (option)
+    {
+        option->approach = (GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType)index;
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onBwSizeAdaptiveSizeChanged(int size)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
-    option->bandwidthSize = bandwidthSize();
+    if (option)
+    {
+        option->bandwidthSize = bandwidthSize();
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onBwSizeAdaptiveUnitChanged(int index)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
-    option->bandwidthSize = bandwidthSize();
+    if (option)
+    {
+        option->bandwidthSize = bandwidthSize();
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onBwSizeFixedSizeChanged(double size)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
-    option->bandwidthSize = bandwidthSize();
+    if (option)
+    {
+        option->bandwidthSize = bandwidthSize();
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onBwSizeFixedUnitChanged(int index)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
-    option->bandwidthSize = bandwidthSize();
+    if (option)
+    {
+        option->bandwidthSize = bandwidthSize();
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onBwKernelFunctionChanged(int index)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
-    option->kernel = (GwmBandwidthWeight::KernelFunctionType)index;
+    if (option)
+    {
+        option->kernel = (GwmBandwidthWeight::KernelFunctionType)index;
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onPredictorCentralizationToggled(bool checked)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
-    option->predictorCentralization = checked;
+    if (option)
+    {
+        option->predictorCentralization = checked;
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onCustomizeRaidoToggled(bool checked)

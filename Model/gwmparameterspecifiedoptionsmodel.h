@@ -11,16 +11,16 @@ struct GwmParameterSpecifiedOption
     int attributeIndex;
     bool checkState = false;
 
-    double bandwidthSize = 0;
-    bool adaptive;
+    double bandwidthSize = 100.0;
+    bool adaptive = true;
     GwmBandwidthWeight::KernelFunctionType kernel = GwmBandwidthWeight::KernelFunctionType::Gaussian;
     GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Null;
     GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType approach = GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV;
     double threshold = 0.01;
 
     GwmDistance::DistanceType distanceType = GwmDistance::DistanceType::CRSDistance;
-    double p;
-    double theta;
+    double p = 2.0;
+    double theta = 0.0;
     QString dmatFile;
 
     bool predictorCentralization = true;
