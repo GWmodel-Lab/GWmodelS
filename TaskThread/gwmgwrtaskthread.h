@@ -263,6 +263,7 @@ public:
     QgsVectorLayer *getRegressionLayer() const;
     void setRegressionLayer(QgsVectorLayer *regressionLayer);
 
+    void initCUDA(IGWmodelCUDA *cuda);
 protected:
     // 图层和 X Y 属性列
     QgsVectorLayer* mLayer = nullptr;

@@ -133,22 +133,25 @@ protected:
         return mHasHatMatrix && (mDataPoints.n_rows < 8192);
     }
 
-    vec distanceParam1(int i)
+    rowvec distanceParam1(int i)
     {
         return (mSpatialWeight.distance()->type() == GwmDistance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
     }
 
 private:
     void createResultLayer(CreateResultLayerData data);
-    void initCuda();
+    void initCuda(IGWmodelCUDA *cuda, const mat &x, const vec &y);
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCVCuda(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICOmp(GwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAICCuda(GwmBandwidthWeight* bandwidthWeight);
 
     double indepVarsSelectCriterionSerial(const QList<GwmVariable>& indepVars);
     double indepVarsSelectCriterionOmp(const QList<GwmVariable>& indepVars);
+    double indepVarsSelectCriterionCuda(const QList<GwmVariable>& indepVars);
 
     mat regressionSerial(const mat& x, const vec& y);
     mat regressionOmp(const mat& x, const vec& y);
@@ -208,7 +211,7 @@ private:
     int mOmpThreadNum = 8;
     int mGpuId = 0;
     int mGroupSize = 64;
-    IGWmodelCUDA* mCuda = nullptr;
+
 };
 
 inline bool GwmBasicGWRAlgorithm::hasFTest() const
@@ -283,7 +286,7 @@ inline IndepVarsCriterionList GwmBasicGWRAlgorithm::indepVarSelectorCriterions()
 
 inline int GwmBasicGWRAlgorithm::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
 }
 
 inline IParallelalbe::ParallelType GwmBasicGWRAlgorithm::parallelType() const
