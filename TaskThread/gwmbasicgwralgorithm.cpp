@@ -1,4 +1,6 @@
 #include "gwmbasicgwralgorithm.h"
+#include <SpatialWeight/gwmcrsdistance.h>
+#include <SpatialWeight/gwmminkwoskidistance.h>
 #include <gsl/gsl_cdf.h>
 #include <omp.h>
 
@@ -100,7 +102,7 @@ void GwmBasicGWRAlgorithm::run()
         vec localR2 = vec(nDp, fill::zeros);
         for (uword i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+            vec w = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
             double tss = sum(dybar2 % w);
             double rss = sum(dyhat2 % w);
             localR2(i) = (tss - rss) / tss;
@@ -152,6 +154,39 @@ void GwmBasicGWRAlgorithm::run()
     }
 
     emit success();
+}
+
+void GwmBasicGWRAlgorithm::initCuda()
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nRp = mRegressionPoints.n_rows;
+    bool hasDmat = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    for (arma::uword r = 0; r < nDp; r++)
+    {
+        for (arma::uword c = 0; c < nVar; c++)
+        {
+            mCuda->SetX(c, r, mX(r, c));
+        }
+        mCuda->SetY(r, mY(r));
+        mCuda->SetDp(r, mDataPoints(r, 0), mDataPoints(r, 1));
+    }
+    if (hasRegressionLayer())
+    {
+        for (uword r = 0; r < nRp; r++)
+        {
+            mCuda->SetRp(r, mRegressionPoints(r, 0), mRegressionPoints(r, 1));
+        }
+    }
+    if (hasDmat)
+    {
+        for (arma::uword r = 0; r < nRp; r++)
+        {
+            vec dist = mSpatialWeight.distance()->distance(distanceParam1(r), mDataPoints);
+            for (arma::uword d = 0; d < nDp; d++)
+            {
+                mCuda->SetDmat(d, r, dist(d));
+            }
+        }
+    }
 }
 
 mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y)
@@ -255,7 +290,7 @@ mat GwmBasicGWRAlgorithm::regressionSerial(const mat &x, const vec &y)
     mat betas(nVar, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
     {
-        vec w = mSpatialWeight.spatialWeight(points.row(i), mDataPoints);
+        vec w = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -283,7 +318,7 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nRp; i++)
     {
-        vec w = mSpatialWeight.spatialWeight(points.row(i), mDataPoints);
+        vec w = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -302,6 +337,70 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
     return betas.t();
 }
 
+mat GwmBasicGWRAlgorithm::regressionCuda(const mat &x, const vec &y)
+{
+    int nDp = x.n_rows, nVar = x.n_cols, nRp = mRegressionPoints.n_rows;
+    double p = 2.0, theta = 0.0;
+    double longlat = false;
+    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    {
+        GwmMinkwoskiDistance* d = static_cast<GwmMinkwoskiDistance*>(mSpatialWeight.distance());
+        p = d->poly();
+        theta = d->theta();
+    }
+    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    {
+        GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
+        longlat = d->geographic();
+    }
+    int groupSize = mGroupSize;
+    int gpuID = mGpuId;
+    GwmBandwidthWeight* bw = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    bool adaptive = bw->adaptive();
+    bool gwrStatus = mCuda->Regression(false, p, theta, longlat, bw->bandwidth(), bw->kernel(), adaptive, groupSize, gpuID);
+    mat betas(nVar, nDp, fill::zeros);
+    if (gwrStatus)
+    {
+        for (int r = 0; r < nDp; r++)
+        {
+            for (int c = 0; c < nVar; c++)
+            {
+                betas(c, r) = mCuda->GetBetas(r, c);
+            }
+        }
+//        if (mHasHatMatrix)
+//        {
+//            bool isStoreS = mHasFTest && (nDp <= 8192);
+//            for (int r = 0; r < nDp; r++)
+//            {
+//                for (int c = 0; c < nVar; c++)
+//                {
+//                    mBetas(c, r) = mCuda->GetBetas(r, c);
+//                    mBetasSE(c, r) = mCuda->GetBetasSE(r, c);
+//                }
+//                mQDiag(r) = mCuda->GetQdiag(r);
+//            }
+//            mSHat(0) = mCuda->GetShat1();
+//            mSHat(1) = mCuda->GetShat2();
+//            if (isStoreS)
+//            {
+//                for (arma::uword r = 0; r < nDp; r++)
+//                {
+//                    for (arma::uword c = 0; c < nVar; c++)
+//                    {
+//                        S(r, c) = cuda->GetS(r, c);
+//                    }
+//                }
+//            }
+//        }
+//        else
+//        {
+
+//        }
+    }
+    return betas.t();
+}
+
 mat GwmBasicGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
     emit message("Regression ...");
@@ -313,7 +412,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, 
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec w = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+        vec w = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -355,7 +454,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat
     for (int i = 0; i < nDp; i++)
     {
         int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+        vec w = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -381,6 +480,60 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat
     }
     shat = sum(shat_all, 1);
     qDiag = sum(qDiag_all, 1);
+    betasSE = betasSE.t();
+    return betas.t();
+}
+
+mat GwmBasicGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
+{
+    int nDp = x.n_rows, nVar = x.n_cols;
+    double p = 2.0, theta = 0.0;
+    double longlat = false;
+    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    {
+        GwmMinkwoskiDistance* d = static_cast<GwmMinkwoskiDistance*>(mSpatialWeight.distance());
+        p = d->poly();
+        theta = d->theta();
+    }
+    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    {
+        GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
+        longlat = d->geographic();
+    }
+    int groupSize = mGroupSize;
+    int gpuID = mGpuId;
+    GwmBandwidthWeight* bw = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    bool adaptive = bw->adaptive();
+    bool gwrStatus = mCuda->Regression(false, p, theta, longlat, bw->bandwidth(), bw->kernel(), adaptive, groupSize, gpuID);
+    mat betas(nVar, nDp, fill::zeros);
+    betasSE = mat(nVar, nDp, fill::zeros);
+    shat = vec(2, fill::zeros);
+    qDiag = vec(nDp, fill::zeros);
+    if (gwrStatus)
+    {
+        for (int r = 0; r < nDp; r++)
+        {
+            for (int c = 0; c < nVar; c++)
+            {
+                betas(c, r) = mCuda->GetBetas(r, c);
+                betasSE(c, r) = mCuda->GetBetasSE(r, c);
+            }
+            qDiag(r) = mCuda->GetQdiag(r);
+        }
+        shat(0) = mCuda->GetShat1();
+        shat(1) = mCuda->GetShat2();
+        if (isStoreS())
+        {
+            S = mat(nDp, nDp, fill::zeros);
+            for (arma::uword r = 0; r < nDp; r++)
+            {
+                for (arma::uword c = 0; c < nVar; c++)
+                {
+                    S(r, c) = mCuda->GetS(r, c);
+                }
+            }
+        }
+    }
     betasSE = betasSE.t();
     return betas.t();
 }
@@ -449,7 +602,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight*
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+        vec d = mSpatialWeight.distance()->distance(distanceParam1(i), mDataPoints);
         vec w = bandwidthWeight->weight(d);
         mat xtw = trans(mX.each_col() % w);
         mat xtwx = xtw * mX;
@@ -489,7 +642,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *ba
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+            vec d = mSpatialWeight.distance()->distance(distanceParam1(i), mDataPoints);
             vec w = bandwidthWeight->weight(d);
             mat xtw = trans(mX.each_col() % w);
             mat xtwx = xtw * mX;
@@ -530,7 +683,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+        vec d = mSpatialWeight.distance()->distance(distanceParam1(i), mDataPoints);
         vec w = bandwidthWeight->weight(d);
         w(i) = 0.0;
         mat xtw = trans(mX.each_col() % w);
@@ -568,7 +721,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *ban
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+            vec d = mSpatialWeight.distance()->distance(distanceParam1(i), mDataPoints);
             vec w = bandwidthWeight->weight(d);
             w(i) = 0.0;
             mat xtw = trans(mX.each_col() % w);
@@ -677,10 +830,20 @@ double GwmBasicGWRAlgorithm::findMaxDistance()
     double maxD = 0.0;
     for (int i = 0; i < nDp; i++)
     {
-        double d = max(mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints));
+        double d = max(mSpatialWeight.distance()->distance(distanceParam1(i), mDataPoints));
         maxD = d > maxD ? d : maxD;
     }
     return maxD;
+}
+
+int GwmBasicGWRAlgorithm::groupSize() const
+{
+    return mGroupSize;
+}
+
+void GwmBasicGWRAlgorithm::setGroupSize(int groupSize)
+{
+    mGroupSize = groupSize;
 }
 
 double GwmBasicGWRAlgorithm::calcTrQtQSerial()
@@ -692,7 +855,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQSerial()
     mat wspan(1, nVar, fill::ones);
     for (arma::uword i = 0; i < nDp; i++)
     {
-        vec wi = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+        vec wi = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
         mat xtwi = trans(mX % (wi * wspan));
         try {
             mat xtwxR = inv_sympd(xtwi * mX);
@@ -742,7 +905,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQOmp()
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec wi = mSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+            vec wi = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
             mat xtwi = trans(mX % (wi * wspan));
             try {
                 mat xtwxR = inv_sympd(xtwi * mX);
