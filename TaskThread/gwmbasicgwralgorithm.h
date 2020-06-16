@@ -5,8 +5,9 @@
 #include "TaskThread/gwmbandwidthsizeselector.h"
 #include "TaskThread/gwmindependentvariableselector.h"
 #include "TaskThread/iparallelable.h"
+#include "GWmodelCUDA/IGWmodelCUDA.h"
 
-class GwmBasicGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public IIndependentVariableSelectable, public IOpenmpParallelable
+class GwmBasicGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public IIndependentVariableSelectable, public IOpenmpParallelable, public ICudaParallelable
 {
     Q_OBJECT
 
@@ -71,6 +72,9 @@ public:
     bool hasFTest() const;
     void setHasFTest(bool value);
 
+    int groupSize() const;
+    void setGroupSize(int groupSize);
+
     BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 
@@ -119,37 +123,53 @@ public:     // IParallelalbe interface
 public:     // IOpenmpParallelable interface
     void setOmpThreadNum(const int threadNum) override;
 
+
+public:     // ICudaParallelable interface
+    void setGPUId(const int gpuId) override;
+
 protected:
     bool isStoreS()
     {
         return mHasHatMatrix && (mDataPoints.n_rows < 8192);
     }
 
+    rowvec distanceParam1(int i)
+    {
+        return (mSpatialWeight.distance()->type() == GwmDistance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
+    }
+
 private:
     void createResultLayer(CreateResultLayerData data);
+    void initCuda(IGWmodelCUDA *cuda, const mat &x, const vec &y);
+
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCVCuda(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICOmp(GwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAICCuda(GwmBandwidthWeight* bandwidthWeight);
 
     double indepVarsSelectCriterionSerial(const QList<GwmVariable>& indepVars);
     double indepVarsSelectCriterionOmp(const QList<GwmVariable>& indepVars);
+    double indepVarsSelectCriterionCuda(const QList<GwmVariable>& indepVars);
 
     mat regressionSerial(const mat& x, const vec& y);
     mat regressionOmp(const mat& x, const vec& y);
+    mat regressionCuda(const mat& x, const vec& y);
 
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
     mat regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    mat regressionHatmatrixCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
 
     void fTest(FTestParameters params);
 
-    double calcTrQtQ() { return (this->*mCalcTrQtQFunction)(); }
     double calcTrQtQSerial();
     double calcTrQtQOmp();
+    double calcTrQtQCuda();
 
-    vec calcDiagB(int i) { return (this->*mCalcDiagBFunction)(i); }
     vec calcDiagBSerial(int i);
     vec calcDiagBOmp(int i);
+    vec calcDiagBCuda(int i);
 
     double findMaxDistance();
 
@@ -189,6 +209,9 @@ private:
 
     IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
+    int mGpuId = 0;
+    int mGroupSize = 64;
+
 };
 
 inline bool GwmBasicGWRAlgorithm::hasFTest() const
@@ -263,7 +286,7 @@ inline IndepVarsCriterionList GwmBasicGWRAlgorithm::indepVarSelectorCriterions()
 
 inline int GwmBasicGWRAlgorithm::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
 }
 
 inline IParallelalbe::ParallelType GwmBasicGWRAlgorithm::parallelType() const
@@ -274,6 +297,11 @@ inline IParallelalbe::ParallelType GwmBasicGWRAlgorithm::parallelType() const
 inline void GwmBasicGWRAlgorithm::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
+}
+
+inline void GwmBasicGWRAlgorithm::setGPUId(const int gpuId)
+{
+    mGpuId = gpuId;
 }
 
 inline BandwidthCriterionList GwmBasicGWRAlgorithm::bandwidthSelectorCriterions() const

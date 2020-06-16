@@ -25,15 +25,18 @@ QMap<QString, double> GwmGWRTaskThread::adaptiveBwUnitDict = {
 
 RegressionAll GwmGWRTaskThread::regressionAll[] = {
     &GwmGWRTaskThread::regressionAllSerial,
-    &GwmGWRTaskThread::regressionAllOmp
+    &GwmGWRTaskThread::regressionAllOmp,
+    &GwmGWRTaskThread::regressionAllCuda
 };
 CalcTrQtQ GwmGWRTaskThread::calcTrQtQ[] = {
     &GwmGWRTaskThread::calcTrQtQSerial,
-    &GwmGWRTaskThread::calcTrQtQOmp
+    &GwmGWRTaskThread::calcTrQtQOmp,
+    &GwmGWRTaskThread::calcTrQtQCuda
 };
 CalcDiagB GwmGWRTaskThread::calcDiagB[] = {
     &GwmGWRTaskThread::calcDiagBSerial,
-    &GwmGWRTaskThread::calcDiagBOmp
+    &GwmGWRTaskThread::calcDiagBOmp,
+    &GwmGWRTaskThread::calcDiagBCuda
 };
 
 GwmGWRTaskThread::GwmGWRTaskThread()
@@ -381,6 +384,102 @@ bool GwmGWRTaskThread::regressionAllOmp(bool hatmatrix, mat &S)
     return isAllCorrect;
 }
 
+void GwmGWRTaskThread::initCUDA(IGWmodelCUDA* cuda)
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nRp = mFeatureList.size();
+    bool hasRp = !(mRegressionLayer == nullptr);
+    bool hasDmat = mDistSrcType == DistanceSourceType::DMatFile;
+    for (arma::uword r = 0; r < nDp; r++)
+    {
+        for (arma::uword c = 0; c < nVar; c++)
+        {
+            cuda->SetX(c, r, mX(r, c));
+        }
+        cuda->SetY(r, mY(r));
+        cuda->SetDp(r, mDataPoints(r, 0), mDataPoints(r, 1));
+    }
+    if (hasRp)
+    {
+        for (int r = 0; r < mFeatureList.size(); r++)
+        {
+            cuda->SetRp(r, mRegPoints(r, 0), mRegPoints(r, 1));
+        }
+    }
+    if (hasDmat)
+    {
+        for (arma::uword r = 0; r < nRp; r++)
+        {
+            vec dist = distance(r);
+            for (arma::uword d = 0; d < nDp; d++)
+            {
+                cuda->SetDmat(d, r, dist(d));
+            }
+        }
+    }
+}
+
+bool GwmGWRTaskThread::regressionAllCuda(bool hatmatrix, mat &S)
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nRp = mFeatureList.size();
+    bool hasRp = !(mRegressionLayer == nullptr);
+    bool hasDmat = mDistSrcType == DistanceSourceType::DMatFile;
+    IGWmodelCUDA* cuda = GWCUDA_Create(nDp, nVar, hasRp, nRp, hasDmat);
+    initCUDA(cuda);
+    double p = 2.0, theta = 0.0;
+    if (mDistSrcType == DistanceSourceType::Minkowski)
+    {
+        QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
+        p = parameters["p"].toDouble();
+        theta = parameters["theta"].toDouble();
+    }
+    bool longlat = mLayer->crs().isGeographic();
+    QMap<QString, QVariant> parameters = mParallelParameter.toMap();
+    int groupSize = parameters["groupSize"].toInt();
+    int gpuID = parameters["gpuID"].toInt();
+    bool adaptive = mBandwidthType == BandwidthType::Adaptive;
+    bool gwrStatus = cuda->Regression(hasHatMatrix, p, theta, longlat, mBandwidthSize, mBandwidthKernelFunction, adaptive, groupSize, gpuID);
+    if (gwrStatus)
+    {
+        if (hasHatMatrix)
+        {
+            bool isStoreS = hasFTest && (nDp <= 8192);
+            for (arma::uword r = 0; r < nDp; r++)
+            {
+                for (arma::uword c = 0; c < nVar; c++)
+                {
+                    mBetas(c, r) = cuda->GetBetas(r, c);
+                    mBetasSE(c, r) = cuda->GetBetasSE(r, c);
+                }
+                mQDiag(r) = cuda->GetQdiag(r);
+            }
+            mSHat(0) = cuda->GetShat1();
+            mSHat(1) = cuda->GetShat2();
+            if (isStoreS)
+            {
+                for (arma::uword r = 0; r < nDp; r++)
+                {
+                    for (arma::uword c = 0; c < nVar; c++)
+                    {
+                        S(r, c) = cuda->GetS(r, c);
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (arma::uword r = 0; r < nDp; r++)
+            {
+                for (arma::uword c = 0; c < nVar; c++)
+                {
+                    mBetas(c, r) = cuda->GetBetas(r, c);
+                }
+            }
+        }
+    }
+    GWCUDA_Del(cuda);
+    return gwrStatus;
+}
+
 double GwmGWRTaskThread::calcTrQtQSerial()
 {
     double trQtQ = 0.0;
@@ -451,6 +550,30 @@ double GwmGWRTaskThread::calcTrQtQOmp()
         emit tick(++current, nDp);
     }
     return sum(trQtQ_all);
+}
+
+double GwmGWRTaskThread::calcTrQtQCuda()
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nRp = mFeatureList.size();
+    bool hasRp = !(mRegressionLayer == nullptr);
+    bool hasDmat = mDistSrcType == DistanceSourceType::DMatFile;
+    IGWmodelCUDA* cuda = GWCUDA_Create(nDp, nVar, hasRp, nRp, hasDmat);
+    initCUDA(cuda);
+    double p = 2.0, theta = 0.0;
+    if (mDistSrcType == DistanceSourceType::Minkowski)
+    {
+        QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
+        p = parameters["p"].toDouble();
+        theta = parameters["theta"].toDouble();
+    }
+    bool longlat = mLayer->crs().isGeographic();
+    QMap<QString, QVariant> parameters = mParallelParameter.toMap();
+    int groupSize = parameters["groupSize"].toInt();
+    int gpuID = parameters["gpuID"].toInt();
+    bool adaptive = mBandwidthType == BandwidthType::Adaptive;
+    double trQtQ = cuda->CalcTrQtQ(p, theta, longlat, mBandwidthSize, mBandwidthKernelFunction, adaptive, groupSize, gpuID);
+    GWCUDA_Del(cuda);
+    return trQtQ;
 }
 
 QString GwmGWRTaskThread::name() const
@@ -952,20 +1075,25 @@ vec GwmGWRTaskThread::distanceMinkowski(int focus)
 
 vec GwmGWRTaskThread::distanceDmat(int focus)
 {
-    QString filename = mDistSrcParameters.toString();
-    qint64 featureCount = mFeatureList.size();
-    QFile dmat(filename);
-    if (dmat.open(QFile::QIODevice::ReadOnly))
+    int nRp = mFeatureList.size();
+    qint64 nDp = mLayer->featureCount();
+    if (focus < nRp)
     {
-        qint64 basePos = 2 * sizeof (int);
-        dmat.seek(basePos + focus * featureCount * sizeof (double));
-        QByteArray values = dmat.read(featureCount * sizeof (double));
-        return vec((double*)values.data(), featureCount);
+        QString filename = mDistSrcParameters.toString();
+        QFile dmat(filename);
+        if (dmat.open(QFile::QIODevice::ReadOnly))
+        {
+            qint64 basePos = 2 * sizeof (int);
+            dmat.seek(basePos + focus * nDp * sizeof (double));
+            QByteArray values = dmat.read(nDp * sizeof (double));
+            return vec((double*)values.data(), nDp);
+        }
+        else
+        {
+            return vec(nDp, fill::zeros);
+        }
     }
-    else
-    {
-        return vec(featureCount, fill::zeros);
-    }
+    else return vec(nDp, fill::zeros);
 }
 
 void GwmGWRTaskThread::diagnostic(bool doLocalR2)
@@ -1152,6 +1280,40 @@ vec GwmGWRTaskThread::calcDiagBOmp(int i)
     vec diagB = sum(diagBAll, 1);
     diagB = 1.0 / nDp * diagB;
     return { sum(diagB), sum(diagB % diagB) };
+}
+
+vec GwmGWRTaskThread::calcDiagBCuda(int i)
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nRp = mFeatureList.size();
+    bool hasRp = !(mRegressionLayer == nullptr);
+    bool hasDmat = mDistSrcType == DistanceSourceType::DMatFile;
+    IGWmodelCUDA* cuda = GWCUDA_Create(nDp, nVar, hasRp, nRp, hasDmat);
+    initCUDA(cuda);
+    double p = 2.0, theta = 0.0;
+    if (mDistSrcType == DistanceSourceType::Minkowski)
+    {
+        QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
+        p = parameters["p"].toDouble();
+        theta = parameters["theta"].toDouble();
+    }
+    bool longlat = mLayer->crs().isGeographic();
+    QMap<QString, QVariant> parameters = mParallelParameter.toMap();
+    int groupSize = parameters["groupSize"].toInt();
+    int gpuID = parameters["gpuID"].toInt();
+    bool adaptive = mBandwidthType == BandwidthType::Adaptive;
+    bool status = cuda->CalcB(i, p, theta, longlat, mBandwidthSize, mBandwidthKernelFunction, adaptive, groupSize, gpuID);
+    if (status)
+    {
+        double trB = cuda->GetTrB();
+        double trBdB = cuda->GetTrBdB();
+        GWCUDA_Del(cuda);
+        return { trB, trBdB };
+    }
+    else
+    {
+        GWCUDA_Del(cuda);
+        return { DBL_MAX, DBL_MAX };
+    }
 }
 
 void GwmGWRTaskThread::createResultLayer()

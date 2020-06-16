@@ -80,8 +80,8 @@ public:
     }
 
 protected:
-    void initPoints();
-    void initXY(mat& x, mat& y, const GwmVariable& depVar, const QList<GwmVariable>& indepVars);
+    virtual void initPoints();
+    virtual void initXY(mat& x, mat& y, const GwmVariable& depVar, const QList<GwmVariable>& indepVars);
 
 protected:
     QgsVectorLayer* mRegressionLayer = nullptr;
