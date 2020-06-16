@@ -72,3 +72,4 @@ vec GwmBandwidthWeight::weight(vec dist)
     }
     return w;
 }
+
