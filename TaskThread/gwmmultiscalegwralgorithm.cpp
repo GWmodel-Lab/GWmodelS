@@ -2,6 +2,7 @@
 #include <omp.h>
 #include <exception>
 #include "GWmodel/GWmodel.h"
+#include <SpatialWeight/gwmcrsdistance.h>
 
 using namespace std;
 
@@ -87,7 +88,7 @@ void GwmMultiscaleGWRAlgorithm::run()
             GwmBandwidthSizeSelector selector;
             selector.setBandwidth(bw0);
             selector.setLower(adaptive ? mAdaptiveLower : 0.0);
-            selector.setUpper(adaptive ? mDataLayer->featureCount() : findMaxDistance(i));
+            selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance(nDp));
             GwmBandwidthWeight* bw = selector.optimize(this);
             if (bw)
             {
@@ -100,14 +101,13 @@ void GwmMultiscaleGWRAlgorithm::run()
     // Calculate the initial beta0 from the above bandwidths
     // *****************************************************
     emit message(tr("Calculating the initial beta0 from the above bandwidths ..."));
-    mInitSpatialWeight.setDistance(mSpatialWeights[0].distance());
     GwmBandwidthWeight* bw0 = bandwidth(0);
     bool adaptive = bw0->adaptive();
     mBandwidthSizeCriterion = bandwidthSizeCriterionAll(mBandwidthSelectionApproach[0]);
     GwmBandwidthSizeSelector initBwSelector;
     initBwSelector.setBandwidth(bw0);
     initBwSelector.setLower(adaptive ? mAdaptiveLower : 0.0);
-    initBwSelector.setUpper(adaptive ? mDataLayer->featureCount() : findMaxDistance(0));
+    initBwSelector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[0].distance()->maxDistance(nDp));
     GwmBandwidthWeight* initBw = initBwSelector.optimize(this);
     if (!initBw)
     {
@@ -191,7 +191,7 @@ mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
                 GwmBandwidthSizeSelector selector;
                 selector.setBandwidth(bwi0);
                 selector.setLower(adaptive ? mAdaptiveLower : 0.0);
-                selector.setUpper(adaptive ? mDataLayer->featureCount() : findMaxDistance(i));
+                selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance(nDp));
                 GwmBandwidthWeight* bwi = selector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
                 emit message(QString("The newly selected bandwidth for variable %1 is %2 (last is %3, difference is %4)")
@@ -312,6 +312,22 @@ void GwmMultiscaleGWRAlgorithm::initPoints()
         }
     }
     else mRegressionPoints = mDataPoints;
+    // 设置空间距离中的数据指针
+    if (mInitSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mInitSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    {
+        GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mInitSpatialWeight.distance());
+        d->setDataPoints(&mDataPoints);
+        d->setFocusPoints(&mRegressionPoints);
+    }
+    for (const GwmSpatialWeight& sw : mSpatialWeights)
+    {
+        if (sw.distance()->type() == GwmDistance::CRSDistance || sw.distance()->type() == GwmDistance::MinkwoskiDistance)
+        {
+            GwmCRSDistance* d = static_cast<GwmCRSDistance*>(sw.distance());
+            d->setDataPoints(&mDataPoints);
+            d->setFocusPoints(&mRegressionPoints);
+        }
+    }
 }
 
 void GwmMultiscaleGWRAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
@@ -410,7 +426,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
         mat betasSE(nVar, nDp, fill::zeros);
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mInitSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+            vec w = mInitSpatialWeight.spatialWeight(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -433,7 +449,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
     {
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mInitSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+            vec w = mInitSpatialWeight.spatialWeight(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -459,7 +475,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mInitSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+            vec w = mInitSpatialWeight.spatialWeight(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -483,7 +499,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mInitSpatialWeight.spatialWeight(mDataPoints.row(i), mDataPoints);
+            vec w = mInitSpatialWeight.spatialWeight(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -509,7 +525,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, c
         S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeights[var].spatialWeight(mDataPoints.row(i), mDataPoints);
+            vec w = mSpatialWeights[var].spatialWeight(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -529,7 +545,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, c
     {
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeights[var].spatialWeight(mDataPoints.row(i), mDataPoints);
+            vec w = mSpatialWeights[var].spatialWeight(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -556,7 +572,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarOmp(const vec &x, const vec &y, cons
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeights[var].spatialWeight(mDataPoints.row(i), mDataPoints);
+            vec w = mSpatialWeights[var].spatialWeight(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -577,7 +593,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarOmp(const vec &x, const vec &y, cons
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeights[var].spatialWeight(mDataPoints.row(i), mDataPoints);
+            vec w = mSpatialWeights[var].spatialWeight(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -593,18 +609,6 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarOmp(const vec &x, const vec &y, cons
     return betas.t();
 }
 
-double GwmMultiscaleGWRAlgorithm::findMaxDistance(int var)
-{
-    int nDp = mDataPoints.n_rows;
-    double maxD = 0.0;
-    for (int i = 0; i < nDp; i++)
-    {
-        double d = max(mSpatialWeights[var].distance()->distance(mDataPoints.row(i), mDataPoints));
-        maxD = d > maxD ? d : maxD;
-    }
-    return maxD;
-}
-
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows;
@@ -612,7 +616,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial(GwmBandwidt
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mInitSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+        vec d = mInitSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         w(i) = 0.0;
         mat xtw = trans(mX.each_col() % w);
@@ -650,7 +654,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWe
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mInitSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+            vec d = mInitSpatialWeight.distance()->distance(i);
             vec w = bandwidthWeight->weight(d);
             w(i) = 0.0;
             mat xtw = trans(mX.each_col() % w);
@@ -688,7 +692,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial(GwmBandwid
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mInitSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+        vec d = mInitSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         mat xtw = trans(mX.each_col() % w);
         mat xtwx = xtw * mX;
@@ -728,7 +732,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICOmp(GwmBandwidthW
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mInitSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+            vec d = mInitSpatialWeight.distance()->distance(i);
             vec w = bandwidthWeight->weight(d);
             mat xtw = trans(mX.each_col() % w);
             mat xtwx = xtw * mX;
@@ -770,7 +774,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial(GwmBandwidt
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeights[var].distance()->distance(mDataPoints.row(i), mDataPoints);
+        vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         w(i) = 0.0;
         mat xtw = trans(mXi % w);
@@ -809,7 +813,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWe
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mSpatialWeights[var].distance()->distance(mDataPoints.row(i), mDataPoints);
+            vec d = mSpatialWeights[var].distance()->distance(i);
             vec w = bandwidthWeight->weight(d);
             w(i) = 0.0;
             mat xtw = trans(mXi % w);
@@ -848,7 +852,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial(GwmBandwid
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeights[var].distance()->distance(mDataPoints.row(i), mDataPoints);
+        vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         mat xtw = trans(mXi % w);
         mat xtwx = xtw * mXi;
@@ -889,7 +893,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICOmp(GwmBandwidthW
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mSpatialWeights[var].distance()->distance(mDataPoints.row(i), mDataPoints);
+            vec d = mSpatialWeights[var].distance()->distance(i);
             vec w = bandwidthWeight->weight(d);
             mat xtw = trans(mXi % w);
             mat xtwx = xtw * mXi;
@@ -979,4 +983,10 @@ void GwmMultiscaleGWRAlgorithm::setParallelType(const IParallelalbe::ParallelTyp
             break;
         }
     }
+}
+
+void GwmMultiscaleGWRAlgorithm::setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights)
+{
+    GwmSpatialMultiscaleAlgorithm::setSpatialWeights(spatialWeights);
+    mInitSpatialWeight.setDistance(mSpatialWeights[0].distance());
 }

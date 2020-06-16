@@ -140,7 +140,7 @@ void GwmScalableGWRAlgorithm::getNeighbours()
     mat neighboursDists(nBw, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+        vec d = mSpatialWeight.distance()->distance(i);
         uvec indices = sort_index(d);
         vec d_sorted = sort(d);
         neighboursIndex.col(i) = indices(span(1, nBw));

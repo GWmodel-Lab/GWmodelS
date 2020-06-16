@@ -13,7 +13,7 @@ public:
     GwmSpatialMultiscaleAlgorithm();
 
     QList<GwmSpatialWeight> spatialWeights() const;
-    void setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights);
+    virtual void setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights);
 //    void setSpatialWeights(int i, const GwmSpatialWeight& spatialWeight);
 
 protected:

@@ -43,7 +43,7 @@ public:
     }
 
 public:
-    vec spatialWeight(rowvec target, mat dataPoints);
+    vec spatialWeight(int i);
     bool isValid();
 
 private:
@@ -97,9 +97,9 @@ inline void GwmSpatialWeight::setDistance(GwmDistance&& distance)
     mDistance = distance.clone();
 }
 
-inline vec GwmSpatialWeight::spatialWeight(rowvec target, mat dataPoints)
+inline vec GwmSpatialWeight::spatialWeight(int i)
 {
-    return mWeight->weight(mDistance->distance(target, dataPoints));
+    return mWeight->weight(mDistance->distance(i));
 }
 
 #endif // GWMSPATIALWEIGHT_H

@@ -27,15 +27,16 @@ mat GwmMinkwoskiDistance::CoordinateRotate(const mat& coords, double theta)
     return rotated_coords;
 }
 
-vec GwmMinkwoskiDistance::distance(const rowvec& target, const mat& dataPoints)
+vec GwmMinkwoskiDistance::distance(int focus)
 {
-    mat dp(dataPoints), rp = target;
+    if (mGeographic) return GwmCRSDistance::SpatialDistance(mFocusPoints->row(focus), *mDataPoints);
+    mat dp(*mDataPoints), rp = mFocusPoints->row(focus);
     if (mPoly != 2 && mTheta != 0)
     {
-        dp = CoordinateRotate(dataPoints, mTheta);
-        rp = CoordinateRotate(target, mTheta);
+        dp = CoordinateRotate(*mDataPoints, mTheta);
+        rp = CoordinateRotate(mFocusPoints->row(focus), mTheta);
     }
-    if (mPoly == 1.0) return ChessDistance(target, dataPoints);
-    else if (mPoly == -1.0) return ManhattonDistance(target, dataPoints);
-    else return MinkwoskiDistance(target, dataPoints, mPoly);
+    if (mPoly == 1.0) return ChessDistance(mFocusPoints->row(focus), *mDataPoints);
+    else if (mPoly == -1.0) return ManhattonDistance(mFocusPoints->row(focus), *mDataPoints);
+    else return MinkwoskiDistance(mFocusPoints->row(focus), *mDataPoints, mPoly);
 }

@@ -18,10 +18,9 @@ GwmDMatDistance::GwmDMatDistance(const GwmDMatDistance &distance)
     mFeatureCount = distance.mFeatureCount;
 }
 
-vec GwmDMatDistance::distance(const rowvec& params, const mat& dataPoints)
+vec GwmDMatDistance::distance(int focus)
 {
     QFile dmat(mDMatFile);
-    int focus = params(0);
     if (dmat.open(QFile::QIODevice::ReadOnly))
     {
         qint64 basePos = 2 * sizeof (int);

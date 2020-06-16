@@ -27,7 +27,10 @@ public:
     virtual DistanceType type() = 0;
 
 public:
-    virtual vec distance(const rowvec& target, const mat& dataPoints) = 0;
+    virtual vec distance(int focus) = 0;
+
+    double maxDistance(int n);
+    double minDistance(int n);
 };
 
 

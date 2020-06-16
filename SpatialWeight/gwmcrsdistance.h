@@ -25,11 +25,19 @@ public:
     bool geographic() const;
     void setGeographic(bool geographic);
 
-public:
-    virtual vec distance(const rowvec& target, const mat& dataPoints) override;
+    mat *focusPoints() const;
+    void setFocusPoints(mat *focusPoints);
 
-private:
+    mat *dataPoints() const;
+    void setDataPoints(mat *dataPoints);
+
+public:
+    virtual vec distance(int focus) override;
+
+protected:
     bool mGeographic = false;
+    mat* mFocusPoints = nullptr;
+    mat* mDataPoints = nullptr;
 };
 
 inline vec GwmCRSDistance::EuclideanDistance(const rowvec& out_loc, const mat& in_locs)
@@ -48,11 +56,24 @@ inline void GwmCRSDistance::setGeographic(bool geographic)
     mGeographic = geographic;
 }
 
-inline vec GwmCRSDistance::distance(const rowvec& target, const mat& dataPoints)
+inline mat *GwmCRSDistance::focusPoints() const
 {
-    return mGeographic ?
-                SpatialDistance(target, dataPoints) :
-                EuclideanDistance(target, dataPoints);
+    return mFocusPoints;
+}
+
+inline void GwmCRSDistance::setFocusPoints(mat *focusPoints)
+{
+    mFocusPoints = focusPoints;
+}
+
+inline mat *GwmCRSDistance::dataPoints() const
+{
+    return mDataPoints;
+}
+
+inline void GwmCRSDistance::setDataPoints(mat *dataPoints)
+{
+    mDataPoints = dataPoints;
 }
 
 #endif // GWMCRSDISTANCE_H

@@ -22,7 +22,7 @@ public:
     void setDMatFile(const QString &dMatFile);
 
 public:
-    virtual vec distance(const rowvec& params, const mat& dataPoints) override;
+    virtual vec distance(int focus) override;
 
     int featureCount() const;
     void setFeatureCount(int featureCount);

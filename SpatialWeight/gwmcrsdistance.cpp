@@ -79,3 +79,14 @@ GwmCRSDistance::GwmCRSDistance(const GwmCRSDistance &distance)
 {
     mGeographic = distance.mGeographic;
 }
+
+vec GwmCRSDistance::distance(int focus)
+{
+    if (mFocusPoints && mDataPoints)
+    {
+        return mGeographic ?
+                    SpatialDistance(mFocusPoints->row(focus), *mDataPoints) :
+                    EuclideanDistance(mFocusPoints->row(focus), *mDataPoints);
+    }
+    else return vec();
+}
