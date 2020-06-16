@@ -131,7 +131,7 @@ void GwmBasicGWRAlgorithm::run()
             }
             else
             {
-                trQtQ = calcTrQtQ();
+                trQtQ = (this->*mCalcTrQtQFunction)();
             }
             FTestParameters fTestParams;
             fTestParams.nDp = mDataLayer->featureCount();
@@ -907,7 +907,7 @@ void GwmBasicGWRAlgorithm::fTest(GwmBasicGWRAlgorithm::FTestParameters params)
     QList<GwmFTestResult> f3;
     for (int i = 0; i < nVar; i++)
     {
-        vec diagB = calcDiagB(i);
+        vec diagB = (this->*mCalcDiagBFunction)(i);
         double g1 = diagB(0);
         double g2 = diagB(1);
         double numdf = g1 * g1 / g2;
@@ -1051,6 +1051,32 @@ double GwmBasicGWRAlgorithm::calcTrQtQOmp()
     return flag ? sum(trQtQ) : DBL_MAX;
 }
 
+double GwmBasicGWRAlgorithm::calcTrQtQCuda()
+{
+    int nDp = mDataPoints.n_rows, nVar = mX.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
+    bool hasDmat = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    IGWmodelCUDA* cuda = GWCUDA_Create(nDp ,nVar, hasRegressionLayer(), nRp, hasDmat);
+    initCuda(cuda, mX, mY);
+    double p = 2.0, theta = 0.0;
+    double longlat = false;
+    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    {
+        GwmMinkwoskiDistance* d = static_cast<GwmMinkwoskiDistance*>(mSpatialWeight.distance());
+        p = d->poly();
+        theta = d->theta();
+    }
+    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    {
+        GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
+        longlat = d->geographic();
+    }
+    GwmBandwidthWeight* bw = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    bool adaptive = bw->adaptive();
+    double trQtQ = cuda->CalcTrQtQ(p, theta, longlat, bw->bandwidth(), bw->kernel(), adaptive, mGroupSize, mGpuId);
+    GWCUDA_Del(cuda);
+    return trQtQ;
+}
+
 vec GwmBasicGWRAlgorithm::calcDiagBSerial(int i)
 {
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
@@ -1133,6 +1159,37 @@ vec GwmBasicGWRAlgorithm::calcDiagBOmp(int i)
     return { sum(diagB), sum(diagB % diagB) };
 }
 
+vec GwmBasicGWRAlgorithm::calcDiagBCuda(int i)
+{
+    int nDp = mDataPoints.n_rows, nVar = mX.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
+    bool hasDmat = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    IGWmodelCUDA* cuda = GWCUDA_Create(nDp ,nVar, hasRegressionLayer(), nRp, hasDmat);
+    initCuda(cuda, mX, mY);
+    double p = 2.0, theta = 0.0;
+    double longlat = false;
+    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    {
+        GwmMinkwoskiDistance* d = static_cast<GwmMinkwoskiDistance*>(mSpatialWeight.distance());
+        p = d->poly();
+        theta = d->theta();
+    }
+    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    {
+        GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
+        longlat = d->geographic();
+    }
+    GwmBandwidthWeight* bw = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    bool adaptive = bw->adaptive();
+    vec diagB(2, fill::zeros);
+    bool status = cuda->CalcB(i, p, theta, longlat, bw->bandwidth(), bw->kernel(), adaptive, mGroupSize, mGpuId);
+    if (status)
+    {
+        diagB = { cuda->GetTrB(), cuda->GetTrBdB() };
+    }
+    GWCUDA_Del(cuda);
+    return diagB;
+}
+
 bool GwmBasicGWRAlgorithm::isValid()
 {
     if (GwmGeographicalWeightedRegressionAlgorithm::isValid())
@@ -1188,8 +1245,8 @@ void GwmBasicGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &ty
             mRegressionFunction = &GwmBasicGWRAlgorithm::regressionCuda;
             mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixCuda;
             mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionCuda;
-            mCalcTrQtQFunction = &GwmBasicGWRAlgorithm::calcTrQtQSerial;
-            mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBSerial;
+            mCalcTrQtQFunction = &GwmBasicGWRAlgorithm::calcTrQtQCuda;
+            mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBCuda;
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             break;
         default:

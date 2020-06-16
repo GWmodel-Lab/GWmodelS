@@ -163,13 +163,13 @@ private:
 
     void fTest(FTestParameters params);
 
-    double calcTrQtQ() { return (this->*mCalcTrQtQFunction)(); }
     double calcTrQtQSerial();
     double calcTrQtQOmp();
+    double calcTrQtQCuda();
 
-    vec calcDiagB(int i) { return (this->*mCalcDiagBFunction)(i); }
     vec calcDiagBSerial(int i);
     vec calcDiagBOmp(int i);
+    vec calcDiagBCuda(int i);
 
     double findMaxDistance();
 
