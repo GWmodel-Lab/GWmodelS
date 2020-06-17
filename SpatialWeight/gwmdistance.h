@@ -26,12 +26,28 @@ public:
 
     virtual DistanceType type() = 0;
 
+    int total() const;
+    void setTotal(int total);
+
 public:
     virtual vec distance(int focus) = 0;
 
-    double maxDistance(int n);
-    double minDistance(int n);
+    double maxDistance();
+    double minDistance();
+
+protected:
+    int mTotal = 0;
 };
+
+inline int GwmDistance::total() const
+{
+    return mTotal;
+}
+
+inline void GwmDistance::setTotal(int total)
+{
+    mTotal = total;
+}
 
 
 #endif // GWMDISTANCE_H

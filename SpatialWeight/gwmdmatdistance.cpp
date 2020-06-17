@@ -20,16 +20,20 @@ GwmDMatDistance::GwmDMatDistance(const GwmDMatDistance &distance)
 
 vec GwmDMatDistance::distance(int focus)
 {
-    QFile dmat(mDMatFile);
-    if (dmat.open(QFile::QIODevice::ReadOnly))
+    if (focus < mTotal)
     {
-        qint64 basePos = 2 * sizeof (int);
-        dmat.seek(basePos + focus * mFeatureCount * sizeof (double));
-        QByteArray values = dmat.read(mFeatureCount * sizeof (double));
-        return vec((double*)values.data(), mFeatureCount);
+        QFile dmat(mDMatFile);
+        if (dmat.open(QFile::QIODevice::ReadOnly))
+        {
+            qint64 basePos = 2 * sizeof (int);
+            dmat.seek(basePos + focus * mFeatureCount * sizeof (double));
+            QByteArray values = dmat.read(mFeatureCount * sizeof (double));
+            return vec((double*)values.data(), mFeatureCount);
+        }
+        else
+        {
+            return vec(mFeatureCount, fill::zeros);
+        }
     }
-    else
-    {
-        return vec(mFeatureCount, fill::zeros);
-    }
+    else return vec(mTotal, fill::zeros);
 }

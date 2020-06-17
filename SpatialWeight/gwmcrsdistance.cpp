@@ -82,7 +82,7 @@ GwmCRSDistance::GwmCRSDistance(const GwmCRSDistance &distance)
 
 vec GwmCRSDistance::distance(int focus)
 {
-    if (mFocusPoints && mDataPoints)
+    if (focus < mTotal && mFocusPoints && mDataPoints)
     {
         return mGeographic ?
                     SpatialDistance(mFocusPoints->row(focus), *mDataPoints) :

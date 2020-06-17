@@ -29,14 +29,21 @@ mat GwmMinkwoskiDistance::CoordinateRotate(const mat& coords, double theta)
 
 vec GwmMinkwoskiDistance::distance(int focus)
 {
-    if (mGeographic) return GwmCRSDistance::SpatialDistance(mFocusPoints->row(focus), *mDataPoints);
-    mat dp(*mDataPoints), rp = mFocusPoints->row(focus);
-    if (mPoly != 2 && mTheta != 0)
+    if (focus < mTotal)
     {
-        dp = CoordinateRotate(*mDataPoints, mTheta);
-        rp = CoordinateRotate(mFocusPoints->row(focus), mTheta);
+        if (mGeographic) return GwmCRSDistance::SpatialDistance(mFocusPoints->row(focus), *mDataPoints);
+        if (mDataPoints && mFocusPoints)
+        {
+            mat dp(*mDataPoints), rp = mFocusPoints->row(focus);
+            if (mPoly != 2 && mTheta != 0)
+            {
+                dp = CoordinateRotate(*mDataPoints, mTheta);
+                rp = CoordinateRotate(mFocusPoints->row(focus), mTheta);
+            }
+            if (mPoly == 1.0) return ChessDistance(mFocusPoints->row(focus), *mDataPoints);
+            else if (mPoly == -1.0) return ManhattonDistance(mFocusPoints->row(focus), *mDataPoints);
+            else return MinkwoskiDistance(mFocusPoints->row(focus), *mDataPoints, mPoly);
+        }
     }
-    if (mPoly == 1.0) return ChessDistance(mFocusPoints->row(focus), *mDataPoints);
-    else if (mPoly == -1.0) return ManhattonDistance(mFocusPoints->row(focus), *mDataPoints);
-    else return MinkwoskiDistance(mFocusPoints->row(focus), *mDataPoints, mPoly);
+    else return vec(mTotal, fill::zeros);
 }
