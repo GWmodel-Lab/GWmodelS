@@ -32,11 +32,6 @@ void GwmLcrGWRTaskThread::run()
     initPoints();
     // 设置矩阵
     initXY(mX, mY, mDepVar, mIndepVars);
-//    qDebug() << madaptive;
-//    qDebug() << mBandwidthKernelFunction;
-//    qDebug() << mlambda;
-//    qDebug() << mlambdaAdjust;
-//    qDebug() << mcnThresh;
     //选带宽
     //这里判断是否选带宽
     if(mIsAutoselectBandwidth)
@@ -45,7 +40,7 @@ void GwmLcrGWRTaskThread::run()
         //GwmBandwidthSizeSelector selector;
         selector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
-        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : findMaxDistance();
+        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSpatialWeight.distance()->maxDistance();
         selector.setLower(lower);
         selector.setUpper(upper);
         GwmBandwidthWeight* bandwidthWeight = selector.optimize(this);
@@ -54,72 +49,16 @@ void GwmLcrGWRTaskThread::run()
             mSpatialWeight.setWeight(bandwidthWeight);
         }
     }
-    //double bw = 100;
-    //arrays for the results
-    //mFeatureList.length()
     mat betas(mDataPoints.n_rows,mX.n_cols,fill::zeros);
     vec localcn(mDataPoints.n_rows,fill::zeros);
     vec locallambda(mDataPoints.n_rows,fill::zeros);
     vec hatrow(mDataPoints.n_rows,fill::zeros);
-    //main loop
-    /*for(int i=0;i<mDataPoints.n_rows;i++)
-    {
-//        vec distvi = distance(i);
-//        //distvi.print();
-//        vec wi = gwWeight(distvi,bw,mBandwidthKernelFunction,madaptive);
-        vec wi = mSpatialWeight.spatialWeight(mDataPoints.row(i),mDataPoints);
-        //wi.print();
-        //计算xw
-        //取mX不含第一列的部分
-        mat mXnot1 = mX.cols(1, mX.n_cols - 1);
-        mat wispan(1,mXnot1.n_cols,fill::ones);
-        mat wispan1(1,mX.n_cols,fill::ones);
-        //计算xw
-        mat xw = mXnot1 % (wi * wispan);
-        //计算x1w
-        mat x1w = mX % (wi * wispan1);
-        //计算svd.x
-        //mat U,V均为正交矩阵，S为奇异值构成的列向量
-        //sqrt(sum((x1w % x1w),2));
-        mat U,V;
-        colvec S;
-        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
-        //qDebug() << mX.n_cols;
-        //赋值操作
-        localcn(i)=S(0)/S(mX.n_cols-1);
-        locallambda(i) = mlambda;
-        if(mlambdaAdjust){
-            if(localcn(i)>mcnThresh){
-                locallambda(i) = (S(0) - mcnThresh*S(mX.n_cols-1)) / (mcnThresh - 1);
-            }
-        }
-        betas.row(i) = trans( ridgelm(wi,locallambda(i)) );
-        //如果没有给regressionpoint
-        if(!mRegressionLayer)
-        {
-            mat xm = mX;
-            mat xtw = trans(mX % (wi * wispan1));
-            mat xtwx = xtw * mX;
-            mat xtwxinv = inv(xtwx);
-            rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
-            trs += hatrow(i);
-            trsts += sum(hatrow % hatrow);
-        }
-        emit tick(i+1, mDataPoints.n_rows);
-    } */
-    //end of main loop
     //yhat赋值
     mBetas = regression(mX, mY);
     vec mYHat = fitted(mX,mBetas);
-//    for(int i=0;i<mYHat.n_rows;i++)
-//    {
-//        mat tmp(mX.n_rows,mX.n_cols,fill::zeros);
-//        tmp = (mX % betas);
-//        mYHat.row(i) = sum(tmp.row(i));
-//    }
     vec mResidual = mY - mYHat;
     mDiagnostic.RSS = sum(mResidual % mResidual);
-    mDiagnostic.ENP = 2*trs - trsts;
+    mDiagnostic.ENP = 2*this->trs - this->trsts;
     mDiagnostic.EDF = mDataPoints.n_rows - mDiagnostic.ENP;
     //mDiagnostic.RSquare =
     double s2 = mDiagnostic.RSS / (mDataPoints.n_rows - mDiagnostic.ENP);
@@ -143,7 +82,6 @@ void GwmLcrGWRTaskThread::run()
 //        qMakePair(QString("localR2"), localR2)
     };
     createResultLayer(resultLayerData);
-    //createResultLayer(resultLayerData);
     emit success();
 }
 
@@ -168,7 +106,7 @@ double GwmLcrGWRTaskThread::criterion(GwmBandwidthWeight *weight)
     {
 //        vec distvi = distance(i);
 //        vec wgt = gwWeight(distvi, bw, kernel, adaptive);
-        vec distvi = mSpatialWeight.distance()->distance(mDataPoints.row(i),mDataPoints);
+        vec distvi = mSpatialWeight.distance()->distance(i);
         vec wgt = weight->weight(distvi);
         //vec wgt = mSpatialWeight.spatialWeight(mDataPoints.row(i),mDataPoints);
         wgt(i) = 0;
@@ -332,57 +270,8 @@ vec GwmLcrGWRTaskThread::ridgelm(const vec &w, double lambda)
     return resultb;
 }
 
-//double GwmLcrGWRTaskThread::gold(pfGwmLcrBandwidthSelectionApproach p,double xL, double xU, bool adaptBw, int kernel, bool adaptive,double lambda, bool lambdaAdjust,double cnThresh)
-//{
-//    const double eps = 1e-4;
-//    const double R = (sqrt(5)-1)/2;
-//    int iter = 0;
-//    double d = R * (xU - xL);
-//    double x1 = adaptBw ? floor(xL + d) : (xL + d);
-//    double x2 = adaptBw ? round(xU - d) : (xU - d);
-//    double f1 = (this->*p)(x1, kernel, adaptive, lambda, lambdaAdjust, cnThresh);
-//    double f2 = (this->*p)(x2, kernel, adaptive, lambda, lambdaAdjust, cnThresh);
-//    double d1 = f2 - f1;
-//    double xopt = f1 < f2 ? x1 : x2;
-//    double ea = 100;
-//    while ((fabs(d) > eps) && (fabs(d1) > eps) && iter < ea)
-//    {
-//        d = R * d;
-//        if (f1 < f2)
-//        {
-//            xL = x2;
-//            x2 = x1;
-//            x1 = adaptBw ? round(xL + d) : (xL + d);
-//            f2 = f1;
-//            f1 = (this->*p)(x1, kernel, adaptive, lambda, lambdaAdjust, cnThresh);
-//        }
-//        else
-//        {
-//            xU = x1;
-//            x1 = x2;
-//            x2 = adaptBw ? floor(xU - d) : (xU - d);
-//            f1 = f2;
-//            f2 = (this->*p)(x2, kernel, adaptive, lambda, lambdaAdjust, cnThresh);
-//        }
-//        iter = iter + 1;
-//        xopt = (f1 < f2) ? x1 : x2;
-//        d1 = f2 - f1;
-//    }
-//    return xopt;
-//}
 
-//double GwmLcrGWRTaskThread::LcrBandWidthSelect(int kernel, double lambda, bool lambdaAdjust, double cnThresh, bool adaptive)
-//{
-//    double upper, lower;
-//    upper = adaptive ? mX.n_rows : getFixedBwUpper();
-//    lower = adaptive ? 20 : 0.0;
-//    double bw;
-//    bw = gold(&GwmLcrGWRTaskThread::LcrCV,lower,upper,adaptive,kernel,adaptive,lambda,lambdaAdjust,cnThresh);
-//    //显示带宽和CV值
-//    double cvShow = GwmLcrGWRTaskThread::LcrCV(bw,kernel,adaptive,lambda,lambdaAdjust,cnThresh);
-//    emit message("BandWidth select....");
-//    return bw;
-//}
+
 
 //double GwmLcrGWRTaskThread::getFixedBwUpper()
 //{
@@ -448,7 +337,7 @@ arma::mat GwmLcrGWRTaskThread::regression(const arma::mat &x, const arma::vec &y
 //        vec distvi = distance(i);
 //        //distvi.print();
 //        vec wi = gwWeight(distvi,bw,mBandwidthKernelFunction,madaptive);
-        vec wi = mSpatialWeight.spatialWeight(mDataPoints.row(i),mDataPoints);
+        vec wi = mSpatialWeight.spatialWeight(i);
         //wi.print();
         //计算xw
         //取mX不含第一列的部分
@@ -476,15 +365,15 @@ arma::mat GwmLcrGWRTaskThread::regression(const arma::mat &x, const arma::vec &y
         }
         betas.row(i) = trans( ridgelm(wi,locallambda(i)) );
         //如果没有给regressionpoint
-        if(!hashatmatix)
+        if(hashatmatix)
         {
             mat xm = x;
             mat xtw = trans(x % (wi * wispan1));
             mat xtwx = xtw * x;
             mat xtwxinv = inv(xtwx);
             rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
-            trs += hatrow(i);
-            trsts += sum(hatrow % hatrow);
+            this->trs += hatrow(i);
+            this->trsts += sum(hatrow % hatrow);
         }
         emit tick(i+1, mDataPoints.n_rows);
     }
@@ -493,79 +382,6 @@ arma::mat GwmLcrGWRTaskThread::regression(const arma::mat &x, const arma::vec &y
 
 void GwmLcrGWRTaskThread::createResultLayer(CreateResultLayerData data)
 {
-//    emit message("Creating result layer...");
-//    QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mLayer;
-//    QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
-//    QString layerName = srcLayer->name();
-//    if (mBandwidthType == BandwidthType::Fixed)
-//    {
-//        layerName += QString("_B%1%2").arg(mBandwidthSizeOrigin, 0, 'f', 3).arg(mBandwidthSize);
-//    }
-//    else
-//    {
-//        layerName += QString("_B%1").arg(int(mBandwidthSize));
-//    }
-//    mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
-//    mResultLayer->setCrs(srcLayer->crs());
-
-//    QgsFields fields;
-//    fields.append(QgsField(QStringLiteral("Intercept"), QVariant::Double, QStringLiteral("double")));
-//    for (int index : mIndepVarsIndex)
-//    {
-//        QString srcName = mLayer->fields().field(index).name();
-//        QString name = srcName;
-//        fields.append(QgsField(name, QVariant::Double, QStringLiteral("double")));
-//    }
-//    if (hasHatMatrix)
-//    {
-//        fields.append(QgsField(QStringLiteral("y"), QVariant::Double, QStringLiteral("double")));
-//        fields.append(QgsField(QStringLiteral("yhat"), QVariant::Double, QStringLiteral("double")));
-//        fields.append(QgsField(QStringLiteral("residual"), QVariant::Double, QStringLiteral("double")));
-//    }
-//    mResultLayer->dataProvider()->addAttributes(fields.toList());
-//    mResultLayer->updateFields();
-
-//    mResultLayer->startEditing();
-//    if (hasHatMatrix)
-//    {
-//        int indepSize = mIndepVarsIndex.size() + 1;
-//        for (int f = 0; f < mFeatureList.size(); f++)
-//        {
-//            int curCol = 0;
-//            QgsFeature srcFeature = mFeatureList[f];
-//            QgsFeature feature(fields);
-//            feature.setGeometry(srcFeature.geometry());
-//            for (int a = 0; a < indepSize; a++)
-//            {
-//                int fieldIndex = a + curCol;
-//                QString attributeName = fields[fieldIndex].name();
-//                double attributeValue = mBetas(f, a);
-//                feature.setAttribute(attributeName, attributeValue);
-//            }
-//            curCol += indepSize;
-//            feature.setAttribute(fields[curCol++].name(), mY(f));
-//            feature.setAttribute(fields[curCol++].name(), mYHat(f));
-//            feature.setAttribute(fields[curCol++].name(), mResidual(f));
-//            mResultLayer->addFeature(feature);
-//        }
-//    }
-//    else
-//    {
-//        for (int f = 0; f < mFeatureList.size(); f++)
-//        {
-//            QgsFeature srcFeature = mFeatureList[f];
-//            QgsFeature feature(fields);
-//            feature.setGeometry(srcFeature.geometry());
-//            for (int a = 0; a < fields.size(); a++)
-//            {
-//                QString attributeName = fields[a].name();
-//                double attributeValue = mBetas(f, a);
-//                feature.setAttribute(attributeName, attributeValue);
-//            }
-//            mResultLayer->addFeature(feature);
-//        }
-//    }
-//    mResultLayer->commitChanges();
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();

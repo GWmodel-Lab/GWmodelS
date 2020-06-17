@@ -30,17 +30,17 @@ public:
 
     bool mIsAutoselectBandwidth = false;
 
-    double findMaxDistance()
-    {
-        int nDp = mDataPoints.n_rows;
-        double maxD = 0.0;
-        for (int i = 0; i < nDp; i++)
-        {
-            double d = max(mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints));
-            maxD = d > maxD ? d : maxD;
-        }
-        return maxD;
-    }
+//    double findMaxDistance()
+//    {
+//        int nDp = mDataPoints.n_rows;
+//        double maxD = 0.0;
+//        for (int i = 0; i < nDp; i++)
+//        {
+//            double d = max(mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints));
+//            maxD = d > maxD ? d : maxD;
+//        }
+//        return maxD;
+//    }
 
 
 protected:

@@ -497,23 +497,23 @@ void GwmLcrGWROptionsDialog::updateFields()
     GwmBandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
     spatialWeight.setWeight(weight);
     // 距离设置
+    int featureCount = dataLayer->featureCount();
     if (ui->mDistTypeDmatRadio->isChecked())
     {
         QString filename = ui->mDistMatrixFileNameEdit->text();
-        int featureCount = dataLayer->featureCount();
-        GwmDMatDistance distance(filename, featureCount);
+        GwmDMatDistance distance(featureCount, filename);
         spatialWeight.setDistance(distance);
     }
     else if (ui->mDistTypeMinkowskiRadio->isChecked())
     {
         double theta = ui->mThetaValue->value();
         double p = ui->mPValue->value();
-        GwmMinkwoskiDistance distance(p, theta);
+        GwmMinkwoskiDistance distance(featureCount, p, theta);
         spatialWeight.setDistance(distance);
     }
     else
     {
-        GwmCRSDistance distance(dataLayer->crs().isGeographic());
+        GwmCRSDistance distance(featureCount, dataLayer->crs().isGeographic());
         spatialWeight.setDistance(distance);
     }
     mTaskThread->setSpatialWeight(spatialWeight);
