@@ -37,14 +37,17 @@ void GwmGWSSTaskThread::run()
     double upper = adaptive ? mDataPoints.n_rows : DBL_MAX;
     double lower = adaptive ? 20 : 0.0;
     int nVar = mX.n_cols;
+    emit tick(0,nVar);
     for(int i = 0; i < nVar; i++){
         mBWS(0,i) = gold(GwmCVType::mean,lower,upper,mX.col(i));
         qDebug() << "Local Mean bw:" << mVariables[i].name << mBWS(0,i);
-        emit message("");
+        emit message(QString("Local Mean: %1 (bw: %2)").arg(mVariables[i].name).arg(mBWS(0,i)));
         mBWS(1,i) = gold(GwmCVType::median,lower,upper,mX.col(i));
         qDebug() << "Local Median bw:" << mVariables[i].name << mBWS(1,i);
-        emit message("");
+        emit message(QString("Local Median: %1 (bw: %2)").arg(mVariables[i].name).arg(mBWS(1,i)));
+        emit tick(i,nVar);
     }
+    createResultLayer();
     emit success();
 }
 
@@ -123,6 +126,7 @@ double GwmGWSSTaskThread::meanCV(const mat &x, GwmBandwidthWeight* bandwidthWeig
         cv += res * res;
     }
     qDebug() << "Local Mean bw:" << bandwidthWeight->bandwidth()  << "CV value" << cv;
+    emit message(QString("Local Mean bw: %1 (CV value: %2)").arg(bandwidthWeight->bandwidth()).arg(cv));
     return cv;
 }
 
@@ -149,6 +153,7 @@ double GwmGWSSTaskThread::medianCV(const mat &x, GwmBandwidthWeight *bandwidthWe
         cv += res * res;
     }
     qDebug() << "Local Median bw:" << bandwidthWeight->bandwidth() << "CV value" << cv;
+    emit message(QString("Local Median bw: %1 (CV value: %2)").arg(bandwidthWeight->bandwidth()).arg(cv));
     return cv;
 }
 
@@ -208,4 +213,33 @@ double GwmGWSSTaskThread::gold(GwmCVType cvType, double xL, double xU, const mat
         d1 = f2 - f1;
     }
     return xopt;
+}
+
+void GwmGWSSTaskThread::createResultLayer()
+{
+    QgsVectorLayer* srcLayer = mDataLayer;
+
+    QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
+    QString layerName = srcLayer->name();
+    layerName += QStringLiteral("_GWSS");
+
+    mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
+    mResultLayer->setCrs(srcLayer->crs());
+
+    QgsFields fields;
+
+    // 设置要素几何
+    mResultLayer->startEditing();
+    QgsFeatureIterator iterator = srcLayer->getFeatures();
+    QgsFeature f;
+    for (int i = 0; iterator.nextFeature(f); i++)
+    {
+        QgsFeature feature(fields);
+        feature.setGeometry(f.geometry());
+
+
+        mResultLayer->addFeature(feature);
+    }
+    mResultLayer->commitChanges();
+
 }

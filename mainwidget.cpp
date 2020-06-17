@@ -49,6 +49,8 @@
 
 #include <TaskThread/gwmbasicgwralgorithm.h>
 #include <TaskThread/gwmgwsstaskthread.h>
+#include <Model/gwmlayergwssitem.h>
+#include <gwmgwssoptionsdialog.h>
 #include <SpatialWeight/gwmcrsdistance.h>
 
 #include <Model/gwmlayerbasicgwritem.h>
@@ -238,8 +240,10 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::GGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+        case GwmLayerItem::GwmLayerItemType::GWSS:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -300,8 +304,10 @@ void MainWidget::onSaveLayer()
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::GGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+        case GwmLayerItem::GwmLayerItemType::GWSS:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -342,8 +348,10 @@ void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
     case GwmLayerItem::GwmLayerItemType::Vector:
     case GwmLayerItem::GwmLayerItemType::Origin:
     case GwmLayerItem::GwmLayerItemType::GWR:
+    case GwmLayerItem::GwmLayerItemType::GGWR:
     case GwmLayerItem::GwmLayerItemType::ScalableGWR:
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+    case GwmLayerItem::GwmLayerItemType::GWSS:
         layerItem = ((GwmLayerVectorItem*)item);
         break;
     default:
@@ -388,8 +396,10 @@ void MainWidget::onExportLayer(QString filetype)
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::GGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+        case GwmLayerItem::GwmLayerItemType::GWSS:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -677,28 +687,33 @@ void MainWidget::onGWRNewBtnClicked()
 
 void MainWidget::onGWSSBtnClicked()
 {
-    GwmGWSSTaskThread* taskThread = new GwmGWSSTaskThread();
-    QgsVectorLayer* dataLayer = static_cast<GwmLayerGroupItem*>(mapModel->rootChildren()[0])->originChild()->layer();
-    taskThread->setDataLayer(dataLayer);
-    QgsFields fields = dataLayer->fields();
-//    GwmVariable depVar = {0, fields[0].name(), fields[0].type(), fields[0].isNumeric()};
-    QList<GwmVariable> indepVars;
-    for (int i = 0; i < 1; i++)
+    GwmGWSSTaskThread* gwssTaskThread = new GwmGWSSTaskThread();
+    GwmGWSSOptionsDialog* gwssOptionDialog = new GwmGWSSOptionsDialog(mapModel->rootChildren(), gwssTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
     {
-        indepVars.append({ i, fields[i].name(), fields[i].type(), fields[i].isNumeric()});
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
     }
-    taskThread->setVariables(indepVars);
-    GwmSpatialWeight spatialWeight;
-    spatialWeight.setDistance(new GwmCRSDistance(false));
-    spatialWeight.setWeight(new GwmBandwidthWeight(100, true, GwmBandwidthWeight::Gaussian));
-    taskThread->setBandwidth(new GwmBandwidthWeight(100, true, GwmBandwidthWeight::Gaussian));
-    taskThread->setSpatialWeight(spatialWeight);
-
-    GwmProgressDialog* progressDlg = new GwmProgressDialog(taskThread);
-    if (progressDlg->exec() == QDialog::Accepted)
+    if (gwssOptionDialog->exec() == QDialog::Accepted)
     {
-//        QgsVectorLayer* resultLayer = taskThread->resultLayer();
-//        addLayerToModel(resultLayer);
+        gwssOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwssOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwssTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwssTaskThread->resultLayer();
+            GwmLayerGWSSItem* gwssItem = new GwmLayerGWSSItem(selectedItem, resultLayer, gwssTaskThread);
+            mapModel->appentItem(gwssItem, selectedIndex);
+        }
     }
 
 }

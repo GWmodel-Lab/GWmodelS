@@ -4,6 +4,7 @@
 #include <QWidget>
 
 #include "Model/gwmlayergwssitem.h"
+#include <QTableWidgetItem>
 
 
 namespace Ui {
@@ -19,8 +20,11 @@ public:
     static QMap<bool, QString> bandwidthTypeNameDict;
 
 public:
-    explicit GwmPropertyGWSSTab(QWidget *parent = nullptr);
+    explicit GwmPropertyGWSSTab(QWidget *parent = nullptr, GwmLayerGWSSItem *item = nullptr);
     ~GwmPropertyGWSSTab();
+
+public:
+    void updateUI();
 
 private:
     Ui::GwmPropertyGWSSTab *ui;

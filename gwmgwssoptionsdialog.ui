@@ -32,20 +32,6 @@
      <item row="0" column="1">
       <widget class="QComboBox" name="mLayerComboBox"/>
      </item>
-     <item row="1" column="0">
-      <widget class="QCheckBox" name="ckbRegressionPoints">
-       <property name="text">
-        <string>Regression Points</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QComboBox" name="cmbRegressionLayerSelect">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
     </layout>
    </item>
    <item>

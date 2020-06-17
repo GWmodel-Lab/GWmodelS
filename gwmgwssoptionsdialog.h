@@ -49,7 +49,7 @@ public slots:
 public:
     QString crsRotateTheta();
     QString crsRotateP();
-    GwmGWRTaskThread::BandwidthType bandwidthType();
+    bool bandwidthType();
     GwmGWRTaskThread::ParallelMethod approachType();
 //    double bandwidthSize();
 //    GwmGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
@@ -69,8 +69,8 @@ public:
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
 private slots:
 //    void on_cbxHatmatrix_toggled(bool checked);
-    void on_cbkRegressionPoints_toggled(bool checked);
-    void on_cmbRegressionLayerSelect_currentIndexChanged(int index);
+//    void on_cbkRegressionPoints_toggled(bool checked);
+//    void on_cmbRegressionLayerSelect_currentIndexChanged(int index);
 
 
 

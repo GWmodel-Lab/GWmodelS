@@ -89,7 +89,7 @@ public:     // GwmTaskThread interface
 
 public:
 
-    GwmBandwidthWeight* bandwidth()
+    GwmBandwidthWeight* bandwidth() const
     {
         return mBandwidth;
     }
