@@ -83,13 +83,14 @@ GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroup
     QButtonGroup* calcParallelTypeBtnGroup = new QButtonGroup(this);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
-    calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
+//    calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onMultithreadingRadioToggled);
-    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onGPURadioToggled);
+//    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onGPURadioToggled);
+    ui->mCalcParallelGPURadio->hide();
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);
