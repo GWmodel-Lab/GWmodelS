@@ -38,6 +38,7 @@ SOURCES += \
     Model/gwmlayerattributeitem.cpp \
     Model/gwmlayerattributeitemmodel.cpp \
     Model/gwmlayerbasicgwritem.cpp \
+    Model/gwmlayercollinearitygwritem.cpp \
     Model/gwmlayerggwritem.cpp \
     Model/gwmlayergroupitem.cpp \
     Model/gwmlayergwritem.cpp \
@@ -49,6 +50,7 @@ SOURCES += \
     Model/gwmlayersymbolitem.cpp \
     Model/gwmlayervectoritem.cpp \
     Model/gwmvariableitemmodel.cpp \
+    PropertyPanelTabs/gwmpropertycollinearitygwrtab.cpp \
     PropertyPanelTabs/gwmpropertyggwrtab.cpp \
     Model/gwmparameterspecifiedoptionsmodel.cpp \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.cpp \
@@ -144,6 +146,7 @@ HEADERS += \
     Model/gwmlayerattributeitem.h \
     Model/gwmlayerattributeitemmodel.h \
     Model/gwmlayerbasicgwritem.h \
+    Model/gwmlayercollinearitygwritem.h \
     Model/gwmlayerggwritem.h \
     Model/gwmlayergroupitem.h \
     Model/gwmlayergwritem.h \
@@ -155,6 +158,7 @@ HEADERS += \
     Model/gwmlayersymbolitem.h \
     Model/gwmlayervectoritem.h \
     Model/gwmvariableitemmodel.h \
+    PropertyPanelTabs/gwmpropertycollinearitygwrtab.h \
     PropertyPanelTabs/gwmpropertyggwrtab.h \
     Model/gwmparameterspecifiedoptionsmodel.h \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.h \
@@ -248,6 +252,7 @@ HEADERS += \
     qgsattributetableviewextend.h
 
 FORMS += \
+    PropertyPanelTabs/gwmpropertycollinearitygwrtab.ui \
     PropertyPanelTabs/gwmpropertyggwrtab.ui \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
     PropertyPanelTabs/gwmpropertymultiscalegwrtab.ui \

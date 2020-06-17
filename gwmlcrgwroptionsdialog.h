@@ -7,6 +7,7 @@
 #include "TaskThread/GwmLcrGWRtaskthread.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
+#include "Model/gwmvariableitemmodel.h"
 
 namespace Ui {
 class GwmLcrGWROptionsDialog;
@@ -25,7 +26,7 @@ private:
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
     GwmLcrGWRTaskThread* mTaskThread = nullptr;
-    GwmLayerAttributeItemModel* mDepVarModel;
+    GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
 
 public slots:
@@ -49,16 +50,18 @@ public slots:
 public:
     QString crsRotateTheta();
     QString crsRotateP();
-    GwmLcrGWRTaskThread::BandwidthType bandwidthType();
-    GwmLcrGWRTaskThread::ParallelMethod approachType();
+    //GwmLcrGWRTaskThread::BandwidthType bandwidthType();
+    //GwmLcrGWRTaskThread::ParallelMethod approachType();
     double bandwidthSize();
-    GwmLcrGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
+    //GwmLcrGWRTaskThread::BandwidthSelectionCriterionType bandwidthSelectionApproach();
+    //GwmLcrGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
     QString bandWidthUnit();
-    GwmLcrGWRTaskThread::KernelFunction bandwidthKernelFunction();
-    GwmLcrGWRTaskThread::DistanceSourceType distanceSourceType();
+    //GwmLcrGWRTaskThread::KernelFunction bandwidthKernelFunction();
+    //GwmLcrGWRTaskThread::DistanceSourceType distanceSourceType();
     QVariant distanceSourceParameters();
-    GwmLcrGWRTaskThread::ParallelMethod parallelMethod();
+    //GwmLcrGWRTaskThread::ParallelMethod parallelMethod();
     QVariant parallelParameters();
+    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
 
     void setTaskThread(GwmLcrGWRTaskThread* taskThread);
     void updateFieldsAndEnable();
@@ -67,6 +70,9 @@ public:
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
+
+    bool bandwidthType();
+    GwmGWRTaskThread::DistanceSourceType distanceSourceType();
 private slots:
     void on_cbxHatmatrix_toggled(bool checked);
     void on_cbkRegressionPoints_toggled(bool checked);
