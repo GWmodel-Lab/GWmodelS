@@ -130,6 +130,8 @@ public slots:
     //void setNewCoordinate(QgsCoordinateReferenceSystem,QString,QModelIndex);
 
     void onLcrGWRBtnClicked();
+
+    void onGWPCABtnClicked();
 };
 
 #endif // MAINLAYOUT_H

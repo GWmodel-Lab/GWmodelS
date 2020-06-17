@@ -70,6 +70,7 @@ SOURCES += \
     TaskThread/gwmggwrbandwidthselectionthread.cpp \
     TaskThread/gwmggwrtaskthread.cpp \
 #    TaskThread/gwmgwpcataskthread.cpp \
+    TaskThread/gwmgwpcataskthread.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
 #    TaskThread/gwmgwsstaskthread.cpp \
@@ -175,6 +176,7 @@ HEADERS += \
     TaskThread/gwmggwrbandwidthselectionthread.h \
     TaskThread/gwmggwrtaskthread.h \
 #    TaskThread/gwmgwpcataskthread.h \
+    TaskThread/gwmgwpcataskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
 #    TaskThread/gwmgwsstaskthread.h \

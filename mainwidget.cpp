@@ -159,6 +159,8 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
     connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRBtnClicked);
 
+    connect(toolbar, &GwmToolbar::gwmodelGWPCABtnSignal,this,&MainWidget::onGWPCABtnClicked);
+
 }
 
 void MainWidget::setupFeaturePanel()
@@ -862,4 +864,44 @@ void MainWidget::onGGWRBtnClicked(){
             mapModel->appentItem(ggwrItem, selectedIndex);
         }
     }
+}
+
+
+
+
+
+void MainWidget::onGWPCABtnClicked()
+{
+    //qDebug() << 1;
+    //中心化代码
+    mat a(3,2,fill::zeros);
+    mat b(3,2,fill::zeros);
+    a<<1<<4<<endr<<2<<5<<endr<<3<<6<<endr;
+
+    vec wt(5,fill::zeros);
+    wt<<0.3<<endr<<0.4<<endr<<1<<endr<<2<<endr<<3<<endr;
+
+    for(int i=0;i<a.n_rows;i++){
+        b.row(i) = a.row(i)*wt(i);
+    }
+
+    mat A(5,2,fill::zeros);
+    A<<1<<6<<endr<<2<<7<<endr<<3<<8<<endr<<4<<9<<endr<<5<<10<<endr;
+    mat coeff;
+    mat score;
+    vec latent;
+    vec tsquared;
+
+    princomp(coeff, score, latent, tsquared, A);
+
+    coeff.print();
+    qDebug()<< 123;
+//    score.print();
+//    qDebug()<< 123;
+    latent.print();
+//    qDebug()<< 123;
+//    tsquared.print();
+
+
+
 }
