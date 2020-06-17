@@ -338,7 +338,6 @@ mat GwmBasicGWRAlgorithm::regressionSerial(const mat &x, const vec &y)
 {
     emit message("Regression ...");
     uword nRp = mRegressionPoints.n_rows, nVar = x.n_cols;
-    const mat& points = hasRegressionLayer() ? mRegressionPoints : mDataPoints;
     mat betas(nVar, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
     {
@@ -364,7 +363,6 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
 {
     emit message("Regression ...");
     int nRp = mRegressionPoints.n_rows, nVar = x.n_cols;
-    const mat& points = hasRegressionLayer() ? mRegressionPoints : mDataPoints;
     mat betas(nVar, nRp, fill::zeros);
     int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
@@ -1012,7 +1010,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQOmp()
                 pi(i) += 1.0;
                 double qi = sum(pi % pi);
                 trQtQ(thread) += qi * qi;
-                for (arma::uword j = i + 1; j < nDp && flag; j++)
+                for (int j = i + 1; j < nDp && flag; j++)
                 {
                     vec wj = mSpatialWeight.spatialWeight(j);
                     mat xtwj = trans(mX % (wj * wspan));
@@ -1191,6 +1189,20 @@ bool GwmBasicGWRAlgorithm::isValid()
         return true;
     }
     else return false;
+}
+
+void GwmBasicGWRAlgorithm::initPoints()
+{
+    GwmGeographicalWeightedRegressionAlgorithm::initPoints();
+    if (!hasRegressionLayer() && !mHasHatMatrix)
+    {
+        mRegressionPoints = mDataPoints;
+        if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+        {
+            GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
+            d->setFocusPoints(&mRegressionPoints);
+        }
+    }
 }
 
 void GwmBasicGWRAlgorithm::setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)

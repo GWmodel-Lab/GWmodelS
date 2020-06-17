@@ -87,6 +87,11 @@ public:
 
     IndepVarsCriterionList indepVarSelectorCriterions() const;
 
+
+protected:  // QThread interface
+    void run() override;
+
+
 public:     // GwmTaskThread interface
     QString name() const override { return tr("Basic GWR"); };
 
@@ -95,8 +100,8 @@ public:  // GwmSpatialAlgorithm interface
     bool isValid() override;
 
 
-protected:  // QThread interface
-    void run() override;
+public:     // GwmGeographicalWeightedRegressionAlgorithm
+    virtual void initPoints();
 
 
 public:     // IBandwidthSizeSelectable interface
