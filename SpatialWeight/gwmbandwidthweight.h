@@ -45,15 +45,15 @@ public:
     double bandwidth() const;
     void setBandwidth(double bandwidth);
 
-    double adaptive() const;
-    void setAdaptive(double adaptive);
+    bool adaptive() const;
+    void setAdaptive(bool adaptive);
 
     KernelFunctionType kernel() const;
     void setKernel(const KernelFunctionType &kernel);
 
 private:
     double mBandwidth;
-    double mAdaptive;
+    bool mAdaptive;
     KernelFunctionType mKernel;
 };
 
@@ -91,12 +91,12 @@ inline void GwmBandwidthWeight::setBandwidth(double bandwidth)
     mBandwidth = bandwidth;
 }
 
-inline double GwmBandwidthWeight::adaptive() const
+inline bool GwmBandwidthWeight::adaptive() const
 {
     return mAdaptive;
 }
 
-inline void GwmBandwidthWeight::setAdaptive(double adaptive)
+inline void GwmBandwidthWeight::setAdaptive(bool adaptive)
 {
     mAdaptive = adaptive;
 }
