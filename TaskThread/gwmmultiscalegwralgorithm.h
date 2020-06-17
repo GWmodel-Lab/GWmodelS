@@ -185,8 +185,6 @@ private:
     QList<GwmVariable> mIndepVars;
 
     GwmSpatialWeight mInitSpatialWeight;
-//    BandwidthSizeCriterionFunction mBandwidthSizeCriterionAll = &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial;
-//    BandwidthSizeCriterionFunction mBandwidthSizeCriterionVar = &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial;
     BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial;
     int mBandwidthSelectionCurrentIndex = 0;
 
