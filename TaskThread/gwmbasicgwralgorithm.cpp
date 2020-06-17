@@ -70,7 +70,7 @@ void GwmBasicGWRAlgorithm::run()
         GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
         mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
-        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : findMaxDistance();
+        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSpatialWeight.distance()->maxDistance();
         mBandwidthSizeSelector.setLower(lower);
         mBandwidthSizeSelector.setUpper(upper);
         GwmBandwidthWeight* bandwidthWeight = mBandwidthSizeSelector.optimize(this);
@@ -931,18 +931,6 @@ void GwmBasicGWRAlgorithm::fTest(GwmBasicGWRAlgorithm::FTestParameters params)
     mF2TestResult = f2;
     mF3TestResult = f3;
     mF4TestResult = f4;
-}
-
-double GwmBasicGWRAlgorithm::findMaxDistance()
-{
-    int nDp = mDataPoints.n_rows;
-    double maxD = 0.0;
-    for (int i = 0; i < nDp; i++)
-    {
-        double d = max(mSpatialWeight.distance()->distance(i));
-        maxD = d > maxD ? d : maxD;
-    }
-    return maxD;
 }
 
 int GwmBasicGWRAlgorithm::groupSize() const

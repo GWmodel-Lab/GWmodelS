@@ -1,17 +1,17 @@
 #include "gwmminkwoskidistance.h"
 
-GwmMinkwoskiDistance::GwmMinkwoskiDistance() : GwmDistance()
+GwmMinkwoskiDistance::GwmMinkwoskiDistance(int total) : GwmCRSDistance(total)
 {
 
 }
 
-GwmMinkwoskiDistance::GwmMinkwoskiDistance(double p, double theta)
+GwmMinkwoskiDistance::GwmMinkwoskiDistance(int total, double p, double theta) : GwmCRSDistance(total)
 {
     mPoly = p;
     mTheta = theta;
 }
 
-GwmMinkwoskiDistance::GwmMinkwoskiDistance(const GwmMinkwoskiDistance &distance)
+GwmMinkwoskiDistance::GwmMinkwoskiDistance(const GwmMinkwoskiDistance &distance) : GwmCRSDistance(distance)
 {
 
     mPoly = distance.mPoly;

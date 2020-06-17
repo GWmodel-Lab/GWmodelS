@@ -19,8 +19,9 @@ public:
     static GwmEnumValueNameMapper<DistanceType> TypeNameMapper;
 
 public:
-    GwmDistance() {}
-    virtual ~GwmDistance() {}
+    explicit GwmDistance(int total) : mTotal(total) {};
+    GwmDistance(const GwmDistance& d) { mTotal = d.mTotal; };
+    virtual ~GwmDistance() {};
 
     virtual GwmDistance* clone() = 0;
 

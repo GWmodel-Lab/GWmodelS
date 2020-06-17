@@ -88,7 +88,7 @@ void GwmMultiscaleGWRAlgorithm::run()
             GwmBandwidthSizeSelector selector;
             selector.setBandwidth(bw0);
             selector.setLower(adaptive ? mAdaptiveLower : 0.0);
-            selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance(nDp));
+            selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
             GwmBandwidthWeight* bw = selector.optimize(this);
             if (bw)
             {
@@ -107,7 +107,7 @@ void GwmMultiscaleGWRAlgorithm::run()
     GwmBandwidthSizeSelector initBwSelector;
     initBwSelector.setBandwidth(bw0);
     initBwSelector.setLower(adaptive ? mAdaptiveLower : 0.0);
-    initBwSelector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[0].distance()->maxDistance(nDp));
+    initBwSelector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[0].distance()->maxDistance());
     GwmBandwidthWeight* initBw = initBwSelector.optimize(this);
     if (!initBw)
     {
@@ -191,7 +191,7 @@ mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
                 GwmBandwidthSizeSelector selector;
                 selector.setBandwidth(bwi0);
                 selector.setLower(adaptive ? mAdaptiveLower : 0.0);
-                selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance(nDp));
+                selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
                 GwmBandwidthWeight* bwi = selector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
                 emit message(QString("The newly selected bandwidth for variable %1 is %2 (last is %3, difference is %4)")
@@ -988,5 +988,8 @@ void GwmMultiscaleGWRAlgorithm::setParallelType(const IParallelalbe::ParallelTyp
 void GwmMultiscaleGWRAlgorithm::setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights)
 {
     GwmSpatialMultiscaleAlgorithm::setSpatialWeights(spatialWeights);
-    mInitSpatialWeight.setDistance(mSpatialWeights[0].distance());
+    if (spatialWeights.size() > 0)
+    {
+        mInitSpatialWeight = spatialWeights[0];
+    }
 }

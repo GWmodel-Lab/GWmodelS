@@ -12,8 +12,8 @@ public:
     static vec MinkwoskiDistance(const rowvec& out_loc, const mat& in_locs, double p);
 
 public:
-    GwmMinkwoskiDistance();
-    GwmMinkwoskiDistance(double p, double theta);
+    explicit GwmMinkwoskiDistance(int total);
+    explicit GwmMinkwoskiDistance(int total, double p, double theta);
     GwmMinkwoskiDistance(const GwmMinkwoskiDistance& distance);
 
     virtual GwmDistance * clone() override

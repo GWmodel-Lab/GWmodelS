@@ -11,8 +11,8 @@ public:
     static double SpGcdist(double lon1, double lon2, double lat1, double lat2);
 
 public:
-    GwmCRSDistance();
-    GwmCRSDistance(bool isGeographic);
+    explicit GwmCRSDistance(int total);
+    explicit GwmCRSDistance(int total, bool isGeographic);
     GwmCRSDistance(const GwmCRSDistance& distance);
 
     virtual GwmDistance * clone() override

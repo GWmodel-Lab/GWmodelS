@@ -50,7 +50,7 @@ public:     // IRegressionAnalysis interface
     arma::mat regression(const arma::mat &x, const arma::vec &y) override;
 
 private:
-    void getNeighbours();
+    void findNeighbours();
     double optimize(const mat& Mx0, const mat& My0, double& b_tilde, double& alpha);
     void prepare();
 
