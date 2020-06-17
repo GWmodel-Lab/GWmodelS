@@ -673,20 +673,21 @@ void GwmMultiscaleGWROptionsDialog::updateFields()
         GwmBandwidthWeight weight(option->bandwidthSize, option->adaptive, option->kernel);
         sw.setWeight(weight);
         // 距离设置
+        int featureCount = dataLayer->featureCount();
         if (ui->mDistTypeDmatRadio->isChecked())
         {
             int featureCount = dataLayer->featureCount();
-            GwmDMatDistance distance(option->dmatFile, featureCount);
+            GwmDMatDistance distance(featureCount, option->dmatFile);
             sw.setDistance(distance);
         }
         else if (ui->mDistTypeMinkowskiRadio->isChecked())
         {
-            GwmMinkwoskiDistance distance(option->p, option->theta);
+            GwmMinkwoskiDistance distance(featureCount, option->p, option->theta);
             sw.setDistance(distance);
         }
         else
         {
-            GwmCRSDistance distance(dataLayer->crs().isGeographic());
+            GwmCRSDistance distance(featureCount, dataLayer->crs().isGeographic());
             sw.setDistance(distance);
         }
         spatialWeights.append(sw);

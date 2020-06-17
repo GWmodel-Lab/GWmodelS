@@ -1,9 +1,9 @@
 #ifndef GWMMINKWOSKIDISTANCE_H
 #define GWMMINKWOSKIDISTANCE_H
 
-#include "SpatialWeight/gwmdistance.h"
+#include "SpatialWeight/gwmcrsdistance.h"
 
-class GwmMinkwoskiDistance : public GwmDistance
+class GwmMinkwoskiDistance : public GwmCRSDistance
 {
 public:
     static mat CoordinateRotate(const mat& coords, double theta);
@@ -12,8 +12,8 @@ public:
     static vec MinkwoskiDistance(const rowvec& out_loc, const mat& in_locs, double p);
 
 public:
-    GwmMinkwoskiDistance();
-    GwmMinkwoskiDistance(double p, double theta);
+    explicit GwmMinkwoskiDistance(int total);
+    explicit GwmMinkwoskiDistance(int total, double p, double theta);
     GwmMinkwoskiDistance(const GwmMinkwoskiDistance& distance);
 
     virtual GwmDistance * clone() override
@@ -30,7 +30,7 @@ public:
     void setTheta(double theta);
 
 public:
-    virtual vec distance(const rowvec& target, const mat& dataPoints) override;
+    virtual vec distance(int focus) override;
 
 private:
     double mPoly;

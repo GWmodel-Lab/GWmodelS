@@ -65,17 +65,28 @@ vec GwmCRSDistance::SpatialDistance(const rowvec& out_loc, const mat& in_locs)
     return dists;
 }
 
-GwmCRSDistance::GwmCRSDistance() : GwmDistance()
+GwmCRSDistance::GwmCRSDistance(int total) : GwmDistance(total)
 {
 
 }
 
-GwmCRSDistance::GwmCRSDistance(bool isGeographic)
+GwmCRSDistance::GwmCRSDistance(int total, bool isGeographic) : GwmDistance(total)
 {
     mGeographic = isGeographic;
 }
 
-GwmCRSDistance::GwmCRSDistance(const GwmCRSDistance &distance)
+GwmCRSDistance::GwmCRSDistance(const GwmCRSDistance &distance) : GwmDistance(distance)
 {
     mGeographic = distance.mGeographic;
+}
+
+vec GwmCRSDistance::distance(int focus)
+{
+    if (focus < mTotal && mFocusPoints && mDataPoints)
+    {
+        return mGeographic ?
+                    SpatialDistance(mFocusPoints->row(focus), *mDataPoints) :
+                    EuclideanDistance(mFocusPoints->row(focus), *mDataPoints);
+    }
+    else return vec();
 }

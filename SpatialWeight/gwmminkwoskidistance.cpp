@@ -1,17 +1,17 @@
 #include "gwmminkwoskidistance.h"
 
-GwmMinkwoskiDistance::GwmMinkwoskiDistance() : GwmDistance()
+GwmMinkwoskiDistance::GwmMinkwoskiDistance(int total) : GwmCRSDistance(total)
 {
 
 }
 
-GwmMinkwoskiDistance::GwmMinkwoskiDistance(double p, double theta)
+GwmMinkwoskiDistance::GwmMinkwoskiDistance(int total, double p, double theta) : GwmCRSDistance(total)
 {
     mPoly = p;
     mTheta = theta;
 }
 
-GwmMinkwoskiDistance::GwmMinkwoskiDistance(const GwmMinkwoskiDistance &distance)
+GwmMinkwoskiDistance::GwmMinkwoskiDistance(const GwmMinkwoskiDistance &distance) : GwmCRSDistance(distance)
 {
 
     mPoly = distance.mPoly;
@@ -27,15 +27,23 @@ mat GwmMinkwoskiDistance::CoordinateRotate(const mat& coords, double theta)
     return rotated_coords;
 }
 
-vec GwmMinkwoskiDistance::distance(const rowvec& target, const mat& dataPoints)
+vec GwmMinkwoskiDistance::distance(int focus)
 {
-    mat dp(dataPoints), rp = target;
-    if (mPoly != 2 && mTheta != 0)
+    if (focus < mTotal)
     {
-        dp = CoordinateRotate(dataPoints, mTheta);
-        rp = CoordinateRotate(target, mTheta);
+        if (mGeographic) return GwmCRSDistance::SpatialDistance(mFocusPoints->row(focus), *mDataPoints);
+        if (mDataPoints && mFocusPoints)
+        {
+            mat dp(*mDataPoints), rp = mFocusPoints->row(focus);
+            if (mPoly != 2 && mTheta != 0)
+            {
+                dp = CoordinateRotate(*mDataPoints, mTheta);
+                rp = CoordinateRotate(mFocusPoints->row(focus), mTheta);
+            }
+            if (mPoly == 1.0) return ChessDistance(mFocusPoints->row(focus), *mDataPoints);
+            else if (mPoly == -1.0) return ManhattonDistance(mFocusPoints->row(focus), *mDataPoints);
+            else return MinkwoskiDistance(mFocusPoints->row(focus), *mDataPoints, mPoly);
+        }
     }
-    if (mPoly == 1.0) return ChessDistance(target, dataPoints);
-    else if (mPoly == -1.0) return ManhattonDistance(target, dataPoints);
-    else return MinkwoskiDistance(target, dataPoints, mPoly);
+    else return vec(mTotal, fill::zeros);
 }

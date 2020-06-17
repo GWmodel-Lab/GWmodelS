@@ -70,7 +70,7 @@ void GwmBasicGWRAlgorithm::run()
         GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
         mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
-        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : findMaxDistance();
+        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSpatialWeight.distance()->maxDistance();
         mBandwidthSizeSelector.setLower(lower);
         mBandwidthSizeSelector.setUpper(upper);
         GwmBandwidthWeight* bandwidthWeight = mBandwidthSizeSelector.optimize(this);
@@ -102,7 +102,7 @@ void GwmBasicGWRAlgorithm::run()
         vec localR2 = vec(nDp, fill::zeros);
         for (uword i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
+            vec w = mSpatialWeight.spatialWeight(i);
             double tss = sum(dybar2 % w);
             double rss = sum(dyhat2 % w);
             localR2(i) = (tss - rss) / tss;
@@ -180,7 +180,7 @@ void GwmBasicGWRAlgorithm::initCuda(IGWmodelCUDA* cuda, const mat& x, const vec&
     {
         for (arma::uword r = 0; r < nRp; r++)
         {
-            vec dist = mSpatialWeight.distance()->distance(distanceParam1(r), mDataPoints);
+            vec dist = mSpatialWeight.distance()->distance(r);
             for (arma::uword d = 0; d < nDp; d++)
             {
                 cuda->SetDmat(d, r, dist(d));
@@ -342,7 +342,7 @@ mat GwmBasicGWRAlgorithm::regressionSerial(const mat &x, const vec &y)
     mat betas(nVar, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
     {
-        vec w = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
+        vec w = mSpatialWeight.spatialWeight(i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -370,7 +370,7 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nRp; i++)
     {
-        vec w = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
+        vec w = mSpatialWeight.spatialWeight(i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -439,7 +439,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, 
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec w = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
+        vec w = mSpatialWeight.spatialWeight(i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -481,7 +481,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat
     for (int i = 0; i < nDp; i++)
     {
         int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
+        vec w = mSpatialWeight.spatialWeight(i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -631,7 +631,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight*
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeight.distance()->distance(distanceParam1(i), mDataPoints);
+        vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         mat xtw = trans(mX.each_col() % w);
         mat xtwx = xtw * mX;
@@ -671,7 +671,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *ba
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mSpatialWeight.distance()->distance(distanceParam1(i), mDataPoints);
+            vec d = mSpatialWeight.distance()->distance(i);
             vec w = bandwidthWeight->weight(d);
             mat xtw = trans(mX.each_col() % w);
             mat xtwx = xtw * mX;
@@ -759,7 +759,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeight.distance()->distance(distanceParam1(i), mDataPoints);
+        vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         w(i) = 0.0;
         mat xtw = trans(mX.each_col() % w);
@@ -797,7 +797,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *ban
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mSpatialWeight.distance()->distance(distanceParam1(i), mDataPoints);
+            vec d = mSpatialWeight.distance()->distance(i);
             vec w = bandwidthWeight->weight(d);
             w(i) = 0.0;
             mat xtw = trans(mX.each_col() % w);
@@ -933,18 +933,6 @@ void GwmBasicGWRAlgorithm::fTest(GwmBasicGWRAlgorithm::FTestParameters params)
     mF4TestResult = f4;
 }
 
-double GwmBasicGWRAlgorithm::findMaxDistance()
-{
-    int nDp = mDataPoints.n_rows;
-    double maxD = 0.0;
-    for (int i = 0; i < nDp; i++)
-    {
-        double d = max(mSpatialWeight.distance()->distance(distanceParam1(i), mDataPoints));
-        maxD = d > maxD ? d : maxD;
-    }
-    return maxD;
-}
-
 int GwmBasicGWRAlgorithm::groupSize() const
 {
     return mGroupSize;
@@ -964,7 +952,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQSerial()
     mat wspan(1, nVar, fill::ones);
     for (arma::uword i = 0; i < nDp; i++)
     {
-        vec wi = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
+        vec wi = mSpatialWeight.spatialWeight(i);
         mat xtwi = trans(mX % (wi * wspan));
         try {
             mat xtwxR = inv_sympd(xtwi * mX);
@@ -976,7 +964,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQSerial()
             trQtQ += qi * qi;
             for (arma::uword j = i + 1; j < nDp; j++)
             {
-                vec wj = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
+                vec wj = mSpatialWeight.spatialWeight(j);
                 mat xtwj = trans(mX % (wj * wspan));
                 try {
                     mat sj = mX.row(j) * inv_sympd(xtwj * mX) * xtwj;
@@ -1014,7 +1002,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQOmp()
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec wi = mSpatialWeight.spatialWeight(distanceParam1(i), mDataPoints);
+            vec wi = mSpatialWeight.spatialWeight(i);
             mat xtwi = trans(mX % (wi * wspan));
             try {
                 mat xtwxR = inv_sympd(xtwi * mX);
@@ -1026,7 +1014,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQOmp()
                 trQtQ(thread) += qi * qi;
                 for (arma::uword j = i + 1; j < nDp && flag; j++)
                 {
-                    vec wj = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
+                    vec wj = mSpatialWeight.spatialWeight(j);
                     mat xtwj = trans(mX % (wj * wspan));
                     try {
                         mat sj = mX.row(j) * inv_sympd(xtwj * mX) * xtwj;
@@ -1085,7 +1073,7 @@ vec GwmBasicGWRAlgorithm::calcDiagBSerial(int i)
     mat wspan(1, nVar, fill::ones);
     for (arma::uword j = 0; j < nDp; j++)
     {
-        vec w = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
+        vec w = mSpatialWeight.spatialWeight(j);
         mat xtw = trans(mX % (w * wspan));
         try {
             mat C = trans(xtw) * inv_sympd(xtw * mX);
@@ -1097,7 +1085,7 @@ vec GwmBasicGWRAlgorithm::calcDiagBSerial(int i)
     }
     for (arma::uword k = 0; k < nDp; k++)
     {
-        vec w = mSpatialWeight.spatialWeight(mDataPoints.row(k), mDataPoints);
+        vec w = mSpatialWeight.spatialWeight(k);
         mat xtw = trans(mX % (w * wspan));
         try {
             mat C = trans(xtw) * inv_sympd(xtw * mX);
@@ -1125,7 +1113,7 @@ vec GwmBasicGWRAlgorithm::calcDiagBOmp(int i)
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec w = mSpatialWeight.spatialWeight(mDataPoints.row(j), mDataPoints);
+            vec w = mSpatialWeight.spatialWeight(j);
             mat xtw = trans(mX % (w * wspan));
             try {
                 mat C = trans(xtw) * inv_sympd(xtw * mX);
@@ -1143,7 +1131,7 @@ vec GwmBasicGWRAlgorithm::calcDiagBOmp(int i)
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec w = mSpatialWeight.spatialWeight(mDataPoints.row(k), mDataPoints);
+            vec w = mSpatialWeight.spatialWeight(k);
             mat xtw = trans(mX % (w * wspan));
             try {
                 mat C = trans(xtw) * inv_sympd(xtw * mX);

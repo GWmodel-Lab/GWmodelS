@@ -76,7 +76,7 @@ void GwmScalableGWRAlgorithm::run()
 {
     initPoints();
     initXY(mX, mY, mDepVar, mIndepVars);
-    getNeighbours();
+    findNeighbours();
 
     // 解算模型
     GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
@@ -132,7 +132,7 @@ void GwmScalableGWRAlgorithm::run()
     emit success();
 }
 
-void GwmScalableGWRAlgorithm::getNeighbours()
+void GwmScalableGWRAlgorithm::findNeighbours()
 {
     GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
     uword nDp = mDataPoints.n_rows, nBw = bandwidth->bandwidth();
@@ -140,7 +140,7 @@ void GwmScalableGWRAlgorithm::getNeighbours()
     mat neighboursDists(nBw, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints);
+        vec d = mSpatialWeight.distance()->distance(i);
         uvec indices = sort_index(d);
         vec d_sorted = sort(d);
         neighboursIndex.col(i) = indices(span(1, nBw));
@@ -445,6 +445,9 @@ bool GwmScalableGWRAlgorithm::isValid()
     {
         GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
         if (!(bandwidth->kernel() == GwmBandwidthWeight::Gaussian || bandwidth->kernel() == GwmBandwidthWeight::Exponential))
+            return false;
+
+        if (bandwidth->bandwidth() <= mIndepVars.size())
             return false;
 
         return true;

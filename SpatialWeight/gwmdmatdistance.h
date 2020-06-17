@@ -7,8 +7,8 @@
 class GwmDMatDistance : public GwmDistance
 {
 public:
-    GwmDMatDistance();
-    GwmDMatDistance(QString dmatFile, int featureCount);
+    explicit GwmDMatDistance(int total);
+    explicit GwmDMatDistance(int total, QString dmatFile);
     GwmDMatDistance(const GwmDMatDistance& distance);
 
     virtual GwmDistance * clone() override
@@ -22,25 +22,11 @@ public:
     void setDMatFile(const QString &dMatFile);
 
 public:
-    virtual vec distance(const rowvec& params, const mat& dataPoints) override;
-
-    int featureCount() const;
-    void setFeatureCount(int featureCount);
+    virtual vec distance(int focus) override;
 
 private:
     QString mDMatFile;
-    int mFeatureCount;
 };
-
-inline int GwmDMatDistance::featureCount() const
-{
-    return mFeatureCount;
-}
-
-inline void GwmDMatDistance::setFeatureCount(int featureCount)
-{
-    mFeatureCount = featureCount;
-}
 
 inline QString GwmDMatDistance::dMatFile() const
 {

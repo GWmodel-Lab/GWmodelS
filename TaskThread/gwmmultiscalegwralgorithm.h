@@ -64,6 +64,7 @@ public:
 public:
     void run() override;
 
+
     QList<BandwidthInitilizeType> bandwidthInitilize() const;
     void setBandwidthInitilize(const QList<BandwidthInitilizeType> &bandwidthInitilize);
 
@@ -108,6 +109,10 @@ public:     // GwmTaskThread interface
 
 public:     // GwmSpatialAlgorithm interface
     bool isValid() override;
+
+
+public:     // GwmSpatialMultiscaleAlgorithm interface
+    virtual void setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights);
 
 
 public:     // IBandwidthSizeSelectable interface
@@ -165,8 +170,6 @@ protected:
     double mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWeight* bandwidthWeight);
     double mBandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight* bandwidthWeight);
     double mBandwidthSizeCriterionVarAICOmp(GwmBandwidthWeight* bandwidthWeight);
-
-    double findMaxDistance(int var);
 
     void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
 

@@ -171,8 +171,6 @@ private:
     vec calcDiagBOmp(int i);
     vec calcDiagBCuda(int i);
 
-    double findMaxDistance();
-
 protected:
     GwmFTestResult mF1TestResult;
     GwmFTestResult mF2TestResult;
