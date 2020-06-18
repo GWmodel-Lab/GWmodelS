@@ -7,6 +7,7 @@
 #include "TaskThread/gwmrobustgwrtaskthread.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
+#include "Model/gwmvariableitemmodel.h"
 
 namespace Ui {
 class GwmRobustGWROptionsDialog;
@@ -25,7 +26,7 @@ private:
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
     GwmRobustGWRTaskThread* mTaskThread = nullptr;
-    GwmLayerAttributeItemModel* mDepVarModel;
+    GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
 
 public slots:
@@ -49,15 +50,15 @@ public slots:
 public:
     QString crsRotateTheta();
     QString crsRotateP();
-    GwmRobustGWRTaskThread::BandwidthType bandwidthType();
-    GwmRobustGWRTaskThread::ParallelMethod approachType();
+    //GwmRobustGWRTaskThread::BandwidthType bandwidthType();
+    //GwmRobustGWRTaskThread::ParallelMethod approachType();
     double bandwidthSize();
-    GwmRobustGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
+    //GwmRobustGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
     QString bandWidthUnit();
-    GwmRobustGWRTaskThread::KernelFunction bandwidthKernelFunction();
-    GwmRobustGWRTaskThread::DistanceSourceType distanceSourceType();
+    //GwmRobustGWRTaskThread::KernelFunction bandwidthKernelFunction();
+    //GwmRobustGWRTaskThread::DistanceSourceType distanceSourceType();
     QVariant distanceSourceParameters();
-    GwmRobustGWRTaskThread::ParallelMethod parallelMethod();
+    //GwmRobustGWRTaskThread::ParallelMethod parallelMethod();
     QVariant parallelParameters();
 
     void setTaskThread(GwmRobustGWRTaskThread* taskThread);
@@ -67,6 +68,10 @@ public:
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
+
+    bool bandwidthType();
+    GwmGWRTaskThread::DistanceSourceType distanceSourceType();
+    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
 private slots:
     void on_cbxHatmatrix_toggled(bool checked);
     void on_cbkRegressionPoints_toggled(bool checked);

@@ -762,8 +762,8 @@ void MainWidget::onRobustGWR()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrRobustTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = gwrRobustTaskThread->getResultLayer();
-            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
+            QgsVectorLayer* resultLayer = gwrRobustTaskThread->resultLayer();
+            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
@@ -794,8 +794,8 @@ void MainWidget::onRobustGWRBtnClicked()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrRobustTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = gwrRobustTaskThread->getResultLayer();
-            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
+            QgsVectorLayer* resultLayer = gwrRobustTaskThread->resultLayer();
+            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
