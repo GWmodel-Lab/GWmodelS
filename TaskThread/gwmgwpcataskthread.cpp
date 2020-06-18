@@ -13,13 +13,13 @@ void GwmGWPCATaskThread::run()
     initXY(mX,mVariables);
     //选带宽
     //这里判断是否选带宽
-    if(true)
+    if(false)
     {
         GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
         GwmBandwidthSizeSelector selector;
         selector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
-        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : findMaxDistance();
+        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSpatialWeight.distance()->maxDistance();
         selector.setLower(lower);
         selector.setUpper(upper);
         GwmBandwidthWeight* bandwidthWeight = selector.optimize(this);
@@ -28,7 +28,54 @@ void GwmGWPCATaskThread::run()
             mSpatialWeight.setWeight(bandwidthWeight);
         }
     }
-
+    //存储d的计算值
+    mat dResult(mDataPoints.n_rows, mVariables.size(),fill::zeros);
+    //存储最新的wt
+    vec latestWt(mDataPoints.n_rows,1,fill::zeros);
+    //GWPCA算法
+    for(int i=0;i<mDataPoints.n_rows;i++)
+    {
+        vec wt = mSpatialWeight.spatialWeight(i);
+        //取wt大于0的部分
+        //临时变量?很麻烦
+        int j=0;
+        int length=0;
+        for(int k=0;k<wt.n_rows;k++)
+        {
+            //判断有几项大于0
+            if(wt(k)>0){
+                length++;
+            }
+        }
+        vec newWt(length,fill::zeros);
+        mat newX(length,mX.n_cols,fill::zeros);
+        for(int k=0;k<wt.n_rows;k++)
+        {
+            if(wt(k)>0){
+                newWt(j) = wt(i);
+                newX.row(j) = mX.row(i);
+                j++;
+            }
+        }
+        if(newWt.n_rows<=5)
+        {
+            break;
+        }
+        //调用PCA函数
+        //事先准备好的D和V
+        mat V;
+        vec D;
+        wpca(newX,newWt,0,mk,V,D);
+        latestWt = newWt;
+        dResult.row(i) = D;
+    }
+    //R代码中的d1计算
+    mat dResult1(mDataPoints.n_rows, mVariables.size(),fill::zeros);
+    dResult1 = (dResult / pow(sum(latestWt),0.5)) % (dResult / pow(sum(latestWt),0.5));
+    //取dResult1的前K列
+    mat localPV;
+    localPV = dResult1.cols(0,1) % (1 / sum(dResult1,1)) *100;
+    localPV.print();
 }
 
 void GwmGWPCATaskThread::initPoints()
@@ -106,7 +153,7 @@ double GwmGWPCATaskThread::criterion(GwmBandwidthWeight *weight)
     for (int i = 0; i < n; i++)
     {
         //vec distvi = distance(i);
-        vec wt = mSpatialWeight.spatialWeight(mDataPoints.row(i),mDataPoints);
+        vec wt = mSpatialWeight.spatialWeight(i);
         wt(i) = 0;
         //取wt大于0的部分
         //临时变量?很麻烦
@@ -192,7 +239,7 @@ double GwmGWPCATaskThread::gold(pfGwmGWPCABandwidthSelectionApproach p, double x
 double GwmGWPCATaskThread::bwGWPCA(double k, bool robust, int kernel, bool adaptive)
 {
     double upper, lower;
-    upper = adaptive ? mX.n_rows : findMaxDistance();
+    //upper = adaptive ? mX.n_rows : findMaxDistance();
     lower = adaptive ? 20 : 0.0;
     double bw;
     //计算x？
