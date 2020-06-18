@@ -26,7 +26,6 @@ private:
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
     GwmGWSSTaskThread* mTaskThread = nullptr;
-    GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
     GwmBandwidthWeight* mBandwidth;
 
@@ -51,7 +50,7 @@ public:
     QString crsRotateP();
     bool bandwidthType();
     GwmGWRTaskThread::ParallelMethod approachType();
-//    double bandwidthSize();
+    double bandwidthSize();
 //    GwmGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
 //    QString bandWidthUnit();
     GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
@@ -69,7 +68,7 @@ public:
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
 private slots:
 //    void on_cbxHatmatrix_toggled(bool checked);
-//    void on_cbkRegressionPoints_toggled(bool checked);
+    void on_cbkRegressionPoints_toggled(bool checked);
 //    void on_cmbRegressionLayerSelect_currentIndexChanged(int index);
 
 

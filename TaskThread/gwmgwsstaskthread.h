@@ -25,6 +25,7 @@ class GwmGWSSTaskThread : public GwmSpatialMonoscaleAlgorithm, public IMultivari
     };
 
     typedef double (GwmGWSSTaskThread::*CVFunction)(const mat& ,GwmBandwidthWeight*);
+    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
 
 public:
     inline vec del(vec x,int rowcount){
@@ -38,11 +39,18 @@ public:
         return res;
     }
 
+    inline vec rank(vec x)
+    {
+        vec n = linspace(0,x.n_rows-1,x.n_rows);
+        vec res = n(sort_index(x));
+        return n(sort_index(res));
+    }
+
 public:
     GwmGWSSTaskThread();
     bool quantile() const;
-    void setQuantile(bool quantile);
 
+    void setQuantile(bool quantile);
     mat getBWS() const{
         return mBWS;
     }
@@ -53,7 +61,13 @@ protected:
 
     double findmedian(const mat& x, const mat& w);
 
+    mat findq(const mat& x, const mat& w);
+
     double gold(GwmCVType cvType,double xL, double xU, const mat& x);
+
+    double covwt(mat x1, mat x2, mat w);
+
+    double corwt(mat x1, mat x2, mat w);
 
 protected:  // QThread interface
     void run() override;
@@ -99,13 +113,45 @@ public:
         mBandwidth = bandwidth;
     }
 
+    inline QgsVectorLayer *regressionLayer() const
+    {
+        return mRegressionLayer;
+    }
+
+    inline void setRegressionLayer(QgsVectorLayer *layer)
+    {
+        mRegressionLayer = layer;
+    }
+
+    inline void setHasRegressionLayer(bool hasregressionlayer){
+        mHasRegressionLayer = hasregressionlayer;
+    }
+
+    inline bool hasRegressionLayer()
+    {
+        return mHasRegressionLayer;
+    }
+
+    mat localmean() const{return mLocalMean;}
+    mat standarddev() const{return mStandardDev;}
+    mat localskewness() const{return mLocalSkewness;}
+    mat lcv() const{return mLCV;}
+    mat lvar() const{return mLVar;}
+
+    mat localmedian() const{return mLocalMedian;}
+    mat iqr() const{return mIQR;}
+    mat qi() const{return mQI;}
+
+    mat covmat() const{return mCovmat;}
+    mat corrmat() const{return mCorrmat;}
+    mat scorrmat() const{return mSCorrmat;}
 
 protected:
     void initPoints();
     void initXY(mat& x, const QList<GwmVariable>& indepVars);
 
 protected:  // GwmSpatialMonoscaleAlgorithm interface
-    void createResultLayer();
+    void createResultLayer(CreateResultLayerData data);
 
 private:
     QList<GwmVariable> mVariables;
@@ -113,6 +159,10 @@ private:
 
 protected:
     mat mDataPoints;
+    QgsVectorLayer * mRegressionLayer;
+    mat mRegressionPoints;
+
+    bool mHasRegressionLayer;
 
     GwmBandwidthWeight* mBandwidth;
 
@@ -122,6 +172,24 @@ protected:
 
     mat mBWS;
 
+protected:
+    mat mLocalMean;
+    mat mStandardDev;
+    mat mLocalSkewness;
+    mat mLCV;
+    mat mLVar;
+
+    mat mLocalMedian;
+    mat mIQR;
+    mat mQI;
+
+    mat mCovmat;
+    mat mCorrmat;
+    mat mSCorrnms;
+    mat mSCorrmat;
+
 };
+
+
 
 #endif // GWMGWSSTASKTHREAD_H

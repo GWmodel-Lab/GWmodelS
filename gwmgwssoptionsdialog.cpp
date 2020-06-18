@@ -19,14 +19,14 @@ GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemL
     //图层选择部分
     for (GwmLayerGroupItem* item : mMapLayerList){
         ui->mLayerComboBox->addItem(item->originChild()->layer()->name());
-//        ui->cmbRegressionLayerSelect->addItem(item->originChild()->layer()->name());
+        ui->cmbRegressionLayerSelect->addItem(item->originChild()->layer()->name());
     }
     ui->mLayerComboBox->setCurrentIndex(-1);
-//    ui->cmbRegressionLayerSelect->setCurrentIndex(-1);
+    ui->cmbRegressionLayerSelect->setCurrentIndex(-1);
 
     //连接图层选择部分信号
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWSSOptionsDialog::layerChanged);
-//    connect(ui->ckbRegressionPoints, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::on_cbkRegressionPoints_toggled);
+    connect(ui->ckbRegressionPoints, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::on_cbkRegressionPoints_toggled);
 //    connect(ui->cmbRegressionLayerSelect, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWSSOptionsDialog::on_cmbRegressionLayerSelect_currentIndexChanged);
 
     //带宽类型选择部分
@@ -61,8 +61,8 @@ GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemL
 
     //更新线程参数信息
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-//    connect(ui->ckbRegressionPoints, &QAbstractButton::toggle, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-//    connect(ui->cmbRegressionLayerSelect, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
+    connect(ui->ckbRegressionPoints, &QAbstractButton::toggle, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
+    connect(ui->cmbRegressionLayerSelect, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
 //    connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
 //    connect(ui->mVariableAutoSelectionCheck, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
@@ -92,7 +92,7 @@ GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemL
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
 //    connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
-//    connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mQuantileCheckBox, &QAbstractButton::toggle, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
 
     updateFieldsAndEnable();
 }
@@ -251,13 +251,25 @@ void GwmGWSSOptionsDialog::onDmatFileOpenClicked()
 
 void GwmGWSSOptionsDialog::onFixedRadioToggled(bool checked)
 {
-//    mBandwidth->setAdaptive(false);
+    ui->mBwSizeSettingStack->setCurrentIndex(1);
 }
 
 void GwmGWSSOptionsDialog::onVariableRadioToggled(bool checked)
 {
-//    mBandwidth->setAdaptive(true);
+    ui->mBwSizeSettingStack->setCurrentIndex(0);
 }
+
+double GwmGWSSOptionsDialog::bandwidthSize(){
+    if (ui->mBwTypeAdaptiveRadio->isChecked())
+    {
+        return (double)ui->mBwSizeAdaptiveSize->value();
+    }
+    else
+    {
+        return ui->mBwSizeFixedSize->value();
+    }
+}
+
 
 GwmBandwidthWeight::KernelFunctionType GwmGWSSOptionsDialog::bandwidthKernelFunction()
 {
@@ -329,6 +341,27 @@ void GwmGWSSOptionsDialog::updateFields()
         return;
     }
 
+    // 回归点设置
+    if (ui->ckbRegressionPoints->isChecked())
+    {
+        int regLayerIndex = ui->cmbRegressionLayerSelect->currentIndex();
+        if (regLayerIndex > -1)
+        {
+            mTaskThread->setRegressionLayer(mMapLayerList[regLayerIndex]->originChild()->layer());
+            mTaskThread->setHasRegressionLayer(true);
+        }
+        else
+        {
+            mTaskThread->setRegressionLayer(nullptr);
+            mTaskThread->setHasRegressionLayer(false);
+        }
+    }
+    else
+    {
+        mTaskThread->setRegressionLayer(nullptr);
+        mTaskThread->setHasRegressionLayer(false);
+    }
+
 
     GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
     if (selectedIndepVarModel)
@@ -340,30 +373,32 @@ void GwmGWSSOptionsDialog::updateFields()
     }
 
     GwmSpatialWeight spatialWeight;
-    GwmBandwidthWeight weight(100, bandwidthType(), bandwidthKernelFunction());
-    mTaskThread->setBandwidth(new GwmBandwidthWeight(100, bandwidthType(), bandwidthKernelFunction()));
+    GwmBandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
+    mTaskThread->setBandwidth(new GwmBandwidthWeight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction()));
     spatialWeight.setWeight(weight);
     // 距离设置
+    int featureCount = dataLayer->featureCount();
     if (ui->mDistTypeDmatRadio->isChecked())
     {
         QString filename = ui->mDistMatrixFileNameEdit->text();
-        int featureCount = dataLayer->featureCount();
-        GwmDMatDistance distance(filename, featureCount);
+        GwmDMatDistance distance(featureCount, filename);
         spatialWeight.setDistance(distance);
     }
     else if (ui->mDistTypeMinkowskiRadio->isChecked())
     {
         double theta = ui->mThetaValue->value();
         double p = ui->mPValue->value();
-        GwmMinkwoskiDistance distance(p, theta);
+        GwmMinkwoskiDistance distance(featureCount, p, theta);
         spatialWeight.setDistance(distance);
     }
     else
     {
-        GwmCRSDistance distance(dataLayer->crs().isGeographic());
+        GwmCRSDistance distance(featureCount, dataLayer->crs().isGeographic());
         spatialWeight.setDistance(distance);
     }
     mTaskThread->setSpatialWeight(spatialWeight);
+
+    mTaskThread->setQuantile(ui->mQuantileCheckBox->isChecked());
     // 并行设置
 //    if (ui->mCalcParallelNoneRadio->isChecked())
 //    {
@@ -387,7 +422,6 @@ void GwmGWSSOptionsDialog::updateFields()
 
 void GwmGWSSOptionsDialog::enableAccept()
 {
-    QString message;
     if (mTaskThread->isValid())
     {
         ui->mCheckMessage->setText(tr("Valid."));
@@ -395,9 +429,14 @@ void GwmGWSSOptionsDialog::enableAccept()
     }
     else
     {
-        ui->mCheckMessage->setText("");
+        ui->mCheckMessage->setText("Invalid.");
         ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Cancel);
     }
+}
+
+void GwmGWSSOptionsDialog::on_cbkRegressionPoints_toggled(bool checked)
+{
+    ui->cmbRegressionLayerSelect->setEnabled(checked);
 }
 
 

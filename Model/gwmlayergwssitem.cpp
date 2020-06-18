@@ -8,6 +8,26 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
     mBWS = taskThread->getBWS();
     mVariables = taskThread->variables();
     mBandwidth = taskThread->bandwidth();
+    mQuantile = taskThread->quantile();
+
+    mLocalMean = taskThread->localmean();
+    mStandardDev = taskThread->standarddev();
+    mLocalSkewness = taskThread->localskewness();
+    mLCV = taskThread->lcv();
+    mLVar = taskThread->lvar();
+
+    if(mQuantile){
+        mLocalMedian = taskThread->localmedian();
+        mIQR = taskThread->iqr();
+        mQI = taskThread->qi();
+    }
+
+    if(mVariables.size() >= 2){
+        mCovmat = taskThread->covmat();
+        mCorrmat = taskThread->corrmat();
+        mSCorrmat = taskThread->scorrmat();
+    }
+
 }
 
 int GwmLayerGWSSItem::childNumber()
