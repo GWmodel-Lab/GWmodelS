@@ -113,24 +113,6 @@ public:
         mBandwidth = bandwidth;
     }
 
-    inline QgsVectorLayer *regressionLayer() const
-    {
-        return mRegressionLayer;
-    }
-
-    inline void setRegressionLayer(QgsVectorLayer *layer)
-    {
-        mRegressionLayer = layer;
-    }
-
-    inline void setHasRegressionLayer(bool hasregressionlayer){
-        mHasRegressionLayer = hasregressionlayer;
-    }
-
-    inline bool hasRegressionLayer()
-    {
-        return mHasRegressionLayer;
-    }
 
     mat localmean() const{return mLocalMean;}
     mat standarddev() const{return mStandardDev;}
@@ -159,10 +141,6 @@ private:
 
 protected:
     mat mDataPoints;
-    QgsVectorLayer * mRegressionLayer;
-    mat mRegressionPoints;
-
-    bool mHasRegressionLayer;
 
     GwmBandwidthWeight* mBandwidth;
 

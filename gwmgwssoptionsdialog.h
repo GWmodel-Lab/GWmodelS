@@ -31,19 +31,18 @@ private:
 
 public slots:
     void layerChanged(const int index);
-//    void onDepVarChanged(const int index);
+
     void onFixedRadioToggled(bool checked);
     void onVariableRadioToggled(bool checked);
     void onNoneRadioToggled(bool checked);
     void onMultithreadingRadioToggled(bool checked);
     void onGPURadioToggled(bool checked);
-//    void onCustomizeRaidoToggled(bool checked);
-//    void onAutomaticRadioToggled(bool checked);
+
     void onDistTypeCRSToggled(bool checked);
     void onDistTypeMinkowskiToggled(bool checked);
     void onDistTypeDmatToggled(bool checked);
     void onDmatFileOpenClicked();
-//    void onVariableAutoSelectionToggled(bool checked);
+
 
 public:
     QString crsRotateTheta();
@@ -66,10 +65,6 @@ public:
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
-private slots:
-//    void on_cbxHatmatrix_toggled(bool checked);
-    void on_cbkRegressionPoints_toggled(bool checked);
-//    void on_cmbRegressionLayerSelect_currentIndexChanged(int index);
 
 
 

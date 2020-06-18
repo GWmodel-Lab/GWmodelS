@@ -38,7 +38,7 @@ void GwmGWSSTaskThread::run()
     double upper = adaptive ? mDataPoints.n_rows : DBL_MAX;
     double lower = adaptive ? 20 : 0.0;
     int nVar = mX.n_cols;
-    int nDp = mX.n_rows,nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
+    int nDp = mX.n_rows,nRp = mDataPoints.n_rows;
     emit tick(0,nRp);
     for(int i = 0; i < nRp; i++){
         vec d = mSpatialWeight.distance()->distance(i);
@@ -170,21 +170,6 @@ void GwmGWSSTaskThread::initPoints()
         mDataPoints(i, 0) = centroPoint.x();
         mDataPoints(i, 1) = centroPoint.y();
     }
-    // Regression Layer
-    if (hasRegressionLayer())
-    {
-        int nRp = mRegressionLayer->featureCount();
-        mRegressionPoints = mat(nRp, 2, fill::zeros);
-        QgsFeatureIterator iterator = mRegressionLayer->getFeatures();
-        QgsFeature f;
-        for (int i = 0; i < nRp && iterator.nextFeature(f); i++)
-        {
-            QgsPointXY centroPoint = f.geometry().centroid().asPoint();
-            mRegressionPoints(i, 0) = centroPoint.x();
-            mRegressionPoints(i, 1) = centroPoint.y();
-        }
-    }
-    else mRegressionPoints = mDataPoints;
 
     if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
     {
@@ -197,7 +182,7 @@ void GwmGWSSTaskThread::initPoints()
 void GwmGWSSTaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
 {
     int nDp = mDataLayer->featureCount(), nVar = indepVars.size();
-    int nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
+    int nRp = mDataPoints.n_rows;
     // Data layer and X,Y
     x = mat(nDp, nVar, fill::zeros);
     QgsFeatureIterator iterator = mDataLayer->getFeatures();
@@ -344,7 +329,7 @@ double GwmGWSSTaskThread::gold(GwmCVType cvType, double xL, double xU, const mat
 
 void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
 {
-    QgsVectorLayer* srcLayer =  mRegressionLayer ? mRegressionLayer : mDataLayer;
+    QgsVectorLayer* srcLayer =  mDataLayer;
     int nVar = mVariables.size();
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
