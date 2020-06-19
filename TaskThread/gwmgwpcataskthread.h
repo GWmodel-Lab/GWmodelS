@@ -19,7 +19,7 @@ public:
 
 public:
     QList<GwmVariable> variables() const{return QList<GwmVariable>();};
-    void setVariables(const QList<GwmVariable> &variables){};
+    void setVariables(const QList<GwmVariable> &variables);
     void setVariables(const QList<GwmVariable> &&variables){};
 
 public:  // IParallelalbe interface
@@ -71,6 +71,10 @@ public:
 //    }
 public:
     double criterion(GwmBandwidthWeight *weight);
+
+    // IOpenmpParallelable interface
+public:
+    void setOmpThreadNum(const int threadNum){};
 };
 
 #endif // GWMGWPCATASKTHREAD_H

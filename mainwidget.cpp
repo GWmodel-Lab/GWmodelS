@@ -907,6 +907,21 @@ void MainWidget::onGWPCABtnClicked()
     //latent.print();
 //    qDebug()<< 123;
 //    tsquared.print();
+    GwmGWPCATaskThread * test = new GwmGWPCATaskThread();
 
+    QgsVectorLayer* dataLayer = static_cast<GwmLayerGroupItem*>(mapModel->rootChildren()[0])->originChild()->layer();
+    test->setDataLayer(dataLayer);
+    QgsFields fields = dataLayer->fields();
+    QList<GwmVariable> indepVars;
+    for (int i : {1, 10, 12, 13, 15})
+    {
+        indepVars.append({ i, fields[i].name(), fields[i].type(), fields[i].isNumeric()});
+    }
+    test->setVariables(indepVars);
+
+    GwmSpatialWeight spatialWeight;
+    spatialWeight.setDistance(GwmCRSDistance(false));
+    spatialWeight.setWeight(GwmBandwidthWeight(100, true, GwmBandwidthWeight::Gaussian));
+    test->setSpatialWeight(spatialWeight);
 
 }

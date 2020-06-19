@@ -249,3 +249,7 @@ double GwmGWPCATaskThread::bwGWPCA(double k, bool robust, int kernel, bool adapt
     return bw;
 }
 
+void GwmGWPCATaskThread::setVariables(const QList<GwmVariable> &variables)
+{
+    mVariables = variables;
+}
