@@ -526,7 +526,7 @@ void GwmLcrGWROptionsDialog::updateFields()
     // 其他设置
     mTaskThread->setHasHatmatix(ui->cbxHatmatrix->isChecked());
     mTaskThread->setLambdaAdjust(ui->mLambdaAdjustCheck->isChecked());
-    mTaskThread->setCnThresh(ui->mcnThreshSpinBox->value());
+    mTaskThread->setCnThresh(pow(10, -ui->mcnThreshSpinBox->value()));
     mTaskThread->setLambda(ui->mLambdaSpinBox->value());
 }
 
