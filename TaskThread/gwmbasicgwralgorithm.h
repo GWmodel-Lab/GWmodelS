@@ -182,14 +182,13 @@ protected:
     QList<GwmFTestResult> mF3TestResult;
     GwmFTestResult mF4TestResult;
 
-
-private:
     bool mHasHatMatrix = true;
     bool mHasFTest = false;
 
-    mat mBetasSE;
-    vec mShat;
     vec mQDiag;
+    mat mBetasSE;
+
+    vec mShat;
     mat mS;
 
     GwmBandwidthSizeSelector mBandwidthSizeSelector;
