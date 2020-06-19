@@ -3,12 +3,12 @@
 
 #include <gsl/gsl_cdf.h>
 
-GwmRobustGWRTaskThread::GwmRobustGWRTaskThread(): GwmBasicGWRAlgorithm()
+GwmRobustGWRAlgorithm::GwmRobustGWRAlgorithm(): GwmBasicGWRAlgorithm()
 {
 
 }
 
-GwmDiagnostic GwmRobustGWRTaskThread::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
+GwmDiagnostic GwmRobustGWRAlgorithm::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
@@ -23,7 +23,7 @@ GwmDiagnostic GwmRobustGWRTaskThread::CalcDiagnostic(const mat& x, const vec& y,
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-void GwmRobustGWRTaskThread::run()
+void GwmRobustGWRAlgorithm::run()
 {
     //点位初始化
     emit message(QString(tr("Setting data points")) + (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
@@ -112,7 +112,7 @@ void GwmRobustGWRTaskThread::run()
     emit success();
 }
 
-mat GwmRobustGWRTaskThread::regression(const mat &x, const vec &y)
+mat GwmRobustGWRAlgorithm::regression(const mat &x, const vec &y)
 {
     if(!mHasHatMatrix)
     {
@@ -143,7 +143,7 @@ mat GwmRobustGWRTaskThread::regression(const mat &x, const vec &y)
     }
 }
 
-vec GwmRobustGWRTaskThread::filtWeight(vec x)
+vec GwmRobustGWRAlgorithm::filtWeight(vec x)
 {
     double iter = 0;
     double diffmse = 1;
@@ -167,7 +167,7 @@ vec GwmRobustGWRTaskThread::filtWeight(vec x)
     return mWVect;
 }
 
-void GwmRobustGWRTaskThread::setFiltered(bool value)
+void GwmRobustGWRAlgorithm::setFiltered(bool value)
 {
     if(value == true){
         this->filtered=true;
@@ -176,27 +176,27 @@ void GwmRobustGWRTaskThread::setFiltered(bool value)
     }
 }
 
-void GwmRobustGWRTaskThread::setHasFTest(bool hasFTest)
+void GwmRobustGWRAlgorithm::setHasFTest(bool hasFTest)
 {
     mHasFTest = hasFTest;
 }
 
-void GwmRobustGWRTaskThread::setHasHatMatrix(bool hasHatMatrix)
+void GwmRobustGWRAlgorithm::setHasHatMatrix(bool hasHatMatrix)
 {
     mHasHatMatrix = hasHatMatrix;
 }
 
-bool GwmRobustGWRTaskThread::hasFTest() const
+bool GwmRobustGWRAlgorithm::hasFTest() const
 {
     return mHasFTest;
 }
 
-bool GwmRobustGWRTaskThread::hasHatMatrix() const
+bool GwmRobustGWRAlgorithm::hasHatMatrix() const
 {
     return mHasHatMatrix;
 }
 
-void GwmRobustGWRTaskThread::createResultLayer(CreateResultLayerData data)
+void GwmRobustGWRAlgorithm::createResultLayer(CreateResultLayerData data)
 {
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
@@ -253,7 +253,7 @@ void GwmRobustGWRTaskThread::createResultLayer(CreateResultLayerData data)
     mResultLayer->commitChanges();
 }
 
-double GwmRobustGWRTaskThread::calcTrQtQSerial()
+double GwmRobustGWRAlgorithm::calcTrQtQSerial()
 {
     double trQtQ = 0.0;
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
@@ -298,7 +298,7 @@ double GwmRobustGWRTaskThread::calcTrQtQSerial()
     return trQtQ;
 }
 
-vec GwmRobustGWRTaskThread::calcDiagBSerial(int i)
+vec GwmRobustGWRAlgorithm::calcDiagBSerial(int i)
 {
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
@@ -333,7 +333,7 @@ vec GwmRobustGWRTaskThread::calcDiagBSerial(int i)
     return { sum(diagB), sum(diagB % diagB) };
 }
 
-void GwmRobustGWRTaskThread::fTest(GwmRobustGWRTaskThread::FTestParameters params)
+void GwmRobustGWRAlgorithm::fTest(GwmRobustGWRAlgorithm::FTestParameters params)
 {
     emit message("F Test");
     GwmFTestResult f1, f2, f4;
@@ -404,7 +404,7 @@ void GwmRobustGWRTaskThread::fTest(GwmRobustGWRTaskThread::FTestParameters param
     mF4TestResult = f4;
 }
 
-void GwmRobustGWRTaskThread::robustGWRCaliFirst()
+void GwmRobustGWRAlgorithm::robustGWRCaliFirst()
 {
     mBetas = regression(mX, mY);
     //  ------------- 计算W.vect
@@ -431,7 +431,7 @@ void GwmRobustGWRTaskThread::robustGWRCaliFirst()
     mBetas = regression(mX, mY);
 }
 
-void GwmRobustGWRTaskThread::robustGWRCaliSecond()
+void GwmRobustGWRAlgorithm::robustGWRCaliSecond()
 {
     int nDp = mX.n_rows;
     double iter = 0;
@@ -459,7 +459,7 @@ void GwmRobustGWRTaskThread::robustGWRCaliSecond()
     }
 }
 
-mat GwmRobustGWRTaskThread::regressionHatmatrixSerial(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
+mat GwmRobustGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
     emit message("Regression ...");
     uword nDp = x.n_rows, nVar = x.n_cols;

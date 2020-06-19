@@ -7,10 +7,10 @@
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "TaskThread/gwmbasicgwralgorithm.h"
 
-class GwmRobustGWRTaskThread: public GwmBasicGWRAlgorithm
+class GwmRobustGWRAlgorithm: public GwmBasicGWRAlgorithm
 {
 public:
-    GwmRobustGWRTaskThread();
+    GwmRobustGWRAlgorithm();
     //二次权重数组
     vec mWVect;
 
@@ -75,14 +75,14 @@ public:
 
     void fTest(FTestParameters params);
 
-    typedef double (GwmRobustGWRTaskThread::*CalcTrQtQFunction)();
-    typedef vec (GwmRobustGWRTaskThread::*CalcDiagBFunction)(int);
-    CalcDiagBFunction mCalcDiagBFunction = &GwmRobustGWRTaskThread::calcDiagBSerial;
+    typedef double (GwmRobustGWRAlgorithm::*CalcTrQtQFunction)();
+    typedef vec (GwmRobustGWRAlgorithm::*CalcDiagBFunction)(int);
+    CalcDiagBFunction mCalcDiagBFunction = &GwmRobustGWRAlgorithm::calcDiagBSerial;
 
     double calcTrQtQSerial();
     vec calcDiagBSerial(int i);
 
-    CalcTrQtQFunction mCalcTrQtQFunction = &GwmRobustGWRTaskThread::calcTrQtQSerial;
+    CalcTrQtQFunction mCalcTrQtQFunction = &GwmRobustGWRAlgorithm::calcTrQtQSerial;
 
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
 

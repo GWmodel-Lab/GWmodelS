@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
-#include "TaskThread/gwmrobustgwrtaskthread.h"
+#include "TaskThread/gwmrobustgwralgorithm.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
 #include "Model/gwmvariableitemmodel.h"
@@ -18,14 +18,14 @@ class GwmRobustGWROptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmRobustGWRTaskThread* thread,QWidget *parent = nullptr);
+    explicit GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmRobustGWRAlgorithm* thread,QWidget *parent = nullptr);
     ~GwmRobustGWROptionsDialog();
 
 private:
     Ui::GwmRobustGWROptionsDialog *ui;
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
-    GwmRobustGWRTaskThread* mTaskThread = nullptr;
+    GwmRobustGWRAlgorithm* mTaskThread = nullptr;
     GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
 
@@ -61,7 +61,7 @@ public:
     //GwmRobustGWRTaskThread::ParallelMethod parallelMethod();
     QVariant parallelParameters();
 
-    void setTaskThread(GwmRobustGWRTaskThread* taskThread);
+    void setTaskThread(GwmRobustGWRAlgorithm* taskThread);
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();

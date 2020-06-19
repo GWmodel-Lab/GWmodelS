@@ -10,7 +10,7 @@
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
 
-GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmRobustGWRTaskThread* thread,QWidget *parent) :
+GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmRobustGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmRobustGWROptionsDialog),
     mMapLayerList(originItemList),
@@ -372,7 +372,7 @@ QVariant GwmRobustGWROptionsDialog::parallelParameters()
     }
 }
 
-void GwmRobustGWROptionsDialog::setTaskThread(GwmRobustGWRTaskThread *taskThread)
+void GwmRobustGWROptionsDialog::setTaskThread(GwmRobustGWRAlgorithm *taskThread)
 {
 
 }

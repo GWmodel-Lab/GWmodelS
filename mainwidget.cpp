@@ -739,7 +739,7 @@ void MainWidget::onMultiscaleGWRBtnClicked()
 
 void MainWidget::onRobustGWR()
 {
-    GwmRobustGWRTaskThread* gwrRobustTaskThread = new GwmRobustGWRTaskThread();
+    GwmRobustGWRAlgorithm* gwrRobustTaskThread = new GwmRobustGWRAlgorithm();
     GwmRobustGWROptionsDialog* gwrRobustOptionDialog = new GwmRobustGWROptionsDialog(mapModel->rootChildren(), gwrRobustTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
@@ -771,7 +771,7 @@ void MainWidget::onRobustGWR()
 
 void MainWidget::onRobustGWRBtnClicked()
 {
-    GwmRobustGWRTaskThread* gwrRobustTaskThread = new GwmRobustGWRTaskThread();
+    GwmRobustGWRAlgorithm* gwrRobustTaskThread = new GwmRobustGWRAlgorithm();
     GwmRobustGWROptionsDialog* gwrRobustOptionDialog = new GwmRobustGWROptionsDialog(mapModel->rootChildren(), gwrRobustTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
