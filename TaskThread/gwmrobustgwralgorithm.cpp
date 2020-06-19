@@ -1,4 +1,4 @@
-#include "gwmrobustgwrtaskthread.h"
+#include "gwmrobustgwralgorithm.h"
 #include "GWmodel/GWmodel.h"
 
 #include <gsl/gsl_cdf.h>
