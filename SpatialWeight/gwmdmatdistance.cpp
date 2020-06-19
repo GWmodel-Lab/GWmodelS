@@ -1,11 +1,6 @@
 #include "gwmdmatdistance.h"
 #include <QFile>
 
-GwmDMatDistance::GwmDMatDistance(int total) : GwmDistance(total)
-{
-
-}
-
 GwmDMatDistance::GwmDMatDistance(int total, QString dmatFile) : GwmDistance(total)
 {
     mDMatFile = dmatFile;

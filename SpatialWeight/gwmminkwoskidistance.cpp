@@ -1,11 +1,6 @@
 #include "gwmminkwoskidistance.h"
 
-GwmMinkwoskiDistance::GwmMinkwoskiDistance(int total) : GwmCRSDistance(total)
-{
-
-}
-
-GwmMinkwoskiDistance::GwmMinkwoskiDistance(int total, double p, double theta) : GwmCRSDistance(total)
+GwmMinkwoskiDistance::GwmMinkwoskiDistance(int total, double p, double theta) : GwmCRSDistance(total, false)
 {
     mPoly = p;
     mTheta = theta;

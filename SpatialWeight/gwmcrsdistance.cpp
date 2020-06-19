@@ -65,11 +65,6 @@ vec GwmCRSDistance::SpatialDistance(const rowvec& out_loc, const mat& in_locs)
     return dists;
 }
 
-GwmCRSDistance::GwmCRSDistance(int total) : GwmDistance(total)
-{
-
-}
-
 GwmCRSDistance::GwmCRSDistance(int total, bool isGeographic) : GwmDistance(total)
 {
     mGeographic = isGeographic;

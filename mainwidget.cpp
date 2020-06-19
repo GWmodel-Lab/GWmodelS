@@ -653,7 +653,7 @@ void MainWidget::onGWRNewBtnClicked()
     algorithm->setIsAutoselectIndepVars(true);
     algorithm->setIndepVarSelectionThreshold(150.0);
     GwmSpatialWeight spatialWeight;
-    spatialWeight.setDistance(GwmCRSDistance(false));
+    spatialWeight.setDistance(GwmCRSDistance(dataLayer->featureCount(), false));
     spatialWeight.setWeight(GwmBandwidthWeight(36, true, GwmBandwidthWeight::Gaussian));
     algorithm->setSpatialWeight(spatialWeight);
     algorithm->setIsAutoselectBandwidth(true);

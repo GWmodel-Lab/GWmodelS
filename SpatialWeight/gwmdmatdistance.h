@@ -7,7 +7,6 @@
 class GwmDMatDistance : public GwmDistance
 {
 public:
-    explicit GwmDMatDistance(int total);
     explicit GwmDMatDistance(int total, QString dmatFile);
     GwmDMatDistance(const GwmDMatDistance& distance);
 
