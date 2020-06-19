@@ -6,7 +6,6 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
     : GwmLayerVectorItem(parentItem, vector)
 {
     mDataPointsSize = taskThread->dataPointsSize();
-    mBWS = taskThread->getBWS();
     mVariables = taskThread->variables();
     mBandwidth = taskThread->bandwidth();
     mQuantile = taskThread->quantile();

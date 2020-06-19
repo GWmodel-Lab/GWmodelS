@@ -8,6 +8,7 @@
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
+
 GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGWSSTaskThread* thread,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmGWSSOptionsDialog),
@@ -80,6 +81,9 @@ GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemL
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
     connect(ui->mQuantileCheckBox, &QAbstractButton::toggle, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
 
+    ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
+    ui->mBwSizeFixedSize->setMaximum(DBL_MAX);
+    ui->mDistTypeCRSRadio->setChecked(true);
     updateFieldsAndEnable();
 }
 
@@ -248,11 +252,13 @@ void GwmGWSSOptionsDialog::onVariableRadioToggled(bool checked)
 double GwmGWSSOptionsDialog::bandwidthSize(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
-        return (double)ui->mBwSizeAdaptiveSize->value();
+        QList<double> unit = { 1, 10, 100, 1000 };
+        return (double)ui->mBwSizeAdaptiveSize->value() * unit[ui->mBwSizeAdaptiveUnit->currentIndex()];
     }
     else
     {
-        return ui->mBwSizeFixedSize->value();
+        QList<double> unit = { 1.0, 1000.0, 1609.344 };
+        return ui->mBwSizeFixedSize->value() * unit[ui->mBwSizeFixedUnit->currentIndex()];
     }
 }
 

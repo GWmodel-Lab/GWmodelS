@@ -26,6 +26,9 @@ bool GwmGWSSTaskThread::isValid()
     if (mVariables.size() < 1)
         return false;
 
+    if (static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight())->bandwidth() == 0)
+        return false;
+
     return true;
 }
 
@@ -36,15 +39,15 @@ void GwmGWSSTaskThread::run()
     // 初始化
     initXY(mX, mVariables);
 
-    bool adaptive = mBandwidth->adaptive();
+    bool adaptive = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight())->adaptive();
     double upper = adaptive ? mDataPoints.n_rows : DBL_MAX;
     double lower = adaptive ? 20 : 0.0;
     int nVar = mX.n_cols;
     int nDp = mX.n_rows,nRp = mDataPoints.n_rows;
     emit tick(0,nRp);
     for(int i = 0; i < nRp; i++){
-        vec d = mSpatialWeight.distance()->distance(i);
-        vec w = mBandwidth->weight(d);
+//        vec d = mSpatialWeight.distance()->distance(i);
+        vec w = mSpatialWeight.spatialWeight(i);
         double sumw = sum(w);
         mat Wi = w / sumw;
         mLocalMean.row(i) = trans(Wi) * mX;
@@ -101,25 +104,6 @@ void GwmGWSSTaskThread::run()
     emit success();
 }
 
-double GwmGWSSTaskThread::findmedian(const mat &x, const mat &w)
-{
-    int lw = w.n_rows;
-    vec xo = sort(x);
-    vec wo = w.rows(sort_index(x));
-    vec Cum = cumsum(wo);
-    int cond = lw - 1;
-    for(int i = 0; i < lw; i++){
-        if(Cum(i) > 0.5){
-            cond = i - 1;
-            break;
-        }
-    }
-    if(cond < 0)
-    {
-        cond = 0;
-    }
-    return xo[cond];
-}
 
 mat GwmGWSSTaskThread::findq(const mat &x, const mat &w)
 {
@@ -203,7 +187,6 @@ void GwmGWSSTaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
         }
     }
 
-    mBWS = mat(2,nVar,fill::zeros);
     mLocalMean = mat(nRp,nVar,fill::zeros);
     mStandardDev = mat(nRp,nVar,fill::zeros);
     mLocalSkewness = mat(nRp,nVar,fill::zeros);
@@ -223,56 +206,7 @@ void GwmGWSSTaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
     }
 }
 
-double GwmGWSSTaskThread::meanCV(const mat &x, GwmBandwidthWeight* bandwidthWeight)
-{
-    uword nDp = mDataPoints.n_rows, nVar = mVariables.size();
-    vec shat(2, fill::zeros);
-    double cv = 0.0;
-    vec CVScore = vec(nDp);
-    for (uword i = 0; i < nDp; i++)
-    {
-        vec d = mSpatialWeight.distance()->distance(i);
-        vec w = bandwidthWeight->weight(d);
-        double sumw = sum(w);
-        vec Wi = w / sumw;
-        double lmean = sum(Wi % x);
-        w.row(i) = 0;
-        w = w / sum(w);
-        double lmeanresi = sum(w % x);
-        double res = lmean - lmeanresi;
-        cv += res * res;
-    }
-    qDebug() << "Local Mean bw:" << bandwidthWeight->bandwidth()  << "CV value" << cv;
-    emit message(QString("Local MeanA bw: %1 (CV value: %2)").arg(bandwidthWeight->bandwidth()).arg(cv));
-    return cv;
-}
 
-double GwmGWSSTaskThread::medianCV(const mat &x, GwmBandwidthWeight *bandwidthWeight)
-{
-    uword nDp = mDataPoints.n_rows, nVar = mVariables.size();
-    vec shat(2, fill::zeros);
-    double cv = 0.0;
-    for (uword i = 0; i < nDp; i++)
-    {
-        vec d = mSpatialWeight.distance()->distance(i);
-        vec w = bandwidthWeight->weight(d);
-        double sumw = sum(w);
-        vec Wi = w / sumw;
-        double lmedian = findmedian(x,Wi);
-        Wi = del(Wi,i);
-        double test = sum(Wi);
-        Wi = Wi / sum(Wi);
-        double lmedianresi = findmedian(del(x,i),Wi);
-        double res = lmedian - lmedianresi;
-        if(1){
-            double k = 0;
-        }
-        cv += res * res;
-    }
-    qDebug() << "Local Median bw:" << bandwidthWeight->bandwidth() << "CV value" << cv;
-    emit message(QString("Local Median bw: %1 (CV value: %2)").arg(bandwidthWeight->bandwidth()).arg(cv));
-    return cv;
-}
 
 void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
 {

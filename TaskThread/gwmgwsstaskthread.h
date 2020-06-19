@@ -43,15 +43,8 @@ public:
     bool quantile() const;
 
     void setQuantile(bool quantile);
-    mat getBWS() const{
-        return mBWS;
-    }
 
 protected:
-    double meanCV(const mat& x,GwmBandwidthWeight* bandwidthWeight);
-    double medianCV(const mat& x,GwmBandwidthWeight* bandwidthWeight);
-
-    double findmedian(const mat& x, const mat& w);
 
     mat findq(const mat& x, const mat& w);
 
@@ -95,12 +88,12 @@ public:
 
     GwmBandwidthWeight* bandwidth() const
     {
-        return mBandwidth;
+        return static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
     }
 
     void setBandwidth(GwmBandwidthWeight* bandwidth)
     {
-        mBandwidth = bandwidth;
+        mSpatialWeight.setWeight(bandwidth);
     }
 
 
@@ -139,13 +132,11 @@ private:
 protected:
     mat mDataPoints;
 
-    GwmBandwidthWeight* mBandwidth;
+//    GwmBandwidthWeight* mBandwidth;
 
     CVFunction mCVFunction;
 
     mat mX;
-
-    mat mBWS;
 
 protected:
     mat mLocalMean;

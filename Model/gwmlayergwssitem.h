@@ -13,11 +13,6 @@ public:
 
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::GWSS; }
 
-    mat bws() const
-    {
-        return mBWS;
-    }
-
     int dataPointsSize() const;
 
     mat localmean() const{return mLocalMean;}
@@ -52,7 +47,6 @@ public:
 
 protected:
     int mDataPointsSize;
-    mat mBWS;
     QList<GwmVariable> mVariables;
     GwmBandwidthWeight* mBandwidth;
     bool mQuantile;
