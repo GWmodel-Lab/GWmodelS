@@ -10,19 +10,19 @@ GwmLayerCollinearityGWRItem::GwmLayerCollinearityGWRItem(GwmLayerItem* parent, Q
         mDepVar = taskThread->dependentVariable();
         mIndepVars = taskThread->independentVariables();
         mWeight = GwmBandwidthWeight(*static_cast<GwmBandwidthWeight*>(taskThread->spatialWeight().weight()));
-        mDiagnostic = taskThread->getDialnostic();
+        mDiagnostic = taskThread->dialnostic();
         mBetas = mat(taskThread->betas());
         //mModelSelModels = taskThread->indepVarSelectorCriterions();
-        isBandwidthOptimized = taskThread->getIsAutoselectBandwidth();
+        isBandwidthOptimized = taskThread->isAutoselectBandwidth();
         //isModelOptimized = taskThread->autoselectIndepVars();
         mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();
         //mFTestResults = taskThread->fTestResult();
         //hasHatmatrix = taskThread->getHasHatmatrix();
         //hasFTest = taskThread->hasFTest();
         //isRegressionPointGiven = !(taskThread->regressionLayer() == nullptr);
-        mLambda = taskThread->getMlambda();
-        mcnThresh = taskThread->getMcnThresh();
-        hasHatmatrix = taskThread->getHashatmatix();
+        mLambda = taskThread->lambda();
+        mcnThresh = taskThread->cnThresh();
+        hasHatmatrix = taskThread->hasHatmatix();
     }
 }
 

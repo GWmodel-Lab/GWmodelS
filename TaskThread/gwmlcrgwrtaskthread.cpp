@@ -5,24 +5,24 @@ GwmLcrGWRTaskThread::GwmLcrGWRTaskThread():GwmGeographicalWeightedRegressionAlgo
 
 }
 
-double GwmLcrGWRTaskThread::getMlambda() const
+double GwmLcrGWRTaskThread::lambda() const
 {
-    return mlambda;
+    return mLambda;
 }
 
-void GwmLcrGWRTaskThread::setHashatmatix(bool value)
+void GwmLcrGWRTaskThread::setHasHatmatix(bool value)
 {
-    hashatmatix = value;
+    mHasHatmatix = value;
 }
 
-bool GwmLcrGWRTaskThread::getHashatmatix() const
+bool GwmLcrGWRTaskThread::hasHatmatix() const
 {
-    return hashatmatix;
+    return mHasHatmatix;
 }
 
-double GwmLcrGWRTaskThread::getMcnThresh() const
+double GwmLcrGWRTaskThread::cnThresh() const
 {
-    return mcnThresh;
+    return mCnThresh;
 }
 
 void GwmLcrGWRTaskThread::run()
@@ -57,7 +57,7 @@ void GwmLcrGWRTaskThread::run()
     vec mYHat = fitted(mX,mBetas);
     vec mResidual = mY - mYHat;
     mDiagnostic.RSS = sum(mResidual % mResidual);
-    mDiagnostic.ENP = 2*this->trs - this->trsts;
+    mDiagnostic.ENP = 2*this->mTrS - this->mTrStS;
     mDiagnostic.EDF = mDataPoints.n_rows - mDiagnostic.ENP;
     double s2 = mDiagnostic.RSS / (mDataPoints.n_rows - mDiagnostic.ENP);
     mDiagnostic.AIC = mDataPoints.n_rows * (log(2*M_PI*s2)+1) + 2*(mDiagnostic.ENP + 1);
@@ -115,10 +115,10 @@ double GwmLcrGWRTaskThread::criterion(GwmBandwidthWeight *weight)
         S.print();
         //qDebug() << S(m);
         localcn(i)=S(0)/S(m-1);
-        locallambda(i) = mlambda;
-        if(mlambdaAdjust){
-            if(localcn(i)>mcnThresh){
-                locallambda(i) = (S(0) - mcnThresh*S(m-1)) / (mcnThresh - 1);
+        locallambda(i) = mLambda;
+        if(mLambdaAdjust){
+            if(localcn(i)>mCnThresh){
+                locallambda(i) = (S(0) - mCnThresh*S(m-1)) / (mCnThresh - 1);
             }
         }
         betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
@@ -132,7 +132,7 @@ double GwmLcrGWRTaskThread::criterion(GwmBandwidthWeight *weight)
     return cv;
 }
 
-bool GwmLcrGWRTaskThread::getIsAutoselectBandwidth() const
+bool GwmLcrGWRTaskThread::isAutoselectBandwidth() const
 {
     return mIsAutoselectBandwidth;
 }
@@ -199,23 +199,23 @@ arma::mat GwmLcrGWRTaskThread::regression(const arma::mat &x, const arma::vec &y
         //qDebug() << mX.n_cols;
         //赋值操作
         localcn(i)=S(0)/S(x.n_cols-1);
-        locallambda(i) = mlambda;
-        if(mlambdaAdjust){
-            if(localcn(i)>mcnThresh){
-                locallambda(i) = (S(0) - mcnThresh*S(x.n_cols-1)) / (mcnThresh - 1);
+        locallambda(i) = mLambda;
+        if(mLambdaAdjust){
+            if(localcn(i)>mCnThresh){
+                locallambda(i) = (S(0) - mCnThresh*S(x.n_cols-1)) / (mCnThresh - 1);
             }
         }
         betas.row(i) = trans( ridgelm(wi,locallambda(i)) );
         //如果没有给regressionpoint
-        if(hashatmatix)
+        if(mHasHatmatix)
         {
             mat xm = x;
             mat xtw = trans(x % (wi * wispan1));
             mat xtwx = xtw * x;
             mat xtwxinv = inv(xtwx);
             rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
-            this->trs += hatrow(i);
-            this->trsts += sum(hatrow % hatrow);
+            this->mTrS += hatrow(i);
+            this->mTrStS += sum(hatrow % hatrow);
         }
         emit tick(i+1, mDataPoints.n_rows);
     }
@@ -279,6 +279,16 @@ void GwmLcrGWRTaskThread::createResultLayer(CreateResultLayerData data)
     mResultLayer->commitChanges();
 }
 
+bool GwmLcrGWRTaskThread::lambdaAdjust() const
+{
+    return mLambdaAdjust;
+}
+
+void GwmLcrGWRTaskThread::setLambdaAdjust(bool lambdaAdjust)
+{
+    mLambdaAdjust = lambdaAdjust;
+}
+
 GwmDiagnostic GwmLcrGWRTaskThread::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
     vec r = y - sum(betas % x, 1);
@@ -311,4 +321,14 @@ bool GwmLcrGWRTaskThread::isValid()
         return true;
     }
     else return false;
+}
+
+void GwmLcrGWRTaskThread::setCnThresh(double cnThresh)
+{
+    mCnThresh = cnThresh;
+}
+
+void GwmLcrGWRTaskThread::setLambda(double lambda)
+{
+    mLambda = lambda;
 }

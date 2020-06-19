@@ -524,10 +524,10 @@ void GwmLcrGWROptionsDialog::updateFields()
 //        mTaskThread->setParallelParameter(this->parallelParameters());
 //    }
     // 其他设置
-    mTaskThread->setHashatmatix(ui->cbxHatmatrix->isChecked());
-    mTaskThread->mlambdaAdjust = ui->mLambdaAdjustCheck->isChecked();
-    mTaskThread->mcnThresh = ui->mcnThreshSpinBox->value();
-    mTaskThread->mlambda = ui->mLambdaSpinBox->value();
+    mTaskThread->setHasHatmatix(ui->cbxHatmatrix->isChecked());
+    mTaskThread->setLambdaAdjust(ui->mLambdaAdjustCheck->isChecked());
+    mTaskThread->setCnThresh(ui->mcnThreshSpinBox->value());
+    mTaskThread->setLambda(ui->mLambdaSpinBox->value());
 }
 
 void GwmLcrGWROptionsDialog::enableAccept()
