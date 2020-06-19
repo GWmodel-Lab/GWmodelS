@@ -73,6 +73,8 @@ GwmCRSDistance::GwmCRSDistance(int total, bool isGeographic) : GwmDistance(total
 GwmCRSDistance::GwmCRSDistance(const GwmCRSDistance &distance) : GwmDistance(distance)
 {
     mGeographic = distance.mGeographic;
+    mDataPoints = distance.mDataPoints;
+    mFocusPoints = distance.mFocusPoints;
 }
 
 vec GwmCRSDistance::distance(int focus)

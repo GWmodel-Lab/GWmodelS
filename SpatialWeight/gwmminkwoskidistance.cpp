@@ -8,7 +8,6 @@ GwmMinkwoskiDistance::GwmMinkwoskiDistance(int total, double p, double theta) : 
 
 GwmMinkwoskiDistance::GwmMinkwoskiDistance(const GwmMinkwoskiDistance &distance) : GwmCRSDistance(distance)
 {
-
     mPoly = distance.mPoly;
     mTheta = distance.mTheta;
 }
