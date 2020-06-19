@@ -39,11 +39,7 @@ void GwmGWSSTaskThread::run()
     // 初始化
     initXY(mX, mVariables);
 
-    bool adaptive = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight())->adaptive();
-    double upper = adaptive ? mDataPoints.n_rows : DBL_MAX;
-    double lower = adaptive ? 20 : 0.0;
-    int nVar = mX.n_cols;
-    int nDp = mX.n_rows,nRp = mDataPoints.n_rows;
+    int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
     emit tick(0,nRp);
     for(int i = 0; i < nRp; i++){
 //        vec d = mSpatialWeight.distance()->distance(i);
@@ -72,32 +68,31 @@ void GwmGWSSTaskThread::run()
         if(nVar >= 2){
             int tag = 0;
             for(int j = 0; j < nVar-1; j++){
-                for(int k = 0; k < nVar; k++){
+                for(int k = j+1; k < nVar; k++){
+                    mCovmat(tag,i) = covwt(mX.col(j),mX.col(k),Wi);
+                    mCorrmat(tag,i) = corwt(mX.col(j),mX.col(k),Wi);
+                    mSCorrmat(tag,i) = corwt(rank(mX.col(j)),rank(mX.col(k)),Wi);
                     tag++;
-                    mCovmat(i,tag) = covwt(mX.col(j),mX.col(k),Wi);
-                    mCorrmat(i,tag) = corwt(mX.col(j),mX.col(k),Wi);
-                    mSCorrmat(i,tag) = corwt(rank(mX.col(j)),rank(mX.col(k)),Wi);
                 }
             }
         }
         emit tick(i,nRp);
     }
     CreateResultLayerData resultLayerData;
-    resultLayerData.push_back(qMakePair(QString("Local means"), mLocalMean));
-    resultLayerData.push_back(qMakePair(QString("standard deviation"), mStandardDev));
-    resultLayerData.push_back(qMakePair(QString("local variance"), mLVar));
-    resultLayerData.push_back(qMakePair(QString("Local skewness"), mLocalSkewness));
-    resultLayerData.push_back(qMakePair(QString("localized coefficient of variation"), mLCV));
+    resultLayerData.push_back(qMakePair(QString("LM"), mLocalMean));
+    resultLayerData.push_back(qMakePair(QString("LSD"), mStandardDev));
+    resultLayerData.push_back(qMakePair(QString("LVar"), mLVar));
+    resultLayerData.push_back(qMakePair(QString("LSke"), mLocalSkewness));
+    resultLayerData.push_back(qMakePair(QString("LCV"), mLCV));
     if(mQuantile){
-        resultLayerData.push_back(qMakePair(QString("Local median"), mLocalMedian));
-        resultLayerData.push_back(qMakePair(QString("Interquartile range"), mIQR));
-        resultLayerData.push_back(qMakePair(QString("Quantile imbalance"), mQI));
+        resultLayerData.push_back(qMakePair(QString("LM"), mLocalMedian));
+        resultLayerData.push_back(qMakePair(QString("IQR"), mIQR));
+        resultLayerData.push_back(qMakePair(QString("QI"), mQI));
     }
     if(nVar >= 2){
         resultLayerData.push_back(qMakePair(QString("Cov"), trans(mCovmat)));
         resultLayerData.push_back(qMakePair(QString("Corr"), trans(mCorrmat)));
         resultLayerData.push_back(qMakePair(QString("Corr"), trans(mSCorrmat)));
-
     }
     mResultList = resultLayerData;
     createResultLayer(resultLayerData);
@@ -105,7 +100,7 @@ void GwmGWSSTaskThread::run()
 }
 
 
-mat GwmGWSSTaskThread::findq(const mat &x, const mat &w)
+vec GwmGWSSTaskThread::findq(const mat &x, const vec &w)
 {
     int lw = w.n_rows;
     int lp = 3;
@@ -132,7 +127,7 @@ mat GwmGWSSTaskThread::findq(const mat &x, const mat &w)
     return q;
 }
 
-double GwmGWSSTaskThread::covwt(mat x1, mat x2, mat w){
+double GwmGWSSTaskThread::covwt(const mat &x1, const mat &x2, const vec &w){
     vec wi = w/sum(w);
     double center1 = sum(x1 % wi);
     double center2 = sum(x2 % wi);
@@ -142,7 +137,7 @@ double GwmGWSSTaskThread::covwt(mat x1, mat x2, mat w){
     return res;
 }
 
-double GwmGWSSTaskThread::corwt(mat x1, mat x2, mat w)
+double GwmGWSSTaskThread::corwt(const mat &x1, const mat &x2, const vec &w)
 {
     return covwt(x1,x2,w)/sqrt(covwt(x1,x1,w)*covwt(x2,x2,w));
 }
@@ -230,7 +225,7 @@ void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
             for(uword j = 0; j < nVar-1; j++){
                 for (uword k = 0; k < nVar; k++)
                 {
-                    QString variableName = mVariables[j].name + "*" + mVariables[k].name + "_" + title;
+                    QString variableName = title + "_" + mVariables[j].name + "." + mVariables[k].name;
 //                    QString fieldName = title.arg(variableName);
                     fields.append(QgsField(variableName, QVariant::Double, QStringLiteral("double")));
                 }

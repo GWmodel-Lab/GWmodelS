@@ -30,7 +30,6 @@ public:
 
 public:
     static vec del(vec x,int rowcount);
-
     static vec rank(vec x)
     {
         vec n = linspace(0,x.n_rows-1,x.n_rows);
@@ -38,37 +37,24 @@ public:
         return n(sort_index(res));
     }
 
+protected:
+    static vec findq(const mat& x, const vec& w);
+    static double covwt(const mat& x1, const mat& x2, const vec& w);
+    static double corwt(const mat& x1, const mat& x2, const vec& w);
+
 public:
     GwmGWSSTaskThread();
     bool quantile() const;
 
     void setQuantile(bool quantile);
 
-protected:
-
-    mat findq(const mat& x, const mat& w);
-
-    double covwt(mat x1, mat x2, mat w);
-
-    double corwt(mat x1, mat x2, mat w);
-
 protected:  // QThread interface
     void run() override;
 
 public:  // IMultivariableAnalysis interface
-    QList<GwmVariable> variables() const{
-        return mVariables;
-    }
-
-    void setVariables(const QList<GwmVariable> &variables)
-    {
-        mVariables = variables;
-    }
-
-    void setVariables(const QList<GwmVariable> &&variables)
-    {
-        mVariables = variables;
-    }
+    QList<GwmVariable> variables() const;
+    void setVariables(const QList<GwmVariable> &variables);
+    void setVariables(const QList<GwmVariable> &&variables);
 
 //public:  // IParallelalbe interface
 //    int parallelAbility() const;
@@ -86,15 +72,8 @@ public:     // GwmTaskThread interface
 
 public:
 
-    GwmBandwidthWeight* bandwidth() const
-    {
-        return static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
-    }
-
-    void setBandwidth(GwmBandwidthWeight* bandwidth)
-    {
-        mSpatialWeight.setWeight(bandwidth);
-    }
+    GwmBandwidthWeight* bandwidth() const;
+    void setBandwidth(GwmBandwidthWeight* bandwidth);
 
 
     mat localmean() const{return mLocalMean;}
@@ -166,6 +145,30 @@ inline bool GwmGWSSTaskThread::quantile() const
 inline void GwmGWSSTaskThread::setQuantile(bool quantile)
 {
     mQuantile = quantile;
+}
+
+inline QList<GwmVariable> GwmGWSSTaskThread::variables() const{
+    return mVariables;
+}
+
+inline void GwmGWSSTaskThread::setVariables(const QList<GwmVariable> &variables)
+{
+    mVariables = variables;
+}
+
+inline void GwmGWSSTaskThread::setVariables(const QList<GwmVariable> &&variables)
+{
+    mVariables = variables;
+}
+
+inline GwmBandwidthWeight *GwmGWSSTaskThread::bandwidth() const
+{
+    return static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+}
+
+inline void GwmGWSSTaskThread::setBandwidth(GwmBandwidthWeight *bandwidth)
+{
+    mSpatialWeight.setWeight(bandwidth);
 }
 
 

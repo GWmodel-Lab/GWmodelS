@@ -72,7 +72,7 @@ void GwmPropertyGWSSTab::updateUI()
         if (value.n_cols > nVar){
             int r = 0;
             for(uword j = 0; j < nVar-1; j++){
-                for (uword k = 0; k < nVar; k++){
+                for (uword k = j+1; k < nVar; k++){
                     vec q = quantile(value.col(r), p);
                     QString name =  indepVars[j].name + "*" + indepVars[k].name ;
                     QTableWidgetItem* nameItem = new QTableWidgetItem(name);
