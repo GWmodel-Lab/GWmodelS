@@ -39,20 +39,9 @@
      <property name="title">
       <string>Independent Variable Selection</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,0">
+     <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1">
       <item>
        <widget class="GwmIndepVarSelectorWidget" name="mIndepVarSelector" native="true"/>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_7">
-        <item>
-         <widget class="Line" name="line_3">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </item>
      </layout>
     </widget>
@@ -138,49 +127,6 @@
        </layout>
       </item>
       <item row="1" column="1">
-       <layout class="QGridLayout" name="gridLayout_4">
-        <property name="leftMargin">
-         <number>6</number>
-        </property>
-       </layout>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_13">
-        <property name="text">
-         <string>Kernel</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QComboBox" name="mBwKernelFunctionCombo">
-        <item>
-         <property name="text">
-          <string>Gaussion</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Exponential</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Bisquare</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Tricube</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Boxcar</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="2" column="1">
        <widget class="QStackedWidget" name="mBwSizeSettingStack">
         <property name="currentIndex">
          <number>0</number>
@@ -284,6 +230,49 @@
         </widget>
        </widget>
       </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>Kernel</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="mBwKernelFunctionCombo">
+        <item>
+         <property name="text">
+          <string>Gaussion</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Exponential</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Bisquare</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Tricube</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Boxcar</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Size</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -305,6 +294,9 @@
          <widget class="QRadioButton" name="mDistTypeCRSRadio">
           <property name="text">
            <string>According to CRS</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
