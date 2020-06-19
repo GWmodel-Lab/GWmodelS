@@ -55,7 +55,7 @@ public:
     //带宽选择函数? 怎样加vars?
     double bwGWPCA(double k, bool robust, int kernel, bool adaptive);
     //
-    double mk;
+    double mk=2;
     bool mRobust;
     mat mX;
 //    double findMaxDistance()

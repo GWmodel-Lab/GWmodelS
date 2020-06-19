@@ -1,4 +1,5 @@
 #include "gwmgwpcataskthread.h"
+#include <SpatialWeight/gwmcrsdistance.h>
 
 GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm()
 {
@@ -9,6 +10,9 @@ void GwmGWPCATaskThread::run()
 {
     // 设置矩阵
     initPoints();
+    GwmCRSDistance d(mDataLayer->featureCount(), mDataLayer->crs().isGeographic());
+    d.setDataPoints(&mDataPoints);
+    d.setFocusPoints(&mDataPoints);
     //
     initXY(mX,mVariables);
     //选带宽
@@ -29,12 +33,15 @@ void GwmGWPCATaskThread::run()
         }
     }
     //存储d的计算值
+    mSpatialWeight.setDistance(d);
+    mSpatialWeight.setWeight(GwmBandwidthWeight(100, true, GwmBandwidthWeight::Gaussian));;
     mat dResult(mDataPoints.n_rows, mVariables.size(),fill::zeros);
     //存储最新的wt
     vec latestWt(mDataPoints.n_rows,1,fill::zeros);
     //GWPCA算法
     for(int i=0;i<mDataPoints.n_rows;i++)
     {
+        //vec distvi = mSpatialWeight.distance()->distance(i);
         vec wt = mSpatialWeight.spatialWeight(i);
         //取wt大于0的部分
         //临时变量?很麻烦
@@ -74,8 +81,29 @@ void GwmGWPCATaskThread::run()
     dResult1 = (dResult / pow(sum(latestWt),0.5)) % (dResult / pow(sum(latestWt),0.5));
     //取dResult1的前K列
     mat localPV;
-    localPV = dResult1.cols(0,1) % (1 / sum(dResult1,1)) *100;
+    localPV = dResult1.cols(0,mk) % (1 / sum(dResult1,1)) *100;
     localPV.print();
+    //R代码 的 Local variance
+    //t(apply(d1, 2, summary))
+    const vec p = { 0.0, 0.25, 0.5, 0.75, 1.0 };
+    for(int i=0;i<dResult1.n_cols;i++)
+    {
+        vec q = quantile(dResult1.col(i), p);
+        qDebug() << "Comp";
+        q.print();
+    }
+    //R代码 的 Local Proportion of Variance
+    //t(apply(local.PV, 2, summary))
+    for(int i=0;i<localPV.n_cols;i++)
+    {
+        vec q = quantile(localPV.col(i), p);
+        qDebug() << "Comp";
+        q.print();
+    }
+    //Cumulative summary(rowSums(local.PV))
+    vec localPVSum = sum(localPV,2);
+    vec Cumulative = quantile(localPVSum,p);
+    Cumulative.print();
 }
 
 void GwmGWPCATaskThread::initPoints()
