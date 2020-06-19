@@ -18,6 +18,8 @@ public:
         return mBWS;
     }
 
+    int dataPointsSize() const;
+
     mat localmean() const{return mLocalMean;}
     mat standarddev() const{return mStandardDev;}
     mat localskewness() const{return mLocalSkewness;}
@@ -34,6 +36,8 @@ public:
 
     bool quantile() const{return mQuantile;}
 
+    GwmGWSSTaskThread::CreateResultLayerData resultlist() const{return mResultList;}
+
     QList<GwmVariable> variables() const
     {
         return mVariables;
@@ -44,8 +48,10 @@ public:
         return mBandwidth;
     }
 
-protected:
 
+
+protected:
+    int mDataPointsSize;
     mat mBWS;
     QList<GwmVariable> mVariables;
     GwmBandwidthWeight* mBandwidth;
@@ -65,6 +71,8 @@ protected:
     mat mCovmat;
     mat mCorrmat;
     mat mSCorrmat;
+
+    GwmGWSSTaskThread::CreateResultLayerData mResultList;
 };
 
 #endif // GWMLAYERGWSSITEM_H

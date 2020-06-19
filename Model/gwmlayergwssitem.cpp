@@ -5,10 +5,12 @@
 GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWSSTaskThread* taskThread)
     : GwmLayerVectorItem(parentItem, vector)
 {
+    mDataPointsSize = taskThread->dataPointsSize();
     mBWS = taskThread->getBWS();
     mVariables = taskThread->variables();
     mBandwidth = taskThread->bandwidth();
     mQuantile = taskThread->quantile();
+    mResultList = taskThread->resultlist();
 
     mLocalMean = taskThread->localmean();
     mStandardDev = taskThread->standarddev();
@@ -37,3 +39,7 @@ int GwmLayerGWSSItem::childNumber()
     return 0;
 }
 
+int GwmLayerGWSSItem::dataPointsSize() const
+{
+    return mDataPointsSize;
+}

@@ -19,6 +19,7 @@ class GwmGWSSTaskThread : public GwmSpatialMonoscaleAlgorithm, public IMultivari
 {
     Q_OBJECT
 
+public:
     enum GwmCVType{
         mean,
         median
@@ -128,6 +129,13 @@ public:
     mat corrmat() const{return mCorrmat;}
     mat scorrmat() const{return mSCorrmat;}
 
+    CreateResultLayerData resultlist() const{return mResultList;}
+
+    int dataPointsSize() const
+    {
+        return mDataPoints.n_rows;
+    }
+
 protected:
     void initPoints();
     void initXY(mat& x, const QList<GwmVariable>& indepVars);
@@ -165,6 +173,8 @@ protected:
     mat mCorrmat;
     mat mSCorrnms;
     mat mSCorrmat;
+
+    CreateResultLayerData mResultList;
 
 };
 

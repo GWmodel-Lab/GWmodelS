@@ -5,6 +5,7 @@
 
 #include "Model/gwmlayergwssitem.h"
 #include <QTableWidgetItem>
+#include <QTableWidget>
 
 
 namespace Ui {
@@ -29,6 +30,8 @@ public:
 private:
     Ui::GwmPropertyGWSSTab *ui;
     GwmLayerGWSSItem* mLayerItem;
+
+    QList<QTableWidget *> mTableWidgetList;
 
 
 

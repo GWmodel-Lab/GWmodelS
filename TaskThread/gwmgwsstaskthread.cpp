@@ -91,7 +91,10 @@ void GwmGWSSTaskThread::run()
     if(nVar >= 2){
         resultLayerData.push_back(qMakePair(QString("Cov"), trans(mCovmat)));
         resultLayerData.push_back(qMakePair(QString("Corr"), trans(mCorrmat)));
+        resultLayerData.push_back(qMakePair(QString("Corr"), trans(mSCorrmat)));
+
     }
+    mResultList = resultLayerData;
     createResultLayer(resultLayerData);
     emit success();
 }
@@ -349,7 +352,7 @@ void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
             for(uword j = 0; j < nVar-1; j++){
                 for (uword k = 0; k < nVar; k++)
                 {
-                    QString variableName = mVariables[k].name + "*" + mVariables[k].name + "_" + title;
+                    QString variableName = mVariables[j].name + "*" + mVariables[k].name + "_" + title;
 //                    QString fieldName = title.arg(variableName);
                     fields.append(QgsField(variableName, QVariant::Double, QStringLiteral("double")));
                 }
