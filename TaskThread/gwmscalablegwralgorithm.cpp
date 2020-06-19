@@ -79,7 +79,7 @@ void GwmScalableGWRAlgorithm::run()
     findNeighbours();
 
     // 解算模型
-    GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
     emit tick(0, 0);
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nBw = bandwidth->bandwidth();
     double band0 = 0.0;
@@ -134,7 +134,7 @@ void GwmScalableGWRAlgorithm::run()
 
 void GwmScalableGWRAlgorithm::findNeighbours()
 {
-    GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
     uword nDp = mDataPoints.n_rows, nBw = bandwidth->bandwidth();
     umat neighboursIndex(nBw, nDp, fill::zeros);
     mat neighboursDists(nBw, nDp, fill::zeros);
@@ -164,7 +164,7 @@ double scagwr_loocv_multimin_function(const gsl_vector* vars, void* params)
 
 double GwmScalableGWRAlgorithm::optimize(const mat &Mx0, const mat &My0, double& b_tilde, double& alpha)
 {
-    GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
     gsl_multimin_fminimizer* minizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex, 2);
     gsl_vector* target = gsl_vector_alloc(2);
     gsl_vector_set(target, 0, b_tilde);
@@ -206,7 +206,7 @@ double GwmScalableGWRAlgorithm::optimize(const mat &Mx0, const mat &My0, double&
 
 void GwmScalableGWRAlgorithm::prepare()
 {
-    GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
     int bw = bandwidth->bandwidth();
     const mat &x = mX, &y = mY, &g0 = mG0;
     int n = x.n_rows;
@@ -253,7 +253,7 @@ void GwmScalableGWRAlgorithm::prepare()
 
 arma::mat GwmScalableGWRAlgorithm::regression(const arma::mat &x, const arma::vec &y)
 {
-    GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
     int bw = bandwidth->bandwidth();
     int n = x.n_rows, k = x.n_cols, poly1 = mPolynomial + 1;
     double b = mScale, a = mPenalty;
@@ -443,7 +443,7 @@ bool GwmScalableGWRAlgorithm::isValid()
 {
     if (GwmGeographicalWeightedRegressionAlgorithm::isValid())
     {
-        GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+        GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
         if (!(bandwidth->kernel() == GwmBandwidthWeight::Gaussian || bandwidth->kernel() == GwmBandwidthWeight::Exponential))
             return false;
 

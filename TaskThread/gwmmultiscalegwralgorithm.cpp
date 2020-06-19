@@ -266,7 +266,7 @@ bool GwmMultiscaleGWRAlgorithm::isValid()
 
     for (int i = 0; i < nVar; i++)
     {
-        GwmBandwidthWeight* bw = static_cast<GwmBandwidthWeight*>(mSpatialWeights[i].weight());
+        GwmBandwidthWeight* bw = mSpatialWeights[i].weight<GwmBandwidthWeight>();
         if (mBandwidthInitilize[i] == GwmMultiscaleGWRAlgorithm::Specified || mBandwidthInitilize[i] == GwmMultiscaleGWRAlgorithm::Initial)
         {
             if (bw->adaptive())
@@ -315,7 +315,7 @@ void GwmMultiscaleGWRAlgorithm::initPoints()
     // 设置空间距离中的数据指针
     if (mInitSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mInitSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
     {
-        GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mInitSpatialWeight.distance());
+        GwmCRSDistance* d = mInitSpatialWeight.distance<GwmCRSDistance>();
         d->setDataPoints(&mDataPoints);
         d->setFocusPoints(&mRegressionPoints);
     }
@@ -323,7 +323,7 @@ void GwmMultiscaleGWRAlgorithm::initPoints()
     {
         if (sw.distance()->type() == GwmDistance::CRSDistance || sw.distance()->type() == GwmDistance::MinkwoskiDistance)
         {
-            GwmCRSDistance* d = static_cast<GwmCRSDistance*>(sw.distance());
+            GwmCRSDistance* d = sw.distance<GwmCRSDistance>();
             d->setDataPoints(&mDataPoints);
             d->setFocusPoints(&mRegressionPoints);
         }

@@ -4,6 +4,12 @@
 #include "SpatialWeight/gwmweight.h"
 #include "SpatialWeight/gwmdistance.h"
 
+#include "SpatialWeight/gwmbandwidthweight.h"
+
+#include "gwmcrsdistance.h"
+#include "gwmdmatdistance.h"
+#include "gwmminkwoskidistance.h"
+
 class GwmSpatialWeight
 {
 public:
@@ -16,11 +22,23 @@ public:
     void setWeight(GwmWeight *weight);
     void setWeight(GwmWeight& weight);
     void setWeight(GwmWeight&& weight);
+    template<typename T>
+    T* weight() const { return mWeight; }
+    template<>
+    GwmBandwidthWeight* weight<GwmBandwidthWeight>() const { return static_cast<GwmBandwidthWeight*>(mWeight); }
 
     GwmDistance *distance() const;
     void setDistance(GwmDistance *distance);
     void setDistance(GwmDistance& distance);
     void setDistance(GwmDistance&& distance);
+    template<typename T>
+    T* distance() const { return mDistance; }
+    template<>
+    GwmCRSDistance* distance<GwmCRSDistance>() const { return static_cast<GwmCRSDistance*>(mDistance); }
+    template<>
+    GwmMinkwoskiDistance* distance<GwmMinkwoskiDistance>() const { return static_cast<GwmMinkwoskiDistance*>(mDistance); }
+    template<>
+    GwmDMatDistance* distance<GwmDMatDistance>() const { return static_cast<GwmDMatDistance*>(mDistance); }
 
 public:
     GwmSpatialWeight& operator=(const GwmSpatialWeight& spatialWeight)
