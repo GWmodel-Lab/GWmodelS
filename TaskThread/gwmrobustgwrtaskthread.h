@@ -34,13 +34,8 @@ public:
     vec mResidual;
     vec mStudentizedResidual;
 //    vec mLocalRSquare;
-    vec mQDiag;
-    mat mBetasSE;
 
     double mMse;
-
-    bool mHasHatMatrix = true;
-    bool mHasFTest = false;
 
     mat regression(const mat& x, const vec& y) override;
     bool hasHatMatrix() const;
@@ -88,11 +83,6 @@ public:
     vec calcDiagBSerial(int i);
 
     CalcTrQtQFunction mCalcTrQtQFunction = &GwmRobustGWRTaskThread::calcTrQtQSerial;
-
-    GwmFTestResult mF1TestResult;
-    GwmFTestResult mF2TestResult;
-    QList<GwmFTestResult> mF3TestResult;
-    GwmFTestResult mF4TestResult;
 
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
 
