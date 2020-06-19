@@ -29,18 +29,9 @@ public:
     typedef QList<QPair<QString, const mat> > CreateResultLayerData;
 
 public:
-    inline vec del(vec x,int rowcount){
-        vec res;
-        if(rowcount == 0)
-            res = x.rows(rowcount+1,x.n_rows-1);
-        else if(rowcount == x.n_rows-1)
-            res = x.rows(0,x.n_rows-2);
-        else
-            res = join_cols(x.rows(0,rowcount - 1),x.rows(rowcount+1,x.n_rows-1));
-        return res;
-    }
+    static vec del(vec x,int rowcount);
 
-    inline vec rank(vec x)
+    static vec rank(vec x)
     {
         vec n = linspace(0,x.n_rows-1,x.n_rows);
         vec res = n(sort_index(x));
@@ -63,8 +54,6 @@ protected:
     double findmedian(const mat& x, const mat& w);
 
     mat findq(const mat& x, const mat& w);
-
-    double gold(GwmCVType cvType,double xL, double xU, const mat& x);
 
     double covwt(mat x1, mat x2, mat w);
 
@@ -177,6 +166,16 @@ protected:
     CreateResultLayerData mResultList;
 
 };
+
+inline bool GwmGWSSTaskThread::quantile() const
+{
+    return mQuantile;
+}
+
+inline void GwmGWSSTaskThread::setQuantile(bool quantile)
+{
+    mQuantile = quantile;
+}
 
 
 

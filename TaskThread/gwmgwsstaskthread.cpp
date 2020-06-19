@@ -1,19 +1,21 @@
 #include "gwmgwsstaskthread.h"
+#include "gwmgwsstaskthread.h"
 #include "SpatialWeight/gwmcrsdistance.h"
+
+vec GwmGWSSTaskThread::del(vec x, int rowcount){
+    vec res;
+    if(rowcount == 0)
+        res = x.rows(rowcount+1,x.n_rows-1);
+    else if(rowcount == x.n_rows-1)
+        res = x.rows(0,x.n_rows-2);
+    else
+        res = join_cols(x.rows(0,rowcount - 1),x.rows(rowcount+1,x.n_rows-1));
+    return res;
+}
 
 GwmGWSSTaskThread::GwmGWSSTaskThread() : GwmSpatialMonoscaleAlgorithm()
 {
 
-}
-
-bool GwmGWSSTaskThread::quantile() const
-{
-    return mQuantile;
-}
-
-void GwmGWSSTaskThread::setQuantile(bool quantile)
-{
-    mQuantile = quantile;
 }
 
 bool GwmGWSSTaskThread::isValid()
@@ -270,64 +272,6 @@ double GwmGWSSTaskThread::medianCV(const mat &x, GwmBandwidthWeight *bandwidthWe
     qDebug() << "Local Median bw:" << bandwidthWeight->bandwidth() << "CV value" << cv;
     emit message(QString("Local Median bw: %1 (CV value: %2)").arg(bandwidthWeight->bandwidth()).arg(cv));
     return cv;
-}
-
-double GwmGWSSTaskThread::gold(GwmCVType cvType, double xL, double xU, const mat& x)
-{
-    switch (cvType)
-    {
-    case GwmCVType::mean:
-        mCVFunction = &GwmGWSSTaskThread::meanCV;
-        break;
-    case GwmCVType::median:
-        mCVFunction = &GwmGWSSTaskThread::medianCV;
-        break;
-    default:
-        mCVFunction = &GwmGWSSTaskThread::meanCV;
-        break;
-    }
-    GwmBandwidthWeight* w1 = new GwmBandwidthWeight(*mBandwidth);
-    GwmBandwidthWeight* w2 = new GwmBandwidthWeight(*mBandwidth);
-    const double eps = 1e-4;
-    const double R = (sqrt(5)-1)/2;
-    int iter = 0;
-    double d = R * (xU - xL);
-    bool adaptBw = mBandwidth->adaptive();
-    double x1 = adaptBw ? floor(xL + d) : (xL + d);
-    double x2 = adaptBw ? round(xU - d) : (xU - d);
-    w1->setBandwidth(x1);
-    w2->setBandwidth(x2);
-    double f1 = (this->*mCVFunction)(x, w1);
-    double f2 = (this->*mCVFunction)(x, w2);
-    double d1 = f2 - f1;
-    double xopt = f1 < f2 ? x1 : x2;
-    double ea = 100;
-    while ((fabs(d) > eps) && (fabs(d1) > eps) && iter < ea)
-    {
-        d = R * d;
-        if (f1 < f2)
-        {
-            xL = x2;
-            x2 = x1;
-            x1 = adaptBw ? round(xL + d) : (xL + d);
-            f2 = f1;
-            w1->setBandwidth(x1);
-            f1 = (this->*mCVFunction)(x, w1);
-        }
-        else
-        {
-            xU = x1;
-            x1 = x2;
-            x2 = adaptBw ? floor(xU - d) : (xU - d);
-            f1 = f2;
-            w2->setBandwidth(x2);
-            f2 = (this->*mCVFunction)(x, w2);
-        }
-        iter = iter + 1;
-        xopt = (f1 < f2) ? x1 : x2;
-        d1 = f2 - f1;
-    }
-    return xopt;
 }
 
 void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
