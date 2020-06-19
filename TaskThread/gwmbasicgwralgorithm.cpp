@@ -1186,6 +1186,12 @@ bool GwmBasicGWRAlgorithm::isValid()
         if (mRegressionLayer && mHasFTest)
             return false;
 
+        if (!mIsAutoselectBandwidth)
+        {
+            GwmBandwidthWeight* bw = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+            if (bw->adaptive() && bw->bandwidth() <= mIndepVars.size())
+                return false;
+        }
         return true;
     }
     else return false;
