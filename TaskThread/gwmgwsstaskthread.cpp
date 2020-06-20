@@ -108,6 +108,7 @@ bool GwmGWSSTaskThread::CalculateSerial(){
 bool GwmGWSSTaskThread::CalculateOmp(){
     int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
     emit tick(0,nRp);
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i = 0; i < nRp; i++){
 //        vec d = mSpatialWeight.distance()->distance(i);
@@ -144,7 +145,7 @@ bool GwmGWSSTaskThread::CalculateOmp(){
                 }
             }
         }
-        emit tick(i,nRp);
+        emit tick(++current,nRp);
     }
     return true;
 }

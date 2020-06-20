@@ -181,7 +181,7 @@ inline void GwmGWSSTaskThread::setBandwidth(GwmBandwidthWeight *bandwidth)
 
 inline int GwmGWSSTaskThread::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
 }
 
 inline IParallelalbe::ParallelType GwmGWSSTaskThread::parallelType() const
