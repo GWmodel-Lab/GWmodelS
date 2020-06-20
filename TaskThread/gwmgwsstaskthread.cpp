@@ -1,6 +1,7 @@
 #include "gwmgwsstaskthread.h"
 #include "gwmgwsstaskthread.h"
 #include "SpatialWeight/gwmcrsdistance.h"
+#include <omp.h>
 
 vec GwmGWSSTaskThread::del(vec x, int rowcount){
     vec res;
@@ -38,7 +39,30 @@ void GwmGWSSTaskThread::run()
     initPoints();
     // 初始化
     initXY(mX, mVariables);
+    int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
+    (this->*mCalFunciton)();
+    CreateResultLayerData resultLayerData;
+    resultLayerData.push_back(qMakePair(QString("LM"), mLocalMean));
+    resultLayerData.push_back(qMakePair(QString("LSD"), mStandardDev));
+    resultLayerData.push_back(qMakePair(QString("LVar"), mLVar));
+    resultLayerData.push_back(qMakePair(QString("LSke"), mLocalSkewness));
+    resultLayerData.push_back(qMakePair(QString("LCV"), mLCV));
+    if(mQuantile){
+        resultLayerData.push_back(qMakePair(QString("LM"), mLocalMedian));
+        resultLayerData.push_back(qMakePair(QString("IQR"), mIQR));
+        resultLayerData.push_back(qMakePair(QString("QI"), mQI));
+    }
+    if(nVar >= 2){
+        resultLayerData.push_back(qMakePair(QString("Cov"), trans(mCovmat)));
+        resultLayerData.push_back(qMakePair(QString("Corr"), trans(mCorrmat)));
+        resultLayerData.push_back(qMakePair(QString("Corr"), trans(mSCorrmat)));
+    }
+    mResultList = resultLayerData;
+    createResultLayer(resultLayerData);
+    emit success();
+}
 
+bool GwmGWSSTaskThread::CalculateSerial(){
     int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
     emit tick(0,nRp);
     for(int i = 0; i < nRp; i++){
@@ -78,27 +102,52 @@ void GwmGWSSTaskThread::run()
         }
         emit tick(i,nRp);
     }
-    CreateResultLayerData resultLayerData;
-    resultLayerData.push_back(qMakePair(QString("LM"), mLocalMean));
-    resultLayerData.push_back(qMakePair(QString("LSD"), mStandardDev));
-    resultLayerData.push_back(qMakePair(QString("LVar"), mLVar));
-    resultLayerData.push_back(qMakePair(QString("LSke"), mLocalSkewness));
-    resultLayerData.push_back(qMakePair(QString("LCV"), mLCV));
-    if(mQuantile){
-        resultLayerData.push_back(qMakePair(QString("LM"), mLocalMedian));
-        resultLayerData.push_back(qMakePair(QString("IQR"), mIQR));
-        resultLayerData.push_back(qMakePair(QString("QI"), mQI));
-    }
-    if(nVar >= 2){
-        resultLayerData.push_back(qMakePair(QString("Cov"), trans(mCovmat)));
-        resultLayerData.push_back(qMakePair(QString("Corr"), trans(mCorrmat)));
-        resultLayerData.push_back(qMakePair(QString("Corr"), trans(mSCorrmat)));
-    }
-    mResultList = resultLayerData;
-    createResultLayer(resultLayerData);
-    emit success();
+    return true;
 }
 
+bool GwmGWSSTaskThread::CalculateOmp(){
+    int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
+    emit tick(0,nRp);
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for(int i = 0; i < nRp; i++){
+//        vec d = mSpatialWeight.distance()->distance(i);
+        vec w = mSpatialWeight.spatialWeight(i);
+        double sumw = sum(w);
+        mat Wi = w / sumw;
+        mLocalMean.row(i) = trans(Wi) * mX;
+        if(mQuantile){
+//            mat cor = cor(mX);
+            mat quant = mat(3,nVar);
+            for(int j = 0; j < nVar; j++){
+                quant.col(j) = findq(mX.col(j), Wi);
+            }
+            mLocalMedian.row(i) = quant.row(1);
+            mIQR.row(i) = quant.row(2) - quant.row(0);
+            mQI.row(i) = (2 * quant.row(1) - quant.row(2) - quant.row(0))/mIQR.row(i);
+        }
+        for(int j = 0; j < nVar; j++){
+            vec lvar = trans(Wi) * (square(mX.col(j) - mLocalMean(i,j)));
+            mLVar(i,j) = lvar(0);
+            mStandardDev(i,j) = sqrt(mLVar(i,j));
+            vec localSkewness = (trans(Wi) * pow(mX.col(j) - mLocalMean(i,j),3)) / pow(mStandardDev(i,j),3);
+            mLocalSkewness(i,j) = localSkewness(0);
+            mLCV(i,j) = mStandardDev(i,j)/mLocalMean(i,j);
+        }
+        if(nVar >= 2){
+            int tag = 0;
+            for(int j = 0; j < nVar-1; j++){
+                for(int k = j+1; k < nVar; k++){
+                    mCovmat(tag,i) = covwt(mX.col(j),mX.col(k),Wi);
+                    mCorrmat(tag,i) = corwt(mX.col(j),mX.col(k),Wi);
+                    mSCorrmat(tag,i) = corwt(rank(mX.col(j)),rank(mX.col(k)),Wi);
+                    tag++;
+                }
+            }
+        }
+        emit tick(i,nRp);
+    }
+    return true;
+}
 
 vec GwmGWSSTaskThread::findq(const mat &x, const vec &w)
 {
@@ -268,4 +317,24 @@ void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
     }
     mResultLayer->commitChanges();
 
+}
+
+void GwmGWSSTaskThread::setParallelType(const IParallelalbe::ParallelType &type)
+{
+    if (type & parallelAbility())
+    {
+        mParallelType = type;
+        switch (type) {
+        case IParallelalbe::ParallelType::SerialOnly:
+//            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
+            mCalFunciton = &GwmGWSSTaskThread::CalculateSerial;
+            break;
+        case IParallelalbe::ParallelType::OpenMP:
+            mCalFunciton = &GwmGWSSTaskThread::CalculateOmp;
+            break;
+        default:
+            mCalFunciton = &GwmGWSSTaskThread::CalculateSerial;
+            break;
+        }
+    }
 }

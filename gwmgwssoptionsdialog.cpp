@@ -371,23 +371,23 @@ void GwmGWSSOptionsDialog::updateFields()
 
     mTaskThread->setQuantile(ui->mQuantileCheckBox->isChecked());
     // 并行设置
-//    if (ui->mCalcParallelNoneRadio->isChecked())
-//    {
-//        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
-//    }
-//    else if (ui->mCalcParallelMultithreadRadio->isChecked())
-//    {
-//        mTaskThread->setParallelType(IParallelalbe::OpenMP);
-//        mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
-//    }
-//    else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
-//    {
-//        mTaskThread->setParallelType(IParallelalbe::CUDA);
-//    }
-//    else
-//    {
-//        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
-//    }
+    if (ui->mCalcParallelNoneRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
+    else if (ui->mCalcParallelMultithreadRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
+    }
+    else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::CUDA);
+    }
+    else
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
 
 }
 

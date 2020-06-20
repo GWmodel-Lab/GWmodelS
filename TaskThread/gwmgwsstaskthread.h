@@ -15,7 +15,7 @@ class GwmGWSSTaskThread;
 //typedef double (GwmGWSSTaskThread::*pfGwmCVApproach)(const mat& , GwmBandwidthWeight*);
 
 
-class GwmGWSSTaskThread : public GwmSpatialMonoscaleAlgorithm, public IMultivariableAnalysis//, public IOpenmpParallelable
+class GwmGWSSTaskThread : public GwmSpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IOpenmpParallelable
 {
     Q_OBJECT
 
@@ -27,6 +27,8 @@ public:
 
     typedef double (GwmGWSSTaskThread::*CVFunction)(const mat& ,GwmBandwidthWeight*);
     typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+
+    typedef bool (GwmGWSSTaskThread::*CalFunction)();
 
 public:
     static vec del(vec x,int rowcount);
@@ -42,6 +44,9 @@ protected:
     static double covwt(const mat& x1, const mat& x2, const vec& w);
     static double corwt(const mat& x1, const mat& x2, const vec& w);
 
+    bool CalculateSerial();
+    bool CalculateOmp();
+
 public:
     GwmGWSSTaskThread();
     bool quantile() const;
@@ -56,13 +61,13 @@ public:  // IMultivariableAnalysis interface
     void setVariables(const QList<GwmVariable> &variables);
     void setVariables(const QList<GwmVariable> &&variables);
 
-//public:  // IParallelalbe interface
-//    int parallelAbility() const;
-//    virtual ParallelType parallelType() const;
-//    virtual void setParallelType(const ParallelType& type);
+public:  // IParallelalbe interface
+    int parallelAbility() const override;
+    virtual ParallelType parallelType() const override;
+    virtual void setParallelType(const ParallelType& type) override;
 
-//public:  // IOpenmpParallelable interface
-//    void setThreadNum(const int threadNum);
+public:  // IOpenmpParallelable interface
+    void setOmpThreadNum(const int threadNum) override;
 
 public:  // GwmSpatialAlgorithm interface
     bool isValid() override;
@@ -113,9 +118,12 @@ protected:
 
 //    GwmBandwidthWeight* mBandwidth;
 
-    CVFunction mCVFunction;
+    CalFunction mCalFunciton;
 
     mat mX;
+
+    IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
+    int mOmpThreadNum = 8;
 
 protected:
     mat mLocalMean;
@@ -171,6 +179,20 @@ inline void GwmGWSSTaskThread::setBandwidth(GwmBandwidthWeight *bandwidth)
     mSpatialWeight.setWeight(bandwidth);
 }
 
+inline int GwmGWSSTaskThread::parallelAbility() const
+{
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
+}
+
+inline IParallelalbe::ParallelType GwmGWSSTaskThread::parallelType() const
+{
+    return mParallelType;
+}
+
+inline void GwmGWSSTaskThread::setOmpThreadNum(const int threadNum)
+{
+    mOmpThreadNum = threadNum;
+}
 
 
 #endif // GWMGWSSTASKTHREAD_H
