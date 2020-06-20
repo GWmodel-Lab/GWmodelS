@@ -119,6 +119,7 @@ public slots:
     void refreshCanvas();
     void onShowCoordinateTransDlg(const QModelIndex &index);
     void onGWRBtnClicked();
+    void onGWSSBtnClicked();
     void onGWRNewBtnClicked();
     void onScalableGWRBtnClicked();
     void onMultiscaleGWRBtnClicked();

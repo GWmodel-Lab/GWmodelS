@@ -4,6 +4,7 @@
 #include "PropertyPanelTabs/gwmpropertyscalablegwrtab.h"
 #include "PropertyPanelTabs/gwmpropertyggwrtab.h"
 #include "PropertyPanelTabs/gwmpropertymultiscalegwrtab.h"
+#include "PropertyPanelTabs/gwmpropertygwsstab.h"
 
 GwmPropertyPanel::GwmPropertyPanel(QWidget *parent) :
     QTabWidget(parent),
@@ -89,6 +90,9 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
             case GwmLayerItem::MultiscaleGWR:
                 tabWidget = new GwmPropertyMultiscaleGWRTab(this, static_cast<GwmLayerMultiscaleGWRItem*>(item));
                 (static_cast<GwmPropertyMultiscaleGWRTab*>(tabWidget))->updateUI();
+            case GwmLayerItem::GWSS:
+                tabWidget = new GwmPropertyGWSSTab(this, static_cast<GwmLayerGWSSItem*>(item));
+                (static_cast<GwmPropertyGWSSTab*>(tabWidget))->updateUI();
             default:
                 break;
             }

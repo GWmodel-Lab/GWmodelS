@@ -48,7 +48,9 @@
 #include "Model/gwmlayerggwritem.h"
 
 #include <TaskThread/gwmbasicgwralgorithm.h>
-
+#include <TaskThread/gwmgwsstaskthread.h>
+#include <Model/gwmlayergwssitem.h>
+#include <gwmgwssoptionsdialog.h>
 #include <SpatialWeight/gwmcrsdistance.h>
 
 #include <Model/gwmlayerbasicgwritem.h>
@@ -159,6 +161,8 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
     connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRBtnClicked);
 
+    connect(toolbar,&GwmToolbar::gwmodelGWSSBtnSignal,this,&MainWidget::onGWSSBtnClicked);
+
 }
 
 void MainWidget::setupFeaturePanel()
@@ -236,8 +240,10 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::GGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+        case GwmLayerItem::GwmLayerItemType::GWSS:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -298,8 +304,10 @@ void MainWidget::onSaveLayer()
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::GGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+        case GwmLayerItem::GwmLayerItemType::GWSS:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -340,8 +348,10 @@ void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
     case GwmLayerItem::GwmLayerItemType::Vector:
     case GwmLayerItem::GwmLayerItemType::Origin:
     case GwmLayerItem::GwmLayerItemType::GWR:
+    case GwmLayerItem::GwmLayerItemType::GGWR:
     case GwmLayerItem::GwmLayerItemType::ScalableGWR:
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+    case GwmLayerItem::GwmLayerItemType::GWSS:
         layerItem = ((GwmLayerVectorItem*)item);
         break;
     default:
@@ -386,8 +396,10 @@ void MainWidget::onExportLayer(QString filetype)
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::GGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+        case GwmLayerItem::GwmLayerItemType::GWSS:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -671,6 +683,39 @@ void MainWidget::onGWRNewBtnClicked()
         GwmDiagnostic diagnostic = algorithm->diagnostic();
         GwmBasicGWRAlgorithm::FTestResultPack fTestResult = algorithm->fTestResult();
     }
+}
+
+void MainWidget::onGWSSBtnClicked()
+{
+    GwmGWSSTaskThread* gwssTaskThread = new GwmGWSSTaskThread();
+    GwmGWSSOptionsDialog* gwssOptionDialog = new GwmGWSSOptionsDialog(mapModel->rootChildren(), gwssTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwssOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwssOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwssOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwssTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwssTaskThread->resultLayer();
+            GwmLayerGWSSItem* gwssItem = new GwmLayerGWSSItem(selectedItem, resultLayer, gwssTaskThread);
+            mapModel->appentItem(gwssItem, selectedIndex);
+        }
+    }
+
 }
 
 void MainWidget::onScalableGWRBtnClicked()
