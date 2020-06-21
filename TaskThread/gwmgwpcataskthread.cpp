@@ -1,5 +1,6 @@
 #include "gwmgwpcataskthread.h"
 #include <SpatialWeight/gwmcrsdistance.h>
+#include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 
 GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm()
 {
@@ -10,34 +11,36 @@ void GwmGWPCATaskThread::run()
 {
     // 设置矩阵
     initPoints();
-    GwmCRSDistance d(mDataLayer->featureCount(), mDataLayer->crs().isGeographic());
-    d.setDataPoints(&mDataPoints);
-    d.setFocusPoints(&mDataPoints);
+//    GwmCRSDistance d(mDataLayer->featureCount(), mDataLayer->crs().isGeographic());
+//    d.setDataPoints(&mDataPoints);
+//    d.setFocusPoints(&mDataPoints);
     //
     initXY(mX,mVariables);
     //选带宽
     //这里判断是否选带宽
-    if(false)
+    if(mIsAutoselectBandwidth)
     {
         GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
-        GwmBandwidthSizeSelector selector;
-        selector.setBandwidth(bandwidthWeight0);
-        double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
-        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSpatialWeight.distance()->maxDistance();
-        selector.setLower(lower);
-        selector.setUpper(upper);
-        GwmBandwidthWeight* bandwidthWeight = selector.optimize(this);
+        mSelector.setBandwidth(bandwidthWeight0);
+        double tmpMaxD = mSpatialWeight.distance()->maxDistance();
+        double lower = bandwidthWeight0->adaptive() ? 2 : tmpMaxD / 5000;
+        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : tmpMaxD;
+        mSelector.setLower(lower);
+        mSelector.setUpper(upper);
+        GwmBandwidthWeight* bandwidthWeight = mSelector.optimize(this);
         if(bandwidthWeight)
         {
             mSpatialWeight.setWeight(bandwidthWeight);
         }
     }
     //存储d的计算值
-    mSpatialWeight.setDistance(d);
-    mSpatialWeight.setWeight(GwmBandwidthWeight(100, true, GwmBandwidthWeight::Gaussian));;
+//    mSpatialWeight.setDistance(d);
+//    mSpatialWeight.setWeight(GwmBandwidthWeight(100, true, GwmBandwidthWeight::Gaussian));;
     mat dResult(mDataPoints.n_rows, mVariables.size(),fill::zeros);
     //存储最新的wt
     vec latestWt(mDataPoints.n_rows,1,fill::zeros);
+    //存储R代码中的W
+    mat RW(mDataPoints.n_rows,mVariables.size(),fill::zeros);
     //GWPCA算法
     for(int i=0;i<mDataPoints.n_rows;i++)
     {
@@ -59,8 +62,8 @@ void GwmGWPCATaskThread::run()
         for(int k=0;k<wt.n_rows;k++)
         {
             if(wt(k)>0){
-                newWt(j) = wt(i);
-                newX.row(j) = mX.row(i);
+                newWt(j) = wt(k);
+                newX.row(j) = mX.row(k);
                 j++;
             }
         }
@@ -74,14 +77,18 @@ void GwmGWPCATaskThread::run()
         vec D;
         wpca(newX,newWt,0,mk,V,D);
         latestWt = newWt;
-        dResult.row(i) = D;
+        dResult.row(i) = trans(D);
+        //dResult.row(0).print();
+        RW.row(i) = trans(V.col(0));
     }
+    //dResult.print();
     //R代码中的d1计算
-    mat dResult1(mDataPoints.n_rows, mVariables.size(),fill::zeros);
+    mat tmp(mDataPoints.n_rows, mVariables.size(),fill::zeros);
+    dResult1 = tmp;
     dResult1 = (dResult / pow(sum(latestWt),0.5)) % (dResult / pow(sum(latestWt),0.5));
+    //dResult1.print();
     //取dResult1的前K列
-    mat localPV;
-    localPV = dResult1.cols(0,mk) % (1 / sum(dResult1,1)) *100;
+    localPV = dResult1.cols(0,mk-1).each_col() % (1 / sum(dResult1,1)) *100;
     localPV.print();
     //R代码 的 Local variance
     //t(apply(d1, 2, summary))
@@ -89,21 +96,41 @@ void GwmGWPCATaskThread::run()
     for(int i=0;i<dResult1.n_cols;i++)
     {
         vec q = quantile(dResult1.col(i), p);
-        qDebug() << "Comp";
-        q.print();
+        q.print("Comp1:");
     }
     //R代码 的 Local Proportion of Variance
     //t(apply(local.PV, 2, summary))
     for(int i=0;i<localPV.n_cols;i++)
     {
         vec q = quantile(localPV.col(i), p);
-        qDebug() << "Comp";
-        q.print();
+        q.print("Comp2:");
     }
     //Cumulative summary(rowSums(local.PV))
-    vec localPVSum = sum(localPV,2);
+    sum(localPV,1).print();
+    vec localPVSum = sum(localPV,1);
     vec Cumulative = quantile(localPVSum,p);
-    Cumulative.print();
+    //Cumulative.print();cc/
+
+    //准备resultlayer的数据
+
+    //win_var_PC1 列
+    // 取RW矩阵每一行最大的列的索引
+    vec RWmaxIndex(mDataPoints.n_rows,fill::zeros);
+    QList<QString> win_var_PC1;
+    for(int i=0;i<RWmaxIndex.n_rows;i++)
+    {
+        RWmaxIndex.row(i) = RW.row(i).index_max();
+        win_var_PC1.append(mVariables.at(RW.row(i).index_max()).name);
+    }
+    //Com.1_PV列
+    //有几列生成几列
+    CreateResultLayerData resultLayerData = {
+        qMakePair(QString("%1"), localPV),
+        qMakePair(QString("local_CP"), localPVSum),
+        //qMakePair(QString("win_var_PC1"), win_var_PC1)
+    };
+    createResultLayer(resultLayerData,win_var_PC1);
+    emit success();
 }
 
 void GwmGWPCATaskThread::initPoints()
@@ -117,6 +144,12 @@ void GwmGWPCATaskThread::initPoints()
         QgsPointXY centroPoint = f.geometry().centroid().asPoint();
         mDataPoints(i, 0) = centroPoint.x();
         mDataPoints(i, 1) = centroPoint.y();
+    }
+    if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    {
+        GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
+        d->setDataPoints(&mDataPoints);
+        d->setFocusPoints(&mDataPoints);
     }
 }
 
@@ -180,8 +213,9 @@ double GwmGWPCATaskThread::criterion(GwmBandwidthWeight *weight)
     //主循环
     for (int i = 0; i < n; i++)
     {
-        //vec distvi = distance(i);
-        vec wt = mSpatialWeight.spatialWeight(i);
+        vec distvi = mSpatialWeight.distance()->distance(i);
+        vec wt = weight->weight(distvi);
+        qDebug() << weight->bandwidth();
         wt(i) = 0;
         //取wt大于0的部分
         //临时变量?很麻烦
@@ -199,8 +233,8 @@ double GwmGWPCATaskThread::criterion(GwmBandwidthWeight *weight)
         for(int k=0;k<wt.n_rows;k++)
         {
             if(wt(k)>0){
-                newWt(j) = wt(i);
-                newX.row(j) = mX.row(i);
+                newWt(j) = wt(k);
+                newX.row(j) = mX.row(k);
                 j++;
             }
         }
@@ -225,59 +259,77 @@ double GwmGWPCATaskThread::criterion(GwmBandwidthWeight *weight)
     return score;
 }
 
-double GwmGWPCATaskThread::gold(pfGwmGWPCABandwidthSelectionApproach p, double xL, double xU, bool adaptBw, const mat &x, double k, bool robust, int kernel, bool adaptive)
+bool GwmGWPCATaskThread::isAutoselectBandwidth() const
 {
-    const double eps = 1e-4;
-    const double R = (sqrt(5)-1)/2;
-    int iter = 0;
-    double d = R * (xU - xL);
-    double x1 = adaptBw ? floor(xL + d) : (xL + d);
-    double x2 = adaptBw ? round(xU - d) : (xU - d);
-    double f1 = (this->*p)(x1, x, k, robust, kernel, adaptive);
-    double f2 = (this->*p)(x2, x, k, robust, kernel, adaptive);
-    double d1 = f2 - f1;
-    double xopt = f1 < f2 ? x1 : x2;
-    double ea = 100;
-    while ((fabs(d) > eps) && (fabs(d1) > eps) && iter < ea)
-    {
-        d = R * d;
-        if (f1 < f2)
-        {
-            xL = x2;
-            x2 = x1;
-            x1 = adaptBw ? round(xL + d) : (xL + d);
-            f2 = f1;
-            f1 = (this->*p)(x1, x, k, robust, kernel, adaptive);
-        }
-        else
-        {
-            xU = x1;
-            x1 = x2;
-            x2 = adaptBw ? floor(xU - d) : (xU - d);
-            f1 = f2;
-            f2 = (this->*p)(x2, x, k, robust, kernel, adaptive);
-        }
-        iter = iter + 1;
-        xopt = (f1 < f2) ? x1 : x2;
-        d1 = f2 - f1;
-    }
-    return xopt;
+    return mIsAutoselectBandwidth;
 }
 
-double GwmGWPCATaskThread::bwGWPCA(double k, bool robust, int kernel, bool adaptive)
+void GwmGWPCATaskThread::setIsAutoselectBandwidth(bool isAutoselectBandwidth)
 {
-    double upper, lower;
-    //upper = adaptive ? mX.n_rows : findMaxDistance();
-    lower = adaptive ? 20 : 0.0;
-    double bw;
-    //计算x？
-    mat x;
-    bw = gold(&GwmGWPCATaskThread::gwpcaCV,lower,upper,adaptive,x,k,robust,kernel,adaptive);
-    //显示带宽和CV值
-    return bw;
+    mIsAutoselectBandwidth = isAutoselectBandwidth;
 }
 
 void GwmGWPCATaskThread::setVariables(const QList<GwmVariable> &variables)
 {
     mVariables = variables;
+}
+
+void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QString> winvar)
+{
+    QgsVectorLayer* srcLayer = mDataLayer;
+    QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
+    QString layerName = srcLayer->name();
+    layerName += QStringLiteral("_GWPCA");
+    mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
+    mResultLayer->setCrs(srcLayer->crs());
+
+    // 设置字段
+    QgsFields fields;
+    for (QPair<QString, const mat&> item : data)
+    {
+        QString title = item.first;
+        const mat& value = item.second;
+        if (value.n_cols > 1)
+        {
+            for (int k = 0; k < value.n_cols; k++)
+            {
+                QChar c(k+1);
+                QString variableName = QString("Comp.%1_PV").arg(k+1);
+                QString fieldName = title.arg(variableName);
+                fields.append(QgsField(fieldName, QVariant::Double, QStringLiteral("double")));
+            }
+        }
+        else
+        {
+            fields.append(QgsField(title, QVariant::Double, QStringLiteral("double")));
+        }
+    }
+    fields.append(QgsField("win_var_PC1",QVariant::String,QStringLiteral("varchar"),255));
+    mResultLayer->dataProvider()->addAttributes(fields.toList());
+    mResultLayer->updateFields();
+
+    // 设置要素几何
+    mResultLayer->startEditing();
+    QgsFeatureIterator iterator = srcLayer->getFeatures();
+    QgsFeature f;
+    for (int i = 0; iterator.nextFeature(f); i++)
+    {
+        QgsFeature feature(fields);
+        feature.setGeometry(f.geometry());
+
+        // 设置属性
+        int k = 0;
+        for (QPair<QString, const mat&> item : data)
+        {
+            for (uword d = 0; d < item.second.n_cols; d++)
+            {
+                feature.setAttribute(k, item.second(i, d));
+                k++;
+            }
+        }
+        feature.setAttribute("win_var_PC1",winvar[i]);
+
+        mResultLayer->addFeature(feature);
+    }
+    mResultLayer->commitChanges();
 }

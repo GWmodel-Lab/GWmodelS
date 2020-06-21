@@ -40,6 +40,7 @@ SOURCES += \
     Model/gwmlayerbasicgwritem.cpp \
     Model/gwmlayerggwritem.cpp \
     Model/gwmlayergroupitem.cpp \
+    Model/gwmlayergwpcaitem.cpp \
     Model/gwmlayergwritem.cpp \
     Model/gwmlayeritem.cpp \
     Model/gwmlayeritemmodel.cpp \
@@ -52,6 +53,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertyggwrtab.cpp \
     Model/gwmparameterspecifiedoptionsmodel.cpp \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.cpp \
+    PropertyPanelTabs/gwmpropertygwpcatab.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
     PropertyPanelTabs/gwmpropertymultiscalegwrtab.cpp \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.cpp \
@@ -109,6 +111,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
     gwmggwroptionsdialog.cpp \
+    gwmgwpcaoptionsdialog.cpp \
     gwmgwroptionsdialog.cpp \
     gwmindepvarselectorwidget.cpp \
     gwmlcrgwroptionsdialog.cpp \
@@ -147,6 +150,7 @@ HEADERS += \
     Model/gwmlayerbasicgwritem.h \
     Model/gwmlayerggwritem.h \
     Model/gwmlayergroupitem.h \
+    Model/gwmlayergwpcaitem.h \
     Model/gwmlayergwritem.h \
     Model/gwmlayeritem.h \
     Model/gwmlayeritemmodel.h \
@@ -159,6 +163,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertyggwrtab.h \
     Model/gwmparameterspecifiedoptionsmodel.h \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.h \
+    PropertyPanelTabs/gwmpropertygwpcatab.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
     PropertyPanelTabs/gwmpropertymultiscalegwrtab.h \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.h \
@@ -223,6 +228,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
     gwmggwroptionsdialog.h \
+    gwmgwpcaoptionsdialog.h \
     gwmgwroptionsdialog.h \
     gwmindepvarselectorwidget.h \
     gwmlcrgwroptionsdialog.h \
@@ -251,6 +257,7 @@ HEADERS += \
 
 FORMS += \
     PropertyPanelTabs/gwmpropertyggwrtab.ui \
+    PropertyPanelTabs/gwmpropertygwpcatab.ui \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
     PropertyPanelTabs/gwmpropertymultiscalegwrtab.ui \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.ui \
@@ -260,6 +267,7 @@ FORMS += \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
     gwmggwroptionsdialog.ui \
+    gwmgwpcaoptionsdialog.ui \
     gwmgwroptionsdialog.ui \
     gwmindepvarselectorwidget.ui \
     gwmmultiscalegwroptionsdialog.ui \

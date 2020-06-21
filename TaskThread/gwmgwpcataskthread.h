@@ -8,9 +8,6 @@
 
 #include "TaskThread/gwmbandwidthsizeselector.h"
 
-class GwmGWPCATaskThread;
-typedef double (GwmGWPCATaskThread::*pfGwmGWPCABandwidthSelectionApproach)(double ,const mat &, int , bool, int, bool);
-
 class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IOpenmpParallelable, public IBandwidthSizeSelectable
 {
     Q_OBJECT
@@ -20,7 +17,7 @@ public:
 public:
     QList<GwmVariable> variables() const{return QList<GwmVariable>();};
     void setVariables(const QList<GwmVariable> &variables);
-    void setVariables(const QList<GwmVariable> &&variables){};
+    //void setVariables(const QList<GwmVariable> &&variables){};
 
 public:  // IParallelalbe interface
     int parallelAbility() const{return 0;};
@@ -30,9 +27,10 @@ public:  // IParallelalbe interface
 public:  // IOpenmpParallelable interface
     void setThreadNum(const int threadNum){};
 
+    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+
 protected:  // GwmSpatialMonoscaleAlgorithm interface
     void createResultLayer();
-    bool isValid(){return true;};
 
     void run() override;
 
@@ -51,12 +49,12 @@ public:
     //gwpca.cv函数(k=2)
     double gwpcaCV(double bw, const mat &x, int k, bool robust, int kernel, bool adaptive){return 0;};
     //黄金分割函数
-    double gold(pfGwmGWPCABandwidthSelectionApproach p,double xL, double xU, bool adaptBw, const mat &x, double k, bool robust, int kernel, bool adaptive);
+    //double gold(pfGwmGWPCABandwidthSelectionApproach p,double xL, double xU, bool adaptBw, const mat &x, double k, bool robust, int kernel, bool adaptive);
     //带宽选择函数? 怎样加vars?
-    double bwGWPCA(double k, bool robust, int kernel, bool adaptive);
+    //double bwGWPCA(double k, bool robust, int kernel, bool adaptive);
     //
     double mk=2;
-    bool mRobust;
+    bool mRobust=false;
     mat mX;
 //    double findMaxDistance()
 //    {
@@ -75,6 +73,29 @@ public:
     // IOpenmpParallelable interface
 public:
     void setOmpThreadNum(const int threadNum){};
+
+    GwmBandwidthSizeSelector mSelector;
+
+    bool mIsAutoselectBandwidth = false;
+    bool isAutoselectBandwidth() const;
+    void setIsAutoselectBandwidth(bool isAutoselectBandwidth);
+
+    bool isValid(){return true;};
+
+    // IRegressionAnalysis interface
+public:
+    arma::mat regression(const arma::mat &x, const arma::vec &y){return mat(1,1,fill::zeros);};
+
+    void createResultLayer(CreateResultLayerData data,QList<QString> winvar);
+
+    mat localPV;
+    mat dResult1;
+
+    inline BandwidthCriterionList GwmGWPCATaskThread::bandwidthSelectorCriterions() const
+    {
+        return mSelector.bandwidthCriterion();
+    }
+
 };
 
 #endif // GWMGWPCATASKTHREAD_H

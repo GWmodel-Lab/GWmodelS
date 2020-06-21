@@ -24,7 +24,8 @@ public:
         Symbol,
         ScalableGWR,
         GGWR,
-        MultiscaleGWR
+        MultiscaleGWR,
+        GWPCA
     };
 
 public:

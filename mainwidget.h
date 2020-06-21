@@ -21,6 +21,7 @@
 
 #include "gwmrobustgwroptionsdialog.h"
 #include "gwmlcrgwroptionsdialog.h"
+#include "gwmgwpcaoptionsdialog.h"
 
 namespace Ui {
     class MainWidget;
