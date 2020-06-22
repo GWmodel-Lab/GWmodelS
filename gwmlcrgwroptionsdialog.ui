@@ -114,10 +114,21 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QDoubleSpinBox" name="mLambdaSpinBox"/>
+       <widget class="QDoubleSpinBox" name="mLambdaSpinBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
       </item>
       <item row="5" column="1">
-       <widget class="QDoubleSpinBox" name="mcnThreshSpinBox"/>
+       <widget class="QDoubleSpinBox" name="mcnThreshSpinBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="value">
+         <double>30.000000000000000</double>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

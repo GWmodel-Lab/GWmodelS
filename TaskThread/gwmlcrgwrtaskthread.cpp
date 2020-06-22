@@ -256,9 +256,9 @@ double GwmLcrGWRTaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weig
     //vec cv_all(mOmpThreadNum, fill::zeros);
     //qDebug() << 'omp';
     //行数
-    double n = mX.n_rows;
+    int n = mX.n_rows;
     //列数
-    double m = mX.n_cols;
+    int m = mX.n_cols;
     //初始化矩阵
     mat betas = mat(n,m,fill::zeros);
     vec localcn(n,fill::zeros);
@@ -266,7 +266,7 @@ double GwmLcrGWRTaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weig
     //取mX不含第一列的部分
     mat mXnot1 = mX.cols(1, mX.n_cols - 1);
     //主循环
-//#pragma omp parallel for num_threads(mOmpThreadNum)
+#pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
         //int thread = omp_get_thread_num();
