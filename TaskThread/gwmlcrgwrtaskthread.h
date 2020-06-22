@@ -45,11 +45,6 @@ public:
     }
     bool isAutoselectBandwidth() const;
 
-    BandwidthCriterionList GwmLcrGWRTaskThread::bandwidthSelectorCriterions() const
-    {
-        return selector.bandwidthCriterion();
-    }
-
     void GwmLcrGWRTaskThread::setIsAutoselectBandwidth(bool value)
     {
         mIsAutoselectBandwidth = value;
@@ -60,26 +55,39 @@ public:
         return mIsAutoselectBandwidth;
     }
 
+    BandwidthCriterionList GwmLcrGWRTaskThread::bandwidthSelectorCriterions() const
+    {
+        return selector.bandwidthCriterion();
+    }
+
     BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 public:
-    void run() override;
-
     bool isValid() override;
-
-    arma::mat regression(const arma::mat &x, const arma::vec &y);
 
     double criterion(GwmBandwidthWeight *weight)
     {
         return (this->*mBandwidthSelectCriterionFunction)(weight);
     };
 protected:
+    void run() override;
+
+    arma::mat regression(const arma::mat &x, const arma::vec &y);
     //返回cv的函数
     double LcrCV(double bw,int kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
     //ridge.lm函数
     vec ridgelm(const vec& w,double lambda);
 
     void createResultLayer(CreateResultLayerData data);
+public:
+    int parallelAbility() const;
+    ParallelType parallelType() const;
+
+    void setParallelType(const ParallelType &type);
+
+    // IOpenmpParallelable interface
+public:
+    void setOmpThreadNum(const int threadNum);
 private:
     double mLambda;
 
@@ -111,18 +119,6 @@ private:
     int mOmpThreadNum = 8;
     int mGpuId = 0;
     int mGroupSize = 64;
-    // IParallelalbe interface
-public:
-    int parallelAbility() const;
-    ParallelType parallelType() const;
-
-    // IOpenmpParallelable interface
-public:
-    void setOmpThreadNum(const int threadNum);
-
-    // IParallelalbe interface
-public:
-    void setParallelType(const ParallelType &type);
 };
 
 inline int GwmLcrGWRTaskThread::parallelAbility() const
