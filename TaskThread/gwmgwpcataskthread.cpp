@@ -11,13 +11,17 @@ GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm()
 void GwmGWPCATaskThread::run()
 {
     // 设置矩阵
+    emit message(QString(tr("Setting data points ...")));
     initPoints();
     //
+    emit message(QString(tr("Setting X and Y.")));
     initXY(mX,mVariables);
     //选带宽
     //这里判断是否选带宽
     if(mIsAutoselectBandwidth)
     {
+        emit message(QString(tr("Automatically selecting bandwidth ...")));
+        emit tick(0, 0);
         GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
         mSelector.setBandwidth(bandwidthWeight0);
         double tmpMaxD = mSpatialWeight.distance()->maxDistance();
@@ -31,18 +35,19 @@ void GwmGWPCATaskThread::run()
             mSpatialWeight.setWeight(bandwidthWeight);
         }
     }
+    emit message(QString(tr("Principle components analyzing ...")));
     //存储d的计算值
     mat dResult(mDataPoints.n_rows, mVariables.size(),fill::zeros);
     //存储R代码中的W
     mat RW(mDataPoints.n_rows,mVariables.size(),fill::zeros);
     //GWPCA算法
-    latestWt = mat(mDataPoints.n_rows,1,fill::zeros);
+    mLatestWt = mat(mDataPoints.n_rows,1,fill::zeros);
     pca(mX, dResult, RW);
     //dResult.print();
     //R代码中的d1计算
     mat tmp(mDataPoints.n_rows, mVariables.size(),fill::zeros);
     mDResult1 = tmp;
-    mDResult1 = (dResult / pow(sum(latestWt),0.5)) % (dResult / pow(sum(latestWt),0.5));
+    mDResult1 = (dResult / pow(sum(mLatestWt),0.5)) % (dResult / pow(sum(mLatestWt),0.5));
     //dResult1.print();
     //取dResult1的前K列
     mLocalPV = mDResult1.cols(0,mK-1).each_col() % (1 / sum(mDResult1,1)) *100;
@@ -365,7 +370,7 @@ void GwmGWPCATaskThread::pcaSerial(mat &x, mat &dResult, mat &RW)
         vec D;
         wpca(newX,newWt,V,D);
         //存储最新的wt
-        latestWt = newWt;
+        mLatestWt = newWt;
         dResult.row(i) = trans(D);
         //dResult.row(0).print();
         RW.row(i) = trans(V.col(0));
@@ -395,7 +400,7 @@ void GwmGWPCATaskThread::pcaOmp(mat &x, mat &dResult, mat &RW)
         wpca(newX,newWt,V,D);
         //存储最新的wt
         if(i==mDataPoints.n_rows-1){
-            latestWt = newWt;
+            mLatestWt = newWt;
         }
         dResult.row(i) = trans(D);
         //dResult.row(0).print();

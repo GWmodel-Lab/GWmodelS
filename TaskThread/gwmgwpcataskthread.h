@@ -34,6 +34,12 @@ public:
 
     bool isAutoselectBandwidth() const;
     void setIsAutoselectBandwidth(bool isAutoselectBandwidth);
+    BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
+    void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
+
+    void setOmpThreadNum(const int threadNum){
+        mOmpThreadNum = threadNum;
+    };
 
     BandwidthCriterionList GwmGWPCATaskThread::bandwidthSelectorCriterions() const
     {
@@ -73,67 +79,40 @@ private:
     void wpca(const mat &x, const vec &wt, mat &V, vec &S);
     mat rwpca(const mat &x, const vec &wt, double nu, double nv);
     void createResultLayer(CreateResultLayerData data,QList<QString> winvar);
-    void createResultLayer();
+
+    void pca(mat &x , mat &dResult, mat &RW)
+    {
+        return (this->*mPcaFunction)(x , dResult, RW);
+    };
+    void pcaSerial(mat &x, mat &dResult, mat &RW);
+    void pcaOmp(mat &x, mat &dResult, mat &RW);
+
+    double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
+    double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
+    double criterion(GwmBandwidthWeight *weight)
+    {
+        return (this->*mBandwidthSelectCriterionFunction)(weight);
+    }
 
 private:
     QList<GwmVariable> mVariables;
     mat mDataPoints;
 
-    double mK=2;
+    double mK = 2;
     bool mRobust=false;
     mat mX;
-//    double findMaxDistance()
-//    {
-//        int nDp = mDataPoints.n_rows;
-//        double maxD = 0.0;
-//        for (int i = 0; i < nDp; i++)
-//        {
-//            double d = max(mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints));
-//            maxD = d > maxD ? d : maxD;
-//        }
-//        return maxD;
-//    }
-    vec latestWt;
-public:
+    vec mLatestWt;
 
-    BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
-    void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
-
+    GwmBandwidthSizeSelector mSelector;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::CV;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial;
-    double criterion(GwmBandwidthWeight *weight)
-    {
-        return (this->*mBandwidthSelectCriterionFunction)(weight);
-    }
+    bool mIsAutoselectBandwidth = false;
+
     // IOpenmpParallelable interface
     IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
-    int mGpuId = 0;
-    int mGroupSize = 64;
-
-    double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
-    double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
-
-    void pcaSerial(mat &x, mat &dResult, mat &RW);
-    void pcaOmp(mat &x, mat &dResult, mat &RW);
-
-public:
-    void setOmpThreadNum(const int threadNum){
-        mOmpThreadNum = threadNum;
-    };
-
-    //GWPCA函数
 
     PcaFunction mPcaFunction = &GwmGWPCATaskThread::pcaSerial;
-    void pca(mat &x , mat &dResult, mat &RW)
-    {
-        return (this->*mPcaFunction)(x , dResult, RW);
-    };
-
-    GwmBandwidthSizeSelector mSelector;
-
-    bool mIsAutoselectBandwidth = false;
-
 
     mat mLocalPV;
     mat mDResult1;
