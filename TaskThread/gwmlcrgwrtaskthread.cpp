@@ -1,5 +1,7 @@
 #include "gwmlcrgwrtaskthread.h"
 
+#include <omp.h>
+
 GwmLcrGWRTaskThread::GwmLcrGWRTaskThread():GwmGeographicalWeightedRegressionAlgorithm()
 {
 
@@ -76,65 +78,23 @@ void GwmLcrGWRTaskThread::run()
     emit success();
 }
 
-double GwmLcrGWRTaskThread::criterion(GwmBandwidthWeight *weight)
-{
-    //行数
-    double n = mX.n_rows;
-    //列数
-    double m = mX.n_cols;
-    //初始化矩阵
-    mat betas = mat(n,m,fill::zeros);
-    vec localcn(n,fill::zeros);
-    vec locallambda(n,fill::zeros);
-    //取mX不含第一列的部分
-    mat mXnot1 = mat(mX.n_rows,mX.n_cols-1,fill::zeros);
-    for(int i=0;i<mX.n_cols-1;i++)
-    {
-        mXnot1.col(i) = mX.col(i+1);
-    }
-    //主循环
-    for (int i = 0; i < n; i++)
-    {
-        vec distvi = mSpatialWeight.distance()->distance(i);
-        vec wgt = weight->weight(distvi);
-        //vec wgt = mSpatialWeight.spatialWeight(mDataPoints.row(i),mDataPoints);
-        wgt(i) = 0;
-        mat wgtspan(1,mXnot1.n_cols,fill::ones);
-        mat wgtspan1(1,mX.n_cols,fill::ones);
-        //计算xw
-        mat xw = mXnot1 % (wgt * wgtspan);
-        //计算x1w
-        mat x1w = mX % (wgt * wgtspan1);
-        //计算用于SVD分解的矩阵
-        //计算svd.x
-        //mat U,V均为正交矩阵，S为奇异值构成的列向量
-        mat U,V;
-        colvec S;
-        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
-        //赋值操作
-        S.print();
-        //qDebug() << S(m);
-        localcn(i)=S(0)/S(m-1);
-        locallambda(i) = mLambda;
-        if(mLambdaAdjust){
-            if(localcn(i)>mCnThresh){
-                locallambda(i) = (S(0) - mCnThresh*S(m-1)) / (mCnThresh - 1);
-            }
-        }
-        betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
-    }
-    //yhat赋值
-    vec mYHat = fitted(mX,betas);
-    //计算residual
-    vec mResidual = mY - mYHat;
-    //计算cv
-    double cv = sum(mResidual % mResidual);
-    return cv;
-}
-
 bool GwmLcrGWRTaskThread::isAutoselectBandwidth() const
 {
     return mIsAutoselectBandwidth;
+}
+
+void GwmLcrGWRTaskThread::setBandwidthSelectionCriterionType(const GwmLcrGWRTaskThread::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
+{
+     mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
+     QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
+         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVSerial),
+         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVOmp),
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVCuda),
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICSerial),
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICOmp),
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICCuda)
+     };
+     mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
 }
 
 vec GwmLcrGWRTaskThread::ridgelm(const vec &w, double lambda)
@@ -153,9 +113,9 @@ vec GwmLcrGWRTaskThread::ridgelm(const vec &w, double lambda)
     //Xsd = trans(Xsd);
     //计算Xws
     if (abs(w(0) - 1.0) < 1e-6) {
-        Xsd.print();
-        Xw.print("xw");
-        w.print("w");
+//        Xsd.print();
+//        Xw.print("xw");
+//        w.print("w");
     }
     mat Xws = Xw.each_row() / Xsd;
     double ysd = stddev(yw.col(0));
@@ -175,51 +135,7 @@ vec GwmLcrGWRTaskThread::ridgelm(const vec &w, double lambda)
 
 arma::mat GwmLcrGWRTaskThread::regression(const arma::mat &x, const arma::vec &y)
 {
-    mat betas(mDataPoints.n_rows,x.n_cols,fill::zeros);
-    vec localcn(mDataPoints.n_rows,fill::zeros);
-    vec locallambda(mDataPoints.n_rows,fill::zeros);
-    vec hatrow(mDataPoints.n_rows,fill::zeros);
-    for(int i=0;i<mDataPoints.n_rows;i++)
-    {
-        vec wi = mSpatialWeight.spatialWeight(i);
-        //计算xw
-        //取mX不含第一列的部分
-        mat mXnot1 = x.cols(1, x.n_cols - 1);
-        mat wispan(1,mXnot1.n_cols,fill::ones);
-        mat wispan1(1,x.n_cols,fill::ones);
-        //计算xw
-        mat xw = mXnot1 % (wi * wispan);
-        //计算x1w
-        mat x1w = x % (wi * wispan1);
-        //计算svd.x
-        //mat U,V均为正交矩阵，S为奇异值构成的列向量
-        mat U,V;
-        colvec S;
-        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
-        //qDebug() << mX.n_cols;
-        //赋值操作
-        localcn(i)=S(0)/S(x.n_cols-1);
-        locallambda(i) = mLambda;
-        if(mLambdaAdjust){
-            if(localcn(i)>mCnThresh){
-                locallambda(i) = (S(0) - mCnThresh*S(x.n_cols-1)) / (mCnThresh - 1);
-            }
-        }
-        betas.row(i) = trans( ridgelm(wi,locallambda(i)) );
-        //如果没有给regressionpoint
-        if(mHasHatmatix)
-        {
-            mat xm = x;
-            mat xtw = trans(x % (wi * wispan1));
-            mat xtwx = xtw * x;
-            mat xtwxinv = inv(xtwx);
-            rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
-            this->mTrS += hatrow(i);
-            this->mTrStS += sum(hatrow % hatrow);
-        }
-        emit tick(i+1, mDataPoints.n_rows);
-    }
-    return betas;
+    return (this->*mRegressionFunction)(x, y);
 }
 
 void GwmLcrGWRTaskThread::createResultLayer(CreateResultLayerData data)
@@ -277,6 +193,244 @@ void GwmLcrGWRTaskThread::createResultLayer(CreateResultLayerData data)
         mResultLayer->addFeature(feature);
     }
     mResultLayer->commitChanges();
+}
+
+double GwmLcrGWRTaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *weight)
+{
+    //行数
+    double n = mX.n_rows;
+    //列数
+    double m = mX.n_cols;
+    //初始化矩阵
+    mat betas = mat(n,m,fill::zeros);
+    vec localcn(n,fill::zeros);
+    vec locallambda(n,fill::zeros);
+    //取mX不含第一列的部分
+    mat mXnot1 = mat(mX.n_rows,mX.n_cols-1,fill::zeros);
+    for(int i=0;i<mX.n_cols-1;i++)
+    {
+        mXnot1.col(i) = mX.col(i+1);
+    }
+    //主循环
+    for (int i = 0; i < n; i++)
+    {
+        vec distvi = mSpatialWeight.distance()->distance(i);
+        vec wgt = weight->weight(distvi);
+        //vec wgt = mSpatialWeight.spatialWeight(mDataPoints.row(i),mDataPoints);
+        wgt(i) = 0;
+        mat wgtspan(1,mXnot1.n_cols,fill::ones);
+        mat wgtspan1(1,mX.n_cols,fill::ones);
+        //计算xw
+        mat xw = mXnot1 % (wgt * wgtspan);
+        //计算x1w
+        mat x1w = mX % (wgt * wgtspan1);
+        //计算用于SVD分解的矩阵
+        //计算svd.x
+        //mat U,V均为正交矩阵，S为奇异值构成的列向量
+        mat U,V;
+        colvec S;
+        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
+        //赋值操作
+        //S.print();
+        //qDebug() << S(m);
+        localcn(i)=S(0)/S(m-1);
+        locallambda(i) = mLambda;
+        if(mLambdaAdjust){
+            if(localcn(i)>mCnThresh){
+                locallambda(i) = (S(0) - mCnThresh*S(m-1)) / (mCnThresh - 1);
+            }
+        }
+        betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
+    }
+    //yhat赋值
+    vec mYHat = fitted(mX,betas);
+    //计算residual
+    vec mResidual = mY - mYHat;
+    //计算cv
+    double cv = sum(mResidual % mResidual);
+    return cv;
+}
+
+double GwmLcrGWRTaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weight)
+{
+    //vec cv_all(mOmpThreadNum, fill::zeros);
+    //qDebug() << 'omp';
+    //行数
+    double n = mX.n_rows;
+    //列数
+    double m = mX.n_cols;
+    //初始化矩阵
+    mat betas = mat(n,m,fill::zeros);
+    vec localcn(n,fill::zeros);
+    vec locallambda(n,fill::zeros);
+    //取mX不含第一列的部分
+    mat mXnot1 = mX.cols(1, mX.n_cols - 1);
+    //主循环
+//#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; i < n; i++)
+    {
+        //int thread = omp_get_thread_num();
+        vec distvi = mSpatialWeight.distance()->distance(i);
+        vec wgt = weight->weight(distvi);
+        //vec wgt = mSpatialWeight.spatialWeight(mDataPoints.row(i),mDataPoints);
+        wgt(i) = 0;
+        mat wgtspan(1,mXnot1.n_cols,fill::ones);
+        mat wgtspan1(1,mX.n_cols,fill::ones);
+        //计算xw
+        mat xw = mXnot1 % (wgt * wgtspan);
+        //计算x1w
+        mat x1w = mX % (wgt * wgtspan1);
+        //计算用于SVD分解的矩阵
+        //计算svd.x
+        //mat U,V均为正交矩阵，S为奇异值构成的列向量
+        mat U,V;
+        colvec S;
+        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
+        //赋值操作
+        //S.print();
+        //qDebug() << S(m);
+        localcn(i)=S(0)/S(m-1);
+        locallambda(i) = mLambda;
+        if(mLambdaAdjust){
+            if(localcn(i)>mCnThresh){
+                locallambda(i) = (S(0) - mCnThresh*S(m-1)) / (mCnThresh - 1);
+            }
+        }
+        betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
+    }
+    //yhat赋值
+    vec mYHat = fitted(mX,betas);
+    //计算residual
+    vec mResidual = mY - mYHat;
+    //计算cv
+    double cv = sum(mResidual % mResidual);
+    return cv;
+}
+
+mat GwmLcrGWRTaskThread::regressionSerial(const mat &x, const vec &y)
+{
+    mat betas(mDataPoints.n_rows,x.n_cols,fill::zeros);
+    vec localcn(mDataPoints.n_rows,fill::zeros);
+    vec locallambda(mDataPoints.n_rows,fill::zeros);
+    vec hatrow(mDataPoints.n_rows,fill::zeros);
+    for(int i=0;i<mDataPoints.n_rows;i++)
+    {
+        vec wi = mSpatialWeight.spatialWeight(i);
+        //计算xw
+        //取mX不含第一列的部分
+        mat mXnot1 = x.cols(1, x.n_cols - 1);
+        mat wispan(1,mXnot1.n_cols,fill::ones);
+        mat wispan1(1,x.n_cols,fill::ones);
+        //计算xw
+        mat xw = mXnot1 % (wi * wispan);
+        //计算x1w
+        mat x1w = x % (wi * wispan1);
+        //计算svd.x
+        //mat U,V均为正交矩阵，S为奇异值构成的列向量
+        mat U,V;
+        colvec S;
+        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
+        //qDebug() << mX.n_cols;
+        //赋值操作
+        localcn(i)=S(0)/S(x.n_cols-1);
+        locallambda(i) = mLambda;
+        if(mLambdaAdjust){
+            if(localcn(i)>mCnThresh){
+                locallambda(i) = (S(0) - mCnThresh*S(x.n_cols-1)) / (mCnThresh - 1);
+            }
+        }
+        betas.row(i) = trans( ridgelm(wi,locallambda(i)) );
+        //如果没有给regressionpoint
+        if(mHasHatmatix)
+        {
+            mat xm = x;
+            mat xtw = trans(x % (wi * wispan1));
+            mat xtwx = xtw * x;
+            mat xtwxinv = inv(xtwx);
+            rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
+            this->mTrS += hatrow(i);
+            this->mTrStS += sum(hatrow % hatrow);
+        }
+        emit tick(i+1, mDataPoints.n_rows);
+    }
+    return betas;
+}
+
+mat GwmLcrGWRTaskThread::regressionOmp(const mat &x, const vec &y)
+{
+    mat betas(mDataPoints.n_rows,x.n_cols,fill::zeros);
+    vec localcn(mDataPoints.n_rows,fill::zeros);
+    vec locallambda(mDataPoints.n_rows,fill::zeros);
+    vec hatrow(mDataPoints.n_rows,fill::zeros);
+
+    mat shat_all(2, mOmpThreadNum, fill::zeros);
+    int current = 0;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for(int i=0;i<mDataPoints.n_rows;i++)
+    {
+        int thread = omp_get_thread_num();
+        vec wi = mSpatialWeight.spatialWeight(i);
+        //计算xw
+        //取mX不含第一列的部分
+        mat mXnot1 = x.cols(1, x.n_cols - 1);
+        mat wispan(1,mXnot1.n_cols,fill::ones);
+        mat wispan1(1,x.n_cols,fill::ones);
+        //计算xw
+        mat xw = mXnot1 % (wi * wispan);
+        //计算x1w
+        mat x1w = x % (wi * wispan1);
+        //计算svd.x
+        //mat U,V均为正交矩阵，S为奇异值构成的列向量
+        mat U,V;
+        colvec S;
+        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
+        //qDebug() << mX.n_cols;
+        //赋值操作
+        localcn(i)=S(0)/S(x.n_cols-1);
+        locallambda(i) = mLambda;
+        if(mLambdaAdjust){
+            if(localcn(i)>mCnThresh){
+                locallambda(i) = (S(0) - mCnThresh*S(x.n_cols-1)) / (mCnThresh - 1);
+            }
+        }
+        betas.row(i) = trans( ridgelm(wi,locallambda(i)) );
+        //如果没有给regressionpoint
+        if(mHasHatmatix)
+        {
+            mat xm = x;
+            mat xtw = trans(x % (wi * wispan1));
+            mat xtwx = xtw * x;
+            mat xtwxinv = inv(xtwx);
+            rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
+            shat_all(0, thread) += hatrow(i);
+            shat_all(1, thread) += sum(hatrow % hatrow);
+            //this->mTrS += hatrow(i);
+            //this->mTrStS += sum(hatrow % hatrow);
+        }
+        vec shat = sum(shat_all,1);
+        this->mTrS = sum(shat.row(0));
+        this->mTrStS = sum(shat.row(1));
+        emit tick(++current, mDataPoints.n_rows);
+    }
+    return betas;
+}
+
+void GwmLcrGWRTaskThread::setParallelType(const IParallelalbe::ParallelType &type)
+{
+    if(type & parallelAbility())
+    {
+        mParallelType = type;
+        switch(type){
+        case IParallelalbe::ParallelType::SerialOnly:
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            mRegressionFunction = &GwmLcrGWRTaskThread::regressionSerial;
+            break;
+        case IParallelalbe::ParallelType::OpenMP:
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            mRegressionFunction = &GwmLcrGWRTaskThread::regressionOmp;
+            break;
+        }
+    }
 }
 
 bool GwmLcrGWRTaskThread::lambdaAdjust() const

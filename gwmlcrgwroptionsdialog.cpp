@@ -111,8 +111,8 @@ GwmLcrGWROptionsDialog::GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originI
     //connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
 
     connect(ui->mLambdaAdjustCheck,&QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mLambdaSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mcnThreshSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mLambdaSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mcnThreshSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
 
     updateFieldsAndEnable();
 }
@@ -369,22 +369,6 @@ QVariant GwmLcrGWROptionsDialog::distanceSourceParameters()
     else return QVariant();
 }
 
-//GwmLcrGWRTaskThread::ParallelMethod GwmLcrGWROptionsDialog::parallelMethod()
-//{
-//    if (ui->mCalcParallelMultithreadRadio->isChecked())
-//    {
-//        return GwmLcrGWRTaskThread::ParallelMethod::Multithread;
-//    }
-//    else if (ui->mCalcParallelGPURadio->isChecked())
-//    {
-//        return GwmLcrGWRTaskThread::ParallelMethod::GPU;
-//    }
-//    else
-//    {
-//        return GwmLcrGWRTaskThread::ParallelMethod::None;
-//    }
-//}
-
 QVariant GwmLcrGWROptionsDialog::parallelParameters()
 {
     if (ui->mCalcParallelGPURadio->isChecked())
@@ -518,15 +502,19 @@ void GwmLcrGWROptionsDialog::updateFields()
     }
     mTaskThread->setSpatialWeight(spatialWeight);
     // 并行设置
-//    if (distSrcType != GwmLcrGWRTaskThread::DistanceSourceType::DMatFile)
-//    {
-//        mTaskThread->setParallelMethodType(this->parallelMethod());
-//        mTaskThread->setParallelParameter(this->parallelParameters());
-//    }
+    if (ui->mCalcParallelNoneRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
+    else if (ui->mCalcParallelMultithreadRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
+    }
     // 其他设置
     mTaskThread->setHasHatmatix(ui->cbxHatmatrix->isChecked());
     mTaskThread->setLambdaAdjust(ui->mLambdaAdjustCheck->isChecked());
-    mTaskThread->setCnThresh(pow(10, -ui->mcnThreshSpinBox->value()));
+    mTaskThread->setCnThresh(ui->mcnThreshSpinBox->value());
     mTaskThread->setLambda(ui->mLambdaSpinBox->value());
 }
 
