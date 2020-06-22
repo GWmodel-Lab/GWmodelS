@@ -11,9 +11,6 @@ void GwmGWPCATaskThread::run()
 {
     // 设置矩阵
     initPoints();
-//    GwmCRSDistance d(mDataLayer->featureCount(), mDataLayer->crs().isGeographic());
-//    d.setDataPoints(&mDataPoints);
-//    d.setFocusPoints(&mDataPoints);
     //
     initXY(mX,mVariables);
     //选带宽
@@ -34,8 +31,6 @@ void GwmGWPCATaskThread::run()
         }
     }
     //存储d的计算值
-//    mSpatialWeight.setDistance(d);
-//    mSpatialWeight.setWeight(GwmBandwidthWeight(100, true, GwmBandwidthWeight::Gaussian));;
     mat dResult(mDataPoints.n_rows, mVariables.size(),fill::zeros);
     //存储最新的wt
     vec latestWt(mDataPoints.n_rows,1,fill::zeros);
@@ -48,25 +43,9 @@ void GwmGWPCATaskThread::run()
         vec wt = mSpatialWeight.spatialWeight(i);
         //取wt大于0的部分
         //临时变量?很麻烦
-        int j=0;
-        int length=0;
-        for(int k=0;k<wt.n_rows;k++)
-        {
-            //判断有几项大于0
-            if(wt(k)>0){
-                length++;
-            }
-        }
-        vec newWt(length,fill::zeros);
-        mat newX(length,mX.n_cols,fill::zeros);
-        for(int k=0;k<wt.n_rows;k++)
-        {
-            if(wt(k)>0){
-                newWt(j) = wt(k);
-                newX.row(j) = mX.row(k);
-                j++;
-            }
-        }
+        uvec positive = find(wt > 0);
+        vec newWt = wt.elem(positive);
+        mat newX = mX.rows(positive);
         if(newWt.n_rows<=5)
         {
             break;
@@ -75,7 +54,7 @@ void GwmGWPCATaskThread::run()
         //事先准备好的D和V
         mat V;
         vec D;
-        wpca(newX,newWt,0,mK,V,D);
+        wpca(newX,newWt,V,D);
         latestWt = newWt;
         dResult.row(i) = trans(D);
         //dResult.row(0).print();
@@ -174,7 +153,7 @@ void GwmGWPCATaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
     }
 }
 
-void GwmGWPCATaskThread::wpca(const mat &x, const vec &wt, double nu, double nv, mat &V, vec &S)
+void GwmGWPCATaskThread::wpca(const mat &x, const vec &wt, mat &V, vec &S)
 {
     //首先完成中心化
     mat xw = x.each_col() % wt;
@@ -221,18 +200,14 @@ double GwmGWPCATaskThread::criterion(GwmBandwidthWeight *weight)
         //判断length(newWt)
         if(newWt.n_rows <=1)
         {
+            score = DBL_MAX;
             break;
         }
         //调用PCA函数
         //事先准备好的S和V
         mat V;
         vec S;
-        if(mRobust == false)
-        {
-            wpca(newX,newWt,0,mK,V,S);
-        }else if(mRobust == true){
-            V = rwpca(newX,newWt,0,mK);
-        }
+        wpca(newX, newWt, V, S);
         V = V.cols(0, mK - 1);
         V = V * trans(V);
         score = score + pow(sum(mX.row(i) - mX.row(i) * V),2);
