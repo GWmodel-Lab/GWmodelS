@@ -11,14 +11,26 @@
 class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidthSizeSelectable, public IMultivariableAnalysis, public IOpenmpParallelable
 {
     Q_OBJECT
+    enum BandwidthSelectionCriterionType
+    {
+        CV
+    };
+
     typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+
+    typedef double (GwmGWPCATaskThread::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
+
+    typedef void (GwmGWPCATaskThread::*PcaFunction)(mat & , mat &, mat &);
 
 public:
     GwmGWPCATaskThread();
 
+public:
     QList<GwmVariable> variables() const{return QList<GwmVariable>();};
     void setVariables(const QList<GwmVariable> &variables);
-    //void setVariables(const QList<GwmVariable> &&variables){};
+    void setVariables(const QList<GwmVariable> &&variables){
+        mVariables = variables;
+    };
 
     bool isAutoselectBandwidth() const;
     void setIsAutoselectBandwidth(bool isAutoselectBandwidth);
@@ -41,21 +53,24 @@ public:     // GwmSpatialMonoscaleAlgorithm interface
     bool isValid(){return true;};
 
 public:  // IParallelalbe interface
-    int parallelAbility() const{return 0;};
-    virtual ParallelType parallelType() const{return ParallelType::SerialOnly;};
-    virtual void setParallelType(const ParallelType& type){};
+    int parallelAbility() const{
+        return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
+    };
+    virtual ParallelType parallelType() const{return mParallelType;};
+    virtual void setParallelType(const ParallelType& type);
 
 public:  // IOpenmpParallelable interface
     void setThreadNum(const int threadNum){};
-    void setOmpThreadNum(const int threadNum){};
+    //void setOmpThreadNum(const int threadNum){};
 
 public:     // IBandwidthSizeSelectable interface
-    double criterion(GwmBandwidthWeight *weight);
+    //double criterion(GwmBandwidthWeight *weight);
 
 private:
     void initPoints();
     void initXY(mat& x, const QList<GwmVariable>& indepVars);
-    void wpca(const mat &x, const vec &wt, double nu, double nv, mat &V, vec &S);
+    //void wpca(const mat &x, const vec &wt, double nu, double nv, mat &V, vec &S);
+    void wpca(const mat &x, const vec &wt, mat &V, vec &S);
     mat rwpca(const mat &x, const vec &wt, double nu, double nv);
     void createResultLayer(CreateResultLayerData data,QList<QString> winvar);
     void createResultLayer();
@@ -67,6 +82,53 @@ private:
     double mK=2;
     bool mRobust=false;
     mat mX;
+//    double findMaxDistance()
+//    {
+//        int nDp = mDataPoints.n_rows;
+//        double maxD = 0.0;
+//        for (int i = 0; i < nDp; i++)
+//        {
+//            double d = max(mSpatialWeight.distance()->distance(mDataPoints.row(i), mDataPoints));
+//            maxD = d > maxD ? d : maxD;
+//        }
+//        return maxD;
+//    }
+    vec latestWt;
+public:
+
+    BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
+    void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
+
+    BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::CV;
+    BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial;
+    double criterion(GwmBandwidthWeight *weight)
+    {
+        return (this->*mBandwidthSelectCriterionFunction)(weight);
+    }
+    // IOpenmpParallelable interface
+    IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
+    int mOmpThreadNum = 8;
+    int mGpuId = 0;
+    int mGroupSize = 64;
+
+    double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
+    double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
+
+    void pcaSerial(mat &x, mat &dResult, mat &RW);
+    void pcaOmp(mat &x, mat &dResult, mat &RW);
+
+public:
+    void setOmpThreadNum(const int threadNum){
+        mOmpThreadNum = threadNum;
+    };
+
+    //GWPCA函数
+
+    PcaFunction mPcaFunction = &GwmGWPCATaskThread::pcaSerial;
+    void pca(mat &x , mat &dResult, mat &RW)
+    {
+        return (this->*mPcaFunction)(x , dResult, RW);
+    };
 
     GwmBandwidthSizeSelector mSelector;
 

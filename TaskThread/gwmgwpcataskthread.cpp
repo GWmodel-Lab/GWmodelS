@@ -2,6 +2,7 @@
 #include <SpatialWeight/gwmcrsdistance.h>
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 
+#include <omp.h>
 GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm()
 {
 
@@ -32,34 +33,11 @@ void GwmGWPCATaskThread::run()
     }
     //存储d的计算值
     mat dResult(mDataPoints.n_rows, mVariables.size(),fill::zeros);
-    //存储最新的wt
-    vec latestWt(mDataPoints.n_rows,1,fill::zeros);
     //存储R代码中的W
     mat RW(mDataPoints.n_rows,mVariables.size(),fill::zeros);
     //GWPCA算法
-    for(int i=0;i<mDataPoints.n_rows;i++)
-    {
-        //vec distvi = mSpatialWeight.distance()->distance(i);
-        vec wt = mSpatialWeight.spatialWeight(i);
-        //取wt大于0的部分
-        //临时变量?很麻烦
-        uvec positive = find(wt > 0);
-        vec newWt = wt.elem(positive);
-        mat newX = mX.rows(positive);
-        if(newWt.n_rows<=5)
-        {
-            break;
-        }
-        //调用PCA函数
-        //事先准备好的D和V
-        mat V;
-        vec D;
-        wpca(newX,newWt,V,D);
-        latestWt = newWt;
-        dResult.row(i) = trans(D);
-        //dResult.row(0).print();
-        RW.row(i) = trans(V.col(0));
-    }
+    latestWt = mat(mDataPoints.n_rows,1,fill::zeros);
+    pca(mX, dResult, RW);
     //dResult.print();
     //R代码中的d1计算
     mat tmp(mDataPoints.n_rows, mVariables.size(),fill::zeros);
@@ -180,39 +158,18 @@ mat GwmGWPCATaskThread::rwpca(const mat &x, const vec &wt, double nu=0, double n
     return coeff;
 }
 
-double GwmGWPCATaskThread::criterion(GwmBandwidthWeight *weight)
+void GwmGWPCATaskThread::setBandwidthSelectionCriterionType(const GwmGWPCATaskThread::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
 {
-    int n = mX.n_rows;
-    int m = mX.n_cols;
-    double score = 0;
-    //主循环开始
-    //主循环
-    for (int i = 0; i < n; i++)
-    {
-        vec distvi = mSpatialWeight.distance()->distance(i);
-        vec wt = weight->weight(distvi);
-        wt(i) = 0;
-        //取wt大于0的部分
-        //临时变量?很麻烦
-        uvec positive = find(wt > 0);
-        vec newWt = wt.elem(positive);
-        mat newX = mX.rows(positive);
-        //判断length(newWt)
-        if(newWt.n_rows <=1)
-        {
-            score = DBL_MAX;
-            break;
-        }
-        //调用PCA函数
-        //事先准备好的S和V
-        mat V;
-        vec S;
-        wpca(newX, newWt, V, S);
-        V = V.cols(0, mK - 1);
-        V = V * trans(V);
-        score = score + pow(sum(mX.row(i) - mX.row(i) * V),2);
-    }
-    return score;
+    mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
+    QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp),
+        //std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmGWPCATaskThread::bandwidthSizeCriterionCVCuda),
+        //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmGWPCATaskThread::bandwidthSizeCriterionAICSerial),
+        //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmGWPCATaskThread::bandwidthSizeCriterionAICOmp),
+        //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::CUDA), &GwmGWPCATaskThread::bandwidthSizeCriterionAICCuda)
+    };
+    mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
 }
 
 bool GwmGWPCATaskThread::isAutoselectBandwidth() const
@@ -228,6 +185,24 @@ void GwmGWPCATaskThread::setIsAutoselectBandwidth(bool isAutoselectBandwidth)
 void GwmGWPCATaskThread::setVariables(const QList<GwmVariable> &variables)
 {
     mVariables = variables;
+}
+
+void GwmGWPCATaskThread::setParallelType(const IParallelalbe::ParallelType &type)
+{
+    if(type & parallelAbility())
+    {
+        mParallelType = type;
+        switch (type) {
+        case IParallelalbe::ParallelType::SerialOnly:
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            mPcaFunction = &GwmGWPCATaskThread::pcaSerial;
+            break;
+        case IParallelalbe::ParallelType::OpenMP:
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            mPcaFunction = &GwmGWPCATaskThread::pcaOmp;
+            break;
+        }
+    }
 }
 
 void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QString> winvar)
@@ -289,3 +264,143 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
     }
     mResultLayer->commitChanges();
 }
+
+double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *weight)
+{
+    int n = mX.n_rows;
+    int m = mX.n_cols;
+    double score = 0;
+    //主循环开始
+    //主循环
+    for (int i = 0; i < n; i++)
+    {
+        vec distvi = mSpatialWeight.distance()->distance(i);
+        vec wt = weight->weight(distvi);
+        wt(i) = 0;
+        //取wt大于0的部分
+        //临时变量?很麻烦
+        uvec positive = find(wt > 0);
+        vec newWt = wt.elem(positive);
+        mat newX = mX.rows(positive);
+        //判断length(newWt)
+        if(newWt.n_rows <=1)
+        {
+            score = DBL_MAX;
+            break;
+        }
+        //调用PCA函数
+        //事先准备好的S和V
+        mat V;
+        vec S;
+        wpca(newX, newWt, V, S);
+        V = V.cols(0, mK - 1);
+        V = V * trans(V);
+        score = score + pow(sum(mX.row(i) - mX.row(i) * V),2);
+    }
+    return score;
+}
+
+double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weight)
+{
+    int n = mX.n_rows;
+    int m = mX.n_cols;
+    double score = 0;
+    //主循环开始
+    //主循环
+    bool flag = true;
+    vec score_all(mOmpThreadNum, fill::zeros);
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; i < n; i++)
+    {
+        if(flag)
+        {
+            int thread = omp_get_thread_num();
+            vec distvi = mSpatialWeight.distance()->distance(i);
+            vec wt = weight->weight(distvi);
+            qDebug() << weight->bandwidth();
+            wt(i) = 0;
+            //取wt大于0的部分
+            //临时变量?很麻烦
+            uvec positive = find(wt > 0);
+            vec newWt = wt.elem(positive);
+            mat newX = mX.rows(positive);
+            //判断length(newWt)
+            if(newWt.n_rows <=1)
+            {
+                flag=false;
+            }else{
+                //调用PCA函数
+                //事先准备好的S和V
+                mat V;
+                vec S;
+                wpca(newX, newWt, V, S);
+                V = V.cols(0, mK - 1);
+                V = V * trans(V);
+                score_all(thread) += pow(sum(mX.row(i) - mX.row(i) * V),2);
+            }
+        }
+    }
+    score = sum(score_all);
+    return score;
+}
+
+void GwmGWPCATaskThread::pcaSerial(mat &x, mat &dResult, mat &RW)
+{
+    for(int i=0;i<mDataPoints.n_rows;i++)
+    {
+        //vec distvi = mSpatialWeight.distance()->distance(i);
+        vec wt = mSpatialWeight.spatialWeight(i);
+        //取wt大于0的部分
+        //临时变量?很麻烦
+        uvec positive = find(wt > 0);
+        vec newWt = wt.elem(positive);
+        mat newX = x.rows(positive);
+        if(newWt.n_rows<=5)
+        {
+            break;
+        }
+        //调用PCA函数
+        //事先准备好的D和V
+        mat V;
+        vec D;
+        wpca(newX,newWt,V,D);
+        //存储最新的wt
+        latestWt = newWt;
+        dResult.row(i) = trans(D);
+        //dResult.row(0).print();
+        RW.row(i) = trans(V.col(0));
+    }
+}
+
+void GwmGWPCATaskThread::pcaOmp(mat &x, mat &dResult, mat &RW)
+{
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for(int i=0;i<mDataPoints.n_rows;i++)
+    {
+        //vec distvi = mSpatialWeight.distance()->distance(i);
+        vec wt = mSpatialWeight.spatialWeight(i);
+        //取wt大于0的部分
+        //临时变量?很麻烦
+        uvec positive = find(wt > 0);
+        vec newWt = wt.elem(positive);
+        mat newX = x.rows(positive);
+        if(newWt.n_rows<=5)
+        {
+            break;
+        }
+        //调用PCA函数
+        //事先准备好的D和V
+        mat V;
+        vec D;
+        wpca(newX,newWt,V,D);
+        //存储最新的wt
+        if(i==mDataPoints.n_rows-1){
+            latestWt = newWt;
+        }
+        dResult.row(i) = trans(D);
+        //dResult.row(0).print();
+        RW.row(i) = trans(V.col(0));
+    }
+}
+
+

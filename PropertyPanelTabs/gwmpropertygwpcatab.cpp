@@ -61,7 +61,7 @@ void GwmPropertyGWPCATab::updateUI()
 
     // 计算四分位数
     //QList<GwmVariable> indepVars = mLayerItem->indepVars();
-    ui->tbwProp->setRowCount(mLayerItem->mk);
+    ui->tbwProp->setRowCount(mLayerItem->mk+1);
     ui->tbwProp->setColumnCount(6);
     ui->tbwProp->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     QStringList headers = QStringList() << tr("Name") << tr("Min") << tr("1st Qu") << tr("Median") << tr("3rd Qu") << tr("Max");
@@ -85,8 +85,21 @@ void GwmPropertyGWPCATab::updateUI()
             ui->tbwProp->setItem(r, c + 1, quantileItem);
         }
     }
+    //quantile(sum(betas,1),p)
+    vec q = quantile(sum(betas,1),p);
+    QString name = QString("Cumulative");
+    QTableWidgetItem* nameItem = new QTableWidgetItem(name);
+    nameItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+    ui->tbwProp->setItem(betas.n_cols, 0, nameItem);
+    for (int c = 0; c < 5; c++)
+    {
+        QTableWidgetItem* quantileItem = new QTableWidgetItem(QString("%1").arg(q(c), 0, 'f', 3));
+        quantileItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        quantileItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+        ui->tbwProp->setItem(betas.n_cols, c + 1, quantileItem);
+    }
 
-    ui->tbwLocalvariance->setRowCount(mLayerItem->mk +1);
+    ui->tbwLocalvariance->setRowCount(mLayerItem->mk);
     ui->tbwLocalvariance->setColumnCount(6);
     ui->tbwLocalvariance->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     QStringList headers2 = QStringList() << tr("Name") << tr("Min") << tr("1st Qu") << tr("Median") << tr("3rd Qu") << tr("Max");
@@ -94,7 +107,7 @@ void GwmPropertyGWPCATab::updateUI()
     //const mat& betas = mLayerItem->betas();
     //const mat&betas2 = mLayerItem->mdResult1;
     //const vec p = { 0.0, 0.25, 0.5, 0.75, 1.0 };
-    for (uword r = 0; r < betas2.n_cols; r++)
+    for (uword r = 0; r < betas2.n_cols-1; r++)
     {
         vec q = quantile(betas2.col(r), p);
         QString name = QString("Comp.%1").arg(r+1);
