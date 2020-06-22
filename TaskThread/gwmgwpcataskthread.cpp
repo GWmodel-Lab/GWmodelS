@@ -75,7 +75,7 @@ void GwmGWPCATaskThread::run()
         //事先准备好的D和V
         mat V;
         vec D;
-        wpca(newX,newWt,0,mk,V,D);
+        wpca(newX,newWt,0,mK,V,D);
         latestWt = newWt;
         dResult.row(i) = trans(D);
         //dResult.row(0).print();
@@ -84,30 +84,30 @@ void GwmGWPCATaskThread::run()
     //dResult.print();
     //R代码中的d1计算
     mat tmp(mDataPoints.n_rows, mVariables.size(),fill::zeros);
-    dResult1 = tmp;
-    dResult1 = (dResult / pow(sum(latestWt),0.5)) % (dResult / pow(sum(latestWt),0.5));
+    mDResult1 = tmp;
+    mDResult1 = (dResult / pow(sum(latestWt),0.5)) % (dResult / pow(sum(latestWt),0.5));
     //dResult1.print();
     //取dResult1的前K列
-    localPV = dResult1.cols(0,mk-1).each_col() % (1 / sum(dResult1,1)) *100;
-    localPV.print();
+    mLocalPV = mDResult1.cols(0,mK-1).each_col() % (1 / sum(mDResult1,1)) *100;
+    mLocalPV.print();
     //R代码 的 Local variance
     //t(apply(d1, 2, summary))
     const vec p = { 0.0, 0.25, 0.5, 0.75, 1.0 };
-    for(int i=0;i<dResult1.n_cols;i++)
+    for(int i=0;i<mDResult1.n_cols;i++)
     {
-        vec q = quantile(dResult1.col(i), p);
+        vec q = quantile(mDResult1.col(i), p);
         q.print("Comp1:");
     }
     //R代码 的 Local Proportion of Variance
     //t(apply(local.PV, 2, summary))
-    for(int i=0;i<localPV.n_cols;i++)
+    for(int i=0;i<mLocalPV.n_cols;i++)
     {
-        vec q = quantile(localPV.col(i), p);
+        vec q = quantile(mLocalPV.col(i), p);
         q.print("Comp2:");
     }
     //Cumulative summary(rowSums(local.PV))
-    sum(localPV,1).print();
-    vec localPVSum = sum(localPV,1);
+    sum(mLocalPV,1).print();
+    vec localPVSum = sum(mLocalPV,1);
     vec Cumulative = quantile(localPVSum,p);
     //Cumulative.print();cc/
 
@@ -125,7 +125,7 @@ void GwmGWPCATaskThread::run()
     //Com.1_PV列
     //有几列生成几列
     CreateResultLayerData resultLayerData = {
-        qMakePair(QString("%1"), localPV),
+        qMakePair(QString("%1"), mLocalPV),
         qMakePair(QString("local_CP"), localPVSum),
         //qMakePair(QString("win_var_PC1"), win_var_PC1)
     };
@@ -177,14 +177,11 @@ void GwmGWPCATaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
 void GwmGWPCATaskThread::wpca(const mat &x, const vec &wt, double nu, double nv, mat &V, vec &S)
 {
     //首先完成中心化
-    mat tmpLocalCenter(x.n_rows,x.n_cols,fill::zeros);
-    for(int i=0;i<x.n_rows;i++)
-    {
-        tmpLocalCenter.row(i) = x.row(i) * wt(i);
-    }
+    mat xw = x.each_col() % wt;
+    mat centerized = (x.each_row() - sum(xw) / sum(wt)).each_col() % sqrt(wt);
     //SVD
     mat U;
-    svd(U,S,V,(x.each_row() - sum(tmpLocalCenter)/sum(wt)).each_col() % sqrt(wt));
+    svd(U,S,V,centerized);
     //S即为R中的d
     //V即为R中的v
 }
@@ -215,29 +212,12 @@ double GwmGWPCATaskThread::criterion(GwmBandwidthWeight *weight)
     {
         vec distvi = mSpatialWeight.distance()->distance(i);
         vec wt = weight->weight(distvi);
-        qDebug() << weight->bandwidth();
         wt(i) = 0;
         //取wt大于0的部分
         //临时变量?很麻烦
-        int j=0;
-        int length=0;
-        for(int k=0;k<wt.n_rows;k++)
-        {
-            //判断有几项大于0
-            if(wt(k)>0){
-                length++;
-            }
-        }
-        vec newWt(length,fill::zeros);
-        mat newX(length,mX.n_cols,fill::zeros);
-        for(int k=0;k<wt.n_rows;k++)
-        {
-            if(wt(k)>0){
-                newWt(j) = wt(k);
-                newX.row(j) = mX.row(k);
-                j++;
-            }
-        }
+        uvec positive = find(wt > 0);
+        vec newWt = wt.elem(positive);
+        mat newX = mX.rows(positive);
         //判断length(newWt)
         if(newWt.n_rows <=1)
         {
@@ -249,10 +229,11 @@ double GwmGWPCATaskThread::criterion(GwmBandwidthWeight *weight)
         vec S;
         if(mRobust == false)
         {
-            wpca(newX,newWt,0,mk,V,S);
+            wpca(newX,newWt,0,mK,V,S);
         }else if(mRobust == true){
-            V = rwpca(newX,newWt,0,mk);
+            V = rwpca(newX,newWt,0,mK);
         }
+        V = V.cols(0, mK - 1);
         V = V * trans(V);
         score = score + pow(sum(mX.row(i) - mX.row(i) * V),2);
     }
