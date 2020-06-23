@@ -42,12 +42,22 @@ void GwmGWPCATaskThread::run()
     mat RW(mDataPoints.n_rows,mVariables.size(),fill::zeros);
     //GWPCA算法
     mLatestWt = mat(mDataPoints.n_rows,1,fill::zeros);
-    pca(mX, dResult, RW);
+    //pca(mX, dResult, RW);
+    /*
+     * 测试算法
+     */
+    cube loadings = cube(mDataPoints.n_rows, mVariables.size(), mK);
+    //mat sdev;
+    cube scores = cube(mDataPoints.n_rows, mK, mDataPoints.n_rows);
+    mat localPVTest;
+    mat sdev = mat(mDataPoints.n_rows,mVariables.size(),fill::zeros);
+    localPVTest = pcatest(mX, loadings, sdev, scores);
+    //——————————————————
     //dResult.print();
     //R代码中的d1计算
     mat tmp(mDataPoints.n_rows, mVariables.size(),fill::zeros);
-    mDResult1 = tmp;
-    mDResult1 = (dResult / pow(sum(mLatestWt),0.5)) % (dResult / pow(sum(mLatestWt),0.5));
+    //mDResult1 = tmp;
+    //mDResult1 = (dResult / pow(sum(mLatestWt),0.5)) % (dResult / pow(sum(mLatestWt),0.5));
     //dResult1.print();
     //取dResult1的前K列
     mLocalPV = mDResult1.cols(0,mK-1).each_col() % (1 / sum(mDResult1,1)) *100;
@@ -268,6 +278,67 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
         mResultLayer->addFeature(feature);
     }
     mResultLayer->commitChanges();
+}
+
+mat GwmGWPCATaskThread::pcatest(const mat &x, cube &loadings, mat &sdev, cube &scores)
+{
+    //存储d的计算值
+    mat dResult(mDataPoints.n_rows, mVariables.size(),fill::zeros);
+    //存储R代码中的W
+    mat RW(mDataPoints.n_rows,mVariables.size(),fill::zeros);
+    for(int i=0;i<mDataPoints.n_rows;i++)
+    {
+        //vec distvi = mSpatialWeight.distance()->distance(i);
+        vec wt = mSpatialWeight.spatialWeight(i);
+        //取wt大于0的部分
+        //临时变量?很麻烦
+        uvec positive = find(wt > 0);
+        vec newWt = wt.elem(positive);
+        mat newX = x.rows(positive);
+        if(newWt.n_rows<=5)
+        {
+            break;
+        }
+        //调用PCA函数
+        //事先准备好的D和V
+        mat V;
+        vec D;
+        wpca(newX,newWt,V,D);
+        //存储最新的wt
+        mLatestWt = newWt;
+        dResult.row(i) = trans(D);
+        //dResult.row(0).print();
+        RW.row(i) = trans(V.col(0));
+        //计算loadings
+        for(int j=0;j<mK;j++)
+        {
+            loadings.slice(j).row(i) = trans(V.col(j));
+        }
+        //计算scores
+        mat score = mat(mVariables.length(),mDataPoints.n_rows,fill::zeros);
+        mat scorei = mat(mDataPoints.n_rows,mK,fill::zeros);
+        for(int j=0;j<mK;j++)
+        {
+            //score.each_col() = trans(newX.each_row() % (trans(V.col(j))));
+            for(int a=0;a<mDataPoints.n_rows;a++){
+                vec tmp = trans(newX.row(a) % (trans(V.col(j))));
+                score.col(a) = tmp;
+            }
+            scorei.col(j) = trans(sum(score));
+        }
+        scores.slice(i) = scorei;
+        //计算sdev
+    }
+    //R代码中的d1计算
+    mat tmp(mDataPoints.n_rows, mVariables.size(),fill::zeros);
+    mDResult1 = tmp;
+    mDResult1 = (dResult / pow(sum(mLatestWt),0.5)) % (dResult / pow(sum(mLatestWt),0.5));
+    //计算sdev
+    sdev = sqrt(mDResult1);
+    //dResult1.print();
+    //取dResult1的前K列
+    mLocalPV = mDResult1.cols(0,mK-1).each_col() % (1 / sum(mDResult1,1)) *100;
+    return mLocalPV;
 }
 
 double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *weight)

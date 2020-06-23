@@ -84,6 +84,9 @@ private:
     {
         return (this->*mPcaFunction)(x , dResult, RW);
     };
+    /*测试pca*/
+    mat pcatest(const mat& x, cube& loadings, mat& sdev, cube& scores);
+
     void pcaSerial(mat &x, mat &dResult, mat &RW);
     void pcaOmp(mat &x, mat &dResult, mat &RW);
 
@@ -116,6 +119,8 @@ private:
 
     mat mLocalPV;
     mat mDResult1;
+
+    mat mDResult;
 
 };
 
