@@ -25,7 +25,7 @@ void GwmGeneralizedLinearModel::fit(){
     if(mOffset.is_empty()){
         mOffset = zeros(nObs);
     }
-    if(mFamily == GwmGGWRTaskThread::Family::Poisson){
+    if(mFamily == GwmGGWRAlgorithm::Family::Poisson){
         //初始化模型
         mModel = new GwmPoissonModel();
         mModel->setY(mY);
@@ -122,7 +122,7 @@ bool GwmGeneralizedLinearModel::setY(mat Y){
     return true;
 }
 
-bool GwmGeneralizedLinearModel::setFamily(GwmGGWRTaskThread::Family family){
+bool GwmGeneralizedLinearModel::setFamily(GwmGGWRAlgorithm::Family family){
     mFamily = family;
     return true;
 }

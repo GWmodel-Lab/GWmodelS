@@ -144,7 +144,11 @@ protected:
     }
 
 protected:
+
     void createResultLayer(CreateResultLayerData data);
+
+private:
+
     void initCuda(IGWmodelCUDA *cuda, const mat &x, const vec &y);
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight);

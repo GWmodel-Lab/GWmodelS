@@ -33,7 +33,6 @@
 #include <qgsvectorfilewriter.h>
 #include <TaskThread/gwmcsvtodatthread.h>
 #include "gwmggwroptionsdialog.h"
-#include "TaskThread/gwmggwrtaskthread.h"
 
 #include "gwmscalablegwroptionsdialog.h"
 #include "TaskThread/gwmscalablegwralgorithm.h"
@@ -48,7 +47,7 @@
 #include "Model/gwmlayerggwritem.h"
 
 #include <TaskThread/gwmbasicgwralgorithm.h>
-#include <TaskThread/gwmgwsstaskthread.h>
+#include "TaskThread/gwmggwralgorithm.h"
 #include <Model/gwmlayergwssitem.h>
 #include <gwmgwssoptionsdialog.h>
 #include <SpatialWeight/gwmcrsdistance.h>
@@ -893,7 +892,7 @@ void MainWidget::onLcrGWRBtnClicked()
 }
 
 void MainWidget::onGGWRBtnClicked(){
-    GwmGGWRTaskThread* ggwrTaskThread = new GwmGGWRTaskThread();
+    GwmGGWRAlgorithm* ggwrTaskThread = new GwmGGWRAlgorithm();
     GwmGGWROptionsDialog* ggwrOptionDialog = new GwmGGWROptionsDialog(this->mapModel->rootChildren(), ggwrTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
@@ -916,7 +915,7 @@ void MainWidget::onGGWRBtnClicked(){
         GwmProgressDialog* progressDlg = new GwmProgressDialog(ggwrTaskThread); //
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = ggwrTaskThread->getResultLayer();
+            QgsVectorLayer* resultLayer = ggwrTaskThread->resultLayer();
             GwmLayerGGWRItem* ggwrItem = new GwmLayerGGWRItem(selectedItem, resultLayer, ggwrTaskThread);
             mapModel->appentItem(ggwrItem, selectedIndex);
         }

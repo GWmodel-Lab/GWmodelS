@@ -2,8 +2,8 @@
 #define GWMGENERALIZEDLINEARMODEL_H
 
 #include <armadillo>
-#include "TaskThread/gwmggwrtaskthread.h"
 #include "GWmodel/gwmlinearmodel.h"
+#include "TaskThread/gwmggwralgorithm.h"
 
 using namespace arma;
 
@@ -16,7 +16,7 @@ protected:
     mat mX;
     mat mY;
     mat mWeight;
-    GwmGGWRTaskThread::Family mFamily;
+    GwmGGWRAlgorithm::Family mFamily;
     double mEpsilon;
     int mMaxit;
     bool mIntercept;
@@ -34,7 +34,7 @@ public:
 
     bool setX(mat X);
     bool setY(mat Y);
-    bool setFamily(GwmGGWRTaskThread::Family family);
+    bool setFamily(GwmGGWRAlgorithm::Family family);
 
     double dev();
     double nullDev();
