@@ -85,19 +85,22 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
                 tabWidget = new GwmPropertyScalableGWRTab(this, static_cast<GwmLayerScalableGWRItem*>(item));
                 (static_cast<GwmPropertyScalableGWRTab*>(tabWidget))->updateUI();
                 break;
-            case GwmLayerItem::GGWR:
-                tabWidget = new GwmPropertyGGWRTab(this, static_cast<GwmLayerGGWRItem*>(item));
-                (static_cast<GwmPropertyGGWRTab*>(tabWidget))->updateUI();
             case GwmLayerItem::MultiscaleGWR:
                 tabWidget = new GwmPropertyMultiscaleGWRTab(this, static_cast<GwmLayerMultiscaleGWRItem*>(item));
                 (static_cast<GwmPropertyMultiscaleGWRTab*>(tabWidget))->updateUI();
+                break;
             case GwmLayerItem::CollinearityGWR:
                 tabWidget = new GwmPropertyCollinearityGWRTab(this, static_cast<GwmLayerCollinearityGWRItem*>(item));
                 (static_cast<GwmPropertyCollinearityGWRTab*>(tabWidget))->updateUI();
                 break;
+            case GwmLayerItem::GGWR:
+                tabWidget = new GwmPropertyGGWRTab(this, static_cast<GwmLayerGGWRItem*>(item));
+                (static_cast<GwmPropertyGGWRTab*>(tabWidget))->updateUI();
+                break;
             case GwmLayerItem::GWSS:
                 tabWidget = new GwmPropertyGWSSTab(this, static_cast<GwmLayerGWSSItem*>(item));
                 (static_cast<GwmPropertyGWSSTab*>(tabWidget))->updateUI();
+                break;
             default:
                 break;
             }
