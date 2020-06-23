@@ -69,6 +69,8 @@ GwmGWPCAOptionsDialog::GwmGWPCAOptionsDialog(QList<GwmLayerGroupItem*> originIte
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWPCAOptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWPCAOptionsDialog::onGPURadioToggled);
 
+    connect(ui->mKspinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
+
     // 获取显卡信息
     ICUDAInspector* inspector = CUDAInspector_Create();
     int gpuCount = inspector->GetDeviceCount();
@@ -508,6 +510,7 @@ void GwmGWPCAOptionsDialog::updateFields()
     // 其他设置
     //mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
     //mTaskThread->setHasFTest(ui->cbxFTest->isChecked());
+    mTaskThread->setK(ui->mKspinBox->value());
 }
 
 void GwmGWPCAOptionsDialog::enableAccept()

@@ -20,7 +20,7 @@ class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidt
 
     typedef double (GwmGWPCATaskThread::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
 
-    typedef void (GwmGWPCATaskThread::*PcaFunction)(mat & , mat &, mat &);
+    typedef mat (GwmGWPCATaskThread::*PcaFunction)(const mat& , cube& , mat& , cube& );
 
 public:
     GwmGWPCATaskThread();
@@ -52,6 +52,12 @@ public:
 
     mat dResult1() const;
 
+    mat mLoadings;
+
+    mat mSdev;
+
+    mat mScores;
+
 public:     // QThread interface
     void run() override;
 
@@ -72,6 +78,8 @@ public:  // IOpenmpParallelable interface
 public:     // IBandwidthSizeSelectable interface
     //double criterion(GwmBandwidthWeight *weight);
 
+    void setK(double k);
+
 private:
     void initPoints();
     void initXY(mat& x, const QList<GwmVariable>& indepVars);
@@ -80,15 +88,15 @@ private:
     mat rwpca(const mat &x, const vec &wt, double nu, double nv);
     void createResultLayer(CreateResultLayerData data,QList<QString> winvar);
 
-    void pca(mat &x , mat &dResult, mat &RW)
+    mat pca(const mat& x, cube& loadings, mat& sdev, cube& scores)
     {
-        return (this->*mPcaFunction)(x , dResult, RW);
+        return (this->*mPcaFunction)(x , loadings, sdev, scores);
     };
     /*测试pca*/
     mat pcatest(const mat& x, cube& loadings, mat& sdev, cube& scores);
 
-    void pcaSerial(mat &x, mat &dResult, mat &RW);
-    void pcaOmp(mat &x, mat &dResult, mat &RW);
+    mat pcaSerial(const mat& x, cube& loadings, mat& sdev, cube& scores);
+    mat pcaOmp(const mat& x, cube& loadings, mat& sdev, cube& scores);
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
@@ -101,7 +109,7 @@ private:
     QList<GwmVariable> mVariables;
     mat mDataPoints;
 
-    double mK = 2;
+    int mK = 2;
     bool mRobust=false;
     mat mX;
     vec mLatestWt;
