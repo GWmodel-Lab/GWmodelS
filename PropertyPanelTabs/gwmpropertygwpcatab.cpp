@@ -57,7 +57,12 @@ void GwmPropertyGWPCATab::updateUI()
                 .arg(weight.bandwidth());
         ui->lblBandwidthSize->setText(bwSizeString);
     }
+    if (true)
+    {
+        ui->lblDistanceMetric->setText(tr("Edclidean distance metric is used."));
+    }
     //ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
+    ui->lblPCCount->setText(QString("%1").arg(mLayerItem->mk));
 
     // 计算四分位数
     //QList<GwmVariable> indepVars = mLayerItem->indepVars();

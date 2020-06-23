@@ -33,6 +33,8 @@ GwmGWPCAOptionsDialog::GwmGWPCAOptionsDialog(QList<GwmLayerGroupItem*> originIte
 
     //ui->mDepVarComboBox->setCurrentIndex(-1);
     //connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWPCAOptionsDialog::onDepVarChanged);
+    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWPCAOptionsDialog::onSelectedIndenpendentVariablesChanged);
+    ui->mKspinBox->setMaximum(1);
 
     //ui->mModelSelAICThreshold->setMaximum(DBL_MAX);
     //connect(ui->mVariableAutoSelectionCheck, &QAbstractButton::toggled, this, &GwmGWPCAOptionsDialog::onVariableAutoSelectionToggled);
@@ -201,6 +203,7 @@ void GwmGWPCAOptionsDialog::layerChanged(int index)
             mDepVarModel->append(item);
             //ui->mDepVarComboBox->addItem(field.name());
         }
+        ui->mKspinBox->setMaximum(field.length());
     }
 }
 
@@ -289,6 +292,11 @@ void GwmGWPCAOptionsDialog::onDmatFileOpenClicked()
 void GwmGWPCAOptionsDialog::onVariableAutoSelectionToggled(bool checked)
 {
     //ui->mModelSelAICThreshold->setEnabled(checked);
+}
+
+void GwmGWPCAOptionsDialog::onSelectedIndenpendentVariablesChanged()
+{
+    ui->mKspinBox->setMaximum(ui->mIndepVarSelector->selectedIndepVarModel()->rowCount());
 }
 
 void GwmGWPCAOptionsDialog::onCustomizeRaidoToggled(bool checked)
