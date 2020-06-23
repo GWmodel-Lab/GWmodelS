@@ -124,28 +124,29 @@ mat GwmRobustGWRAlgorithm::regression(const mat &x, const vec &y)
     }
 }
 
-vec GwmRobustGWRAlgorithm::filtWeight(vec x)
+vec GwmRobustGWRAlgorithm::filtWeight(vec residual, double mse)
 {
-    double iter = 0;
-    double diffmse = 1;
     //计算residual
-    mYHat = fitted(mX, mBetas);
-    mResidual = mY - mYHat;
-    //计算mse
-    mMse = sum((mResidual % mResidual))/ mResidual.size();
-    mWVect.ones(x.size(),1);
+    vec r = abs(residual / sqrt(mse));
+    vec wvect(r.size(), fill::ones);
     //数组赋值
-    for(int i=0;i<x.size();i++)
+    for(int i=0;i<r.size();i++)
     {
-        if(x[i]<=2){
-            mWVect[i]=1;
-        }else if(x[i]>2 && x[i]<3){
-            mWVect[i]=pow((1-(pow(x[i]-2,2))),2);
-        }else{
-            mWVect[i]=0;
+        if(r[i]<=2)
+        {
+            wvect[i]=1;
+        }
+        else if(r[i]>2 && r[i]<3)
+        {
+            double f = r[i]-2;
+            wvect[i] = (1.0-(f * f)) * (1.0-(f * f));
+        }
+        else
+        {
+            wvect[i]=0;
         }
     }
-    return mWVect;
+    return wvect;
 }
 
 void GwmRobustGWRAlgorithm::createResultLayer(CreateResultLayerData data)
@@ -225,11 +226,6 @@ void GwmRobustGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &t
     }
 }
 
-int GwmRobustGWRAlgorithm::parallelAbility() const
-{
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
-}
-
 mat GwmRobustGWRAlgorithm::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
     mat betas = (this->*mRegressionHatmatrixFunction)(x,y,betasSE,shat,qDiag,S);
@@ -275,7 +271,7 @@ mat GwmRobustGWRAlgorithm::robustGWRCaliSecond(const mat &x, const vec &y, mat &
     //计算mse
     double mse = sum((residual % residual))/ residual.size();
     //计算WVect
-    mWeightMask = filtWeight(abs(residual/sqrt(mse)));
+    mWeightMask = filtWeight(residual, mse);
     while(diffmse>delta && iter<maxiter){
         double oldmse = mse;
         betas = (this->*mRegressionHatmatrixFunction)(x,y,betasSE,shat,qDiag,S);
@@ -283,7 +279,7 @@ mat GwmRobustGWRAlgorithm::robustGWRCaliSecond(const mat &x, const vec &y, mat &
         yHat = fitted(x, betas);
         residual = y - yHat;
         mse = sum((residual % residual))/ residual.size();
-        mWeightMask = filtWeight(abs(residual/sqrt(mse)));
+        mWeightMask = filtWeight(residual, mse);
         diffmse = abs(oldmse-mse)/mse;
         iter = iter +1;
     }
