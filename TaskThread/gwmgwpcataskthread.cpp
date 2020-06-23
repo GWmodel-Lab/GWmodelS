@@ -65,24 +65,25 @@ void GwmGWPCATaskThread::run()
 bool GwmGWPCATaskThread::isValid()
 {
     GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
-    if(!mIsAutoselectBandwidth)
-    {
-        if(bandwidth->adaptive()){
-            if(bandwidth->bandwidth() <= mVariables.size()){
-                return false;
-            }else{
-
+    if(bandwidth){
+        if(!mIsAutoselectBandwidth)
+        {
+            if(bandwidth->adaptive()){
+                if(bandwidth->bandwidth() <= mVariables.size()){
+                    return false;
+                }
             }
         }
-    }
-    if(mVariables.size() == 0){
-        return false;
-    }
-    if(k()>0 && k() <= mVariables.size()){
-        return true;
+        if(mVariables.size() == 0){
+            return false;
+        }
+        if(k()<=0 || k() > mVariables.size()){
+            return false;
+        }
     }else{
         return false;
     }
+    return true;
 }
 
 void GwmGWPCATaskThread::initPoints()
