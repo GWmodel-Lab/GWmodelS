@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
-#include "TaskThread/GwmLcrGWRtaskthread.h"
+#include "TaskThread/gwmlocalcollinearitygwralgorithm.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
 #include "Model/gwmvariableitemmodel.h"

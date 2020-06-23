@@ -2,6 +2,7 @@
 #include "GWmodel/GWmodel.h"
 
 #include <gsl/gsl_cdf.h>
+#include <omp.h>
 
 GwmRobustGWRAlgorithm::GwmRobustGWRAlgorithm(): GwmBasicGWRAlgorithm()
 {
@@ -34,14 +35,8 @@ void GwmRobustGWRAlgorithm::run()
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     mWeightMask = vec(nDp, fill::ones);
 
-    if (mFiltered)
-    {
-        robustGWRCaliFirst();
-    }
-    else
-    {
-        robustGWRCaliSecond();
-    }
+    emit message("Regression ...");
+    mBetas = regression(mX,mY);
 
     //诊断+结果图层
     if(mHasHatMatrix)
@@ -114,32 +109,18 @@ void GwmRobustGWRAlgorithm::run()
 
 mat GwmRobustGWRAlgorithm::regression(const mat &x, const vec &y)
 {
-    if(!mHasHatMatrix)
+    if(mHasHatMatrix)
     {
-        emit message("Regression ...");
-        uword nRp = mRegressionPoints.n_rows, nVar = x.n_cols;
-        const mat& points = hasRegressionLayer() ? mRegressionPoints : mDataPoints;
-        mat betas(nVar, nRp, fill::zeros);
-        for (uword i = 0; i < nRp; i++)
+        if (mFiltered)
         {
-            vec w = mSpatialWeight.spatialWeight(i) % mWeightMask;
-            mat xtw = trans(x.each_col() % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
-            {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-                emit tick(i + 1, nRp);
-            }
-            catch (exception e)
-            {
-                emit error(e.what());
-            }
+            return robustGWRCaliFirst(x,y,mBetasSE,mShat,mQDiag,mS);
         }
-        return betas.t();
+        else
+        {
+            return robustGWRCaliSecond(x,y,mBetasSE,mShat,mQDiag,mS);
+        }
     }else{
-        return regressionHatmatrixSerial(x, y, mBetasSE, mShat, mQDiag, mS);
+        return regressionSerial(x, y);
     }
 }
 
@@ -224,64 +205,95 @@ void GwmRobustGWRAlgorithm::createResultLayer(CreateResultLayerData data)
     mResultLayer->commitChanges();
 }
 
-void GwmRobustGWRAlgorithm::robustGWRCaliFirst()
+void GwmRobustGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &type)
 {
-    mBetas = regression(mX, mY);
+    GwmBasicGWRAlgorithm::setParallelType(type);
+    if (type & parallelAbility())
+    {
+        mParallelType = type;
+        switch (type) {
+        case IParallelalbe::ParallelType::SerialOnly:
+            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
+            break;
+        case IParallelalbe::ParallelType::OpenMP:
+            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixOmp;
+            break;
+        default:
+            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
+            break;
+        }
+    }
+}
+
+int GwmRobustGWRAlgorithm::parallelAbility() const
+{
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
+}
+
+mat GwmRobustGWRAlgorithm::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
+{
+    mat betas = (this->*mRegressionHatmatrixFunction)(x,y,betasSE,shat,qDiag,S);
     //  ------------- 计算W.vect
-    mYHat = fitted(mX, mBetas);
-    mResidual = mY - mYHat;
+    vec yhat = fitted(x, betas);
+    vec residual = y - yhat;
     // 诊断信息
-    mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mShat);
-    double trS = mShat(0), trStS = mShat(1);
-    int nDp = mDataPoints.n_rows;
-    double sigmaHat = mDiagnostic.RSS / (nDp * 1.0 - 2 * trS + trStS);
-    mStudentizedResidual = mResidual / sqrt(sigmaHat * mQDiag);
+    GwmDiagnostic diagnostic;
+    diagnostic = CalcDiagnostic(x, y, betas, shat);
+    double trS = shat(0), trStS = shat(1);
+    double nDp = mDataPoints.n_rows;
+    double sigmaHat = diagnostic.RSS / (nDp * 1.0 - 2 * trS + trStS);
+    vec studentizedResidual = residual / sqrt(sigmaHat * qDiag);
 
     vec WVect(nDp,fill::zeros);
 
     //生成W.vect
-    for(int i=0;i<mStudentizedResidual.size();i++){
-        if(fabs(mStudentizedResidual[i])>3){
+    for(int i=0;i<studentizedResidual.size();i++){
+        if(fabs(studentizedResidual[i])>3){
             WVect(i)=0;
         }else{
             WVect(i)=1;
         }
     }
     mWeightMask = WVect;
-    mBetas = regression(mX, mY);
+    betas = (this->*mRegressionHatmatrixFunction)(x,y,betasSE,shat,qDiag,S);
+    //mShat赋值  必须
+    mShat = shat;
+    return betas;
 }
 
-void GwmRobustGWRAlgorithm::robustGWRCaliSecond()
+mat GwmRobustGWRAlgorithm::robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
-    int nDp = mX.n_rows;
+    int nDp = x.n_rows;
     double iter = 0;
     double diffmse = 1;
     double delta = 1.0e-5;
     double maxiter = 20;
-    mBetas = regression(mX,mY);
+    mat betas = (this->*mRegressionHatmatrixFunction)(x,y,betasSE,shat,qDiag,S);
     //计算residual
-    mYHat = fitted(mX, mBetas);
-    mResidual = mY - mYHat;
+    vec yHat = fitted(x, betas);
+    vec residual = y - yHat;
     //计算mse
-    mMse = sum((mResidual % mResidual))/ mResidual.size();
+    double mse = sum((residual % residual))/ residual.size();
     //计算WVect
-    mWeightMask = filtWeight(abs(mResidual/sqrt(mMse)));
+    mWeightMask = filtWeight(abs(residual/sqrt(mse)));
     while(diffmse>delta && iter<maxiter){
-        double oldmse = mMse;
-        mBetas = regression(mX, mY);
+        double oldmse = mse;
+        betas = (this->*mRegressionHatmatrixFunction)(x,y,betasSE,shat,qDiag,S);
         //计算residual
-        mYHat = fitted(mX, mBetas);
-        mResidual = mY - mYHat;
-        mMse = sum((mResidual % mResidual))/ mResidual.size();
-        mWeightMask = filtWeight(abs(mResidual/sqrt(mMse)));
-        diffmse = abs(oldmse-mMse)/mMse;
+        yHat = fitted(x, betas);
+        residual = y - yHat;
+        mse = sum((residual % residual))/ residual.size();
+        mWeightMask = filtWeight(abs(residual/sqrt(mse)));
+        diffmse = abs(oldmse-mse)/mse;
         iter = iter +1;
     }
+    //mShat赋值  必须
+    mShat = shat;
+    return betas;
 }
 
 mat GwmRobustGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
-    emit message("Regression ...");
     uword nDp = x.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     betasSE = mat(nVar, nDp, fill::zeros);
@@ -315,5 +327,109 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y,
         emit tick(i + 1, nDp);
     }
     betasSE = betasSE.t();
+    return betas.t();
+}
+
+mat GwmRobustGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
+{
+    emit message("Regression ...");
+    int nDp = x.n_rows, nVar = x.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    betasSE = mat(nVar, nDp, fill::zeros);
+    S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
+    mat shat_all(2, mOmpThreadNum, fill::zeros);
+    mat qDiag_all(nDp, mOmpThreadNum, fill::zeros);
+    int current = 0;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; i < nDp; i++)
+    {
+        int thread = omp_get_thread_num();
+        vec w = mSpatialWeight.spatialWeight(i)  % mWeightMask;
+        mat xtw = trans(x.each_col() % w);
+        mat xtwx = xtw * x;
+        mat xtwy = xtw * y;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+            mat ci = xtwx_inv * xtw;
+            betasSE.col(i) = sum(ci % ci, 1);
+            mat si = x.row(i) * ci;
+            shat_all(0, thread) += si(0, i);
+            shat_all(1, thread) += det(si * si.t());
+            vec p = - si.t();
+            p(i) += 1.0;
+            qDiag_all.col(thread) += p % p;
+            S.row(isStoreS() ? i : 0) = si;
+        }
+        catch (std::exception e)
+        {
+            emit error(e.what());
+        }
+        emit tick(++current, nDp);
+    }
+    shat = sum(shat_all, 1);
+    qDiag = sum(qDiag_all, 1);
+    betasSE = betasSE.t();
+    return betas.t();
+}
+
+mat GwmRobustGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
+{
+    int nDp = mDataPoints.n_rows, nVar = x.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
+    bool hasDmat = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    IGWmodelCUDA* cuda = GWCUDA_Create(nDp ,nVar, hasRegressionLayer(), nRp, hasDmat);
+    initCuda(cuda, x, y);
+    double p = 2.0, theta = 0.0;
+    bool longlat = false;
+    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    {
+        GwmMinkwoskiDistance* d = mSpatialWeight.distance<GwmMinkwoskiDistance>();
+        p = d->poly();
+        theta = d->theta();
+    }
+    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    {
+        GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
+        longlat = d->geographic();
+    }
+    GwmBandwidthWeight* bw = mSpatialWeight.weight<GwmBandwidthWeight>();
+    bool adaptive = bw->adaptive();
+    for(int i=0;i<nDp;i++)
+    {
+        cuda->SetWeightMask(i,mWeightMask(i));
+    }
+    bool gwrStatus = cuda->Regression(true, p, theta, longlat, bw->bandwidth(), bw->kernel(), adaptive, mGroupSize, mGpuId);
+    mat betas(nVar, nDp, fill::zeros);
+    betasSE = mat(nVar, nDp, fill::zeros);
+    shat = vec(2, fill::zeros);
+    qDiag = vec(nDp, fill::zeros);
+    if (gwrStatus)
+    {
+        for (int r = 0; r < nDp; r++)
+        {
+            for (int c = 0; c < nVar; c++)
+            {
+                betas(c, r) = cuda->GetBetas(r, c);
+                betasSE(c, r) = cuda->GetBetasSE(r, c);
+            }
+            qDiag(r) = cuda->GetQdiag(r);
+        }
+        shat(0) = cuda->GetShat1();
+        shat(1) = cuda->GetShat2();
+        if (isStoreS())
+        {
+            S = mat(nDp, nDp, fill::zeros);
+            for (int r = 0; r < nDp; r++)
+            {
+                for (int c = 0; c < nVar; c++)
+                {
+                    S(r, c) = cuda->GetS(r, c);
+                }
+            }
+        }
+    }
+    betasSE = betasSE.t();
+    GWCUDA_Del(cuda);
     return betas.t();
 }

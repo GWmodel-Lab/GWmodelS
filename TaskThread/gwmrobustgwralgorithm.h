@@ -11,12 +11,11 @@ class GwmRobustGWRAlgorithm: public GwmBasicGWRAlgorithm
 {
     Q_OBJECT
 
-    typedef double (GwmRobustGWRAlgorithm::*CalcTrQtQFunction)();
-    typedef vec (GwmRobustGWRAlgorithm::*CalcDiagBFunction)(int);
-
     typedef QList<QPair<QString, const mat> > CreateResultLayerData;
 
     static GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+
+    typedef mat (GwmRobustGWRAlgorithm::*RegressionHatmatrix)(const mat&, const vec&, mat&, vec&, vec&, mat&);
 
 public:
     GwmRobustGWRAlgorithm();
@@ -28,7 +27,11 @@ public:
 public:
     mat regression(const mat& x, const vec& y) override;
 
-private:
+public:
+    void setParallelType(const ParallelType &type) override;
+    int parallelAbility() const override;
+
+protected:
 
     void createResultLayer(CreateResultLayerData data);
 
@@ -37,34 +40,41 @@ private:
         return mHasHatMatrix && (mDataPoints.n_rows < 8192);
     }
 
-
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    mat regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    mat regressionHatmatrixCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
 
 protected:
     void run() override;
-    // 主解算函数
-    void gwrModelCalibration();
-    // 鲁棒GWR的第一种解法
-    void robustGWRCaliFirst();
-    // 第二种解法
-    void robustGWRCaliSecond();
-    // 计算二次权重函数
-    vec filtWeight(vec x);
-
 private:
     vec mShat;
-    //vec mQDiag;
+
+    vec mQDiag;
+
     mat mS;
+
     vec mWeightMask;
+
     vec mYHat;
+
     vec mResidual;
+
     vec mStudentizedResidual;
+
     double mMse;
+
     vec mWVect;
+
     bool mFiltered;
 
-    CalcTrQtQFunction mCalcTrQtQFunction = &GwmRobustGWRAlgorithm::calcTrQtQSerial;
-    CalcDiagBFunction mCalcDiagBFunction = &GwmRobustGWRAlgorithm::calcDiagBSerial;
+    RegressionHatmatrix mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
+
+    // 鲁棒GWR的第一种解法
+    mat robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S);
+    // 第二种解法
+    mat robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S);
+    // 计算二次权重函数
+    vec filtWeight(vec x);
 };
 
 
