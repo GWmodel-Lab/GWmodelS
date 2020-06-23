@@ -27,7 +27,10 @@ public:
     double mk=2;
     mat mdResult1;
     mat mLocalPV;
-
+    //存其他参数
+    cube mLoadings;
+    cube mScores;
+    mat mVariance;
     // GwmLayerItem interface
 public:
     bool isBandwidthOptimized;

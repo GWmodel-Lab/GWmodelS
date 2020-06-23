@@ -13,6 +13,10 @@ GwmLayerGWPCAItem::GwmLayerGWPCAItem(GwmLayerItem* parent, QgsVectorLayer* vecto
         mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();
 
         isBandwidthOptimized = taskThread->isAutoselectBandwidth();
+        //
+        mLoadings = taskThread->loadings();
+        mScores = taskThread->scores();
+        mVariance = taskThread->variance();
     }
 }
 

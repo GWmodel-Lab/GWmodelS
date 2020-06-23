@@ -22,6 +22,8 @@ class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidt
 
     typedef mat (GwmGWPCATaskThread::*PcaFunction)(const mat& , cube& , mat& , cube& );
 
+    typedef mat (GwmGWPCATaskThread::*PcaNotScoresFunction)(const mat&, cube&, mat&);
+
 public:
     GwmGWPCATaskThread();
 
@@ -73,6 +75,9 @@ public:  // IOpenmpParallelable interface
     //void setOmpThreadNum(const int threadNum){};
 
 
+    bool scoresCal() const;
+    void setScoresCal(bool scoresCal);
+
 private:
     void initPoints();
     void initXY(mat& x, const QList<GwmVariable>& indepVars);
@@ -86,8 +91,16 @@ private:
         return (this->*mPcaFunction)(x , loadings, sdev, scores);
     };
 
+    //实现不计算scores的pca
+    mat pcaNotScores(const mat& x, cube& loadings, mat& variance)
+    {
+        return (this->*mPcaNotScoresFunction)(x,loadings,variance);
+    }
+
     mat pcaSerial(const mat& x, cube& loadings, mat& variance, cube& scores);
     mat pcaOmp(const mat& x, cube& loadings, mat& variance, cube& scores);
+    mat pcaNotScoresSerial(const mat& x, cube& loadings, mat& variance);
+    mat pcaNotScoresOmp(const mat& x, cube& loadings, mat& variance);
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
@@ -115,11 +128,15 @@ private:
     int mOmpThreadNum = 8;
 
     PcaFunction mPcaFunction = &GwmGWPCATaskThread::pcaSerial;
+    PcaNotScoresFunction mPcaNotScoresFunction = &GwmGWPCATaskThread::pcaNotScoresSerial;
 
     mat mLocalPV;
     mat mVariance;
     cube mLoadings;
     cube mScores;
+
+    //用户选择是否计算scores
+    bool mScoresCal;
 };
 
 inline mat GwmGWPCATaskThread::variance() const

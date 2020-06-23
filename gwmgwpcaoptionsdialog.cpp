@@ -137,6 +137,7 @@ GwmGWPCAOptionsDialog::GwmGWPCAOptionsDialog(QList<GwmLayerGroupItem*> originIte
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
     //connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
     //connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mScoresCheckBox,&QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
 
     updateFieldsAndEnable();
 }
@@ -519,6 +520,7 @@ void GwmGWPCAOptionsDialog::updateFields()
     //mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
     //mTaskThread->setHasFTest(ui->cbxFTest->isChecked());
     mTaskThread->setK(ui->mKspinBox->value());
+    mTaskThread->setScoresCal(ui->mScoresCheckBox->isChecked());
 }
 
 void GwmGWPCAOptionsDialog::enableAccept()
