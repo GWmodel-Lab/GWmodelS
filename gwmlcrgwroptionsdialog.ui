@@ -79,27 +79,17 @@
       <property name="topMargin">
        <number>9</number>
       </property>
-      <property name="bottomMargin">
-       <number>1</number>
-      </property>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="label_15">
         <property name="text">
          <string>lambda.adjust</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="label_11">
         <property name="text">
          <string>CNThresh</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QSpinBox" name="mcnThreshSpinBox">
-        <property name="enabled">
-         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -116,13 +106,27 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="mLambdaSpinBox"/>
-      </item>
-      <item row="3" column="1">
+      <item row="4" column="1">
        <widget class="QCheckBox" name="mLambdaAdjustCheck">
         <property name="text">
          <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="mLambdaSpinBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QDoubleSpinBox" name="mcnThreshSpinBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="value">
+         <double>30.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -368,6 +372,9 @@
         </item>
         <item row="0" column="1">
          <widget class="QComboBox" name="mBwSizeAutomaticApprochCombo">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <item>
            <property name="text">
             <string>CV</string>

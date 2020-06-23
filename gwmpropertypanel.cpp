@@ -5,6 +5,7 @@
 #include "PropertyPanelTabs/gwmpropertyggwrtab.h"
 #include "PropertyPanelTabs/gwmpropertymultiscalegwrtab.h"
 #include "PropertyPanelTabs/gwmpropertygwsstab.h"
+#include "PropertyPanelTabs/gwmpropertycollinearitygwrtab.h"
 
 GwmPropertyPanel::GwmPropertyPanel(QWidget *parent) :
     QTabWidget(parent),
@@ -90,6 +91,10 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
             case GwmLayerItem::MultiscaleGWR:
                 tabWidget = new GwmPropertyMultiscaleGWRTab(this, static_cast<GwmLayerMultiscaleGWRItem*>(item));
                 (static_cast<GwmPropertyMultiscaleGWRTab*>(tabWidget))->updateUI();
+            case GwmLayerItem::CollinearityGWR:
+                tabWidget = new GwmPropertyCollinearityGWRTab(this, static_cast<GwmLayerCollinearityGWRItem*>(item));
+                (static_cast<GwmPropertyCollinearityGWRTab*>(tabWidget))->updateUI();
+                break;
             case GwmLayerItem::GWSS:
                 tabWidget = new GwmPropertyGWSSTab(this, static_cast<GwmLayerGWSSItem*>(item));
                 (static_cast<GwmPropertyGWSSTab*>(tabWidget))->updateUI();

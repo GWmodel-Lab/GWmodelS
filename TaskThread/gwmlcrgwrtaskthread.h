@@ -1,40 +1,139 @@
 #ifndef GWMLCRGWRTASKTHREAD_H
 #define GWMLCRGWRTASKTHREAD_H
 
-#include "gwmgwrtaskthread.h"
+
 #include "GWmodel/GWmodel.h"
+#include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
+#include "TaskThread/gwmbandwidthsizeselector.h"
+#include "TaskThread/gwmindependentvariableselector.h"
 
-class GwmLcrGWRTaskThread;
-typedef double (GwmLcrGWRTaskThread::*pfGwmLcrBandwidthSelectionApproach)(double , int , bool, double, bool, double );
+#include "TaskThread/iparallelable.h"
 
-class GwmLcrGWRTaskThread:public GwmGWRTaskThread
+class GwmLcrGWRTaskThread:public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable,public IOpenmpParallelable
 {
 public:
+
+    enum BandwidthSelectionCriterionType
+    {
+        CV
+    };
+
+    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+
+    static GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+
+    typedef double (GwmLcrGWRTaskThread::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
+
+    typedef mat (GwmLcrGWRTaskThread::*Regression)(const mat&, const vec&);
+public:
     GwmLcrGWRTaskThread();
-    double mlambda;
-    //
-    bool mlambdaAdjust;
-    //
-    double mcnThresh;
-    //
-    bool madaptive;
+
+    double cnThresh() const;
+    void setCnThresh(double cnThresh);
+
+    double lambda() const;
+    void setLambda(double lambda);
+
+    bool hasHatmatix() const;
+    void setHasHatmatix(bool value);
+
+    bool lambdaAdjust() const;
+    void setLambdaAdjust(bool lambdaAdjust);
+
+    GwmDiagnostic dialnostic() const{
+        return mDiagnostic;
+    }
+    bool isAutoselectBandwidth() const;
+
+    void GwmLcrGWRTaskThread::setIsAutoselectBandwidth(bool value)
+    {
+        mIsAutoselectBandwidth = value;
+    }
+
+    bool GwmLcrGWRTaskThread::autoselectBandwidth() const
+    {
+        return mIsAutoselectBandwidth;
+    }
+
+    BandwidthCriterionList GwmLcrGWRTaskThread::bandwidthSelectorCriterions() const
+    {
+        return selector.bandwidthCriterion();
+    }
+
+    BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
+    void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
+public:
+    bool isValid() override;
+
+    double criterion(GwmBandwidthWeight *weight)
+    {
+        return (this->*mBandwidthSelectCriterionFunction)(weight);
+    };
 protected:
     void run() override;
 
-    void createResultLayer() override;
+    arma::mat regression(const arma::mat &x, const arma::vec &y);
     //返回cv的函数
     double LcrCV(double bw,int kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
     //ridge.lm函数
     vec ridgelm(const vec& w,double lambda);
-    //返回cv.contrib的函数
-    vec LcrCVContrib(double bw, int kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
-    //黄金分割函数
-    double gold(pfGwmLcrBandwidthSelectionApproach p,double xL, double xU, bool adaptBw, int kernel, bool adaptive,double lambda, bool lambdaAdjust,double cnThreshd);
-    //带宽选择函数
-    double LcrBandWidthSelect(int kernel, double lambda, bool lambdaAdjust, double cnThresh, bool adaptive);
-    //
-    double getFixedBwUpper();
-    //
+
+    void createResultLayer(CreateResultLayerData data);
+public:
+    int parallelAbility() const;
+    ParallelType parallelType() const;
+
+    void setParallelType(const ParallelType &type);
+
+    // IOpenmpParallelable interface
+public:
+    void setOmpThreadNum(const int threadNum);
+private:
+    double mLambda;
+
+    bool mLambdaAdjust;
+
+    double mCnThresh;
+
+    GwmBandwidthSizeSelector selector;
+
+    bool mHasHatmatix = false;
+
+    double mTrS = 0;
+
+    double mTrStS = 0;
+
+    bool mIsAutoselectBandwidth = false;
+
+    double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
+    double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
+
+    BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::CV;
+    BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVSerial;
+
+    mat regressionSerial(const mat& x, const vec& y);
+    mat regressionOmp(const mat& x, const vec& y);
+    Regression mRegressionFunction = &GwmLcrGWRTaskThread::regressionSerial;
+
+    IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
+    int mOmpThreadNum = 8;
+    int mGpuId = 0;
+    int mGroupSize = 64;
 };
+
+inline int GwmLcrGWRTaskThread::parallelAbility() const
+{
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
+}
+
+inline IParallelalbe::ParallelType GwmLcrGWRTaskThread::parallelType() const
+{
+    return mParallelType;
+}
+
+inline void GwmLcrGWRTaskThread::setOmpThreadNum(const int threadNum)
+{
+    mOmpThreadNum = threadNum;
+}
 
 #endif // GWMLCRGWRTASKTHREAD_H

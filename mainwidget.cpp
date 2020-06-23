@@ -54,6 +54,7 @@
 #include <SpatialWeight/gwmcrsdistance.h>
 
 #include <Model/gwmlayerbasicgwritem.h>
+#include <Model/gwmlayercollinearitygwritem.h>
 
 //鲁棒GWR
 MainWidget::MainWidget(QWidget *parent)
@@ -244,6 +245,7 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -308,6 +310,7 @@ void MainWidget::onSaveLayer()
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -352,6 +355,7 @@ void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
     case GwmLayerItem::GwmLayerItemType::ScalableGWR:
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
     case GwmLayerItem::GwmLayerItemType::GWSS:
+    case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
         layerItem = ((GwmLayerVectorItem*)item);
         break;
     default:
@@ -400,6 +404,7 @@ void MainWidget::onExportLayer(QString filetype)
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -871,8 +876,8 @@ void MainWidget::onLcrGWRBtnClicked()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(lcrGWRTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = lcrGWRTaskThread->getResultLayer();
-            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, lcrGWRTaskThread);
+            QgsVectorLayer* resultLayer = lcrGWRTaskThread->resultLayer();
+            GwmLayerCollinearityGWRItem* gwrItem = new GwmLayerCollinearityGWRItem(selectedItem, resultLayer, lcrGWRTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
