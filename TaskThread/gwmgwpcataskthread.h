@@ -47,16 +47,15 @@ public:
     }
 
     double k() const;
+    void setK(double k);
 
     mat localPV() const;
 
-    mat dResult1() const;
+    mat variance() const;
 
-    mat mLoadings;
+    cube loadings() const;
 
-    mat mSdev;
-
-    mat mScores;
+    cube scores() const;
 
 public:     // QThread interface
     void run() override;
@@ -65,20 +64,14 @@ public:     // GwmSpatialMonoscaleAlgorithm interface
     bool isValid(){return true;};
 
 public:  // IParallelalbe interface
-    int parallelAbility() const{
-        return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
-    };
-    virtual ParallelType parallelType() const{return mParallelType;};
+    int parallelAbility() const;;
+    virtual ParallelType parallelType() const;;
     virtual void setParallelType(const ParallelType& type);
 
 public:  // IOpenmpParallelable interface
     void setThreadNum(const int threadNum){};
     //void setOmpThreadNum(const int threadNum){};
 
-public:     // IBandwidthSizeSelectable interface
-    //double criterion(GwmBandwidthWeight *weight);
-
-    void setK(double k);
 
 private:
     void initPoints();
@@ -92,11 +85,9 @@ private:
     {
         return (this->*mPcaFunction)(x , loadings, sdev, scores);
     };
-    /*测试pca*/
-    mat pcatest(const mat& x, cube& loadings, mat& sdev, cube& scores);
 
-    mat pcaSerial(const mat& x, cube& loadings, mat& sdev, cube& scores);
-    mat pcaOmp(const mat& x, cube& loadings, mat& sdev, cube& scores);
+    mat pcaSerial(const mat& x, cube& loadings, mat& variance, cube& scores);
+    mat pcaOmp(const mat& x, cube& loadings, mat& variance, cube& scores);
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
@@ -126,15 +117,24 @@ private:
     PcaFunction mPcaFunction = &GwmGWPCATaskThread::pcaSerial;
 
     mat mLocalPV;
-    mat mDResult1;
-
-    mat mDResult;
-
+    mat mVariance;
+    cube mLoadings;
+    cube mScores;
 };
 
-inline mat GwmGWPCATaskThread::dResult1() const
+inline mat GwmGWPCATaskThread::variance() const
 {
-    return mDResult1;
+    return mVariance;
+}
+
+inline int GwmGWPCATaskThread::parallelAbility() const
+{
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
+}
+
+inline IParallelalbe::ParallelType GwmGWPCATaskThread::parallelType() const
+{
+    return mParallelType;
 }
 
 inline mat GwmGWPCATaskThread::localPV() const
@@ -145,6 +145,21 @@ inline mat GwmGWPCATaskThread::localPV() const
 inline double GwmGWPCATaskThread::k() const
 {
     return mK;
+}
+
+inline cube GwmGWPCATaskThread::scores() const
+{
+    return mScores;
+}
+
+inline cube GwmGWPCATaskThread::loadings() const
+{
+    return mLoadings;
+}
+
+inline void GwmGWPCATaskThread::setK(double k)
+{
+    mK = k;
 }
 
 #endif // GWMGWPCATASKTHREAD_H

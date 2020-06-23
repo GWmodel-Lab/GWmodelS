@@ -6,7 +6,7 @@ GwmLayerGWPCAItem::GwmLayerGWPCAItem(GwmLayerItem* parent, QgsVectorLayer* vecto
 {
     if (taskThread)
     {
-        mdResult1 = taskThread->dResult1();
+        mdResult1 = taskThread->variance();
         mLocalPV = taskThread->localPV();
         mk = taskThread->k();
         mWeight = taskThread->spatialWeight().weight<GwmBandwidthWeight>();

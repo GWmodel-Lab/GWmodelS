@@ -37,75 +37,26 @@ void GwmGWPCATaskThread::run()
     }
     emit message(QString(tr("Principle components analyzing ...")));
     //存储d的计算值
-    mat dResult(mDataPoints.n_rows, mVariables.size(),fill::zeros);
-    //存储R代码中的W
-    mat RW(mDataPoints.n_rows,mVariables.size(),fill::zeros);
-    //GWPCA算法
     mLatestWt = mat(mDataPoints.n_rows,1,fill::zeros);
-    //pca(mX, dResult, RW);
-    /*
-     * 测试算法
-     */
-    /*
-    cube loadings = cube(mDataPoints.n_rows, mVariables.size(), mK);
-    cube scores = cube(mDataPoints.n_rows, mK, mDataPoints.n_rows);
-    mat localPVTest;
-    mat sdev = mat(mDataPoints.n_rows,mVariables.size(),fill::zeros);
-    localPVTest = pcatest(mX, loadings, sdev, scores);
-    */
-    cube loadings = cube(mDataPoints.n_rows, mVariables.size(), mK);
-    cube scores = cube(mDataPoints.n_rows, mK, mDataPoints.n_rows);
-    mat sdev = mat(mDataPoints.n_rows,mVariables.size(),fill::zeros);
-    mLocalPV = pca(mX,loadings,sdev,scores);
-
-    //——————————————————
-    //dResult.print();
-    //R代码中的d1计算
-    //mat tmp(mDataPoints.n_rows, mVariables.size(),fill::zeros);
-    //mDResult1 = tmp;
-    //mDResult1 = (dResult / pow(sum(mLatestWt),0.5)) % (dResult / pow(sum(mLatestWt),0.5));
-    //dResult1.print();
-    //取dResult1的前K列
-    mLocalPV = mDResult1.cols(0,mK-1).each_col() % (1 / sum(mDResult1,1)) *100;
-    mLocalPV.print();
-    //R代码 的 Local variance
-    //t(apply(d1, 2, summary))
-    const vec p = { 0.0, 0.25, 0.5, 0.75, 1.0 };
-    for(int i=0;i<mDResult1.n_cols;i++)
-    {
-        vec q = quantile(mDResult1.col(i), p);
-        q.print("Comp1:");
-    }
-    //R代码 的 Local Proportion of Variance
-    //t(apply(local.PV, 2, summary))
-    for(int i=0;i<mLocalPV.n_cols;i++)
-    {
-        vec q = quantile(mLocalPV.col(i), p);
-        q.print("Comp2:");
-    }
-    //Cumulative summary(rowSums(local.PV))
-    sum(mLocalPV,1).print();
-    vec localPVSum = sum(mLocalPV,1);
-    vec Cumulative = quantile(localPVSum,p);
-    //Cumulative.print();cc/
+    mat sdev;
+    mLocalPV = pca(mX,mLoadings,sdev,mScores);
+    mVariance = sdev % sdev;
 
     //准备resultlayer的数据
 
     //win_var_PC1 列
     // 取RW矩阵每一行最大的列的索引
-    vec RWmaxIndex(mDataPoints.n_rows,fill::zeros);
     QList<QString> win_var_PC1;
-    for(int i=0;i<RWmaxIndex.n_rows;i++)
+    uvec iWinVar = index_max(mLoadings.slice(0), 1);
+    for(int i = 0; i < mDataPoints.n_rows; i++)
     {
-        RWmaxIndex.row(i) = RW.row(i).index_max();
-        win_var_PC1.append(mVariables.at(RW.row(i).index_max()).name);
+        win_var_PC1.append(mVariables.at(iWinVar(i)).name);
     }
     //Com.1_PV列
     //有几列生成几列
     CreateResultLayerData resultLayerData = {
-        qMakePair(QString("%1"), mLocalPV),
-        qMakePair(QString("local_CP"), localPVSum),
-        //qMakePair(QString("win_var_PC1"), win_var_PC1)
+        qMakePair(QString("Comp.%1_PV"), mLocalPV),
+        qMakePair(QString("local_CP"), sum(mLocalPV, 1))
     };
     createResultLayer(resultLayerData,win_var_PC1);
     emit success();
@@ -245,9 +196,7 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
         {
             for (int k = 0; k < value.n_cols; k++)
             {
-                QChar c(k+1);
-                QString variableName = QString("Comp.%1_PV").arg(k+1);
-                QString fieldName = title.arg(variableName);
+                QString fieldName = title.arg(k+1);
                 fields.append(QgsField(fieldName, QVariant::Double, QStringLiteral("double")));
             }
         }
@@ -284,67 +233,6 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
         mResultLayer->addFeature(feature);
     }
     mResultLayer->commitChanges();
-}
-
-mat GwmGWPCATaskThread::pcatest(const mat &x, cube &loadings, mat &sdev, cube &scores)
-{
-    //存储d的计算值
-    mat dResult(mDataPoints.n_rows, mVariables.size(),fill::zeros);
-    //存储R代码中的W
-    mat RW(mDataPoints.n_rows,mVariables.size(),fill::zeros);
-    for(int i=0;i<mDataPoints.n_rows;i++)
-    {
-        //vec distvi = mSpatialWeight.distance()->distance(i);
-        vec wt = mSpatialWeight.spatialWeight(i);
-        //取wt大于0的部分
-        //临时变量?很麻烦
-        uvec positive = find(wt > 0);
-        vec newWt = wt.elem(positive);
-        mat newX = x.rows(positive);
-        if(newWt.n_rows<=5)
-        {
-            break;
-        }
-        //调用PCA函数
-        //事先准备好的D和V
-        mat V;
-        vec D;
-        wpca(newX,newWt,V,D);
-        //存储最新的wt
-        mLatestWt = newWt;
-        dResult.row(i) = trans(D);
-        //dResult.row(0).print();
-        RW.row(i) = trans(V.col(0));
-        //计算loadings
-        for(int j=0;j<mK;j++)
-        {
-            loadings.slice(j).row(i) = trans(V.col(j));
-        }
-        //计算scores
-        mat score = mat(mVariables.length(),mDataPoints.n_rows,fill::zeros);
-        mat scorei = mat(mDataPoints.n_rows,mK,fill::zeros);
-        for(int j=0;j<mK;j++)
-        {
-            //score.each_col() = trans(newX.each_row() % (trans(V.col(j))));
-            for(int a=0;a<mDataPoints.n_rows;a++){
-                vec tmp = trans(newX.row(a) % (trans(V.col(j))));
-                score.col(a) = tmp;
-            }
-            scorei.col(j) = trans(sum(score));
-        }
-        scores.slice(i) = scorei;
-        //计算sdev
-    }
-    //R代码中的d1计算
-    mat tmp(mDataPoints.n_rows, mVariables.size(),fill::zeros);
-    mDResult1 = tmp;
-    mDResult1 = (dResult / pow(sum(mLatestWt),0.5)) % (dResult / pow(sum(mLatestWt),0.5));
-    //计算sdev
-    sdev = sqrt(mDResult1);
-    //dResult1.print();
-    //取dResult1的前K列
-    mLocalPV = mDResult1.cols(0,mK-1).each_col() % (1 / sum(mDResult1,1)) *100;
-    return mLocalPV;
 }
 
 double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *weight)
@@ -426,18 +314,15 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
     return score;
 }
 
-void GwmGWPCATaskThread::setK(double k)
-{
-    mK = k;
-}
-
 mat GwmGWPCATaskThread::pcaSerial(const mat &x, cube &loadings, mat &sdev, cube &scores)
 {
+    int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值
-    mat dResult(mDataPoints.n_rows, mVariables.size(),fill::zeros);
-    //存储R代码中的W
-    mat RW(mDataPoints.n_rows,mVariables.size(),fill::zeros);
-    for(int i=0;i<mDataPoints.n_rows;i++)
+    mat d_all(nVar, nDp,fill::zeros);
+    // 初始化矩阵
+    loadings = cube(nDp, nVar, mK, fill::zeros);
+    scores = cube(nDp, mK, nDp, fill::zeros);
+    for(int i=0;i<nDp;i++)
     {
         //vec distvi = mSpatialWeight.distance()->distance(i);
         vec wt = mSpatialWeight.spatialWeight(i);
@@ -453,53 +338,46 @@ mat GwmGWPCATaskThread::pcaSerial(const mat &x, cube &loadings, mat &sdev, cube 
         //调用PCA函数
         //事先准备好的D和V
         mat V;
-        vec D;
-        wpca(newX,newWt,V,D);
+        vec d;
+        wpca(newX,newWt,V,d);
         //存储最新的wt
         mLatestWt = newWt;
-        dResult.row(i) = trans(D);
-        //dResult.row(0).print();
-        RW.row(i) = trans(V.col(0));
+        d_all.col(i) = d;
         //计算loadings
-        for(int j=0;j<mK;j++)
+        for(int j = 0; j < mK; j++)
         {
             loadings.slice(j).row(i) = trans(V.col(j));
         }
         //计算scores
-        mat score = mat(mVariables.length(),mDataPoints.n_rows,fill::zeros);
-        mat scorei = mat(mDataPoints.n_rows,mK,fill::zeros);
-        for(int j=0;j<mK;j++)
+        mat scorei(nDp, mK, fill::zeros);
+        for(int j = 0; j < mK; j++)
         {
-            //score.each_col() = trans(newX.each_row() % (trans(V.col(j))));
-            for(int a=0;a<mDataPoints.n_rows;a++){
-                vec tmp = trans(newX.row(a) % (trans(V.col(j))));
-                score.col(a) = tmp;
-            }
-            scorei.col(j) = trans(sum(score));
+            mat score = newX.each_row() % trans(V.col(j));
+            scorei.col(j) = sum(score, 1);
         }
         scores.slice(i) = scorei;
-        //计算sdev
     }
     //R代码中的d1计算
-    mat tmp(mDataPoints.n_rows, mVariables.size(),fill::zeros);
-    mDResult1 = tmp;
-    mDResult1 = (dResult / pow(sum(mLatestWt),0.5)) % (dResult / pow(sum(mLatestWt),0.5));
+    d_all = trans(d_all);
+    mat variance = (d_all / pow(sum(mLatestWt),0.5)) % (d_all / pow(sum(mLatestWt),0.5));
     //计算sdev
-    sdev = sqrt(mDResult1);
+    sdev = sqrt(variance);
     //dResult1.print();
     //取dResult1的前K列
-    mLocalPV = mDResult1.cols(0,mK-1).each_col() % (1 / sum(mDResult1,1)) *100;
-    return mLocalPV;
+    mat pv = variance.cols(0, mK - 1).each_col() % (1.0 / sum(variance,1)) * 100.0;
+    return pv;
 }
 
 mat GwmGWPCATaskThread::pcaOmp(const mat &x, cube &loadings, mat &sdev, cube &scores)
 {
+    int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值
-    mat dResult(mDataPoints.n_rows, mVariables.size(),fill::zeros);
-    //存储R代码中的W
-    mat RW(mDataPoints.n_rows,mVariables.size(),fill::zeros);
+    mat d_all(nVar, nDp, fill::zeros);
+    // 初始化矩阵
+    loadings = cube(nDp, nVar, mK, fill::zeros);
+    scores = cube(nDp, mK, nDp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for(int i=0;i<mDataPoints.n_rows;i++)
+    for(int i=0;i<nDp;i++)
     {
         //vec distvi = mSpatialWeight.distance()->distance(i);
         vec wt = mSpatialWeight.spatialWeight(i);
@@ -515,45 +393,38 @@ mat GwmGWPCATaskThread::pcaOmp(const mat &x, cube &loadings, mat &sdev, cube &sc
         //调用PCA函数
         //事先准备好的D和V
         mat V;
-        vec D;
-        wpca(newX,newWt,V,D);
+        vec d;
+        wpca(newX,newWt,V,d);
         //存储最新的wt
-        if(i==mDataPoints.n_rows-1){
+        if(i == nDp - 1)
+        {
             mLatestWt = newWt;
         }
-        dResult.row(i) = trans(D);
-        //dResult.row(0).print();
-        RW.row(i) = trans(V.col(0));
+        d_all.col(i) = d;
         //计算loadings
         for(int j=0;j<mK;j++)
         {
             loadings.slice(j).row(i) = trans(V.col(j));
         }
         //计算scores
-        mat score = mat(mVariables.length(),mDataPoints.n_rows,fill::zeros);
-        mat scorei = mat(mDataPoints.n_rows,mK,fill::zeros);
+        mat scorei = mat(nDp,mK,fill::zeros);
         for(int j=0;j<mK;j++)
         {
-            //score.each_col() = trans(newX.each_row() % (trans(V.col(j))));
-            for(int a=0;a<mDataPoints.n_rows;a++){
-                vec tmp = trans(newX.row(a) % (trans(V.col(j))));
-                score.col(a) = tmp;
-            }
+            mat score = newX.each_row() % trans(V.col(j));
             scorei.col(j) = trans(sum(score));
         }
         scores.slice(i) = scorei;
         //计算sdev
     }
     //R代码中的d1计算
-    mat tmp(mDataPoints.n_rows, mVariables.size(),fill::zeros);
-    mDResult1 = tmp;
-    mDResult1 = (dResult / pow(sum(mLatestWt),0.5)) % (dResult / pow(sum(mLatestWt),0.5));
+    d_all = trans(d_all);
+    mat variance = (d_all / pow(sum(mLatestWt),0.5)) % (d_all / pow(sum(mLatestWt),0.5));
     //计算sdev
-    sdev = sqrt(mDResult1);
+    sdev = sqrt(variance);
     //dResult1.print();
     //取dResult1的前K列
-    mLocalPV = mDResult1.cols(0,mK-1).each_col() % (1 / sum(mDResult1,1)) *100;
-    return mLocalPV;
+    mat pv = variance.cols(0,mK-1).each_col() % (1 / sum(variance,1)) *100;
+    return pv;
 }
 
 
