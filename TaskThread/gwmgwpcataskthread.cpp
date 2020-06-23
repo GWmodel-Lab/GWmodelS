@@ -62,6 +62,29 @@ void GwmGWPCATaskThread::run()
     emit success();
 }
 
+bool GwmGWPCATaskThread::isValid()
+{
+    GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    if(!mIsAutoselectBandwidth)
+    {
+        if(bandwidth->adaptive()){
+            if(bandwidth->bandwidth() <= mVariables.size()){
+                return false;
+            }else{
+
+            }
+        }
+    }
+    if(mVariables.size() == 0){
+        return false;
+    }
+    if(k()>0 && k() <= mVariables.size()){
+        return true;
+    }else{
+        return false;
+    }
+}
+
 void GwmGWPCATaskThread::initPoints()
 {
     int nDp = mDataLayer->featureCount();
@@ -411,7 +434,7 @@ mat GwmGWPCATaskThread::pcaOmp(const mat &x, cube &loadings, mat &sdev, cube &sc
         for(int j=0;j<mK;j++)
         {
             mat score = newX.each_row() % trans(V.col(j));
-            scorei.col(j) = trans(sum(score));
+            scorei.col(j) = sum(score,1);
         }
         scores.slice(i) = scorei;
         //计算sdev

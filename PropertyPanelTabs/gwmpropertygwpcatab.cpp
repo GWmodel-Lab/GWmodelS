@@ -112,7 +112,7 @@ void GwmPropertyGWPCATab::updateUI()
     //const mat& betas = mLayerItem->betas();
     //const mat&betas2 = mLayerItem->mdResult1;
     //const vec p = { 0.0, 0.25, 0.5, 0.75, 1.0 };
-    for (uword r = 0; r < betas2.n_cols-1; r++)
+    for (uword r = 0; r < betas2.n_cols; r++)
     {
         vec q = quantile(betas2.col(r), p);
         QString name = QString("Comp.%1").arg(r+1);

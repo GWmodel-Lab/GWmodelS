@@ -61,7 +61,7 @@ public:     // QThread interface
     void run() override;
 
 public:     // GwmSpatialMonoscaleAlgorithm interface
-    bool isValid(){return true;};
+    bool isValid() override;
 
 public:  // IParallelalbe interface
     int parallelAbility() const;;
