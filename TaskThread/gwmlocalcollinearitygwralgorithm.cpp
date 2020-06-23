@@ -1,33 +1,33 @@
-#include "gwmlcrgwrtaskthread.h"
+#include "gwmlocalcollinearitygwralgorithm.h"
 
 #include <omp.h>
 
-GwmLcrGWRTaskThread::GwmLcrGWRTaskThread():GwmGeographicalWeightedRegressionAlgorithm()
+GwmLocalCollinearityGWRAlgorithm::GwmLocalCollinearityGWRAlgorithm():GwmGeographicalWeightedRegressionAlgorithm()
 {
 
 }
 
-double GwmLcrGWRTaskThread::lambda() const
+double GwmLocalCollinearityGWRAlgorithm::lambda() const
 {
     return mLambda;
 }
 
-void GwmLcrGWRTaskThread::setHasHatmatix(bool value)
+void GwmLocalCollinearityGWRAlgorithm::setHasHatmatix(bool value)
 {
     mHasHatmatix = value;
 }
 
-bool GwmLcrGWRTaskThread::hasHatmatix() const
+bool GwmLocalCollinearityGWRAlgorithm::hasHatmatix() const
 {
     return mHasHatmatix;
 }
 
-double GwmLcrGWRTaskThread::cnThresh() const
+double GwmLocalCollinearityGWRAlgorithm::cnThresh() const
 {
     return mCnThresh;
 }
 
-void GwmLcrGWRTaskThread::run()
+void GwmLocalCollinearityGWRAlgorithm::run()
 {
     // 点位初始化
     emit message(QString(tr("Setting data points")) + (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
@@ -78,17 +78,17 @@ void GwmLcrGWRTaskThread::run()
     emit success();
 }
 
-bool GwmLcrGWRTaskThread::isAutoselectBandwidth() const
+bool GwmLocalCollinearityGWRAlgorithm::isAutoselectBandwidth() const
 {
     return mIsAutoselectBandwidth;
 }
 
-void GwmLcrGWRTaskThread::setBandwidthSelectionCriterionType(const GwmLcrGWRTaskThread::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
+void GwmLocalCollinearityGWRAlgorithm::setBandwidthSelectionCriterionType(const GwmLocalCollinearityGWRAlgorithm::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
 {
      mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
      QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
-         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVSerial),
-         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVOmp),
+         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial),
+         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp),
          //std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVCuda),
          //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICSerial),
          //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICOmp),
@@ -97,7 +97,7 @@ void GwmLcrGWRTaskThread::setBandwidthSelectionCriterionType(const GwmLcrGWRTask
      mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
 }
 
-vec GwmLcrGWRTaskThread::ridgelm(const vec &w, double lambda)
+vec GwmLocalCollinearityGWRAlgorithm::ridgelm(const vec &w, double lambda)
 {
     //X默认加了1
     //默认add.int为False
@@ -128,12 +128,12 @@ vec GwmLcrGWRTaskThread::ridgelm(const vec &w, double lambda)
     return resultb;
 }
 
-arma::mat GwmLcrGWRTaskThread::regression(const arma::mat &x, const arma::vec &y)
+arma::mat GwmLocalCollinearityGWRAlgorithm::regression(const arma::mat &x, const arma::vec &y)
 {
     return (this->*mRegressionFunction)(x, y);
 }
 
-void GwmLcrGWRTaskThread::createResultLayer(CreateResultLayerData data)
+void GwmLocalCollinearityGWRAlgorithm::createResultLayer(CreateResultLayerData data)
 {
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
@@ -190,7 +190,7 @@ void GwmLcrGWRTaskThread::createResultLayer(CreateResultLayerData data)
     mResultLayer->commitChanges();
 }
 
-double GwmLcrGWRTaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *weight)
+double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *weight)
 {
     //行数
     double n = mX.n_rows;
@@ -246,7 +246,7 @@ double GwmLcrGWRTaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *w
     return cv;
 }
 
-double GwmLcrGWRTaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weight)
+double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weight)
 {
     //vec cv_all(mOmpThreadNum, fill::zeros);
     //qDebug() << 'omp';
@@ -302,7 +302,7 @@ double GwmLcrGWRTaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weig
     return cv;
 }
 
-mat GwmLcrGWRTaskThread::regressionSerial(const mat &x, const vec &y)
+mat GwmLocalCollinearityGWRAlgorithm::regressionSerial(const mat &x, const vec &y)
 {
     mat betas(mDataPoints.n_rows,x.n_cols,fill::zeros);
     vec localcn(mDataPoints.n_rows,fill::zeros);
@@ -351,7 +351,7 @@ mat GwmLcrGWRTaskThread::regressionSerial(const mat &x, const vec &y)
     return betas;
 }
 
-mat GwmLcrGWRTaskThread::regressionOmp(const mat &x, const vec &y)
+mat GwmLocalCollinearityGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
 {
     mat betas(mDataPoints.n_rows,x.n_cols,fill::zeros);
     vec localcn(mDataPoints.n_rows,fill::zeros);
@@ -410,7 +410,7 @@ mat GwmLcrGWRTaskThread::regressionOmp(const mat &x, const vec &y)
     return betas;
 }
 
-void GwmLcrGWRTaskThread::setParallelType(const IParallelalbe::ParallelType &type)
+void GwmLocalCollinearityGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &type)
 {
     if(type & parallelAbility())
     {
@@ -418,27 +418,27 @@ void GwmLcrGWRTaskThread::setParallelType(const IParallelalbe::ParallelType &typ
         switch(type){
         case IParallelalbe::ParallelType::SerialOnly:
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            mRegressionFunction = &GwmLcrGWRTaskThread::regressionSerial;
+            mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
             break;
         case IParallelalbe::ParallelType::OpenMP:
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            mRegressionFunction = &GwmLcrGWRTaskThread::regressionOmp;
+            mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionOmp;
             break;
         }
     }
 }
 
-bool GwmLcrGWRTaskThread::lambdaAdjust() const
+bool GwmLocalCollinearityGWRAlgorithm::lambdaAdjust() const
 {
     return mLambdaAdjust;
 }
 
-void GwmLcrGWRTaskThread::setLambdaAdjust(bool lambdaAdjust)
+void GwmLocalCollinearityGWRAlgorithm::setLambdaAdjust(bool lambdaAdjust)
 {
     mLambdaAdjust = lambdaAdjust;
 }
 
-GwmDiagnostic GwmLcrGWRTaskThread::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
+GwmDiagnostic GwmLocalCollinearityGWRAlgorithm::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
@@ -453,7 +453,7 @@ GwmDiagnostic GwmLcrGWRTaskThread::CalcDiagnostic(const mat& x, const vec& y, co
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-bool GwmLcrGWRTaskThread::isValid()
+bool GwmLocalCollinearityGWRAlgorithm::isValid()
 {
     if (GwmGeographicalWeightedRegressionAlgorithm::isValid())
     {
@@ -472,12 +472,12 @@ bool GwmLcrGWRTaskThread::isValid()
     else return false;
 }
 
-void GwmLcrGWRTaskThread::setCnThresh(double cnThresh)
+void GwmLocalCollinearityGWRAlgorithm::setCnThresh(double cnThresh)
 {
     mCnThresh = cnThresh;
 }
 
-void GwmLcrGWRTaskThread::setLambda(double lambda)
+void GwmLocalCollinearityGWRAlgorithm::setLambda(double lambda)
 {
     mLambda = lambda;
 }

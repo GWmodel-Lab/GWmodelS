@@ -78,7 +78,7 @@ SOURCES += \
     TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmgwsstaskthread.cpp \
     TaskThread/gwmindependentvariableselector.cpp \
-    TaskThread/gwmlcrgwrtaskthread.cpp \
+    TaskThread/gwmlocalcollinearitygwralgorithm.cpp \
     TaskThread/gwmmultiscalegwralgorithm.cpp \
     TaskThread/gwmrobustgwralgorithm.cpp \
     TaskThread/gwmsavelayerthread.cpp \
@@ -187,7 +187,7 @@ HEADERS += \
     TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmgwsstaskthread.h \
     TaskThread/gwmindependentvariableselector.h \
-    TaskThread/gwmlcrgwrtaskthread.h \
+    TaskThread/gwmlocalcollinearitygwralgorithm.h \
     TaskThread/gwmmultiscalegwralgorithm.h \
     TaskThread/gwmrobustgwralgorithm.h \
     TaskThread/gwmrobustgwralgorithm.h \
@@ -414,7 +414,7 @@ HEADERS += \
     TaskThread/gwmgwrtaskthread.h \
 #    TaskThread/gwmgwsstaskthread.h \
     TaskThread/gwmindependentvariableselector.h \
-    TaskThread/gwmlcrgwrtaskthread.h \
+    TaskThread/gwmlocalcollinearitygwralgorithm.h \
     TaskThread/gwmmultiscalegwralgorithm.h \
     TaskThread/gwmrobustgwralgorithm.h \
     TaskThread/gwmsavelayerthread.h \

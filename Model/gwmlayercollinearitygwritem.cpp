@@ -1,7 +1,7 @@
 #include "gwmlayercollinearitygwritem.h"
 #include "gwmlayergroupitem.h"
 
-GwmLayerCollinearityGWRItem::GwmLayerCollinearityGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmLcrGWRTaskThread* taskThread)
+GwmLayerCollinearityGWRItem::GwmLayerCollinearityGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmLocalCollinearityGWRAlgorithm* taskThread)
     : GwmLayerVectorItem(parent, vector)
 {
     if (taskThread)

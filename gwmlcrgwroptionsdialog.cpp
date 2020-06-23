@@ -11,7 +11,7 @@
 
 
 
-GwmLcrGWROptionsDialog::GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmLcrGWRTaskThread* thread,QWidget *parent) :
+GwmLcrGWROptionsDialog::GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmLocalCollinearityGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmLcrGWROptionsDialog),
     mMapLayerList(originItemList),
@@ -385,7 +385,7 @@ QVariant GwmLcrGWROptionsDialog::parallelParameters()
     }
 }
 
-void GwmLcrGWROptionsDialog::setTaskThread(GwmLcrGWRTaskThread *taskThread)
+void GwmLcrGWROptionsDialog::setTaskThread(GwmLocalCollinearityGWRAlgorithm *taskThread)
 {
 
 }

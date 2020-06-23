@@ -9,7 +9,7 @@
 
 #include "TaskThread/iparallelable.h"
 
-class GwmLcrGWRTaskThread:public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable,public IOpenmpParallelable
+class GwmLocalCollinearityGWRAlgorithm:public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable,public IOpenmpParallelable
 {
 public:
 
@@ -22,11 +22,13 @@ public:
 
     static GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
 
-    typedef double (GwmLcrGWRTaskThread::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
+    typedef double (GwmLocalCollinearityGWRAlgorithm::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
 
-    typedef mat (GwmLcrGWRTaskThread::*Regression)(const mat&, const vec&);
+    typedef mat (GwmLocalCollinearityGWRAlgorithm::*Regression)(const mat&, const vec&);
 public:
-    GwmLcrGWRTaskThread();
+    GwmLocalCollinearityGWRAlgorithm();
+
+    QString name() const override { return tr("Local-collinearity GWR"); }
 
     double cnThresh() const;
     void setCnThresh(double cnThresh);
@@ -45,17 +47,17 @@ public:
     }
     bool isAutoselectBandwidth() const;
 
-    void GwmLcrGWRTaskThread::setIsAutoselectBandwidth(bool value)
+    void GwmLocalCollinearityGWRAlgorithm::setIsAutoselectBandwidth(bool value)
     {
         mIsAutoselectBandwidth = value;
     }
 
-    bool GwmLcrGWRTaskThread::autoselectBandwidth() const
+    bool GwmLocalCollinearityGWRAlgorithm::autoselectBandwidth() const
     {
         return mIsAutoselectBandwidth;
     }
 
-    BandwidthCriterionList GwmLcrGWRTaskThread::bandwidthSelectorCriterions() const
+    BandwidthCriterionList GwmLocalCollinearityGWRAlgorithm::bandwidthSelectorCriterions() const
     {
         return selector.bandwidthCriterion();
     }
@@ -109,11 +111,11 @@ private:
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
 
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::CV;
-    BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVSerial;
+    BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial;
 
     mat regressionSerial(const mat& x, const vec& y);
     mat regressionOmp(const mat& x, const vec& y);
-    Regression mRegressionFunction = &GwmLcrGWRTaskThread::regressionSerial;
+    Regression mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
 
     IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
@@ -121,17 +123,17 @@ private:
     int mGroupSize = 64;
 };
 
-inline int GwmLcrGWRTaskThread::parallelAbility() const
+inline int GwmLocalCollinearityGWRAlgorithm::parallelAbility() const
 {
     return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
 }
 
-inline IParallelalbe::ParallelType GwmLcrGWRTaskThread::parallelType() const
+inline IParallelalbe::ParallelType GwmLocalCollinearityGWRAlgorithm::parallelType() const
 {
     return mParallelType;
 }
 
-inline void GwmLcrGWRTaskThread::setOmpThreadNum(const int threadNum)
+inline void GwmLocalCollinearityGWRAlgorithm::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
 }

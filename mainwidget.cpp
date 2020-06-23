@@ -853,7 +853,7 @@ void MainWidget::onRobustGWRBtnClicked()
 
 void MainWidget::onLcrGWRBtnClicked()
 {
-    GwmLcrGWRTaskThread * lcrGWRTaskThread = new GwmLcrGWRTaskThread();
+    GwmLocalCollinearityGWRAlgorithm * lcrGWRTaskThread = new GwmLocalCollinearityGWRAlgorithm();
     GwmLcrGWROptionsDialog* gwrLcrOptionDialog = new GwmLcrGWROptionsDialog(mapModel->rootChildren(), lcrGWRTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)

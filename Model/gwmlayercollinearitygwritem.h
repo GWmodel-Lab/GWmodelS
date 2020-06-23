@@ -9,13 +9,13 @@
 #include "gwmlayervectoritem.h"
 #include "Model/gwmlayerattributeitem.h"
 //#include "TaskThread/gwmgwrtaskthread.h"
-#include "TaskThread/gwmlcrgwrtaskthread.h"
+#include "TaskThread/gwmlocalcollinearitygwralgorithm.h"
 
 class GwmLayerCollinearityGWRItem : public GwmLayerVectorItem
 {
     Q_OBJECT
 public:
-    explicit GwmLayerCollinearityGWRItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmLcrGWRTaskThread* taskThread = nullptr);
+    explicit GwmLayerCollinearityGWRItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmLocalCollinearityGWRAlgorithm* taskThread = nullptr);
 
     virtual int childNumber() override;
 

@@ -18,14 +18,14 @@ class GwmLcrGWROptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmLcrGWRTaskThread* thread,QWidget *parent = nullptr);
+    explicit GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmLocalCollinearityGWRAlgorithm* thread,QWidget *parent = nullptr);
     ~GwmLcrGWROptionsDialog();
 
 private:
     Ui::GwmLcrGWROptionsDialog *ui;
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
-    GwmLcrGWRTaskThread* mTaskThread = nullptr;
+    GwmLocalCollinearityGWRAlgorithm* mTaskThread = nullptr;
     GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
 
@@ -63,7 +63,7 @@ public:
     QVariant parallelParameters();
     GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
 
-    void setTaskThread(GwmLcrGWRTaskThread* taskThread);
+    void setTaskThread(GwmLocalCollinearityGWRAlgorithm* taskThread);
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
