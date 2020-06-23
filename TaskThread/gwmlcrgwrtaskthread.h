@@ -123,7 +123,7 @@ private:
 
 inline int GwmLcrGWRTaskThread::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
 }
 
 inline IParallelalbe::ParallelType GwmLcrGWRTaskThread::parallelType() const

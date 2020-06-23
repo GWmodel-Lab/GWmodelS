@@ -112,11 +112,6 @@ vec GwmLcrGWRTaskThread::ridgelm(const vec &w, double lambda)
     Xsd.cols(1, mX.n_cols - 1) = stddev(mX.cols(1, mX.n_cols - 1),0);
     //Xsd = trans(Xsd);
     //计算Xws
-    if (abs(w(0) - 1.0) < 1e-6) {
-//        Xsd.print();
-//        Xw.print("xw");
-//        w.print("w");
-    }
     mat Xws = Xw.each_row() / Xsd;
     double ysd = stddev(yw.col(0));
     mat yws = yw / ysd;
@@ -407,11 +402,11 @@ mat GwmLcrGWRTaskThread::regressionOmp(const mat &x, const vec &y)
             //this->mTrS += hatrow(i);
             //this->mTrStS += sum(hatrow % hatrow);
         }
-        vec shat = sum(shat_all,1);
-        this->mTrS = sum(shat.row(0));
-        this->mTrStS = sum(shat.row(1));
         emit tick(++current, mDataPoints.n_rows);
     }
+    vec shat = sum(shat_all,1);
+    this->mTrS = sum(shat.row(0));
+    this->mTrStS = sum(shat.row(1));
     return betas;
 }
 
