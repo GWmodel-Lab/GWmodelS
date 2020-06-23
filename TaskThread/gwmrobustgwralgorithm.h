@@ -9,80 +9,34 @@
 
 class GwmRobustGWRAlgorithm: public GwmBasicGWRAlgorithm
 {
-public:
-    GwmRobustGWRAlgorithm();
-    //二次权重数组
-    vec mWVect;
+    Q_OBJECT
 
-    bool filtered;
-
-    void setFiltered(bool value);
-
-    // 计算用的矩阵
-//    mat mX;
-//    vec mY;
-    vec mWeightMask;
-//    mat mBetas;
-//    mat mRowSumBetasSE;
-//    mat mBetasSE;
-//    mat mBetasTV;
-//    mat mDataPoints;
-//    mat mRegPoints;
-//    vec mSHat;
-//    vec mQDiag;
-    vec mYHat;
-    vec mResidual;
-    vec mStudentizedResidual;
-//    vec mLocalRSquare;
-
-    double mMse;
-
-    mat regression(const mat& x, const vec& y) override;
-    bool hasHatMatrix() const;
-
-    bool hasFTest() const;
-
-    void setHasHatMatrix(bool hasHatMatrix);
-
-    void setHasFTest(bool hasFTest);
+    typedef double (GwmRobustGWRAlgorithm::*CalcTrQtQFunction)();
+    typedef vec (GwmRobustGWRAlgorithm::*CalcDiagBFunction)(int);
 
     typedef QList<QPair<QString, const mat> > CreateResultLayerData;
 
-    void createResultLayer(CreateResultLayerData data);
+    static GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
 
-    GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+public:
+    GwmRobustGWRAlgorithm();
+    //二次权重数组
+
+    bool filtered() const;
+    void setFiltered(bool value);
+
+public:
+    mat regression(const mat& x, const vec& y) override;
+
+private:
+
+    void createResultLayer(CreateResultLayerData data);
 
     bool isStoreS()
     {
         return mHasHatMatrix && (mDataPoints.n_rows < 8192);
     }
 
-    //mat mBetasSE;
-    vec mShat;
-    //vec mQDiag;
-    mat mS;
-
-    struct FTestParameters
-    {
-        int nDp = 0;
-        int nVar = 0;
-        double trS = 0.0;
-        double trStS = 0.0;
-        double gwrRSS = 0.0;
-        double trQ = 0.0;
-        double trQtQ = 0.0;
-    };
-
-    void fTest(FTestParameters params);
-
-    typedef double (GwmRobustGWRAlgorithm::*CalcTrQtQFunction)();
-    typedef vec (GwmRobustGWRAlgorithm::*CalcDiagBFunction)(int);
-    CalcDiagBFunction mCalcDiagBFunction = &GwmRobustGWRAlgorithm::calcDiagBSerial;
-
-    double calcTrQtQSerial();
-    vec calcDiagBSerial(int i);
-
-    CalcTrQtQFunction mCalcTrQtQFunction = &GwmRobustGWRAlgorithm::calcTrQtQSerial;
 
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
 
@@ -97,6 +51,35 @@ protected:
     // 计算二次权重函数
     vec filtWeight(vec x);
 
+private:
+    vec mShat;
+    //vec mQDiag;
+    mat mS;
+    vec mWeightMask;
+    vec mYHat;
+    vec mResidual;
+    vec mStudentizedResidual;
+    double mMse;
+    vec mWVect;
+    bool mFiltered;
+
+    CalcTrQtQFunction mCalcTrQtQFunction = &GwmRobustGWRAlgorithm::calcTrQtQSerial;
+    CalcDiagBFunction mCalcDiagBFunction = &GwmRobustGWRAlgorithm::calcDiagBSerial;
 };
+
+
+inline bool GwmRobustGWRAlgorithm::filtered() const
+{
+    return mFiltered;
+}
+
+inline void GwmRobustGWRAlgorithm::setFiltered(bool value)
+{
+    if(value == true){
+        this->mFiltered=true;
+    }else{
+        this->mFiltered=false;
+    }
+}
 
 #endif // GWMROBUSTGWRTASKTHREAD_H

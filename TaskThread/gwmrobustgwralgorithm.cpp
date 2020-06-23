@@ -34,7 +34,7 @@ void GwmRobustGWRAlgorithm::run()
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     mWeightMask = vec(nDp, fill::ones);
 
-    if (filtered)
+    if (mFiltered)
     {
         robustGWRCaliFirst();
     }
@@ -98,7 +98,7 @@ void GwmRobustGWRAlgorithm::run()
             fTestParams.trQ = sum(mQDiag);
             fTestParams.trQtQ = trQtQ;
             fTestParams.gwrRSS = sum(res % res);
-            fTest(fTestParams);
+            GwmBasicGWRAlgorithm::fTest(fTestParams);
         }
     }
     else
@@ -167,35 +167,6 @@ vec GwmRobustGWRAlgorithm::filtWeight(vec x)
     return mWVect;
 }
 
-void GwmRobustGWRAlgorithm::setFiltered(bool value)
-{
-    if(value == true){
-        this->filtered=true;
-    }else{
-        this->filtered=false;
-    }
-}
-
-void GwmRobustGWRAlgorithm::setHasFTest(bool hasFTest)
-{
-    mHasFTest = hasFTest;
-}
-
-void GwmRobustGWRAlgorithm::setHasHatMatrix(bool hasHatMatrix)
-{
-    mHasHatMatrix = hasHatMatrix;
-}
-
-bool GwmRobustGWRAlgorithm::hasFTest() const
-{
-    return mHasFTest;
-}
-
-bool GwmRobustGWRAlgorithm::hasHatMatrix() const
-{
-    return mHasHatMatrix;
-}
-
 void GwmRobustGWRAlgorithm::createResultLayer(CreateResultLayerData data)
 {
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
@@ -251,157 +222,6 @@ void GwmRobustGWRAlgorithm::createResultLayer(CreateResultLayerData data)
         mResultLayer->addFeature(feature);
     }
     mResultLayer->commitChanges();
-}
-
-double GwmRobustGWRAlgorithm::calcTrQtQSerial()
-{
-    double trQtQ = 0.0;
-    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
-    emit message(tr("Calculating the trace of matrix Q..."));
-    emit tick(0, nDp);
-    mat wspan(1, nVar, fill::ones);
-    for (arma::uword i = 0; i < nDp; i++)
-    {
-        vec wi = mSpatialWeight.spatialWeight(i);
-        mat xtwi = trans(mX % (wi * wspan));
-        try {
-            mat xtwxR = inv_sympd(xtwi * mX);
-            mat ci = xtwxR * xtwi;
-            mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
-            vec pi = -trans(si);
-            pi(i) += 1.0;
-            double qi = sum(pi % pi);
-            trQtQ += qi * qi;
-            for (arma::uword j = i + 1; j < nDp; j++)
-            {
-                vec wj = mSpatialWeight.spatialWeight(j);
-                mat xtwj = trans(mX % (wj * wspan));
-                try {
-                    mat sj = mX.row(j) * inv_sympd(xtwj * mX) * xtwj;
-                    vec pj = -trans(sj);
-                    pj(j) += 1.0;
-                    double qj = sum(pi % pj);
-                    trQtQ += qj * qj * 2.0;
-                } catch (...) {
-                    emit error("Matrix seems to be singular.");
-                    emit tick(nDp, nDp);
-                    return DBL_MAX;
-                }
-            }
-        } catch (...) {
-            emit error("Matrix seems to be singular.");
-            emit tick(nDp, nDp);
-            return DBL_MAX;
-        }
-        emit tick(i + 1, nDp);
-    }
-    return trQtQ;
-}
-
-vec GwmRobustGWRAlgorithm::calcDiagBSerial(int i)
-{
-    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
-    vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
-    mat ek = eye(nVar, nVar);
-    mat wspan(1, nVar, fill::ones);
-    for (arma::uword j = 0; j < nDp; j++)
-    {
-        vec w = mSpatialWeight.spatialWeight(j);
-        mat xtw = trans(mX % (w * wspan));
-        try {
-            mat C = trans(xtw) * inv_sympd(xtw * mX);
-            c += C.col(i);
-        } catch (...) {
-            emit error("Matrix seems to be singular.");
-            return { DBL_MAX, DBL_MAX };
-        }
-    }
-    for (arma::uword k = 0; k < nDp; k++)
-    {
-        vec w = mSpatialWeight.spatialWeight(k);
-        mat xtw = trans(mX % (w * wspan));
-        try {
-            mat C = trans(xtw) * inv_sympd(xtw * mX);
-            vec b = C.col(i);
-            diagB += (b % b - (1.0 / nDp) * (b % c));
-        } catch (...) {
-            emit error("Matrix seems to be singular.");
-            return { DBL_MAX, DBL_MAX };
-        }
-    }
-    diagB = 1.0 / nDp * diagB;
-    return { sum(diagB), sum(diagB % diagB) };
-}
-
-void GwmRobustGWRAlgorithm::fTest(GwmRobustGWRAlgorithm::FTestParameters params)
-{
-    emit message("F Test");
-    GwmFTestResult f1, f2, f4;
-    double v1 = params.trS, v2 = params.trStS;
-    int nDp = params.nDp, nVar = params.nVar;
-    emit tick(0, nVar + 3);
-//    double edf = 1.0 * nDp - 2 * v1 + v2;
-    double RSSg = params.gwrRSS;
-    vec betao = solve(mX, mY);
-    vec residual = mY - mX * betao;
-    double RSSo = sum(residual % residual);
-    double DFo = nDp - nVar;
-    double delta1 = 1.0 * nDp - 2 * v1 + v2;
-    double sigma2delta1 = RSSg / delta1;
-//    double sigma2 = RSSg / nDp;
-    double trQ = params.trQ, trQtQ = params.trQtQ;
-    double lDelta1 = trQ;
-    double lDelta2 = trQtQ;
-
-    // F1 Test
-    f1.s = (RSSg/lDelta1)/(RSSo/DFo);
-    f1.df1 = lDelta1 * lDelta1 / lDelta2;
-    f1.df2 = DFo;
-    f1.p = gsl_cdf_fdist_P(f1.s, f1.df1, f1.df2);
-    emit tick(1, nVar + 3);
-
-    // F2 Test
-    f2.s = ((RSSo-RSSg)/(DFo-lDelta1))/(RSSo/DFo);
-    f2.df1 = (DFo-lDelta1) * (DFo-lDelta1) / (DFo - 2 * lDelta1 + lDelta2);
-    f2.df2 = DFo;
-    f2.p = gsl_cdf_fdist_Q(f2.s, f2.df1, f2.df2);
-    emit tick(2, nVar + 3);
-
-    // F3 Test
-    vec vk2(nVar, fill::zeros);
-    for (int i = 0; i < nVar; i++)
-    {
-        vec betasi = mBetas.col(i);
-        vec betasJndp = vec(nDp, fill::ones) * (sum(betasi) * 1.0 / nDp);
-        vk2(i) = (1.0 / nDp) * det(trans(betasi - betasJndp) * betasi);
-    }
-    QList<GwmFTestResult> f3;
-    for (int i = 0; i < nVar; i++)
-    {
-        vec diagB = (this->*mCalcDiagBFunction)(i);
-        double g1 = diagB(0);
-        double g2 = diagB(1);
-        double numdf = g1 * g1 / g2;
-        GwmFTestResult f3i;
-        f3i.s = (vk2(i) / g1) / sigma2delta1;
-        f3i.df1 = numdf;
-        f3i.df2 = f1.df1;
-        f3i.p = gsl_cdf_fdist_Q(f3i.s, numdf, f1.df1);
-        f3.append(f3i);
-        emit tick(3 + i, nVar + 3);
-    }
-
-    // F4 Test
-    f4.s = RSSg / RSSo;
-    f4.df1 = delta1;
-    f4.df2 = DFo;
-    f4.p = gsl_cdf_fdist_P(f4.s, f4.df1, f4.df2);
-    emit tick(nVar + 3, nVar + 3);
-    // 保存结果
-    mF1TestResult = f1;
-    mF2TestResult = f2;
-    mF3TestResult = f3;
-    mF4TestResult = f4;
 }
 
 void GwmRobustGWRAlgorithm::robustGWRCaliFirst()
