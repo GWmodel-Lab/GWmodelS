@@ -18,6 +18,7 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     mTaskThread(thread)
 {
     ui->setupUi(this);
+    ui->buttonBox->setStandardButtons(QDialogButtonBox::Cancel);
     ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
     ui->mBwSizeFixedSize->setMaximum(DBL_MAX);
 
@@ -477,13 +478,15 @@ void GwmRobustGWROptionsDialog::updateFields()
 void GwmRobustGWROptionsDialog::enableAccept()
 {
     QString message;
-    if (!mTaskThread->isValid())
+    if (mTaskThread->isValid())
     {
-        ui->mCheckMessage->setText(message);
+        ui->mCheckMessage->setText(tr("Valid."));
+        ui->buttonBox->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     }
     else
     {
-        ui->mCheckMessage->setText(tr("Valid."));
+        ui->mCheckMessage->setText(message);
+        ui->buttonBox->setStandardButtons(QDialogButtonBox::Cancel);
     }
 }
 

@@ -219,6 +219,9 @@ void GwmRobustGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &t
         case IParallelalbe::ParallelType::OpenMP:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixOmp;
             break;
+        case IParallelalbe::ParallelType::CUDA:
+            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixCuda;
+            break;
         default:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
             break;
