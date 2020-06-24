@@ -2,6 +2,7 @@
 #define GWMGGWRALGORITHM_H
 
 #include "gwmbasicgwralgorithm.h"
+#include "gwmggwrbandwidthsizeselector.h"
 
 struct GwmGGWRDiagnostic
 {
@@ -68,6 +69,17 @@ public:
         Poisson,
         Binomial
     };
+
+    typedef double (GwmGGWRAlgorithm::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
+
+public:     // IBandwidthSizeSelectable interface
+    double criterion(GwmBandwidthWeight* bandwidthWeight) override
+    {
+        return (this->*mBandwidthSelectCriterionFunction)(bandwidthWeight);
+    }
+public:     // GwmTaskThread interface
+    QString name() const override { return tr("GGWR"); };
+
 protected:
     Family mFamily;
     double mTol;
@@ -83,6 +95,15 @@ protected:
 
     CreateResultLayerData mResultList;
 
+    mat mWt2;
+    mat myAdj;
+
+    double mLLik = 0;
+
+    BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionCV;
+
+    GwmGGWRBandwidthSizeSelector mBandwidthSizeSelector;
+
 public:
     static vec gwReg(const mat& x, const vec &y, const vec &w, int focus);
 
@@ -93,6 +114,8 @@ public:
     static mat lchoose(mat n,mat k);
     static mat lgammafn(mat x);
 
+    static mat CiMat(const mat& x, const vec& w);
+
 protected:
     void run() override;
 
@@ -101,7 +124,15 @@ protected:
 
     mat diag(mat a);
 
+    void PoissonWt(const mat& x, const vec& y,mat w,bool verbose = true);
+
+    void BinomialWt(const mat& x, const vec& y,mat w,bool verbose = true);
 //    void createResultLayer();
+
+private:
+
+    double bandwidthSizeGGWRCriterionCV(GwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeGGWRCriterionAIC(GwmBandwidthWeight* bandwidthWeight);
 
 public:
     Family getFamily() const;
@@ -118,6 +149,8 @@ public:
     bool setFamily(Family family);
     bool setTol(double tol, QString unit);
     bool setMaxiter(int maxiter);
+
+    void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 };
 
 

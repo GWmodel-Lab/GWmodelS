@@ -1,6 +1,6 @@
 #include "gwmggwrbandwidthsizeselector.h"
 
-GwmGGWRBandwidthSizeSelector::GwmGGWRBandwidthSizeSelector()
+GwmGGWRBandwidthSizeSelector::GwmGGWRBandwidthSizeSelector() : GwmBandwidthSizeSelector()
 {
 
 }

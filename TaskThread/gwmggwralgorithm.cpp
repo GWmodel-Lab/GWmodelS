@@ -33,6 +33,39 @@ void GwmGGWRAlgorithm::run()
     emit message(QString(tr("Setting X and Y.")));
     initXY(mX, mY, mDepVar, mIndepVars);
 
+    // 优选带宽
+    if (mIsAutoselectBandwidth)
+    {
+        emit message(QString(tr("Automatically selecting bandwidth ...")));
+        emit tick(0, 0);
+        if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+        {
+            GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
+            d->setDataPoints(&mDataPoints);
+            d->setFocusPoints(&mDataPoints);
+        }
+        GwmBandwidthWeight* bandwidthWeight0 = mSpatialWeight.weight<GwmBandwidthWeight>();
+        mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
+        double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
+        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSpatialWeight.distance()->maxDistance();
+        mBandwidthSizeSelector.setLower(lower);
+        mBandwidthSizeSelector.setUpper(upper);
+        GwmBandwidthWeight* bandwidthWeight = mBandwidthSizeSelector.optimize(this);
+        if (bandwidthWeight)
+        {
+            mSpatialWeight.setWeight(bandwidthWeight);
+            // 绘图
+            QVariant data = QVariant::fromValue(mBandwidthSizeSelector.bandwidthCriterion());
+            emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
+        }
+        if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+        {
+            GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
+            d->setDataPoints(&mDataPoints);
+            d->setFocusPoints(&mRegressionPoints);
+        }
+    }
+
     int nVar = mX.n_cols;
     int nDp = mDataLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
     mBetas = mat(nVar, nRp, fill::zeros);
@@ -91,7 +124,7 @@ void GwmGGWRAlgorithm::run()
     // Create Result Layer
     if (isAllCorrect)
     {
-        createResultLayer(mResultList);
+        createResultLayer(mResultList,QStringLiteral("_GGWR"));
     }
     emit success();
 }
@@ -383,6 +416,184 @@ bool GwmGGWRAlgorithm::gwrBinomial()
     return isAllCorrect;
 }
 
+
+double GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionCV(GwmBandwidthWeight *bandwidthWeight)
+{
+    int n = mDataPoints.n_rows;
+    vec cv = vec(n);
+    mat wt = mat(n,n);
+    for (int i = 0; i < n; i++)
+    {
+        vec d = mSpatialWeight.distance()->distance(i);
+        vec w = bandwidthWeight->weight(d);
+        w.row(i) = 0;
+        wt.col(i) = w;
+    }
+    if(mFamily == GwmGGWRAlgorithm::Family::Poisson){
+        PoissonWt(mX,mY,wt);
+    }
+    else{
+        BinomialWt(mX,mY,wt);
+    }
+    for (int i = 0; i < n; i++){
+        mat wi = wt.col(i) % mWt2;
+        vec gwsi = gwReg(mX, myAdj, wi, i);
+        mat yhatnoi = mX.row(i) * gwsi;
+        if(mFamily == GwmGGWRAlgorithm::Family::Poisson){
+            cv.row(i) = mY.row(i) - exp(yhatnoi);
+        }
+        else{
+            cv.row(i) = mY.row(i) - exp(yhatnoi)/(1+exp(yhatnoi));
+        }
+    }
+    vec cvsquare = trans(cv) * cv ;
+    double res = sum(cvsquare);
+//    this->mBwScore.insert(bw,res);
+    QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+            .arg(bandwidthWeight->bandwidth())
+            .arg(res);
+    emit message(msg);
+    return res;
+
+}
+
+double GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionAIC(GwmBandwidthWeight *bandwidthWeight)
+{
+
+    int n = mDataPoints.n_rows;
+    vec cv = vec(n);
+    mat wt = mat(n,n);
+    mat S = mat(n,n);
+    for (int i = 0; i < n; i++)
+    {
+        vec d = mSpatialWeight.distance()->distance(i);
+        vec w = bandwidthWeight->weight(d);
+        wt.col(i) = w;
+    }
+    if(mFamily == GwmGGWRAlgorithm::Family::Poisson){
+        PoissonWt(mX,mY,wt);
+    }
+    else{
+        BinomialWt(mX,mY,wt);
+    }
+    vec trS = vec(1,fill::zeros);
+    for (int i = 0; i < n; i++){
+        vec wi = wt.col(i) % mWt2;
+        mat Ci = CiMat(mX,wi);
+        S.row(i) = mX.row(i) * Ci;
+        trS(0) += S(i,i);
+    }
+    double AICc;
+    if(S.is_finite()){
+        double trs = double(trS(0));
+        AICc = -2*mLLik + 2*trs + 2*trs*(trs+1)/(n-trs-1);
+    }
+    else{
+        AICc = qInf();
+    }
+
+    QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+            .arg(bandwidthWeight->bandwidth())
+            .arg(AICc);
+    emit message(msg);
+    return AICc;
+}
+
+void GwmGGWRAlgorithm::PoissonWt(const mat &x, const vec &y, mat wt,bool verbose){
+//    double tol = 1.0e-5;
+//    int maxiter = 20;
+    int varn = x.n_cols;
+    int dpn = x.n_rows;
+    mat betas = mat(varn, dpn, fill::zeros);
+    mat S = mat(dpn,dpn);
+    int itCount = 0;
+    double oldLLik = 0.0;
+    vec mu = y + 0.1;
+    vec nu = log(mu);
+    vec cv = vec(dpn);
+    mWt2 = ones(dpn);
+
+    while(1){
+        myAdj = nu + (y - mu)/mu;
+        for (int i = 0; i < dpn; i++)
+        {
+            vec wi = wt.col(i);
+            vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
+            betas.col(i) = gwsi;
+        }
+        mat betas1 = trans(betas);
+        nu = Fitted(x,betas1);
+        mu = exp(nu);
+        oldLLik = mLLik;
+        vec lliktemp = dpois(y,mu);
+        mLLik = sum(lliktemp);
+        if (abs((oldLLik - mLLik)/mLLik) < mTol)
+            break;
+        mWt2 = mu;
+        itCount++;
+        if (itCount == mMaxiter)
+            break;
+    }
+//    return cv;
+}
+
+
+void GwmGGWRAlgorithm::BinomialWt(const mat &x, const vec &y, mat wt,bool verbose){
+//    double tol = 1.0e-5;
+//    int maxiter = 20;
+    int varn = x.n_cols;
+    int dpn = x.n_rows;
+    mat betas = mat(varn, dpn, fill::zeros);
+    mat S = mat(dpn,dpn);
+    mat n = vec(y.n_rows,fill::ones);
+    int itCount = 0;
+//    double lLik = 0.0;
+    double oldLLik = 0.0;
+    vec mu = vec(dpn,fill::ones) * 0.5;
+    vec nu = vec(dpn,fill::zeros);
+//    vec cv = vec(dpn);
+    mWt2 = ones(dpn);
+
+    while(1){
+        //计算公式有调整
+        myAdj = nu + (y - mu)/(mu % (1 - mu));
+        for (int i = 0; i < dpn; i++)
+        {
+            vec wi = wt.col(i);
+            vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
+            betas.col(i) = gwsi;
+        }
+        mat betas1 = trans(betas);
+        nu = Fitted(x,betas1);
+        mu = exp(nu)/(1 + exp(nu));
+        oldLLik = mLLik;
+        mLLik = sum(lchoose(n,y) + (n-y)%log(1 - mu/n) + y%log(mu/n));
+        if (abs((oldLLik - mLLik)/mLLik) < mTol)
+            break;
+        mWt2 = n%mu%(1-mu);
+        itCount++;
+        if (itCount == mMaxiter)
+            break;
+    }
+}
+
+
+void GwmGGWRAlgorithm::setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
+{
+    mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
+    QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionCV),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionCV),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionCV),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionAIC),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionAIC),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::CUDA), &GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionAIC)
+    };
+    mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
+}
+
 mat GwmGGWRAlgorithm::diag(mat a){
     int n = a.n_rows;
     mat res = mat(uword(0), uword(0));
@@ -463,3 +674,7 @@ mat GwmGGWRAlgorithm::lgammafn(mat x){
     return res;
 }
 
+mat GwmGGWRAlgorithm::CiMat(const mat& x, const vec &w)
+{
+    return inv(trans(x) * diagmat(w) * x) * trans(x) * diagmat(w);
+}

@@ -145,7 +145,7 @@ protected:
 
 protected:
 
-    void createResultLayer(CreateResultLayerData data);
+    void createResultLayer(CreateResultLayerData data,QString name = QStringLiteral("_GWR"));
 
 private:
 

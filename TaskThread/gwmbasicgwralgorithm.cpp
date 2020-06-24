@@ -565,12 +565,12 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, ma
     return betas.t();
 }
 
-void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data)
+void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString name)
 {
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
-    layerName += QStringLiteral("_GWR");
+    layerName += name;
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(srcLayer->crs());
 
