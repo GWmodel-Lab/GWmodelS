@@ -143,7 +143,7 @@ protected:
         return (mSpatialWeight.distance()->type() == GwmDistance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
     }
 
-private:
+protected:
     void createResultLayer(CreateResultLayerData data);
     void initCuda(IGWmodelCUDA *cuda, const mat &x, const vec &y);
 

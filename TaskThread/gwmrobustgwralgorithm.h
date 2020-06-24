@@ -9,94 +9,79 @@
 
 class GwmRobustGWRAlgorithm: public GwmBasicGWRAlgorithm
 {
-public:
-    GwmRobustGWRAlgorithm();
-    //二次权重数组
-    vec mWVect;
-
-    bool filtered;
-
-    void setFiltered(bool value);
-
-    // 计算用的矩阵
-//    mat mX;
-//    vec mY;
-    vec mWeightMask;
-//    mat mBetas;
-//    mat mRowSumBetasSE;
-//    mat mBetasSE;
-//    mat mBetasTV;
-//    mat mDataPoints;
-//    mat mRegPoints;
-//    vec mSHat;
-//    vec mQDiag;
-    vec mYHat;
-    vec mResidual;
-    vec mStudentizedResidual;
-//    vec mLocalRSquare;
-
-    double mMse;
-
-    mat regression(const mat& x, const vec& y) override;
-    bool hasHatMatrix() const;
-
-    bool hasFTest() const;
-
-    void setHasHatMatrix(bool hasHatMatrix);
-
-    void setHasFTest(bool hasFTest);
+    Q_OBJECT
 
     typedef QList<QPair<QString, const mat> > CreateResultLayerData;
 
-    void createResultLayer(CreateResultLayerData data);
+    typedef mat (GwmRobustGWRAlgorithm::*RegressionHatmatrix)(const mat&, const vec&, mat&, vec&, vec&, mat&);
 
-    GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+    static GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+
+public:
+    GwmRobustGWRAlgorithm();
+    //二次权重数组
+
+    bool filtered() const;
+    void setFiltered(bool value);
+
+public:
+    mat regression(const mat& x, const vec& y) override;
+
+public:
+    void setParallelType(const ParallelType &type) override;
+    int parallelAbility() const override;
+
+protected:
+    void createResultLayer(CreateResultLayerData data);
 
     bool isStoreS()
     {
         return mHasHatMatrix && (mDataPoints.n_rows < 8192);
     }
 
-    //mat mBetasSE;
-    vec mShat;
-    //vec mQDiag;
-    mat mS;
-
-    struct FTestParameters
-    {
-        int nDp = 0;
-        int nVar = 0;
-        double trS = 0.0;
-        double trStS = 0.0;
-        double gwrRSS = 0.0;
-        double trQ = 0.0;
-        double trQtQ = 0.0;
-    };
-
-    void fTest(FTestParameters params);
-
-    typedef double (GwmRobustGWRAlgorithm::*CalcTrQtQFunction)();
-    typedef vec (GwmRobustGWRAlgorithm::*CalcDiagBFunction)(int);
-    CalcDiagBFunction mCalcDiagBFunction = &GwmRobustGWRAlgorithm::calcDiagBSerial;
-
-    double calcTrQtQSerial();
-    vec calcDiagBSerial(int i);
-
-    CalcTrQtQFunction mCalcTrQtQFunction = &GwmRobustGWRAlgorithm::calcTrQtQSerial;
+    // 鲁棒GWR的第一种解法
+    mat robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S);
+    // 第二种解法
+    mat robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S);
+    // 计算二次权重函数
+    vec filtWeight(vec residual, double mse);
 
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    mat regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    mat regressionHatmatrixCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
 
 protected:
     void run() override;
-    // 主解算函数
-    void gwrModelCalibration();
-    // 鲁棒GWR的第一种解法
-    void robustGWRCaliFirst();
-    // 第二种解法
-    void robustGWRCaliSecond();
-    // 计算二次权重函数
-    vec filtWeight(vec x);
 
+private:
+    bool mFiltered;
+
+    vec mShat;
+    vec mQDiag;
+    mat mS;
+    vec mWeightMask;
+
+    RegressionHatmatrix mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
 };
+
+
+inline bool GwmRobustGWRAlgorithm::filtered() const
+{
+    return mFiltered;
+}
+
+inline void GwmRobustGWRAlgorithm::setFiltered(bool value)
+{
+    if(value == true){
+        this->mFiltered=true;
+    }else{
+        this->mFiltered=false;
+    }
+}
+
+inline int GwmRobustGWRAlgorithm::parallelAbility() const
+{
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
+}
 
 #endif // GWMROBUSTGWRTASKTHREAD_H

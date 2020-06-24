@@ -9,6 +9,7 @@
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
+#include <GWmodelCUDA/ICUDAInspector.h>
 
 GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmRobustGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
@@ -18,6 +19,7 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     mTaskThread(thread)
 {
     ui->setupUi(this);
+    ui->buttonBox->setStandardButtons(QDialogButtonBox::Cancel);
     ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
     ui->mBwSizeFixedSize->setMaximum(DBL_MAX);
 
@@ -59,6 +61,30 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onGPURadioToggled);
+
+    // 获取显卡信息
+    ICUDAInspector* inspector = CUDAInspector_Create();
+    int gpuCount = inspector->GetDeviceCount();
+    if (gpuCount > 0)
+    {
+        for (int i = 0; i < gpuCount; ++i)
+        {
+            char name[255] = { "" };
+            int nameLength = inspector->GetDeviceName(i);
+            for (int n = 0; n < nameLength; ++n)
+            {
+                name[n] = inspector->GetNameChar(n);
+            }
+            name[nameLength] = '\0';
+            QString gpuItem(name);
+            ui->mGPUSelection->addItem(gpuItem);
+        }
+        CUDAInspector_Delete(inspector);
+    }
+    else
+    {
+        ui->mCalcParallelGPURadio->setEnabled(false);
+    }
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mCalcParallelNoneRadio->setChecked(true);
@@ -450,11 +476,25 @@ void GwmRobustGWROptionsDialog::updateFields()
     }
     mTaskThread->setSpatialWeight(spatialWeight);
     // 并行设置
-//    if (distSrcType != GwmRobustGWRTaskThread::DistanceSourceType::DMatFile)
-//    {
-//        mTaskThread->setParallelMethodType(this->parallelMethod());
-//        mTaskThread->setParallelParameter(this->parallelParameters());
-//    }
+    if (ui->mCalcParallelNoneRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
+    else if (ui->mCalcParallelMultithreadRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
+    }
+    else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::CUDA);
+        mTaskThread->setGroupSize(ui->mSampleGroupSize->value());
+        mTaskThread->setGPUId(ui->mGPUSelection->currentIndex());
+    }
+    else
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
     mTaskThread->setHasFTest(ui->cbxFTest->isChecked());
@@ -465,13 +505,15 @@ void GwmRobustGWROptionsDialog::updateFields()
 void GwmRobustGWROptionsDialog::enableAccept()
 {
     QString message;
-    if (!mTaskThread->isValid())
+    if (mTaskThread->isValid())
     {
-        ui->mCheckMessage->setText(message);
+        ui->mCheckMessage->setText(tr("Valid."));
+        ui->buttonBox->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     }
     else
     {
-        ui->mCheckMessage->setText(tr("Valid."));
+        ui->mCheckMessage->setText(message);
+        ui->buttonBox->setStandardButtons(QDialogButtonBox::Cancel);
     }
 }
 
