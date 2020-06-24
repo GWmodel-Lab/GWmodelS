@@ -543,6 +543,8 @@ void GwmGWROptionsDialog::updateFields()
     else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
     {
         mTaskThread->setParallelType(IParallelalbe::CUDA);
+        mTaskThread->setGroupSize(ui->mSampleGroupSize->value());
+        mTaskThread->setGPUId(ui->mGPUSelection->currentIndex());
     }
     else
     {

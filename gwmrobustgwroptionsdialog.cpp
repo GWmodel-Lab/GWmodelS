@@ -9,6 +9,7 @@
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
+#include <GWmodelCUDA/ICUDAInspector.h>
 
 GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmRobustGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
@@ -60,6 +61,30 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onGPURadioToggled);
+
+    // 获取显卡信息
+    ICUDAInspector* inspector = CUDAInspector_Create();
+    int gpuCount = inspector->GetDeviceCount();
+    if (gpuCount > 0)
+    {
+        for (int i = 0; i < gpuCount; ++i)
+        {
+            char name[255] = { "" };
+            int nameLength = inspector->GetDeviceName(i);
+            for (int n = 0; n < nameLength; ++n)
+            {
+                name[n] = inspector->GetNameChar(n);
+            }
+            name[nameLength] = '\0';
+            QString gpuItem(name);
+            ui->mGPUSelection->addItem(gpuItem);
+        }
+        CUDAInspector_Delete(inspector);
+    }
+    else
+    {
+        ui->mCalcParallelGPURadio->setEnabled(false);
+    }
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mCalcParallelNoneRadio->setChecked(true);
@@ -463,6 +488,8 @@ void GwmRobustGWROptionsDialog::updateFields()
     else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
     {
         mTaskThread->setParallelType(IParallelalbe::CUDA);
+        mTaskThread->setGroupSize(ui->mSampleGroupSize->value());
+        mTaskThread->setGPUId(ui->mGPUSelection->currentIndex());
     }
     else
     {
