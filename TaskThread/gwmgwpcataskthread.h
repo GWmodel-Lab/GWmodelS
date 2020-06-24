@@ -20,9 +20,8 @@ class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidt
 
     typedef double (GwmGWPCATaskThread::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
 
-    typedef mat (GwmGWPCATaskThread::*PcaFunction)(const mat& , cube& , mat& , cube& );
-
-    typedef mat (GwmGWPCATaskThread::*PcaNotScoresFunction)(const mat&, cube&, mat&);
+    typedef mat (GwmGWPCATaskThread::*PcaLoadingsSdevScoresFunction)(const mat& , cube& , mat& , cube& );
+    typedef mat (GwmGWPCATaskThread::*PcaLoadingsSdev)(const mat&, cube&, mat&);
 
 public:
     GwmGWPCATaskThread();
@@ -88,19 +87,19 @@ private:
 
     mat pca(const mat& x, cube& loadings, mat& sdev, cube& scores)
     {
-        return (this->*mPcaFunction)(x , loadings, sdev, scores);
+        return (this->*mPcaLoadingsSdevScoresFunction)(x , loadings, sdev, scores);
     };
 
     //实现不计算scores的pca
-    mat pcaNotScores(const mat& x, cube& loadings, mat& variance)
+    mat pca(const mat& x, cube& loadings, mat& variance)
     {
-        return (this->*mPcaNotScoresFunction)(x,loadings,variance);
+        return (this->*mPcaLoadingsSdevFunction)(x,loadings,variance);
     }
 
     mat pcaSerial(const mat& x, cube& loadings, mat& variance, cube& scores);
     mat pcaOmp(const mat& x, cube& loadings, mat& variance, cube& scores);
-    mat pcaNotScoresSerial(const mat& x, cube& loadings, mat& variance);
-    mat pcaNotScoresOmp(const mat& x, cube& loadings, mat& variance);
+    mat pcaSerial(const mat& x, cube& loadings, mat& variance);
+    mat pcaOmp(const mat& x, cube& loadings, mat& variance);
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
@@ -127,8 +126,8 @@ private:
     IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
 
-    PcaFunction mPcaFunction = &GwmGWPCATaskThread::pcaSerial;
-    PcaNotScoresFunction mPcaNotScoresFunction = &GwmGWPCATaskThread::pcaNotScoresSerial;
+    PcaLoadingsSdevScoresFunction mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaSerial;
+    PcaLoadingsSdev mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaSerial;
 
     mat mLocalPV;
     mat mVariance;

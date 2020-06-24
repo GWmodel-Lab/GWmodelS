@@ -44,7 +44,7 @@ void GwmGWPCATaskThread::run()
         mLocalPV = pca(mX,mLoadings,sdev,mScores);
         mVariance = sdev % sdev;
     }else if(scoresCal() == false){
-        mLocalPV = pcaNotScores(mX,mLoadings,mVariance);
+        mLocalPV = pca(mX,mLoadings,mVariance);
     }
 
     //准备resultlayer的数据
@@ -196,11 +196,13 @@ void GwmGWPCATaskThread::setParallelType(const IParallelalbe::ParallelType &type
         switch (type) {
         case IParallelalbe::ParallelType::SerialOnly:
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            mPcaFunction = &GwmGWPCATaskThread::pcaSerial;
+            mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaSerial;
+            mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaSerial;
             break;
         case IParallelalbe::ParallelType::OpenMP:
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            mPcaFunction = &GwmGWPCATaskThread::pcaOmp;
+            mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaOmp;
+            mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaOmp;
             break;
         }
     }
@@ -473,7 +475,7 @@ mat GwmGWPCATaskThread::pcaOmp(const mat &x, cube &loadings, mat &sdev, cube &sc
     return pv;
 }
 
-mat GwmGWPCATaskThread::pcaNotScoresSerial(const mat &x, cube &loadings, mat &variance)
+mat GwmGWPCATaskThread::pcaSerial(const mat &x, cube &loadings, mat &variance)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值
@@ -517,7 +519,7 @@ mat GwmGWPCATaskThread::pcaNotScoresSerial(const mat &x, cube &loadings, mat &va
     return pv;
 }
 
-mat GwmGWPCATaskThread::pcaNotScoresOmp(const mat &x, cube &loadings, mat &variance)
+mat GwmGWPCATaskThread::pcaOmp(const mat &x, cube &loadings, mat &variance)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值
