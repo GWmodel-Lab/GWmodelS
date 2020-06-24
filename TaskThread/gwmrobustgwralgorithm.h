@@ -2,7 +2,6 @@
 #define GWMROBUSTGWRTASKTHREAD_H
 
 #include "gwmgwrtaskthread.h"
-#include "GWmodel/GWmodel.h"
 
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "TaskThread/gwmbasicgwralgorithm.h"

@@ -56,7 +56,8 @@ void GwmLocalCollinearityGWRAlgorithm::run()
     vec hatrow(mDataPoints.n_rows,fill::zeros);
     //yhat赋值
     mBetas = regression(mX, mY);
-    vec mYHat = fitted(mX,mBetas);
+    //vec mYHat = fitted(mX,mBetas);
+    vec mYHat = sum(mBetas % mX,1);
     vec mResidual = mY - mYHat;
     mDiagnostic.RSS = sum(mResidual % mResidual);
     mDiagnostic.ENP = 2*this->mTrS - this->mTrStS;
@@ -238,7 +239,8 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandw
         betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
     }
     //yhat赋值
-    vec mYHat = fitted(mX,betas);
+    //vec mYHat = fitted(mX,betas);
+    vec mYHat = sum(mBetas % mX,1);
     //计算residual
     vec mResidual = mY - mYHat;
     //计算cv
@@ -294,7 +296,8 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidt
         betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
     }
     //yhat赋值
-    vec mYHat = fitted(mX,betas);
+    //vec mYHat = fitted(mX,betas);
+    vec mYHat = sum(mBetas % mX,1);
     //计算residual
     vec mResidual = mY - mYHat;
     //计算cv
