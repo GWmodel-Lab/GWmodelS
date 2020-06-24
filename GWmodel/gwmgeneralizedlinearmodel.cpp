@@ -1,7 +1,8 @@
 #include "gwmgeneralizedlinearmodel.h"
 #include "gwmpoissonmodel.h"
 #include "gwmbinomialmodel.h"
-#include "GWmodel.h"
+//#include "GWmodel.h"
+#include "TaskThread/gwmggwralgorithm.h"
 
 GwmGeneralizedLinearModel::GwmGeneralizedLinearModel()
 {
@@ -69,10 +70,10 @@ void GwmGeneralizedLinearModel::fit(){
                 xadj.col(i) = mX.col(i)%w;
             }
             for (int i = 0; i < mX.n_rows; i++){
-                start.col(i) = gwReg(xadj,z%w,vec(mX.n_rows,fill::ones),i);
+                start.col(i) = GwmGGWRAlgorithm::gwReg(xadj,z%w,vec(mX.n_rows,fill::ones),i);
             }
             mat starttrans = trans(start);
-            eta = gwFitted(mX , starttrans) ; //?不是很确定
+            eta = GwmGGWRAlgorithm::Fitted(mX , starttrans) ; //?不是很确定
             mu = mModel->linkinv(eta + mOffset);
             vec devtemp = mModel->devResids(mY,mu,mWeight);
             mDev = sum(devtemp);
@@ -85,7 +86,7 @@ void GwmGeneralizedLinearModel::fit(){
                     ii++;
                     start = (start + coefold)/2;
                     mat starttrans = trans(start);
-                    eta = gwFitted(mX , starttrans);
+                    eta = GwmGGWRAlgorithm::Fitted(mX , starttrans);
                     vec devtemp = mModel->devResids(mY,mu,mWeight);
                     mDev = sum(devtemp);
                 }

@@ -83,13 +83,21 @@ protected:
 
     CreateResultLayerData mResultList;
 
+public:
+    static vec gwReg(const mat& x, const vec &y, const vec &w, int focus);
+
+    static vec gwRegHatmatrix(const mat &x, const vec &y, const vec &w, int focus, mat& ci, mat& s_ri);
+
+    static mat dpois(mat y,mat mu);
+    static mat dbinom(mat y,mat m,mat mu);
+    static mat lchoose(mat n,mat k);
+    static mat lgammafn(mat x);
 
 protected:
     void run() override;
 
     bool gwrPoisson();
     bool gwrBinomial();
-
 
     mat diag(mat a);
 

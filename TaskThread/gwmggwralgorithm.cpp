@@ -1,8 +1,10 @@
 #include "gwmggwralgorithm.h"
 
-#include "GWmodel/GWmodel.h"
+//#include "GWmodel/GWmodel.h"
 //#include "gwmggwrbandwidthselectionthread.h"
 #include "GWmodel/gwmgeneralizedlinearmodel.h"
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
 #include <exception>
 
@@ -133,7 +135,7 @@ bool GwmGGWRAlgorithm::gwrPoisson()
             mBetas.col(i) = gwsi;
         }
         mat mBetastemp = trans(mBetas);
-        nu = gwFitted(mX,mBetastemp);
+        nu = Fitted(mX,mBetastemp);
         mu = exp(nu);
         oldLLik = lLik;
         vec lliktemp = dpois(mY,mu);
@@ -195,7 +197,7 @@ bool GwmGGWRAlgorithm::gwrPoisson()
             double trS = mShat(0);
             double trStS = mShat(1);
 
-            yhat = exp(gwFitted(mX,mBetas));
+            yhat = exp(Fitted(mX,mBetas));
             res = mY - yhat;
 
             //计算诊断信息
@@ -282,7 +284,7 @@ bool GwmGGWRAlgorithm::gwrBinomial()
             mBetas.col(i) = gwsi;
         }
         mat mBetastemp = trans(mBetas);
-        nu = gwFitted(mX,mBetastemp);
+        nu = Fitted(mX,mBetastemp);
         mu = exp(nu)/(1 + exp(nu));
         oldLLik = lLik;
         lLik = sum(lchoose(n,mY) + (n-mY)%log(1 - mu/n) + mY%log(mu/n));
@@ -327,7 +329,7 @@ bool GwmGGWRAlgorithm::gwrBinomial()
             double trS = mShat(0);
             double trStS = mShat(1);
 
-            yhat = gwFitted(mX,mBetas);
+            yhat = Fitted(mX,mBetas);
             yhat = exp(yhat)/(1+exp(yhat));
 
             res = mY - yhat;
@@ -399,3 +401,65 @@ mat GwmGGWRAlgorithm::diag(mat a){
     }
     return res;
 }
+
+//GWR clalibration
+vec GwmGGWRAlgorithm::gwReg(const mat& x, const vec &y, const vec &w, int focus)
+{
+    mat wspan(1, x.n_cols, fill::ones);
+    mat xtw = trans(x % (w * wspan));
+    mat xtwx = xtw * x;
+    mat xtwy = xtw * y;
+    mat xtwx_inv = inv(xtwx);
+    vec beta = xtwx_inv * xtwy;
+    return beta;
+}
+
+vec GwmGGWRAlgorithm::gwRegHatmatrix(const mat &x, const vec &y, const vec &w, int focus, mat& ci, mat& s_ri)
+{
+    mat wspan(1, x.n_cols, fill::ones);
+    mat xtw = trans(x % (w * wspan));
+    mat xtwx = xtw * x;
+    mat xtwy = xtw * y;
+    mat xtwx_inv = inv(xtwx);
+    vec beta = xtwx_inv * xtwy;
+    ci = xtwx_inv * xtw;
+    s_ri = x.row(focus) * ci;
+    return beta;
+}
+
+mat GwmGGWRAlgorithm::dpois(mat y,mat mu){
+    int n = y.n_rows;
+    mat res = vec(n);
+    mat pdf = lgammafn(y);
+    res = -mu + y%log(mu) - pdf;
+    return res;
+}
+
+mat GwmGGWRAlgorithm::lchoose(mat n,mat k){
+    int nrow = n.n_rows;
+    mat res = vec(nrow);
+    for(int i = 0;i < nrow; i++){
+        res.row(i) = lgamma(n[i]+1) - lgamma(n[i]-k[i]+1) - lgamma(k[i]+1);
+    }
+    return res;
+}
+
+mat GwmGGWRAlgorithm::dbinom(mat y,mat m,mat mu){
+    int n = y.n_rows;
+    mat res = vec(n);
+    for(int i = 0;i < n; i++){
+        double pdf = gsl_ran_binomial_pdf(int(y[i]), mu[i], int(m[i]));
+        res[i] = log(pdf);
+    }
+    return res;
+}
+
+mat GwmGGWRAlgorithm::lgammafn(mat x){
+    int n = x.n_rows;
+    mat res = vec(n,fill::zeros);
+    for(int j = 0; j < n ; j++){
+        res[j] = lgamma(x[j]);
+    }
+    return res;
+}
+
