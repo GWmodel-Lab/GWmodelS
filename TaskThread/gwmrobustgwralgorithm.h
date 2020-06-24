@@ -23,6 +23,8 @@ public:
     bool filtered() const;
     void setFiltered(bool value);
 
+    QString name() const override { return tr("Robust GWR"); }
+
 public:
     mat regression(const mat& x, const vec& y) override;
 
