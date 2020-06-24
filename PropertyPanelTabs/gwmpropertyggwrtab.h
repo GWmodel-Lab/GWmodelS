@@ -28,9 +28,6 @@ private:
 private:
     GwmLayerGGWRItem* mLayerItem;
 
-    GwmPlot* mModelSelVarsPlot;
-    GwmPlot* mModelSelAICsPlot;
-
     GwmPlot* mBandwidthSelPlot;
 
 private:

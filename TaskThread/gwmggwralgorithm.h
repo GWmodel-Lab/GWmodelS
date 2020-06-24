@@ -151,6 +151,8 @@ public:
     bool setMaxiter(int maxiter);
 
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
+
+    BandwidthCriterionList bandwidthSelectorCriterions() const;
 };
 
 
@@ -205,5 +207,9 @@ inline bool GwmGGWRAlgorithm::setMaxiter(int maxiter){
     return true;
 }
 
+inline BandwidthCriterionList GwmGGWRAlgorithm::bandwidthSelectorCriterions() const
+{
+    return mBandwidthSizeSelector.bandwidthCriterion();
+}
 
 #endif // GWMGGWRALGORITHM_H

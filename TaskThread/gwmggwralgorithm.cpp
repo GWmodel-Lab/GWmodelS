@@ -502,8 +502,6 @@ double GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionAIC(GwmBandwidthWeight *bandw
 }
 
 void GwmGGWRAlgorithm::PoissonWt(const mat &x, const vec &y, mat wt,bool verbose){
-//    double tol = 1.0e-5;
-//    int maxiter = 20;
     int varn = x.n_cols;
     int dpn = x.n_rows;
     mat betas = mat(varn, dpn, fill::zeros);
@@ -541,8 +539,6 @@ void GwmGGWRAlgorithm::PoissonWt(const mat &x, const vec &y, mat wt,bool verbose
 
 
 void GwmGGWRAlgorithm::BinomialWt(const mat &x, const vec &y, mat wt,bool verbose){
-//    double tol = 1.0e-5;
-//    int maxiter = 20;
     int varn = x.n_cols;
     int dpn = x.n_rows;
     mat betas = mat(varn, dpn, fill::zeros);
@@ -641,7 +637,7 @@ vec GwmGGWRAlgorithm::gwRegHatmatrix(const mat &x, const vec &y, const vec &w, i
 mat GwmGGWRAlgorithm::dpois(mat y,mat mu){
     int n = y.n_rows;
     mat res = vec(n);
-    mat pdf = lgammafn(y);
+    mat pdf = lgamma(y+1);
     res = -mu + y%log(mu) - pdf;
     return res;
 }
@@ -649,9 +645,10 @@ mat GwmGGWRAlgorithm::dpois(mat y,mat mu){
 mat GwmGGWRAlgorithm::lchoose(mat n,mat k){
     int nrow = n.n_rows;
     mat res = vec(nrow);
-    for(int i = 0;i < nrow; i++){
-        res.row(i) = lgamma(n[i]+1) - lgamma(n[i]-k[i]+1) - lgamma(k[i]+1);
-    }
+//    for(int i = 0;i < nrow; i++){
+//        res.row(i) = lgamma(n[i]+1) - lgamma(n[i]-k[i]+1) - lgamma(k[i]+1);
+//    }
+    res = lgamma(n+1) - lgamma(n-k+1) - lgamma(k+1);
     return res;
 }
 
