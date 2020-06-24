@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>GWR Configure</string>
+   <string>Local-collinearity GWR Configure</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1,0,0,0,0,0,0">
    <item>

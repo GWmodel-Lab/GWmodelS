@@ -49,8 +49,8 @@ protected:
 
 public:
     GwmGWSSTaskThread();
-    bool quantile() const;
 
+    bool quantile() const;
     void setQuantile(bool quantile);
 
 protected:  // QThread interface

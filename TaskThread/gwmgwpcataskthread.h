@@ -61,8 +61,14 @@ public:
 public:     // QThread interface
     void run() override;
 
+
+public:     // GwmTaskThread interface
+    QString name() const override { return tr("GWPCA"); }
+
+
 public:     // GwmSpatialMonoscaleAlgorithm interface
     bool isValid() override;
+
 
 public:  // IParallelalbe interface
     int parallelAbility() const;;
