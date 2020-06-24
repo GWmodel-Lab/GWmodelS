@@ -72,8 +72,8 @@ void GwmPropertyGWPCATab::updateUI()
     QStringList headers = QStringList() << tr("Name") << tr("Min") << tr("1st Qu") << tr("Median") << tr("3rd Qu") << tr("Max");
     ui->tbwProp->setHorizontalHeaderLabels(headers);
     //const mat& betas = mLayerItem->betas();
-    const mat&betas2 = mLayerItem->mdResult1;
-    const mat&betas = mLayerItem->mLocalPV;
+    const mat& betas2 = mLayerItem->mdResult1;
+    const mat& betas = mLayerItem->mLocalPV;
     const vec p = { 0.0, 0.25, 0.5, 0.75, 1.0 };
     for (uword r = 0; r < betas.n_cols; r++)
     {

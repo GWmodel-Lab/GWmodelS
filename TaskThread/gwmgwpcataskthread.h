@@ -96,10 +96,10 @@ private:
         return (this->*mPcaLoadingsSdevFunction)(x,loadings,variance);
     }
 
-    mat pcaLoadingsSdevScoresSerial(const mat& x, cube& loadings, mat& variance, cube& scores);
-    mat pcaLoadingsSdevScoresOmp(const mat& x, cube& loadings, mat& variance, cube& scores);
-    mat pcaLoadingsSdevSerial(const mat& x, cube& loadings, mat& variance);
-    mat pcaLoadingsSdevOmp(const mat& x, cube& loadings, mat& variance);
+    mat pcaLoadingsSdevScoresSerial(const mat& x, cube& loadings, mat& stddev, cube& scores);
+    mat pcaLoadingsSdevScoresOmp(const mat& x, cube& loadings, mat& stddev, cube& scores);
+    mat pcaLoadingsSdevSerial(const mat& x, cube& loadings, mat& stddev);
+    mat pcaLoadingsSdevOmp(const mat& x, cube& loadings, mat& stddev);
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);

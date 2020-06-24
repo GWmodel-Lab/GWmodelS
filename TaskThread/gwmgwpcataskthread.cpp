@@ -362,7 +362,7 @@ void GwmGWPCATaskThread::setScoresCal(bool scoresCal)
     mScoresCal = scoresCal;
 }
 
-mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings, mat &sdev, cube &scores)
+mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings, mat &stddev, cube &scores)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值
@@ -410,14 +410,14 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings
     d_all = trans(d_all);
     mat variance = (d_all / pow(sum(mLatestWt),0.5)) % (d_all / pow(sum(mLatestWt),0.5));
     //计算sdev
-    sdev = sqrt(variance);
+    stddev = sqrt(variance);
     //dResult1.print();
     //取dResult1的前K列
     mat pv = variance.cols(0, mK - 1).each_col() % (1.0 / sum(variance,1)) * 100.0;
     return pv;
 }
 
-mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, mat &sdev, cube &scores)
+mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, mat &stddev, cube &scores)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值
@@ -469,14 +469,14 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
     d_all = trans(d_all);
     mat variance = (d_all / pow(sum(mLatestWt),0.5)) % (d_all / pow(sum(mLatestWt),0.5));
     //计算sdev
-    sdev = sqrt(variance);
+    stddev = sqrt(variance);
     //dResult1.print();
     //取dResult1的前K列
     mat pv = variance.cols(0,mK-1).each_col() % (1 / sum(variance,1)) *100;
     return pv;
 }
 
-mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat &variance)
+mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat &stddev)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值
@@ -513,14 +513,15 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat 
     }
     //R代码中的d1计算
     d_all = trans(d_all);
-    variance = (d_all / pow(sum(mLatestWt),0.5)) % (d_all / pow(sum(mLatestWt),0.5));
+    mat variance = (d_all / pow(sum(mLatestWt),0.5)) % (d_all / pow(sum(mLatestWt),0.5));
+    stddev = sqrt(variance);
     //dResult1.print();
     //取dResult1的前K列
     mat pv = variance.cols(0, mK - 1).each_col() % (1.0 / sum(variance,1)) * 100.0;
     return pv;
 }
 
-mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &variance)
+mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &stddev)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值
@@ -561,7 +562,8 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &va
     }
     //R代码中的d1计算
     d_all = trans(d_all);
-    variance = (d_all / pow(sum(mLatestWt),0.5)) % (d_all / pow(sum(mLatestWt),0.5));
+    mat variance = (d_all / pow(sum(mLatestWt),0.5)) % (d_all / pow(sum(mLatestWt),0.5));
+    stddev = sqrt(stddev);
     //dResult1.print();
     //取dResult1的前K列
     mat pv = variance.cols(0, mK - 1).each_col() % (1.0 / sum(variance,1)) * 100.0;
