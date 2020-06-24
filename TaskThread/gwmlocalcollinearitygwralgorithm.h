@@ -2,7 +2,6 @@
 #define GWMLCRGWRTASKTHREAD_H
 
 
-#include "GWmodel/GWmodel.h"
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "TaskThread/gwmbandwidthsizeselector.h"
 #include "TaskThread/gwmindependentvariableselector.h"

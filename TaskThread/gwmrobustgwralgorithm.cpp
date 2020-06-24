@@ -1,5 +1,4 @@
 #include "gwmrobustgwralgorithm.h"
-#include "GWmodel/GWmodel.h"
 
 #include <gsl/gsl_cdf.h>
 #include <omp.h>
@@ -233,7 +232,8 @@ mat GwmRobustGWRAlgorithm::robustGWRCaliFirst(const mat &x, const vec &y, mat &b
 {
     mat betas = (this->*mRegressionHatmatrixFunction)(x,y,betasSE,shat,qDiag,S);
     //  ------------- 计算W.vect
-    vec yhat = fitted(x, betas);
+    //vec yhat = fitted(x, betas);
+    vec yhat = sum(betas % x,1);
     vec residual = y - yhat;
     // 诊断信息
     GwmDiagnostic diagnostic;
@@ -269,7 +269,8 @@ mat GwmRobustGWRAlgorithm::robustGWRCaliSecond(const mat &x, const vec &y, mat &
     double maxiter = 20;
     mat betas = (this->*mRegressionHatmatrixFunction)(x,y,betasSE,shat,qDiag,S);
     //计算residual
-    vec yHat = fitted(x, betas);
+    //vec yHat = fitted(x, betas);
+    vec yHat = sum(betas % x,1);
     vec residual = y - yHat;
     //计算mse
     double mse = sum((residual % residual))/ residual.size();
@@ -279,7 +280,8 @@ mat GwmRobustGWRAlgorithm::robustGWRCaliSecond(const mat &x, const vec &y, mat &
         double oldmse = mse;
         betas = (this->*mRegressionHatmatrixFunction)(x,y,betasSE,shat,qDiag,S);
         //计算residual
-        yHat = fitted(x, betas);
+        //yHat = fitted(x, betas);
+        yHat = sum(betas % x,1);
         residual = y - yHat;
         mse = sum((residual % residual))/ residual.size();
         mWeightMask = filtWeight(residual, mse);
