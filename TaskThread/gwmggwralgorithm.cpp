@@ -18,7 +18,7 @@ QMap<QString, double> GwmGGWRAlgorithm::TolUnitDict = {
 };
 
 
-GwmGGWRAlgorithm::GwmGGWRAlgorithm() : GwmBasicGWRAlgorithm()
+GwmGGWRAlgorithm::GwmGGWRAlgorithm() : GwmGeographicalWeightedRegressionAlgorithm()
 {
 
 }
@@ -130,7 +130,7 @@ void GwmGGWRAlgorithm::run()
     emit success();
 }
 
-bool GwmGGWRAlgorithm::gwrPoissonSerial()
+mat GwmGGWRAlgorithm::regressionPoissonSerial(const mat &x, const vec &y)
 {
     int itCount = 0;
     double lLik = 0.0;
@@ -255,7 +255,7 @@ bool GwmGGWRAlgorithm::gwrPoissonSerial()
     return isAllCorrect;
 }
 
-bool GwmGGWRAlgorithm::gwrPoissonOmp()
+mat GwmGGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
 {
     int itCount = 0;
     double lLik = 0.0;
@@ -382,7 +382,7 @@ bool GwmGGWRAlgorithm::gwrPoissonOmp()
     return isAllCorrect;
 }
 
-bool GwmGGWRAlgorithm::gwrBinomialOmp()
+mat GwmGGWRAlgorithm::regressionBinomialOmp(const mat &x, const vec &y)
 {
     int nVar = mX.n_cols;
     int nDp = mDataLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
@@ -507,7 +507,7 @@ bool GwmGGWRAlgorithm::gwrBinomialOmp()
     return isAllCorrect;
 }
 
-bool GwmGGWRAlgorithm::gwrBinomialSerial()
+mat GwmGGWRAlgorithm::regressionBinomialSerial(const mat &x, const vec &y)
 {
     int nVar = mX.n_cols;
     int nDp = mDataLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
@@ -1062,4 +1062,27 @@ mat GwmGGWRAlgorithm::lgammafn(mat x){
 mat GwmGGWRAlgorithm::CiMat(const mat& x, const vec &w)
 {
     return inv(trans(x) * diagmat(w) * x) * trans(x) * diagmat(w);
+}
+
+bool GwmGGWRAlgorithm::setFamily(Family family){
+    mFamily = family;
+    QMap<QPair<Family, IParallelalbe::ParallelType>, GGWRRegressionFunction> mapper = {
+        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::SerialOnly), &GwmGGWRAlgorithm::regressionPoissonSerial),
+        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::OpenMP), &GwmGGWRAlgorithm::regressionPoissonOmp),
+        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::CUDA), &GwmGGWRAlgorithm::regressionPoissonSerial),
+        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::SerialOnly), &GwmGGWRAlgorithm::regressionBinomialSerial),
+        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::OpenMP), &GwmGGWRAlgorithm::regressionBinomialOmp),
+        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::CUDA), &GwmGGWRAlgorithm::regressionBinomialSerial)
+    };
+    mGGWRRegressionFunction = mapper[qMakePair(family, mParallelType)];
+    QMap<QPair<Family, IParallelalbe::ParallelType>, CalWtFunction> mapper1 = {
+        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::SerialOnly), &GwmGGWRAlgorithm::PoissonWtSerial),
+        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::OpenMP), &GwmGGWRAlgorithm::PoissonWtOmp),
+        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::CUDA), &GwmGGWRAlgorithm::PoissonWtSerial),
+        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::SerialOnly), &GwmGGWRAlgorithm::BinomialWtSerial),
+        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::OpenMP), &GwmGGWRAlgorithm::BinomialWtOmp),
+        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::CUDA), &GwmGGWRAlgorithm::BinomialWtSerial)
+    };
+    mCalWtFunction = mapper1[qMakePair(family, mParallelType)];
+    return true;
 }

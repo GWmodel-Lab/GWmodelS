@@ -55,14 +55,8 @@ struct GwmGLMDiagnostic
     }
 };
 
-class GwmGGWRAlgorithm : public GwmBasicGWRAlgorithm
+class GwmGGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public IOpenmpParallelable
 {
-public:
-    GwmGGWRAlgorithm();
-public:
-    static QMap<QString, double> TolUnitDict;
-    static void initTolUnitDict();
-
 public:
     enum Family
     {
@@ -70,48 +64,51 @@ public:
         Binomial
     };
 
+    enum BandwidthSelectionCriterionType
+    {
+        AIC,
+        CV
+    };
+
+    static QMap<QString, double> TolUnitDict;
+    static void initTolUnitDict();
+
     typedef double (GwmGGWRAlgorithm::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
-    typedef bool (GwmGGWRAlgorithm::*GGWRRegressionFunction)();
+    typedef mat (GwmGGWRAlgorithm::*GGWRRegressionFunction)(const mat& x, const vec& y);
     typedef mat (GwmGGWRAlgorithm::*CalWtFunction)(const mat& x, const vec& y,mat w);
+
+    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+
+
+public:
+    GwmGGWRAlgorithm();
+
+public:     // GwmTaskThread interface
+    QString name() const override { return tr("GGWR"); };
 
 public:     // IBandwidthSizeSelectable interface
     double criterion(GwmBandwidthWeight* bandwidthWeight) override
     {
         return (this->*mBandwidthSelectCriterionFunction)(bandwidthWeight);
     }
-public:     // GwmTaskThread interface
-    QString name() const override { return tr("GGWR"); };
+
+
+public:     // IRegressionAnalysis interface
+    arma::mat regression(const arma::mat &x, const arma::vec &y)
+    {
+        return (this->*mGGWRRegressionFunction)(x, y);
+    }
+
 
 public:     // IParallelalbe interface
+    int parallelAbility() const;
 
+    ParallelType parallelType() const;
     void setParallelType(const ParallelType &type) override;
 
-protected:
-    Family mFamily;
-    double mTol;
-    QString mTolUnit;
-    int mMaxiter;
 
-    mat mWtMat1;
-    mat mWtMat2;
-
-    GwmGGWRDiagnostic mDiagnostic;
-
-    GwmGLMDiagnostic mGLMDiagnostic;
-
-    CreateResultLayerData mResultList;
-
-    mat mWt2;
-    mat myAdj;
-
-    double mLLik = 0;
-
-    BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial;
-
-    GwmGGWRBandwidthSizeSelector mBandwidthSizeSelector;
-
-    GGWRRegressionFunction mGGWRRegressionFunction = &GwmGGWRAlgorithm::gwrPoissonSerial;
-    CalWtFunction mCalWtFunction = &GwmGGWRAlgorithm::PoissonWtSerial;
+public:     // IOpenmpParallelable interface
+    void setOmpThreadNum(const int threadNum);
 
 public:
     static vec gwReg(const mat& x, const vec &y, const vec &w, int focus);
@@ -128,21 +125,21 @@ public:
 protected:
     void run() override;
 
-    bool gwrPoissonSerial();
-    bool gwrBinomialSerial();
+    mat regressionPoissonSerial(const mat& x, const vec& y);
+    mat regressionBinomialSerial(const mat& x, const vec& y);
 
-    bool gwrPoissonOmp();
-    bool gwrBinomialOmp();
+    mat regressionPoissonOmp(const mat& x, const vec& y);
+    mat regressionBinomialOmp(const mat& x, const vec& y);
 
     mat diag(mat a);
 
     mat PoissonWtSerial(const mat& x, const vec& y,mat w);
-
     mat BinomialWtSerial(const mat& x, const vec& y,mat w);
 
     mat PoissonWtOmp(const mat& x, const vec& y,mat w);
     mat BinomialWtOmp(const mat& x, const vec& y,mat w);
-//    void createResultLayer();
+
+    void createResultLayer(CreateResultLayerData data,QString name = QStringLiteral("_GWR"));
 
 private:
 
@@ -165,13 +162,49 @@ public:
     GwmGLMDiagnostic getGLMDiagnostic() const;
 
     bool setFamily(Family family);
-    bool setTol(double tol, QString unit);
-    bool setMaxiter(int maxiter);
+    void setTol(double tol, QString unit);
+    void setMaxiter(int maxiter);
 
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 
     BandwidthCriterionList bandwidthSelectorCriterions() const;
 
+
+protected:
+    Family mFamily;
+    double mTol;
+    QString mTolUnit;
+    int mMaxiter;
+
+    bool mHasHatMatrix = true;
+    bool mHasFTest = false;
+
+    vec mQDiag;
+    mat mBetasSE;
+
+    vec mShat;
+    mat mS;
+
+    mat mWtMat1;
+    mat mWtMat2;
+
+    GwmGGWRDiagnostic mDiagnostic;
+
+    GwmGLMDiagnostic mGLMDiagnostic;
+
+    CreateResultLayerData mResultList;
+
+    mat mWt2;
+    mat myAdj;
+
+    double mLLik = 0;
+
+    GGWRRegressionFunction mGGWRRegressionFunction = &GwmGGWRAlgorithm::regressionPoissonSerial;
+    CalWtFunction mCalWtFunction = &GwmGGWRAlgorithm::PoissonWtSerial;
+
+    bool mIsAutoselectBandwidth = false;
+    BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial;
+    GwmGGWRBandwidthSizeSelector mBandwidthSizeSelector;
 };
 
 
@@ -210,38 +243,13 @@ inline GwmGLMDiagnostic GwmGGWRAlgorithm::getGLMDiagnostic() const
     return mGLMDiagnostic;
 }
 
-inline bool GwmGGWRAlgorithm::setFamily(Family family){
-    mFamily = family;
-    QMap<QPair<Family, IParallelalbe::ParallelType>, GGWRRegressionFunction> mapper = {
-        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::SerialOnly), &GwmGGWRAlgorithm::gwrPoissonSerial),
-        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::OpenMP), &GwmGGWRAlgorithm::gwrPoissonOmp),
-        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::CUDA), &GwmGGWRAlgorithm::gwrPoissonSerial),
-        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::SerialOnly), &GwmGGWRAlgorithm::gwrBinomialSerial),
-        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::OpenMP), &GwmGGWRAlgorithm::gwrBinomialOmp),
-        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::CUDA), &GwmGGWRAlgorithm::gwrBinomialSerial)
-    };
-    mGGWRRegressionFunction = mapper[qMakePair(family, mParallelType)];
-    QMap<QPair<Family, IParallelalbe::ParallelType>, CalWtFunction> mapper1 = {
-        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::SerialOnly), &GwmGGWRAlgorithm::PoissonWtSerial),
-        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::OpenMP), &GwmGGWRAlgorithm::PoissonWtOmp),
-        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::CUDA), &GwmGGWRAlgorithm::PoissonWtSerial),
-        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::SerialOnly), &GwmGGWRAlgorithm::BinomialWtSerial),
-        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::OpenMP), &GwmGGWRAlgorithm::BinomialWtOmp),
-        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::CUDA), &GwmGGWRAlgorithm::BinomialWtSerial)
-    };
-    mCalWtFunction = mapper1[qMakePair(family, mParallelType)];
-    return true;
-}
-
-inline bool GwmGGWRAlgorithm::setTol(double tol, QString unit){
+inline void GwmGGWRAlgorithm::setTol(double tol, QString unit){
     mTolUnit = unit;
     mTol = double(tol) * TolUnitDict[unit];
-    return true;
 }
 
-inline bool GwmGGWRAlgorithm::setMaxiter(int maxiter){
+inline void GwmGGWRAlgorithm::setMaxiter(int maxiter){
     mMaxiter = maxiter;
-    return true;
 }
 
 inline BandwidthCriterionList GwmGGWRAlgorithm::bandwidthSelectorCriterions() const
