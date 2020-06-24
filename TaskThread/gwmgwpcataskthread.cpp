@@ -39,13 +39,15 @@ void GwmGWPCATaskThread::run()
     //存储d的计算值
     mLatestWt = mat(mDataPoints.n_rows,1,fill::zeros);
     mat sdev;
-    if(scoresCal())
+    if(scoresCal() && mDataPoints.n_rows <= 4096)
     {
         mLocalPV = pca(mX,mLoadings,sdev,mScores);
-        mVariance = sdev % sdev;
-    }else if(scoresCal() == false){
-        mLocalPV = pca(mX,mLoadings,mVariance);
     }
+    else
+    {
+        mLocalPV = pca(mX,mLoadings,sdev);
+    }
+    mVariance = sdev % sdev;
 
     //准备resultlayer的数据
 
@@ -196,13 +198,18 @@ void GwmGWPCATaskThread::setParallelType(const IParallelalbe::ParallelType &type
         switch (type) {
         case IParallelalbe::ParallelType::SerialOnly:
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaSerial;
-            mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaSerial;
+            mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial;
+            mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaLoadingsSdevSerial;
             break;
         case IParallelalbe::ParallelType::OpenMP:
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaOmp;
-            mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaOmp;
+            mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp;
+            mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaLoadingsSdevOmp;
+            break;
+        default:
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial;
+            mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaLoadingsSdevSerial;
             break;
         }
     }
@@ -355,7 +362,7 @@ void GwmGWPCATaskThread::setScoresCal(bool scoresCal)
     mScoresCal = scoresCal;
 }
 
-mat GwmGWPCATaskThread::pcaSerial(const mat &x, cube &loadings, mat &sdev, cube &scores)
+mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings, mat &sdev, cube &scores)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值
@@ -391,16 +398,13 @@ mat GwmGWPCATaskThread::pcaSerial(const mat &x, cube &loadings, mat &sdev, cube 
         }
         //计算scores
         //如果点数大于4096不保存scores
-        if(mDataPoints.n_rows <= 4096)
+        mat scorei(nDp, mK, fill::zeros);
+        for(int j = 0; j < mK; j++)
         {
-            mat scorei(nDp, mK, fill::zeros);
-            for(int j = 0; j < mK; j++)
-            {
-                mat score = newX.each_row() % trans(V.col(j));
-                scorei.col(j) = sum(score, 1);
-            }
-            scores.slice(i) = scorei;
+            mat score = newX.each_row() % trans(V.col(j));
+            scorei.col(j) = sum(score, 1);
         }
+        scores.slice(i) = scorei;
     }
     //R代码中的d1计算
     d_all = trans(d_all);
@@ -413,7 +417,7 @@ mat GwmGWPCATaskThread::pcaSerial(const mat &x, cube &loadings, mat &sdev, cube 
     return pv;
 }
 
-mat GwmGWPCATaskThread::pcaOmp(const mat &x, cube &loadings, mat &sdev, cube &scores)
+mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, mat &sdev, cube &scores)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值
@@ -452,16 +456,13 @@ mat GwmGWPCATaskThread::pcaOmp(const mat &x, cube &loadings, mat &sdev, cube &sc
             loadings.slice(j).row(i) = trans(V.col(j));
         }
         //计算scores
-        if(mDataPoints.n_rows <= 4096)
+        mat scorei(nDp, mK, fill::zeros);
+        for(int j = 0; j < mK; j++)
         {
-            mat scorei(nDp, mK, fill::zeros);
-            for(int j = 0; j < mK; j++)
-            {
-                mat score = newX.each_row() % trans(V.col(j));
-                scorei.col(j) = sum(score, 1);
-            }
-            scores.slice(i) = scorei;
+            mat score = newX.each_row() % trans(V.col(j));
+            scorei.col(j) = sum(score, 1);
         }
+        scores.slice(i) = scorei;
         //计算sdev
     }
     //R代码中的d1计算
@@ -475,7 +476,7 @@ mat GwmGWPCATaskThread::pcaOmp(const mat &x, cube &loadings, mat &sdev, cube &sc
     return pv;
 }
 
-mat GwmGWPCATaskThread::pcaSerial(const mat &x, cube &loadings, mat &variance)
+mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat &variance)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值
@@ -519,7 +520,7 @@ mat GwmGWPCATaskThread::pcaSerial(const mat &x, cube &loadings, mat &variance)
     return pv;
 }
 
-mat GwmGWPCATaskThread::pcaOmp(const mat &x, cube &loadings, mat &variance)
+mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &variance)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
     //存储d的计算值

@@ -96,10 +96,10 @@ private:
         return (this->*mPcaLoadingsSdevFunction)(x,loadings,variance);
     }
 
-    mat pcaSerial(const mat& x, cube& loadings, mat& variance, cube& scores);
-    mat pcaOmp(const mat& x, cube& loadings, mat& variance, cube& scores);
-    mat pcaSerial(const mat& x, cube& loadings, mat& variance);
-    mat pcaOmp(const mat& x, cube& loadings, mat& variance);
+    mat pcaLoadingsSdevScoresSerial(const mat& x, cube& loadings, mat& variance, cube& scores);
+    mat pcaLoadingsSdevScoresOmp(const mat& x, cube& loadings, mat& variance, cube& scores);
+    mat pcaLoadingsSdevSerial(const mat& x, cube& loadings, mat& variance);
+    mat pcaLoadingsSdevOmp(const mat& x, cube& loadings, mat& variance);
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
@@ -126,8 +126,8 @@ private:
     IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
 
-    PcaLoadingsSdevScoresFunction mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaSerial;
-    PcaLoadingsSdev mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaSerial;
+    PcaLoadingsSdevScoresFunction mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial;
+    PcaLoadingsSdev mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaLoadingsSdevSerial;
 
     mat mLocalPV;
     mat mVariance;
