@@ -289,7 +289,6 @@ bool GwmGGWRAlgorithm::gwrPoissonOmp()
     mu = (this->*mCalWtFunction)(mX,mY,mWtMat1);
 
     double gwDev = 0.0;
-#pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i = 0; i < nDp; i++){
         if(mY[i] != 0){
             gwDev = gwDev +  2*(mY[i]*(log(mY[i]/mu[i])-1)+mu[i]);
@@ -853,8 +852,7 @@ mat GwmGGWRAlgorithm::PoissonWtOmp(const mat &x, const vec &y, mat wt){
     vec cv = vec(dpn);
     mWt2 = ones(dpn);
     mLLik = 0;
-#pragma omp parallel for num_threads(mOmpThreadNum)
-    for(int k = 0; k < mMaxiter; k++){
+    while(1){
         myAdj = nu + (y - mu)/mu;
         for (int i = 0; i < dpn; i++)
         {
@@ -931,8 +929,7 @@ mat GwmGGWRAlgorithm::BinomialWtOmp(const mat &x, const vec &y, mat wt){
 //    vec cv = vec(dpn);
     mWt2 = ones(dpn);
     mLLik = 0;
-#pragma omp parallel for num_threads(mOmpThreadNum)
-    for(int k = 0; k < mMaxiter; k++){
+    while(1){
         //计算公式有调整
         myAdj = nu + (y - mu)/(mu % (1 - mu));
         for (int i = 0; i < dpn; i++)
