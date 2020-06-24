@@ -26,7 +26,8 @@ public:
         GGWR,
         MultiscaleGWR,
         GWSS,
-        CollinearityGWR
+        CollinearityGWR,
+        GWPCA
     };
 
 public:

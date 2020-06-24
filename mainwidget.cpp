@@ -56,6 +56,11 @@
 #include <Model/gwmlayerbasicgwritem.h>
 #include <Model/gwmlayercollinearitygwritem.h>
 
+#include <TaskThread/gwmgwpcataskthread.h>
+
+#include "gwmgwpcaoptionsdialog.h"
+#include <Model/gwmlayergwpcaitem.h>
+
 //鲁棒GWR
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -163,7 +168,7 @@ void MainWidget::setupToolbar()
     connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRBtnClicked);
 
     connect(toolbar,&GwmToolbar::gwmodelGWSSBtnSignal,this,&MainWidget::onGWSSBtnClicked);
-
+    connect(toolbar, &GwmToolbar::gwmodelGWPCABtnSignal,this,&MainWidget::onGWPCABtnClicked);
 }
 
 void MainWidget::setupFeaturePanel()
@@ -246,6 +251,7 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+        case GwmLayerItem::GwmLayerItemType::GWPCA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -311,6 +317,7 @@ void MainWidget::onSaveLayer()
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+        case GwmLayerItem::GwmLayerItemType::GWPCA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -356,6 +363,7 @@ void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
     case GwmLayerItem::GwmLayerItemType::GWSS:
     case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+    case GwmLayerItem::GwmLayerItemType::GWPCA:
         layerItem = ((GwmLayerVectorItem*)item);
         break;
     default:
@@ -405,6 +413,7 @@ void MainWidget::onExportLayer(QString filetype)
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+        case GwmLayerItem::GwmLayerItemType::GWPCA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -910,6 +919,58 @@ void MainWidget::onGGWRBtnClicked(){
             QgsVectorLayer* resultLayer = ggwrTaskThread->getResultLayer();
             GwmLayerGGWRItem* ggwrItem = new GwmLayerGGWRItem(selectedItem, resultLayer, ggwrTaskThread);
             mapModel->appentItem(ggwrItem, selectedIndex);
+        }
+    }
+}
+
+
+
+//void wpca(const mat &x, const vec &wt, double nu, double nv, mat &V, vec &S)
+//{
+//    //首先完成中心化
+//    mat tmpLocalCenter(x.n_rows,x.n_cols,fill::zeros);
+//    for(int i=0;i<x.n_rows;i++)
+//    {
+//        tmpLocalCenter.row(i) = x.row(i) * wt(i);
+//    }
+//    //SVD
+//    mat tmpRes(5,2,fill::zeros);
+//    tmpRes = (x.each_row() - sum(tmpLocalCenter)/sum(wt)).each_col() % sqrt(wt);
+//    tmpRes.print();
+//    mat U;
+//    svd(U,S,V,tmpRes);
+//    //S即为R中的d
+//    //V即为R中的v
+//}
+
+void MainWidget::onGWPCABtnClicked()
+{
+    GwmGWPCATaskThread* gwpcaTaskThread = new GwmGWPCATaskThread();
+    GwmGWPCAOptionsDialog* gwpcaOptionDialog = new GwmGWPCAOptionsDialog(mapModel->rootChildren(), gwpcaTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwpcaOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwpcaOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwpcaOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwpcaOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwpcaOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwpcaTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwpcaTaskThread->resultLayer();
+            GwmLayerGWPCAItem * gwrItem = new GwmLayerGWPCAItem(selectedItem, resultLayer, gwpcaTaskThread);
+            mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
 }

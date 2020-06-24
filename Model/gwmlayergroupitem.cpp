@@ -131,6 +131,7 @@ bool GwmLayerGroupItem::appendChildren(QList<GwmLayerItem *> items)
         case GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItemType::GWSS:
         case GwmLayerItemType::CollinearityGWR:
+        case GwmLayerItemType::GWPCA:
             mAnalyseChildren.append((GwmLayerVectorItem*)item);
             return true;
         default:

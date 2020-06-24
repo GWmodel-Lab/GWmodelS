@@ -284,6 +284,7 @@ QgsVectorLayer *GwmLayerItemModel::layerFromItem(GwmLayerItem* item) const
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
     case GwmLayerItem::GwmLayerItemType::GWSS:
     case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+    case GwmLayerItem::GwmLayerItemType::GWPCA:
         return ((GwmLayerOriginItem*)item)->layer();
     default:
         return nullptr;
@@ -332,6 +333,7 @@ bool GwmLayerItemModel::canMoveUp(const QModelIndex &index)
     case GwmLayerItem::MultiscaleGWR:
     case GwmLayerItem::GWSS:
     case GwmLayerItem::CollinearityGWR:
+    case GwmLayerItem::GWPCA:
         return row > 1 && row < (item->parentItem()->childCount() - 1);
     default:
         return false;
@@ -352,6 +354,7 @@ bool GwmLayerItemModel::canMoveDown(const QModelIndex &index)
     case GwmLayerItem::MultiscaleGWR:
     case GwmLayerItem::GWSS:
     case GwmLayerItem::CollinearityGWR:
+    case GwmLayerItem::GWPCA:
         return row >= 1 && row < (item->parentItem()->childCount() - 2);
     default:
         return false;
@@ -370,6 +373,7 @@ bool GwmLayerItemModel::canRemove(const QModelIndex &index)
     case GwmLayerItem::MultiscaleGWR:
     case GwmLayerItem::GWSS:
     case GwmLayerItem::CollinearityGWR:
+    case GwmLayerItem::GWPCA:
         return true;
     default:
         return false;
@@ -389,6 +393,7 @@ bool GwmLayerItemModel::canSetSymbol(const QModelIndex &index)
     case GwmLayerItem::MultiscaleGWR:
     case GwmLayerItem::GWSS:
     case GwmLayerItem::CollinearityGWR:
+    case GwmLayerItem::GWPCA:
         return true;
     default:
         return false;

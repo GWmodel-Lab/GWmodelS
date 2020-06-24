@@ -41,6 +41,7 @@ SOURCES += \
     Model/gwmlayercollinearitygwritem.cpp \
     Model/gwmlayerggwritem.cpp \
     Model/gwmlayergroupitem.cpp \
+    Model/gwmlayergwpcaitem.cpp \
     Model/gwmlayergwritem.cpp \
     Model/gwmlayergwssitem.cpp \
     Model/gwmlayeritem.cpp \
@@ -55,6 +56,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertyggwrtab.cpp \
     Model/gwmparameterspecifiedoptionsmodel.cpp \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.cpp \
+    PropertyPanelTabs/gwmpropertygwpcatab.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
     PropertyPanelTabs/gwmpropertygwsstab.cpp \
     PropertyPanelTabs/gwmpropertymultiscalegwrtab.cpp \
@@ -74,6 +76,7 @@ SOURCES += \
     TaskThread/gwmggwrbandwidthselectionthread.cpp \
     TaskThread/gwmggwrtaskthread.cpp \
 #    TaskThread/gwmgwpcataskthread.cpp \
+    TaskThread/gwmgwpcataskthread.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmgwsstaskthread.cpp \
@@ -112,6 +115,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
     gwmggwroptionsdialog.cpp \
+    gwmgwpcaoptionsdialog.cpp \
     gwmgwroptionsdialog.cpp \
     gwmgwssoptionsdialog.cpp \
     gwmindepvarselectorwidget.cpp \
@@ -152,6 +156,7 @@ HEADERS += \
     Model/gwmlayercollinearitygwritem.h \
     Model/gwmlayerggwritem.h \
     Model/gwmlayergroupitem.h \
+    Model/gwmlayergwpcaitem.h \
     Model/gwmlayergwritem.h \
     Model/gwmlayergwssitem.h \
     Model/gwmlayeritem.h \
@@ -165,6 +170,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertyggwrtab.h \
     Model/gwmparameterspecifiedoptionsmodel.h \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.h \
+    PropertyPanelTabs/gwmpropertygwpcatab.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
     PropertyPanelTabs/gwmpropertygwsstab.h \
     PropertyPanelTabs/gwmpropertymultiscalegwrtab.h \
@@ -183,6 +189,7 @@ HEADERS += \
     TaskThread/gwmggwrbandwidthselectionthread.h \
     TaskThread/gwmggwrtaskthread.h \
 #    TaskThread/gwmgwpcataskthread.h \
+    TaskThread/gwmgwpcataskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmgwsstaskthread.h \
@@ -229,6 +236,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
     gwmggwroptionsdialog.h \
+    gwmgwpcaoptionsdialog.h \
     gwmgwroptionsdialog.h \
     gwmgwssoptionsdialog.h \
     gwmindepvarselectorwidget.h \
@@ -258,6 +266,7 @@ HEADERS += \
 
 FORMS += \
     PropertyPanelTabs/gwmpropertyggwrtab.ui \
+    PropertyPanelTabs/gwmpropertygwpcatab.ui \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
     PropertyPanelTabs/gwmpropertygwsstab.ui \
     PropertyPanelTabs/gwmpropertymultiscalegwrtab.ui \
@@ -268,6 +277,7 @@ FORMS += \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
     gwmggwroptionsdialog.ui \
+    gwmgwpcaoptionsdialog.ui \
     gwmgwroptionsdialog.ui \
     gwmgwssoptionsdialog.ui \
     gwmindepvarselectorwidget.ui \
