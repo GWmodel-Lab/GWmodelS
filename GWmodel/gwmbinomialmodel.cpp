@@ -1,6 +1,6 @@
 #include "gwmbinomialmodel.h"
 //#include "GWmodel.h"
-#include "TaskThread/gwmggwralgorithm.h"
+#include "TaskThread/gwmgeneralizedgwralgorithm.h"
 
 GwmBinomialModel::GwmBinomialModel()
 {
@@ -76,7 +76,7 @@ double GwmBinomialModel::aic(mat y, mat n, mat mu, mat wt, double dev){
             wi[i] = 0;
         }
     }
-    vec temp = wi % GwmGGWRAlgorithm::dbinom(round(m % y), round(m), mu);
+    vec temp = wi % GwmGeneralizedGWRAlgorithm::dbinom(round(m % y), round(m), mu);
     return -2 * sum(temp);
 }
 

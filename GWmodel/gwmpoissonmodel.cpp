@@ -1,6 +1,6 @@
 #include "gwmpoissonmodel.h"
 //#include "GWmodel.h"
-#include "TaskThread/gwmggwralgorithm.h"
+#include "TaskThread/gwmgeneralizedgwralgorithm.h"
 
 GwmPoissonModel::GwmPoissonModel()
 {
@@ -50,7 +50,7 @@ mat GwmPoissonModel::devResids(mat y, mat mu, mat weights){
 }
 
 double GwmPoissonModel::aic(mat y,mat n,mat mu,mat wt,double dev){
-    vec temp = GwmGGWRAlgorithm::dpois(y, mu) % wt;
+    vec temp = GwmGeneralizedGWRAlgorithm::dpois(y, mu) % wt;
     return -2 * sum(temp);
 }
 

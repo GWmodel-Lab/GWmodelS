@@ -16,9 +16,9 @@ QMap<GwmGWRTaskThread::BandwidthType, QString> GwmPropertyGGWRTab::bandwidthType
     std::make_pair(GwmGWRTaskThread::BandwidthType::Fixed, QStringLiteral("Fixed bandwidth:"))
 };
 
-QMap<GwmGGWRAlgorithm::Family, QString> GwmPropertyGGWRTab::familyTypeNameDict = {
-    std::make_pair(GwmGGWRAlgorithm::Family::Poisson, QStringLiteral("Poisson")),
-    std::make_pair(GwmGGWRAlgorithm::Family::Binomial, QStringLiteral("Binomial"))
+QMap<GwmGeneralizedGWRAlgorithm::Family, QString> GwmPropertyGGWRTab::familyTypeNameDict = {
+    std::make_pair(GwmGeneralizedGWRAlgorithm::Family::Poisson, QStringLiteral("Poisson")),
+    std::make_pair(GwmGeneralizedGWRAlgorithm::Family::Binomial, QStringLiteral("Binomial"))
 };
 
 GwmPropertyGGWRTab::GwmPropertyGGWRTab(QWidget *parent,GwmLayerGGWRItem* item) :

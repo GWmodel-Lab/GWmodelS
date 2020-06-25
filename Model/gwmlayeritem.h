@@ -23,7 +23,7 @@ public:
         GWR,
         Symbol,
         ScalableGWR,
-        GGWR,
+        GeneralizedGWR,
         MultiscaleGWR,
         GWSS,
         CollinearityGWR,

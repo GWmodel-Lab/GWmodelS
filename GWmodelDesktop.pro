@@ -72,8 +72,8 @@ SOURCES += \
     TaskThread/gwmbandwidthsizeselector.cpp \
     TaskThread/gwmbasicgwralgorithm.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
+    TaskThread/gwmgeneralizedgwralgorithm.cpp \
     TaskThread/gwmgeographicalweightedregressionalgorithm.cpp \
-    TaskThread/gwmggwralgorithm.cpp \
 #    TaskThread/gwmggwrbandwidthselectionthread.cpp \
 #    TaskThread/gwmggwrtaskthread.cpp \
 #    TaskThread/gwmgwpcataskthread.cpp \
@@ -187,8 +187,8 @@ HEADERS += \
     TaskThread/gwmbandwidthselecttaskthread.h \
     TaskThread/gwmbandwidthsizeselector.h \
     TaskThread/gwmbasicgwralgorithm.h \
+    TaskThread/gwmgeneralizedgwralgorithm.h \
     TaskThread/gwmgeographicalweightedregressionalgorithm.h \
-    TaskThread/gwmggwralgorithm.h \
 #    TaskThread/gwmggwrbandwidthselectionthread.h \
 #    TaskThread/gwmggwrtaskthread.h \
 #    TaskThread/gwmgwpcataskthread.h \

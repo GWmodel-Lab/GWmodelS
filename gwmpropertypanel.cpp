@@ -95,7 +95,7 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
                 tabWidget = new GwmPropertyCollinearityGWRTab(this, static_cast<GwmLayerCollinearityGWRItem*>(item));
                 (static_cast<GwmPropertyCollinearityGWRTab*>(tabWidget))->updateUI();
                 break;
-            case GwmLayerItem::GGWR:
+            case GwmLayerItem::GeneralizedGWR:
                 tabWidget = new GwmPropertyGGWRTab(this, static_cast<GwmLayerGGWRItem*>(item));
                 (static_cast<GwmPropertyGGWRTab*>(tabWidget))->updateUI();
                 break;

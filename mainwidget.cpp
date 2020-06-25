@@ -47,7 +47,7 @@
 #include "Model/gwmlayerggwritem.h"
 
 #include <TaskThread/gwmbasicgwralgorithm.h>
-#include "TaskThread/gwmggwralgorithm.h"
+#include "TaskThread/gwmgeneralizedgwralgorithm.h"
 #include <Model/gwmlayergwssitem.h>
 #include <gwmgwssoptionsdialog.h>
 #include <SpatialWeight/gwmcrsdistance.h>
@@ -245,7 +245,7 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
-        case GwmLayerItem::GwmLayerItemType::GGWR:
+        case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
@@ -311,7 +311,7 @@ void MainWidget::onSaveLayer()
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
-        case GwmLayerItem::GwmLayerItemType::GGWR:
+        case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
@@ -357,7 +357,7 @@ void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
     case GwmLayerItem::GwmLayerItemType::Vector:
     case GwmLayerItem::GwmLayerItemType::Origin:
     case GwmLayerItem::GwmLayerItemType::GWR:
-    case GwmLayerItem::GwmLayerItemType::GGWR:
+    case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
     case GwmLayerItem::GwmLayerItemType::ScalableGWR:
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
     case GwmLayerItem::GwmLayerItemType::GWSS:
@@ -407,7 +407,7 @@ void MainWidget::onExportLayer(QString filetype)
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
-        case GwmLayerItem::GwmLayerItemType::GGWR:
+        case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
@@ -892,7 +892,7 @@ void MainWidget::onLcrGWRBtnClicked()
 }
 
 void MainWidget::onGGWRBtnClicked(){
-    GwmGGWRAlgorithm* ggwrTaskThread = new GwmGGWRAlgorithm();
+    GwmGeneralizedGWRAlgorithm* ggwrTaskThread = new GwmGeneralizedGWRAlgorithm();
     GwmGGWROptionsDialog* ggwrOptionDialog = new GwmGGWROptionsDialog(this->mapModel->rootChildren(), ggwrTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)

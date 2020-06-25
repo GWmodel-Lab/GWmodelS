@@ -55,7 +55,7 @@ struct GwmGLMDiagnostic
     }
 };
 
-class GwmGGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public IOpenmpParallelable
+class GwmGeneralizedGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public IOpenmpParallelable
 {
 public:
     enum Family
@@ -73,15 +73,15 @@ public:
     static QMap<QString, double> TolUnitDict;
     static void initTolUnitDict();
 
-    typedef double (GwmGGWRAlgorithm::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
-    typedef mat (GwmGGWRAlgorithm::*GGWRRegressionFunction)(const mat& x, const vec& y);
-    typedef mat (GwmGGWRAlgorithm::*CalWtFunction)(const mat& x, const vec& y,mat w);
+    typedef double (GwmGeneralizedGWRAlgorithm::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
+    typedef mat (GwmGeneralizedGWRAlgorithm::*GGWRRegressionFunction)(const mat& x, const vec& y);
+    typedef mat (GwmGeneralizedGWRAlgorithm::*CalWtFunction)(const mat& x, const vec& y,mat w);
 
     typedef QList<QPair<QString, const mat> > CreateResultLayerData;
 
 
 public:
-    GwmGGWRAlgorithm();
+    GwmGeneralizedGWRAlgorithm();
 
 public:     // GwmTaskThread interface
     QString name() const override { return tr("GGWR"); };
@@ -207,12 +207,12 @@ protected:
 
     double mLLik = 0;
 
-    GGWRRegressionFunction mGGWRRegressionFunction = &GwmGGWRAlgorithm::regressionPoissonSerial;
-    CalWtFunction mCalWtFunction = &GwmGGWRAlgorithm::PoissonWtSerial;
+    GGWRRegressionFunction mGGWRRegressionFunction = &GwmGeneralizedGWRAlgorithm::regressionPoissonSerial;
+    CalWtFunction mCalWtFunction = &GwmGeneralizedGWRAlgorithm::PoissonWtSerial;
 
     bool mIsAutoselectBandwidth = false;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
-    BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial;
+    BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial;
     GwmGGWRBandwidthSizeSelector mBandwidthSizeSelector;
 
     IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
@@ -220,101 +220,101 @@ protected:
 };
 
 
-inline GwmGGWRAlgorithm::Family GwmGGWRAlgorithm::getFamily() const
+inline GwmGeneralizedGWRAlgorithm::Family GwmGeneralizedGWRAlgorithm::getFamily() const
 {
     return mFamily;
 }
 
-inline double GwmGGWRAlgorithm::getTol() const
+inline double GwmGeneralizedGWRAlgorithm::getTol() const
 {
     return mTol;
 }
 
-inline int GwmGGWRAlgorithm::getMaxiter() const
+inline int GwmGeneralizedGWRAlgorithm::getMaxiter() const
 {
     return mMaxiter;
 }
 
-inline mat GwmGGWRAlgorithm::getWtMat1() const
+inline mat GwmGeneralizedGWRAlgorithm::getWtMat1() const
 {
     return mWtMat1;
 }
 
-inline mat GwmGGWRAlgorithm::getWtMat2() const
+inline mat GwmGeneralizedGWRAlgorithm::getWtMat2() const
 {
     return mWtMat2;
 }
 
-inline GwmGGWRDiagnostic GwmGGWRAlgorithm::getDiagnostic() const
+inline GwmGGWRDiagnostic GwmGeneralizedGWRAlgorithm::getDiagnostic() const
 {
     return mDiagnostic;
 }
 
-inline GwmGLMDiagnostic GwmGGWRAlgorithm::getGLMDiagnostic() const
+inline GwmGLMDiagnostic GwmGeneralizedGWRAlgorithm::getGLMDiagnostic() const
 {
     return mGLMDiagnostic;
 }
 
-inline void GwmGGWRAlgorithm::setTol(double tol, QString unit){
+inline void GwmGeneralizedGWRAlgorithm::setTol(double tol, QString unit){
     mTolUnit = unit;
     mTol = double(tol) * TolUnitDict[unit];
 }
 
-inline void GwmGGWRAlgorithm::setMaxiter(int maxiter){
+inline void GwmGeneralizedGWRAlgorithm::setMaxiter(int maxiter){
     mMaxiter = maxiter;
 }
 
-inline BandwidthCriterionList GwmGGWRAlgorithm::bandwidthSelectorCriterions() const
+inline BandwidthCriterionList GwmGeneralizedGWRAlgorithm::bandwidthSelectorCriterions() const
 {
     return mBandwidthSizeSelector.bandwidthCriterion();
 }
 
-inline bool GwmGGWRAlgorithm::hasHatMatrix() const
+inline bool GwmGeneralizedGWRAlgorithm::hasHatMatrix() const
 {
     return mHasHatMatrix;
 }
 
-inline void GwmGGWRAlgorithm::setHasHatMatrix(bool value)
+inline void GwmGeneralizedGWRAlgorithm::setHasHatMatrix(bool value)
 {
     mHasHatMatrix = value;
 }
 
-inline QgsVectorLayer *GwmGGWRAlgorithm::regressionLayer() const
+inline QgsVectorLayer *GwmGeneralizedGWRAlgorithm::regressionLayer() const
 {
     return mRegressionLayer;
 }
 
-inline void GwmGGWRAlgorithm::setRegressionLayer(QgsVectorLayer *layer)
+inline void GwmGeneralizedGWRAlgorithm::setRegressionLayer(QgsVectorLayer *layer)
 {
     mRegressionLayer = layer;
 }
 
-inline GwmGGWRAlgorithm::BandwidthSelectionCriterionType GwmGGWRAlgorithm::bandwidthSelectionCriterionType() const
+inline GwmGeneralizedGWRAlgorithm::BandwidthSelectionCriterionType GwmGeneralizedGWRAlgorithm::bandwidthSelectionCriterionType() const
 {
     return mBandwidthSelectionCriterionType;
 }
 
-inline bool GwmGGWRAlgorithm::autoselectBandwidth() const
+inline bool GwmGeneralizedGWRAlgorithm::autoselectBandwidth() const
 {
     return mIsAutoselectBandwidth;
 }
 
-inline void GwmGGWRAlgorithm::setIsAutoselectBandwidth(bool value)
+inline void GwmGeneralizedGWRAlgorithm::setIsAutoselectBandwidth(bool value)
 {
     mIsAutoselectBandwidth = value;
 }
 
-inline int GwmGGWRAlgorithm::parallelAbility() const
+inline int GwmGeneralizedGWRAlgorithm::parallelAbility() const
 {
     return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
 }
 
-inline IParallelalbe::ParallelType GwmGGWRAlgorithm::parallelType() const
+inline IParallelalbe::ParallelType GwmGeneralizedGWRAlgorithm::parallelType() const
 {
     return mParallelType;
 }
 
-inline void GwmGGWRAlgorithm::setOmpThreadNum(const int threadNum)
+inline void GwmGeneralizedGWRAlgorithm::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
 }

@@ -3,7 +3,7 @@
 
 #include <armadillo>
 #include "GWmodel/gwmlinearmodel.h"
-#include "TaskThread/gwmggwralgorithm.h"
+#include "TaskThread/gwmgeneralizedgwralgorithm.h"
 
 using namespace arma;
 
@@ -16,7 +16,7 @@ protected:
     mat mX;
     mat mY;
     mat mWeight;
-    GwmGGWRAlgorithm::Family mFamily;
+    GwmGeneralizedGWRAlgorithm::Family mFamily;
     double mEpsilon;
     int mMaxit;
     bool mIntercept;
@@ -34,7 +34,7 @@ public:
 
     bool setX(mat X);
     bool setY(mat Y);
-    bool setFamily(GwmGGWRAlgorithm::Family family);
+    bool setFamily(GwmGeneralizedGWRAlgorithm::Family family);
 
     double dev();
     double nullDev();

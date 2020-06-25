@@ -7,7 +7,7 @@
 #include "Model/gwmvariableitemmodel.h"
 #include <SpatialWeight/gwmbandwidthweight.h>
 
-GwmGGWROptionsDialog::GwmGGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGGWRAlgorithm* thread,QWidget *parent) :
+GwmGGWROptionsDialog::GwmGGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGeneralizedGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmGGWROptionsDialog),
     mMapLayerList(originItemList),
@@ -312,14 +312,14 @@ double GwmGGWROptionsDialog::bandwidthSize(){
     }
 }
 
-GwmGGWRAlgorithm::BandwidthSelectionCriterionType GwmGGWROptionsDialog::bandwidthSelectionApproach()
+GwmGeneralizedGWRAlgorithm::BandwidthSelectionCriterionType GwmGGWROptionsDialog::bandwidthSelectionApproach()
 {
     switch (ui->mBwSizeAutomaticApprochCombo->currentIndex())
     {
     case 0:
-        return GwmGGWRAlgorithm::BandwidthSelectionCriterionType::CV;
+        return GwmGeneralizedGWRAlgorithm::BandwidthSelectionCriterionType::CV;
     default:
-        return GwmGGWRAlgorithm::BandwidthSelectionCriterionType::AIC;
+        return GwmGeneralizedGWRAlgorithm::BandwidthSelectionCriterionType::AIC;
     }
 }
 
@@ -412,9 +412,9 @@ QString GwmGGWROptionsDialog::epsilonUnit(){
     return ui->mEpsilonUnit->currentText();
 }
 
-GwmGGWRAlgorithm::Family GwmGGWROptionsDialog::distributionFunction(){
+GwmGeneralizedGWRAlgorithm::Family GwmGGWROptionsDialog::distributionFunction(){
     int distributionSelected = ui->mDistributionType->currentIndex();
-    return GwmGGWRAlgorithm::Family(distributionSelected);
+    return GwmGeneralizedGWRAlgorithm::Family(distributionSelected);
 }
 
 int GwmGGWROptionsDialog::maxiter(){
@@ -425,7 +425,7 @@ int GwmGGWROptionsDialog::maxiter(){
 }
 
 
-void GwmGGWROptionsDialog::setTaskThread(GwmGGWRAlgorithm *taskThread)
+void GwmGGWROptionsDialog::setTaskThread(GwmGeneralizedGWRAlgorithm *taskThread)
 {
     mTaskThread = taskThread;
 }

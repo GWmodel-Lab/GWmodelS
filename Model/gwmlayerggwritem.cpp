@@ -1,6 +1,6 @@
 #include "gwmlayerggwritem.h"
 
-GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmGGWRAlgorithm* taskThread)
+GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmGeneralizedGWRAlgorithm* taskThread)
     :GwmLayerBasicGWRItem(parent,vector)
 {
     if (taskThread)
@@ -29,7 +29,7 @@ GwmGLMDiagnostic GwmLayerGGWRItem::GLMdiagnostic() const
     return mGLMDiagnostic;
 }
 
-GwmGGWRAlgorithm::Family GwmLayerGGWRItem::family() const
+GwmGeneralizedGWRAlgorithm::Family GwmLayerGGWRItem::family() const
 {
     return mFamily;
 }
