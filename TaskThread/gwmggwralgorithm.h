@@ -139,7 +139,9 @@ protected:
     mat PoissonWtOmp(const mat& x, const vec& y,mat w);
     mat BinomialWtOmp(const mat& x, const vec& y,mat w);
 
-    void createResultLayer(CreateResultLayerData data,QString name = QStringLiteral("_GWR"));
+    void CalGLMModel(const mat& x, const vec& y);
+
+    void createResultLayer(CreateResultLayerData data,QString name = QStringLiteral("_GGWR"));
 
 private:
 
@@ -158,7 +160,6 @@ public:
     mat getWtMat2() const;
 
     GwmGGWRDiagnostic getDiagnostic() const;
-
     GwmGLMDiagnostic getGLMDiagnostic() const;
 
     bool setFamily(Family family);
@@ -166,8 +167,18 @@ public:
     void setMaxiter(int maxiter);
 
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
-
     BandwidthCriterionList bandwidthSelectorCriterions() const;
+    BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
+
+    bool autoselectBandwidth() const;
+    void setIsAutoselectBandwidth(bool value);
+
+    QgsVectorLayer* regressionLayer() const;
+    void setRegressionLayer(QgsVectorLayer* layer);
+
+    bool hasHatMatrix() const;
+    void setHasHatMatrix(bool value);
+
 
 
 protected:
@@ -177,21 +188,18 @@ protected:
     int mMaxiter;
 
     bool mHasHatMatrix = true;
-    bool mHasFTest = false;
 
-    vec mQDiag;
     mat mBetasSE;
 
     vec mShat;
     mat mS;
+    double mGwDev;
 
     mat mWtMat1;
     mat mWtMat2;
 
     GwmGGWRDiagnostic mDiagnostic;
-
     GwmGLMDiagnostic mGLMDiagnostic;
-
     CreateResultLayerData mResultList;
 
     mat mWt2;
@@ -203,8 +211,12 @@ protected:
     CalWtFunction mCalWtFunction = &GwmGGWRAlgorithm::PoissonWtSerial;
 
     bool mIsAutoselectBandwidth = false;
+    BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial;
     GwmGGWRBandwidthSizeSelector mBandwidthSizeSelector;
+
+    IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
+    int mOmpThreadNum = 8;
 };
 
 
@@ -255,6 +267,56 @@ inline void GwmGGWRAlgorithm::setMaxiter(int maxiter){
 inline BandwidthCriterionList GwmGGWRAlgorithm::bandwidthSelectorCriterions() const
 {
     return mBandwidthSizeSelector.bandwidthCriterion();
+}
+
+inline bool GwmGGWRAlgorithm::hasHatMatrix() const
+{
+    return mHasHatMatrix;
+}
+
+inline void GwmGGWRAlgorithm::setHasHatMatrix(bool value)
+{
+    mHasHatMatrix = value;
+}
+
+inline QgsVectorLayer *GwmGGWRAlgorithm::regressionLayer() const
+{
+    return mRegressionLayer;
+}
+
+inline void GwmGGWRAlgorithm::setRegressionLayer(QgsVectorLayer *layer)
+{
+    mRegressionLayer = layer;
+}
+
+inline GwmGGWRAlgorithm::BandwidthSelectionCriterionType GwmGGWRAlgorithm::bandwidthSelectionCriterionType() const
+{
+    return mBandwidthSelectionCriterionType;
+}
+
+inline bool GwmGGWRAlgorithm::autoselectBandwidth() const
+{
+    return mIsAutoselectBandwidth;
+}
+
+inline void GwmGGWRAlgorithm::setIsAutoselectBandwidth(bool value)
+{
+    mIsAutoselectBandwidth = value;
+}
+
+inline int GwmGGWRAlgorithm::parallelAbility() const
+{
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
+}
+
+inline IParallelalbe::ParallelType GwmGGWRAlgorithm::parallelType() const
+{
+    return mParallelType;
+}
+
+inline void GwmGGWRAlgorithm::setOmpThreadNum(const int threadNum)
+{
+    mOmpThreadNum = threadNum;
 }
 
 #endif // GWMGGWRALGORITHM_H

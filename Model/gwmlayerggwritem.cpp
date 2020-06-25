@@ -10,13 +10,9 @@ GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector,
         mIndepVars = taskThread->independentVariables();
         mWeight = GwmBandwidthWeight(*static_cast<GwmBandwidthWeight*>(taskThread->spatialWeight().weight()));
         mBetas = mat(taskThread->betas());
-        mModelSelModels = taskThread->indepVarSelectorCriterions();
         isBandwidthOptimized = taskThread->autoselectBandwidth();
-        isModelOptimized = taskThread->autoselectIndepVars();
         mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();
-        mFTestResults = taskThread->fTestResult();
         hasHatmatrix = taskThread->hasHatMatrix();
-        hasFTest = taskThread->hasFTest();
         isRegressionPointGiven = !(taskThread->regressionLayer() == nullptr);
         mDiagnostic = taskThread->getDiagnostic();
         mGLMDiagnostic = taskThread->getGLMDiagnostic();

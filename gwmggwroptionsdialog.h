@@ -51,7 +51,7 @@ public:
     bool bandwidthType();
     GwmGWRTaskThread::ParallelMethod approachType();
     double bandwidthSize();
-    GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType bandwidthSelectionApproach();
+    GwmGGWRAlgorithm::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
     GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     GwmGWRTaskThread::DistanceSourceType distanceSourceType();

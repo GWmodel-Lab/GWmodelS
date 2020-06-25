@@ -312,14 +312,14 @@ double GwmGGWROptionsDialog::bandwidthSize(){
     }
 }
 
-GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType GwmGGWROptionsDialog::bandwidthSelectionApproach()
+GwmGGWRAlgorithm::BandwidthSelectionCriterionType GwmGGWROptionsDialog::bandwidthSelectionApproach()
 {
     switch (ui->mBwSizeAutomaticApprochCombo->currentIndex())
     {
     case 0:
-        return GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType::CV;
+        return GwmGGWRAlgorithm::BandwidthSelectionCriterionType::CV;
     default:
-        return GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType::AIC;
+        return GwmGGWRAlgorithm::BandwidthSelectionCriterionType::AIC;
     }
 }
 
@@ -486,16 +486,6 @@ void GwmGGWROptionsDialog::updateFields()
         {
             mTaskThread->setIndependentVariables(selectedIndepVarModel->attributeItemList());
         }
-        else if (ui->mVariableAutoSelectionCheck->isChecked())
-        {
-            GwmVariableItemModel* indepVarModel = ui->mIndepVarSelector->indepVarModel();
-            if (indepVarModel)
-            {
-                mTaskThread->setIndependentVariables(indepVarModel->attributeItemList());
-            }
-        }
-        mTaskThread->setIsAutoselectIndepVars(ui->mVariableAutoSelectionCheck->isChecked());
-        mTaskThread->setIndepVarSelectionThreshold(ui->mModelSelAICThreshold->value());
     }
     // 带宽设置
     if (ui->mBwSizeAutomaticRadio->isChecked())
