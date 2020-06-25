@@ -280,8 +280,11 @@ QgsVectorLayer *GwmLayerItemModel::layerFromItem(GwmLayerItem* item) const
     case GwmLayerItem::GwmLayerItemType::Origin:
     case GwmLayerItem::GwmLayerItemType::GWR:
     case GwmLayerItem::GwmLayerItemType::ScalableGWR:
-    case GwmLayerItem::GwmLayerItemType::GGWR:
+    case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+    case GwmLayerItem::GwmLayerItemType::GWSS:
+    case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+    case GwmLayerItem::GwmLayerItemType::GWPCA:
         return ((GwmLayerOriginItem*)item)->layer();
     default:
         return nullptr;
@@ -325,9 +328,12 @@ bool GwmLayerItemModel::canMoveUp(const QModelIndex &index)
     case GwmLayerItem::Group:
         return row > 0 && row < item->parentItem()->childCount();
     case GwmLayerItem::GWR:
-    case GwmLayerItem::GGWR:
+    case GwmLayerItem::GeneralizedGWR:
     case GwmLayerItem::ScalableGWR:
     case GwmLayerItem::MultiscaleGWR:
+    case GwmLayerItem::GWSS:
+    case GwmLayerItem::CollinearityGWR:
+    case GwmLayerItem::GWPCA:
         return row > 1 && row < (item->parentItem()->childCount() - 1);
     default:
         return false;
@@ -343,9 +349,12 @@ bool GwmLayerItemModel::canMoveDown(const QModelIndex &index)
     case GwmLayerItem::Group:
         return row >= 0 && row < (item->parentItem()->childCount() - 1);
     case GwmLayerItem::GWR:
-    case GwmLayerItem::GGWR:
+    case GwmLayerItem::GeneralizedGWR:
     case GwmLayerItem::ScalableGWR:
     case GwmLayerItem::MultiscaleGWR:
+    case GwmLayerItem::GWSS:
+    case GwmLayerItem::CollinearityGWR:
+    case GwmLayerItem::GWPCA:
         return row >= 1 && row < (item->parentItem()->childCount() - 2);
     default:
         return false;
@@ -359,9 +368,12 @@ bool GwmLayerItemModel::canRemove(const QModelIndex &index)
     {
     case GwmLayerItem::Group:
     case GwmLayerItem::GWR:
-    case GwmLayerItem::GGWR:
+    case GwmLayerItem::GeneralizedGWR:
     case GwmLayerItem::ScalableGWR:
     case GwmLayerItem::MultiscaleGWR:
+    case GwmLayerItem::GWSS:
+    case GwmLayerItem::CollinearityGWR:
+    case GwmLayerItem::GWPCA:
         return true;
     default:
         return false;
@@ -376,8 +388,12 @@ bool GwmLayerItemModel::canSetSymbol(const QModelIndex &index)
     case GwmLayerItem::Group:
     case GwmLayerItem::Origin:
     case GwmLayerItem::GWR:
+    case GwmLayerItem::GeneralizedGWR:
     case GwmLayerItem::ScalableGWR:
     case GwmLayerItem::MultiscaleGWR:
+    case GwmLayerItem::GWSS:
+    case GwmLayerItem::CollinearityGWR:
+    case GwmLayerItem::GWPCA:
         return true;
     default:
         return false;

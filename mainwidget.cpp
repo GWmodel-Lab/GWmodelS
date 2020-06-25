@@ -33,19 +33,32 @@
 #include <qgsvectorfilewriter.h>
 #include <TaskThread/gwmcsvtodatthread.h>
 #include "gwmggwroptionsdialog.h"
-#include "TaskThread/gwmggwrtaskthread.h"
 
 #include "gwmscalablegwroptionsdialog.h"
-#include "TaskThread/gwmscalablegwrtaskthread.h"
+#include "TaskThread/gwmscalablegwralgorithm.h"
 #include "Model/gwmlayerscalablegwritem.h"
 
 #include "gwmmultiscalegwroptionsdialog.h"
-#include "TaskThread/gwmmultiscalegwrtaskthread.h"
+#include "TaskThread/gwmmultiscalegwralgorithm.h"
 #include "PropertyPanelTabs/gwmpropertymultiscalegwrtab.h"
 
 #include "gwmattributetabledialog.h"
 #include "Model/gwmlayergwritem.h"
 #include "Model/gwmlayerggwritem.h"
+
+#include <TaskThread/gwmbasicgwralgorithm.h>
+#include "TaskThread/gwmgeneralizedgwralgorithm.h"
+#include <Model/gwmlayergwssitem.h>
+#include <gwmgwssoptionsdialog.h>
+#include <SpatialWeight/gwmcrsdistance.h>
+
+#include <Model/gwmlayerbasicgwritem.h>
+#include <Model/gwmlayercollinearitygwritem.h>
+
+#include <TaskThread/gwmgwpcataskthread.h>
+
+#include "gwmgwpcaoptionsdialog.h"
+#include <Model/gwmlayergwpcaitem.h>
 
 //鲁棒GWR
 MainWidget::MainWidget(QWidget *parent)
@@ -153,6 +166,8 @@ void MainWidget::setupToolbar()
     connect(toolbar, &GwmToolbar::zoomToSelectionBtnSignal,this,&MainWidget::onZoomToSelection);
     connect(toolbar,&GwmToolbar::gwmodelGWRBtnSignal,this,&MainWidget::onGWRBtnClicked);
 
+    connect(toolbar,&GwmToolbar::gwmodelGWSSBtnSignal,this,&MainWidget::onGWSSBtnClicked);
+    connect(toolbar, &GwmToolbar::gwmodelGWPCABtnSignal,this,&MainWidget::onGWPCABtnClicked);
 }
 
 void MainWidget::setupFeaturePanel()
@@ -230,8 +245,12 @@ void MainWidget::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+        case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+        case GwmLayerItem::GwmLayerItemType::GWPCA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -292,8 +311,12 @@ void MainWidget::onSaveLayer()
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+        case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+        case GwmLayerItem::GwmLayerItemType::GWPCA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -334,8 +357,12 @@ void MainWidget::onExportLayerAsCsv(const QModelIndex &index)
     case GwmLayerItem::GwmLayerItemType::Vector:
     case GwmLayerItem::GwmLayerItemType::Origin:
     case GwmLayerItem::GwmLayerItemType::GWR:
+    case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
     case GwmLayerItem::GwmLayerItemType::ScalableGWR:
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+    case GwmLayerItem::GwmLayerItemType::GWSS:
+    case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+    case GwmLayerItem::GwmLayerItemType::GWPCA:
         layerItem = ((GwmLayerVectorItem*)item);
         break;
     default:
@@ -380,8 +407,12 @@ void MainWidget::onExportLayer(QString filetype)
         case GwmLayerItem::GwmLayerItemType::Vector:
         case GwmLayerItem::GwmLayerItemType::Origin:
         case GwmLayerItem::GwmLayerItemType::GWR:
+        case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
+        case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+        case GwmLayerItem::GwmLayerItemType::GWPCA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -600,7 +631,7 @@ void MainWidget::onShowCoordinateTransDlg(const QModelIndex &index)
 
 void MainWidget::onGWRBtnClicked()
 {
-    GwmGWRTaskThread* gwrTaskThread = new GwmGWRTaskThread();
+    GwmBasicGWRAlgorithm* gwrTaskThread = new GwmBasicGWRAlgorithm();
     GwmGWROptionsDialog* gwrOptionDialog = new GwmGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
@@ -623,16 +654,86 @@ void MainWidget::onGWRBtnClicked()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
-            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrTaskThread);
+            QgsVectorLayer* resultLayer = gwrTaskThread->resultLayer();
+            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer, gwrTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
 }
 
+void MainWidget::onGWRNewBtnClicked()
+{
+    GwmBasicGWRAlgorithm* algorithm = new GwmBasicGWRAlgorithm();
+    QgsVectorLayer* dataLayer = static_cast<GwmLayerGroupItem*>(mapModel->rootChildren()[0])->originChild()->layer();
+    algorithm->setDataLayer(dataLayer);
+    QgsFields fields = dataLayer->fields();
+    GwmVariable depVar = {0, fields[0].name(), fields[0].type(), fields[0].isNumeric()};
+    QList<GwmVariable> indepVars;
+    for (int i : {1, 10, 12, 13, 15})
+    {
+        indepVars.append({ i, fields[i].name(), fields[i].type(), fields[i].isNumeric()});
+    }
+    algorithm->setDependentVariable(depVar);
+    algorithm->setIndependentVariables(indepVars);
+    algorithm->setIsAutoselectIndepVars(true);
+    algorithm->setIndepVarSelectionThreshold(150.0);
+    GwmSpatialWeight spatialWeight;
+    spatialWeight.setDistance(GwmCRSDistance(dataLayer->featureCount(), false));
+    spatialWeight.setWeight(GwmBandwidthWeight(36, true, GwmBandwidthWeight::Gaussian));
+    algorithm->setSpatialWeight(spatialWeight);
+    algorithm->setIsAutoselectBandwidth(true);
+    algorithm->setBandwidthSelectionCriterionType(GwmBasicGWRAlgorithm::CV);
+    algorithm->setHasHatMatrix(true);
+    algorithm->setHasFTest(true);
+
+
+    GwmProgressDialog* progressDlg = new GwmProgressDialog(algorithm);
+    if (progressDlg->exec() == QDialog::Accepted)
+    {
+        QgsVectorLayer* resultLayer = algorithm->resultLayer();
+        addLayerToModel(resultLayer);
+
+        GwmDiagnostic diagnostic = algorithm->diagnostic();
+        GwmBasicGWRAlgorithm::FTestResultPack fTestResult = algorithm->fTestResult();
+    }
+}
+
+void MainWidget::onGWSSBtnClicked()
+{
+    GwmGWSSTaskThread* gwssTaskThread = new GwmGWSSTaskThread();
+    GwmGWSSOptionsDialog* gwssOptionDialog = new GwmGWSSOptionsDialog(mapModel->rootChildren(), gwssTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwssOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwssOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwssOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwssTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwssTaskThread->resultLayer();
+            GwmLayerGWSSItem* gwssItem = new GwmLayerGWSSItem(selectedItem, resultLayer, gwssTaskThread);
+            mapModel->appentItem(gwssItem, selectedIndex);
+        }
+    }
+
+}
+
 void MainWidget::onScalableGWRBtnClicked()
 {
-    GwmScalableGWRTaskThread* gwrTaskThread = new GwmScalableGWRTaskThread();
+    GwmScalableGWRAlgorithm* gwrTaskThread = new GwmScalableGWRAlgorithm();
     GwmScalableGWROptionsDialog* gwrOptionDialog = new GwmScalableGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
@@ -655,7 +756,7 @@ void MainWidget::onScalableGWRBtnClicked()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
+            QgsVectorLayer* resultLayer = gwrTaskThread->resultLayer();
             GwmLayerScalableGWRItem* gwrItem = new GwmLayerScalableGWRItem(selectedItem, resultLayer, gwrTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
@@ -664,7 +765,7 @@ void MainWidget::onScalableGWRBtnClicked()
 
 void MainWidget::onMultiscaleGWRBtnClicked()
 {
-    GwmMultiscaleGWRTaskThread* gwrTaskThread = new GwmMultiscaleGWRTaskThread();
+    GwmMultiscaleGWRAlgorithm* gwrTaskThread = new GwmMultiscaleGWRAlgorithm();
     GwmMultiscaleGWROptionsDialog* gwrOptionDialog = new GwmMultiscaleGWROptionsDialog(mapModel->rootChildren(), gwrTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
@@ -687,7 +788,7 @@ void MainWidget::onMultiscaleGWRBtnClicked()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = gwrTaskThread->getResultLayer();
+            QgsVectorLayer* resultLayer = gwrTaskThread->resultLayer();
             GwmLayerMultiscaleGWRItem* gwrItem = new GwmLayerMultiscaleGWRItem(selectedItem, resultLayer, gwrTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
@@ -696,7 +797,7 @@ void MainWidget::onMultiscaleGWRBtnClicked()
 
 void MainWidget::onRobustGWR()
 {
-    GwmRobustGWRTaskThread* gwrRobustTaskThread = new GwmRobustGWRTaskThread();
+    GwmRobustGWRAlgorithm* gwrRobustTaskThread = new GwmRobustGWRAlgorithm();
     GwmRobustGWROptionsDialog* gwrRobustOptionDialog = new GwmRobustGWROptionsDialog(mapModel->rootChildren(), gwrRobustTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
@@ -719,8 +820,8 @@ void MainWidget::onRobustGWR()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrRobustTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = gwrRobustTaskThread->getResultLayer();
-            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
+            QgsVectorLayer* resultLayer = gwrRobustTaskThread->resultLayer();
+            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
@@ -728,7 +829,7 @@ void MainWidget::onRobustGWR()
 
 void MainWidget::onRobustGWRBtnClicked()
 {
-    GwmRobustGWRTaskThread* gwrRobustTaskThread = new GwmRobustGWRTaskThread();
+    GwmRobustGWRAlgorithm* gwrRobustTaskThread = new GwmRobustGWRAlgorithm();
     GwmRobustGWROptionsDialog* gwrRobustOptionDialog = new GwmRobustGWROptionsDialog(mapModel->rootChildren(), gwrRobustTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
@@ -751,8 +852,8 @@ void MainWidget::onRobustGWRBtnClicked()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrRobustTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = gwrRobustTaskThread->getResultLayer();
-            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
+            QgsVectorLayer* resultLayer = gwrRobustTaskThread->resultLayer();
+            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
@@ -760,7 +861,7 @@ void MainWidget::onRobustGWRBtnClicked()
 
 void MainWidget::onLcrGWRBtnClicked()
 {
-    GwmLcrGWRTaskThread * lcrGWRTaskThread = new GwmLcrGWRTaskThread();
+    GwmLocalCollinearityGWRAlgorithm * lcrGWRTaskThread = new GwmLocalCollinearityGWRAlgorithm();
     GwmLcrGWROptionsDialog* gwrLcrOptionDialog = new GwmLcrGWROptionsDialog(mapModel->rootChildren(), lcrGWRTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
@@ -783,15 +884,15 @@ void MainWidget::onLcrGWRBtnClicked()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(lcrGWRTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = lcrGWRTaskThread->getResultLayer();
-            GwmLayerGWRItem* gwrItem = new GwmLayerGWRItem(selectedItem, resultLayer, lcrGWRTaskThread);
+            QgsVectorLayer* resultLayer = lcrGWRTaskThread->resultLayer();
+            GwmLayerCollinearityGWRItem* gwrItem = new GwmLayerCollinearityGWRItem(selectedItem, resultLayer, lcrGWRTaskThread);
             mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
 }
 
 void MainWidget::onGGWRBtnClicked(){
-    GwmGGWRTaskThread* ggwrTaskThread = new GwmGGWRTaskThread();
+    GwmGeneralizedGWRAlgorithm* ggwrTaskThread = new GwmGeneralizedGWRAlgorithm();
     GwmGGWROptionsDialog* ggwrOptionDialog = new GwmGGWROptionsDialog(this->mapModel->rootChildren(), ggwrTaskThread);
     QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
@@ -814,9 +915,61 @@ void MainWidget::onGGWRBtnClicked(){
         GwmProgressDialog* progressDlg = new GwmProgressDialog(ggwrTaskThread); //
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            QgsVectorLayer* resultLayer = ggwrTaskThread->getResultLayer();
+            QgsVectorLayer* resultLayer = ggwrTaskThread->resultLayer();
             GwmLayerGGWRItem* ggwrItem = new GwmLayerGGWRItem(selectedItem, resultLayer, ggwrTaskThread);
             mapModel->appentItem(ggwrItem, selectedIndex);
+        }
+    }
+}
+
+
+
+//void wpca(const mat &x, const vec &wt, double nu, double nv, mat &V, vec &S)
+//{
+//    //首先完成中心化
+//    mat tmpLocalCenter(x.n_rows,x.n_cols,fill::zeros);
+//    for(int i=0;i<x.n_rows;i++)
+//    {
+//        tmpLocalCenter.row(i) = x.row(i) * wt(i);
+//    }
+//    //SVD
+//    mat tmpRes(5,2,fill::zeros);
+//    tmpRes = (x.each_row() - sum(tmpLocalCenter)/sum(wt)).each_col() % sqrt(wt);
+//    tmpRes.print();
+//    mat U;
+//    svd(U,S,V,tmpRes);
+//    //S即为R中的d
+//    //V即为R中的v
+//}
+
+void MainWidget::onGWPCABtnClicked()
+{
+    GwmGWPCATaskThread* gwpcaTaskThread = new GwmGWPCATaskThread();
+    GwmGWPCAOptionsDialog* gwpcaOptionDialog = new GwmGWPCAOptionsDialog(mapModel->rootChildren(), gwpcaTaskThread);
+    QModelIndexList selectedIndexes = featurePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwpcaOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwpcaOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwpcaOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwpcaOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwpcaOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwpcaTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwpcaTaskThread->resultLayer();
+            GwmLayerGWPCAItem * gwrItem = new GwmLayerGWPCAItem(selectedItem, resultLayer, gwpcaTaskThread);
+            mapModel->appentItem(gwrItem, selectedIndex);
         }
     }
 }

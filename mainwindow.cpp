@@ -30,4 +30,5 @@ void MainWindow::setupMenus()
     connect(ui->action_GGWR,&QAction::triggered, ui->centralwidget, &MainWidget::onGGWRBtnClicked);
     connect(ui->actionLocal_collinearity_GWR,&QAction::triggered, ui->centralwidget, &MainWidget::onLcrGWRBtnClicked);
     connect(ui->actionMultiscale_GWR,&QAction::triggered, ui->centralwidget, &MainWidget::onMultiscaleGWRBtnClicked);
+    connect(ui->actionBasic_GWR,&QAction::triggered, ui->centralwidget, &MainWidget::onGWRBtnClicked);
 }

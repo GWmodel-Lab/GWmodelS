@@ -16,7 +16,7 @@ class GwmPropertyGGWRTab : public QWidget
 public:
     static QMap<GwmGWRTaskThread::KernelFunction, QString> kernelFunctionNameDict;
     static QMap<GwmGWRTaskThread::BandwidthType, QString> bandwidthTypeNameDict;
-    static QMap<GwmGGWRTaskThread::Family, QString> GwmPropertyGGWRTab::familyTypeNameDict;
+    static QMap<GwmGeneralizedGWRAlgorithm::Family, QString> GwmPropertyGGWRTab::familyTypeNameDict;
 
 public:
     explicit GwmPropertyGGWRTab(QWidget *parent = nullptr, GwmLayerGGWRItem* item = nullptr);
@@ -27,9 +27,6 @@ private:
 
 private:
     GwmLayerGGWRItem* mLayerItem;
-
-    GwmPlot* mModelSelVarsPlot;
-    GwmPlot* mModelSelAICsPlot;
 
     GwmPlot* mBandwidthSelPlot;
 

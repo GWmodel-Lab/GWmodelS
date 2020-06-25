@@ -21,6 +21,7 @@
 
 #include "gwmrobustgwroptionsdialog.h"
 #include "gwmlcrgwroptionsdialog.h"
+#include "gwmgwpcaoptionsdialog.h"
 
 namespace Ui {
     class MainWidget;
@@ -119,6 +120,8 @@ public slots:
     void refreshCanvas();
     void onShowCoordinateTransDlg(const QModelIndex &index);
     void onGWRBtnClicked();
+    void onGWSSBtnClicked();
+    void onGWRNewBtnClicked();
     void onScalableGWRBtnClicked();
     void onMultiscaleGWRBtnClicked();
 
@@ -129,6 +132,8 @@ public slots:
     //void setNewCoordinate(QgsCoordinateReferenceSystem,QString,QModelIndex);
 
     void onLcrGWRBtnClicked();
+
+    void onGWPCABtnClicked();
 };
 
 #endif // MAINLAYOUT_H

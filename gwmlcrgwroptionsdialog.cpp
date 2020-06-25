@@ -5,12 +5,17 @@
 #include <QButtonGroup>
 #include <QFileDialog>
 
+#include <SpatialWeight/gwmcrsdistance.h>
+#include <SpatialWeight/gwmdmatdistance.h>
+#include <SpatialWeight/gwmminkwoskidistance.h>
 
-GwmLcrGWROptionsDialog::GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmLcrGWRTaskThread* thread,QWidget *parent) :
+
+
+GwmLcrGWROptionsDialog::GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmLocalCollinearityGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmLcrGWROptionsDialog),
     mMapLayerList(originItemList),
-    mDepVarModel(new GwmLayerAttributeItemModel),
+    mDepVarModel(new GwmVariableItemModel),
     mTaskThread(thread)
 {
     ui->setupUi(this);
@@ -106,8 +111,8 @@ GwmLcrGWROptionsDialog::GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originI
     //connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
 
     connect(ui->mLambdaAdjustCheck,&QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mLambdaSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mcnThreshSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mLambdaSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mcnThreshSpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmLcrGWROptionsDialog::updateFieldsAndEnable);
 
     updateFieldsAndEnable();
 }
@@ -158,11 +163,12 @@ void GwmLcrGWROptionsDialog::layerChanged(int index)
         QgsField field = fieldList[i];
         if (isNumeric(field.type()))
         {
-            GwmLayerAttributeItem* item = new GwmLayerAttributeItem();
-            item->setAttributeName(field.name());
-            item->setAttributeType(field.type());
-            item->setAttributeIndex(i);
-            mDepVarModel->appendRow(item);
+            GwmVariable item;
+            item.name = field.name();
+            item.type = field.type();
+            item.index = i;
+            item.isNumeric = field.isNumeric();
+            mDepVarModel->append(item);
             ui->mDepVarComboBox->addItem(field.name());
         }
     }
@@ -183,30 +189,30 @@ QString GwmLcrGWROptionsDialog::crsRotateP()
     return ui->mPValue->text();
 }
 
-GwmLcrGWRTaskThread::BandwidthType GwmLcrGWROptionsDialog::bandwidthType()
+bool GwmLcrGWROptionsDialog::bandwidthType()
 {
     if(ui->mBwTypeFixedRadio->isChecked()){
-        return GwmLcrGWRTaskThread::BandwidthType::Fixed;
+        return false;
     }
     else if(ui->mBwTypeAdaptiveRadio->isChecked()){
-        return GwmLcrGWRTaskThread::BandwidthType::Adaptive;
+        return true;
     }
-    else return GwmLcrGWRTaskThread::BandwidthType::Fixed;
+    else return true;
 }
 
-GwmLcrGWRTaskThread::ParallelMethod GwmLcrGWROptionsDialog::approachType()
-{
-    if(ui->mCalcParallelNoneRadio->isChecked()){
-        return GwmLcrGWRTaskThread::ParallelMethod::None;
-    }
-    else if(ui->mCalcParallelMultithreadRadio->isChecked()){
-        return GwmLcrGWRTaskThread::ParallelMethod::Multithread;
-    }
-    else if(ui->mCalcParallelGPURadio->isChecked()){
-        return GwmLcrGWRTaskThread::ParallelMethod::GPU;
-    }
-    else return GwmLcrGWRTaskThread::ParallelMethod::None;
-}
+//GwmLcrGWRTaskThread::ParallelMethod GwmLcrGWROptionsDialog::approachType()
+//{
+//    if(ui->mCalcParallelNoneRadio->isChecked()){
+//        return GwmLcrGWRTaskThread::ParallelMethod::None;
+//    }
+//    else if(ui->mCalcParallelMultithreadRadio->isChecked()){
+//        return GwmLcrGWRTaskThread::ParallelMethod::Multithread;
+//    }
+//    else if(ui->mCalcParallelGPURadio->isChecked()){
+//        return GwmLcrGWRTaskThread::ParallelMethod::GPU;
+//    }
+//    else return GwmLcrGWRTaskThread::ParallelMethod::None;
+//}
 
 void GwmLcrGWROptionsDialog::onNoneRadioToggled(bool checked)
 {
@@ -287,13 +293,13 @@ void GwmLcrGWROptionsDialog::onCustomizeRaidoToggled(bool checked)
 void GwmLcrGWROptionsDialog::onFixedRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(1);
-    mTaskThread->setBandwidthType(GwmLcrGWRTaskThread::BandwidthType::Fixed);
+    //mTaskThread->setBandwidthType(GwmLcrGWRTaskThread::BandwidthType::Fixed);
 }
 
 void GwmLcrGWROptionsDialog::onVariableRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(0);
-    mTaskThread->setBandwidthType(GwmLcrGWRTaskThread::BandwidthType::Adaptive);
+    //mTaskThread->setBandwidthType(GwmLcrGWRTaskThread::BandwidthType::Adaptive);
 }
 
 double GwmLcrGWROptionsDialog::bandwidthSize(){
@@ -307,16 +313,16 @@ double GwmLcrGWROptionsDialog::bandwidthSize(){
     }
 }
 
-GwmLcrGWRTaskThread::BandwidthSelectionApproach GwmLcrGWROptionsDialog::bandwidthSelectionApproach()
-{
-    switch (ui->mBwSizeAutomaticApprochCombo->currentIndex())
-    {
-    case 0:
-        return GwmLcrGWRTaskThread::CV;
-    default:
-        return GwmLcrGWRTaskThread::AIC;
-    }
-}
+//GwmLcrGWRTaskThread::BandwidthSelectionApproach GwmLcrGWROptionsDialog::bandwidthSelectionApproach()
+//{
+//    switch (ui->mBwSizeAutomaticApprochCombo->currentIndex())
+//    {
+//    case 0:
+//        return GwmLcrGWRTaskThread::CV;
+//    default:
+//        return GwmLcrGWRTaskThread::AIC;
+//    }
+//}
 
 QString GwmLcrGWROptionsDialog::bandWidthUnit(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
@@ -328,23 +334,22 @@ QString GwmLcrGWROptionsDialog::bandWidthUnit(){
         return ui->mBwSizeFixedUnit->currentText();
     }
 }
-
-GwmLcrGWRTaskThread::KernelFunction GwmLcrGWROptionsDialog::bandwidthKernelFunction()
+GwmBandwidthWeight::KernelFunctionType GwmLcrGWROptionsDialog::bandwidthKernelFunction()
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
-    return GwmLcrGWRTaskThread::KernelFunction(kernelSelected);
+    return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
-GwmLcrGWRTaskThread::DistanceSourceType GwmLcrGWROptionsDialog::distanceSourceType()
+GwmGWRTaskThread::DistanceSourceType GwmLcrGWROptionsDialog::distanceSourceType()
 {
     if (ui->mDistTypeCRSRadio->isChecked())
-        return GwmLcrGWRTaskThread::DistanceSourceType::CRS;
+        return GwmGWRTaskThread::DistanceSourceType::CRS;
     else if (ui->mDistTypeDmatRadio->isChecked())
-        return GwmLcrGWRTaskThread::DistanceSourceType::DMatFile;
+        return GwmGWRTaskThread::DistanceSourceType::DMatFile;
     else if (ui->mDistTypeMinkowskiRadio->isChecked())
-        return GwmLcrGWRTaskThread::DistanceSourceType::Minkowski;
+        return GwmGWRTaskThread::DistanceSourceType::Minkowski;
     else
-        return GwmLcrGWRTaskThread::DistanceSourceType::CRS;
+        return GwmGWRTaskThread::DistanceSourceType::CRS;
 }
 
 QVariant GwmLcrGWROptionsDialog::distanceSourceParameters()
@@ -364,22 +369,6 @@ QVariant GwmLcrGWROptionsDialog::distanceSourceParameters()
     else return QVariant();
 }
 
-GwmLcrGWRTaskThread::ParallelMethod GwmLcrGWROptionsDialog::parallelMethod()
-{
-    if (ui->mCalcParallelMultithreadRadio->isChecked())
-    {
-        return GwmLcrGWRTaskThread::ParallelMethod::Multithread;
-    }
-    else if (ui->mCalcParallelGPURadio->isChecked())
-    {
-        return GwmLcrGWRTaskThread::ParallelMethod::GPU;
-    }
-    else
-    {
-        return GwmLcrGWRTaskThread::ParallelMethod::None;
-    }
-}
-
 QVariant GwmLcrGWROptionsDialog::parallelParameters()
 {
     if (ui->mCalcParallelGPURadio->isChecked())
@@ -396,7 +385,7 @@ QVariant GwmLcrGWROptionsDialog::parallelParameters()
     }
 }
 
-void GwmLcrGWROptionsDialog::setTaskThread(GwmLcrGWRTaskThread *taskThread)
+void GwmLcrGWROptionsDialog::setTaskThread(GwmLocalCollinearityGWRAlgorithm *taskThread)
 {
 
 }
@@ -416,10 +405,14 @@ void GwmLcrGWROptionsDialog::updateFieldsAndEnable()
 
 void GwmLcrGWROptionsDialog::updateFields()
 {
+    QgsVectorLayer* dataLayer;
     // 图层设置
     if (ui->mLayerComboBox->currentIndex() > -1)
     {
-        mTaskThread->setLayer(mSelectedLayer->originChild()->layer());
+        dataLayer = mSelectedLayer->originChild()->layer();
+        mTaskThread->setDataLayer(dataLayer);
+    }else{
+        return;
     }
     // 回归点设置
     if (ui->ckbRegressionPoints->isChecked())
@@ -427,74 +420,108 @@ void GwmLcrGWROptionsDialog::updateFields()
         int regLayerIndex = ui->cmbRegressionLayerSelect->currentIndex();
         if (regLayerIndex > -1)
         {
-            mTaskThread->setRegressionLayer(mMapLayerList[regLayerIndex]->originChild()->layer());
+            //mTaskThread->setRegressionLayer(mMapLayerList[regLayerIndex]->originChild()->layer());
         }
         else
         {
-            mTaskThread->setRegressionLayer(nullptr);
+            //mTaskThread->setRegressionLayer(nullptr);
         }
     }
     else
     {
-        mTaskThread->setRegressionLayer(nullptr);
+        //mTaskThread->setRegressionLayer(nullptr);
     }
     // 因变量设置
     if (ui->mDepVarComboBox->currentIndex() > -1)
     {
-        mTaskThread->setDepVar(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
+        mTaskThread->setDependentVariable(mDepVarModel ->item(ui->mDepVarComboBox->currentIndex()));
+        //mTaskThread->setDependentVariable(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
     }
     // 自变量设置
-    GwmLayerAttributeItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
+    GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
     if (selectedIndepVarModel)
     {
         if (selectedIndepVarModel->rowCount() > 0)
         {
-            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
+            mTaskThread->setIndependentVariables(selectedIndepVarModel->attributeItemList());
         }
 //        else if (ui->mVariableAutoSelectionCheck->isChecked())
 //        {
-//            GwmLayerAttributeItemModel* indepVarModel = ui->mIndepVarSelector->indepVarModel();
+//            GwmVariableItemModel* indepVarModel = ui->mIndepVarSelector->indepVarModel();
 //            if (indepVarModel)
 //            {
-//                mTaskThread->setIndepVars(indepVarModel->attributeItemList());
+//                mTaskThread->setIndependentVariables(indepVarModel->attributeItemList());
 //            }
 //        }
-//        mTaskThread->setEnableIndepVarAutosel(ui->mVariableAutoSelectionCheck->isChecked());
-//        mTaskThread->setModelSelThreshold(ui->mModelSelAICThreshold->value());
+//        mTaskThread->setIsAutoselectIndepVars(ui->mVariableAutoSelectionCheck->isChecked());
+//        mTaskThread->setIndepVarSelectionThreshold(ui->mModelSelAICThreshold->value());
     }
     // 带宽设置
+//    if (ui->mBwSizeAutomaticRadio->isChecked())
+//    {
+//        mTaskThread->setIsBandwidthSizeAutoSel(true);
+//        mTaskThread->setBandwidthSelectionApproach(bandwidthSelectionApproach());
+//    }
+//    else if (ui->mBwSizeCustomizeRadio->isChecked())
+//    {
+//        mTaskThread->setIsBandwidthSizeAutoSel(false);
+//        mTaskThread->setBandwidth(this->bandwidthType(), this->bandwidthSize(), this->bandWidthUnit());
+//    }
+//    mTaskThread->setBandwidthKernelFunction(this->bandwidthKernelFunction());
     if (ui->mBwSizeAutomaticRadio->isChecked())
     {
-        mTaskThread->setIsBandwidthSizeAutoSel(true);
-        mTaskThread->setBandwidthSelectionApproach(bandwidthSelectionApproach());
+        mTaskThread->setIsAutoselectBandwidth(true);
+        //mTaskThread->setBandwidthSelectionCriterionType(bandwidthSelectionApproach());
     }
     else if (ui->mBwSizeCustomizeRadio->isChecked())
     {
-        mTaskThread->setIsBandwidthSizeAutoSel(false);
-        mTaskThread->setBandwidth(this->bandwidthType(), this->bandwidthSize(), this->bandWidthUnit());
+        mTaskThread->setIsAutoselectBandwidth(false);
     }
-    mTaskThread->setBandwidthKernelFunction(this->bandwidthKernelFunction());
+    GwmSpatialWeight spatialWeight;
+    GwmBandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
+    spatialWeight.setWeight(weight);
     // 距离设置
-    auto distSrcType = this->distanceSourceType();
-    mTaskThread->setDistSrcType(distSrcType);
-    mTaskThread->setDistSrcParameters(this->distanceSourceParameters());
-    // 并行设置
-    if (distSrcType != GwmLcrGWRTaskThread::DistanceSourceType::DMatFile)
+    int featureCount = dataLayer->featureCount();
+    if (ui->mDistTypeDmatRadio->isChecked())
     {
-        mTaskThread->setParallelMethodType(this->parallelMethod());
-        mTaskThread->setParallelParameter(this->parallelParameters());
+        QString filename = ui->mDistMatrixFileNameEdit->text();
+        GwmDMatDistance distance(featureCount, filename);
+        spatialWeight.setDistance(distance);
+    }
+    else if (ui->mDistTypeMinkowskiRadio->isChecked())
+    {
+        double theta = ui->mThetaValue->value();
+        double p = ui->mPValue->value();
+        GwmMinkwoskiDistance distance(featureCount, p, theta);
+        spatialWeight.setDistance(distance);
+    }
+    else
+    {
+        GwmCRSDistance distance(featureCount, dataLayer->crs().isGeographic());
+        spatialWeight.setDistance(distance);
+    }
+    mTaskThread->setSpatialWeight(spatialWeight);
+    // 并行设置
+    if (ui->mCalcParallelNoneRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
+    else if (ui->mCalcParallelMultithreadRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
     }
     // 其他设置
-    mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
-    mTaskThread->mlambdaAdjust = ui->mLambdaAdjustCheck->isChecked();
-    mTaskThread->mcnThresh = ui->mcnThreshSpinBox->value();
-    mTaskThread->mlambda = ui->mLambdaSpinBox->value();
+    mTaskThread->setHasHatmatix(ui->cbxHatmatrix->isChecked());
+    mTaskThread->setLambdaAdjust(ui->mLambdaAdjustCheck->isChecked());
+    mTaskThread->setCnThresh(ui->mcnThreshSpinBox->value());
+    mTaskThread->setLambda(ui->mLambdaSpinBox->value());
 }
 
 void GwmLcrGWROptionsDialog::enableAccept()
 {
     QString message;
-    if (mTaskThread->isValid(message))
+    if (mTaskThread->isValid())
     {
         ui->mCheckMessage->setText(tr("Valid."));
         ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);

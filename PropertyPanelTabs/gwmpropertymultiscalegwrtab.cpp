@@ -19,7 +19,7 @@ GwmPropertyMultiscaleGWRTab::GwmPropertyMultiscaleGWRTab(QWidget *parent, GwmLay
     if (item)
     {
         mParameterSpecifiedModel = new GwmPropertyMultiscaleParameterSpecifiedItemModel(item, this);
-        if (!item->getHasHatmatrix())
+        if (!item->hasHatmatrix())
         {
             ui->grpDiagnostic->hide();
         }
@@ -44,9 +44,9 @@ void GwmPropertyMultiscaleGWRTab::updateUI()
     // 带宽参数
     ui->trvBandwdithDistance->setModel(mParameterSpecifiedModel);
 
-    if (mLayerItem->getHasHatmatrix())
+    if (mLayerItem->hasHatmatrix())
     {
-        GwmGWRDiagnostic diagnostic = mLayerItem->diagnostic();
+        GwmDiagnostic diagnostic = mLayerItem->diagnostic();
         ui->lblAICc->setText(QString("%1").arg(diagnostic.AICc, 0, 'f', 6));
         ui->lblRSS->setText(QString("%1").arg(diagnostic.RSS, 0, 'f', 6));
         ui->lblRSquare->setText(QString("%1").arg(diagnostic.RSquare, 0, 'f', 6));
@@ -54,17 +54,8 @@ void GwmPropertyMultiscaleGWRTab::updateUI()
     }
 
     // 计算四分位数
-    QList<int> indepVarsIndex = mLayerItem->indepVarsIndex();
-    QList<GwmLayerAttributeItem*> indepVars, originIndepVars = mLayerItem->indepVarsOrigin();
-    for (int index : indepVarsIndex)
-    {
-        for (GwmLayerAttributeItem* item : originIndepVars)
-        {
-            if (item->attributeIndex() == index)
-                indepVars.append(item);
-        }
-    }
-    ui->tbwCoefficient->setRowCount(indepVarsIndex.size() + 1);
+    QList<GwmVariable> indepVars = mLayerItem->indepVars();
+    ui->tbwCoefficient->setRowCount(indepVars.size() + 1);
     ui->tbwCoefficient->setColumnCount(6);
     ui->tbwCoefficient->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     QStringList headers = QStringList() << tr("Name") << tr("Min") << tr("1st Qu") << tr("Median") << tr("3rd Qu") << tr("Max");
@@ -74,7 +65,7 @@ void GwmPropertyMultiscaleGWRTab::updateUI()
     for (uword r = 0; r < betas.n_cols; r++)
     {
         vec q = quantile(betas.col(r), p);
-        QString name = (r == 0) ? QStringLiteral("Intercept") : indepVars[r - 1]->attributeName();
+        QString name = (r == 0) ? QStringLiteral("Intercept") : indepVars[r - 1].name;
         QTableWidgetItem* nameItem = new QTableWidgetItem(name);
         nameItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
         ui->tbwCoefficient->setItem(r, 0, nameItem);
@@ -86,6 +77,5 @@ void GwmPropertyMultiscaleGWRTab::updateUI()
             ui->tbwCoefficient->setItem(r, c + 1, quantileItem);
         }
     }
-
 
 }

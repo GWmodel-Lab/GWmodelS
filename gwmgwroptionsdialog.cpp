@@ -4,13 +4,18 @@
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QFileDialog>
+#include <SpatialWeight/gwmcrsdistance.h>
+#include <SpatialWeight/gwmdmatdistance.h>
+#include <SpatialWeight/gwmminkwoskidistance.h>
+
+#include <GWmodelCUDA/ICUDAInspector.h>
 
 
-GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGWRTaskThread* thread,QWidget *parent) :
+GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmBasicGWRAlgorithm *thread, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmGWROptionsDialog),
     mMapLayerList(originItemList),
-    mDepVarModel(new GwmLayerAttributeItemModel),
+    mDepVarModel(new GwmVariableItemModel),
     mTaskThread(thread)
 {
     ui->setupUi(this);
@@ -25,7 +30,6 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     ui->cmbRegressionLayerSelect->setCurrentIndex(-1);
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::layerChanged);
     connect(ui->ckbRegressionPoints, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::on_cbkRegressionPoints_toggled);
-    connect(ui->cmbRegressionLayerSelect, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::on_cmbRegressionLayerSelect_currentIndexChanged);
 
     ui->mDepVarComboBox->setCurrentIndex(-1);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::onDepVarChanged);
@@ -64,6 +68,30 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onGPURadioToggled);
+
+    // 获取显卡信息
+    ICUDAInspector* inspector = CUDAInspector_Create();
+    int gpuCount = inspector->GetDeviceCount();
+    if (gpuCount > 0)
+    {
+        for (int i = 0; i < gpuCount; ++i)
+        {
+            char name[255] = { "" };
+            int nameLength = inspector->GetDeviceName(i);
+            for (int n = 0; n < nameLength; ++n)
+            {
+                name[n] = inspector->GetNameChar(n);
+            }
+            name[nameLength] = '\0';
+            QString gpuItem(name);
+            ui->mGPUSelection->addItem(gpuItem);
+        }
+        CUDAInspector_Delete(inspector);
+    }
+    else
+    {
+        ui->mCalcParallelGPURadio->setEnabled(false);
+    }
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);
@@ -155,11 +183,12 @@ void GwmGWROptionsDialog::layerChanged(int index)
         QgsField field = fieldList[i];
         if (isNumeric(field.type()))
         {
-            GwmLayerAttributeItem* item = new GwmLayerAttributeItem();
-            item->setAttributeName(field.name());
-            item->setAttributeType(field.type());
-            item->setAttributeIndex(i);
-            mDepVarModel->appendRow(item);
+            GwmVariable item;
+            item.name = field.name();
+            item.type = field.type();
+            item.index = i;
+            item.isNumeric = field.isNumeric();
+            mDepVarModel->append(item);
             ui->mDepVarComboBox->addItem(field.name());
         }
     }
@@ -180,15 +209,15 @@ QString GwmGWROptionsDialog::crsRotateP()
     return ui->mPValue->text();
 }
 
-GwmGWRTaskThread::BandwidthType GwmGWROptionsDialog::bandwidthType()
+bool GwmGWROptionsDialog::bandwidthType()
 {
     if(ui->mBwTypeFixedRadio->isChecked()){
-        return GwmGWRTaskThread::BandwidthType::Fixed;
+        return false;
     }
     else if(ui->mBwTypeAdaptiveRadio->isChecked()){
-        return GwmGWRTaskThread::BandwidthType::Adaptive;
+        return true;
     }
-    else return GwmGWRTaskThread::BandwidthType::Fixed;
+    else return true;
 }
 
 GwmGWRTaskThread::ParallelMethod GwmGWROptionsDialog::approachType()
@@ -279,34 +308,34 @@ void GwmGWROptionsDialog::onCustomizeRaidoToggled(bool checked)
 void GwmGWROptionsDialog::onFixedRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(1);
-    mTaskThread->setBandwidthType(GwmGWRTaskThread::BandwidthType::Fixed);
 }
 
 void GwmGWROptionsDialog::onVariableRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(0);
-    mTaskThread->setBandwidthType(GwmGWRTaskThread::BandwidthType::Adaptive);
 }
 
 double GwmGWROptionsDialog::bandwidthSize(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
-        return (double)ui->mBwSizeAdaptiveSize->value();
+        QList<double> unit = { 1, 10, 100, 1000 };
+        return (double)ui->mBwSizeAdaptiveSize->value() * unit[ui->mBwSizeAdaptiveUnit->currentIndex()];
     }
     else
     {
-        return ui->mBwSizeFixedSize->value();
+        QList<double> unit = { 1.0, 1000.0, 1609.344 };
+        return ui->mBwSizeFixedSize->value() * unit[ui->mBwSizeAdaptiveUnit->currentIndex()];
     }
 }
 
-GwmGWRTaskThread::BandwidthSelectionApproach GwmGWROptionsDialog::bandwidthSelectionApproach()
+GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType GwmGWROptionsDialog::bandwidthSelectionApproach()
 {
     switch (ui->mBwSizeAutomaticApprochCombo->currentIndex())
     {
     case 0:
-        return GwmGWRTaskThread::CV;
+        return GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType::CV;
     default:
-        return GwmGWRTaskThread::AIC;
+        return GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType::AIC;
     }
 }
 
@@ -321,10 +350,10 @@ QString GwmGWROptionsDialog::bandWidthUnit(){
     }
 }
 
-GwmGWRTaskThread::KernelFunction GwmGWROptionsDialog::bandwidthKernelFunction()
+GwmBandwidthWeight::KernelFunctionType GwmGWROptionsDialog::bandwidthKernelFunction()
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
-    return GwmGWRTaskThread::KernelFunction(kernelSelected);
+    return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
 GwmGWRTaskThread::DistanceSourceType GwmGWROptionsDialog::distanceSourceType()
@@ -376,7 +405,10 @@ QVariant GwmGWROptionsDialog::parallelParameters()
 {
     if (ui->mCalcParallelGPURadio->isChecked())
     {
-        return ui->mSampleGroupSize->value();
+        QMap<QString, QVariant> parameters;
+        parameters["groupSize"] = ui->mSampleGroupSize->value();
+        parameters["gpuID"] = ui->mGPUSelection->currentIndex();
+        return parameters;
     }
     else if (ui->mCalcParallelMultithreadRadio->isChecked())
     {
@@ -408,10 +440,16 @@ void GwmGWROptionsDialog::updateFieldsAndEnable()
 
 void GwmGWROptionsDialog::updateFields()
 {
+    QgsVectorLayer* dataLayer;
     // 图层设置
     if (ui->mLayerComboBox->currentIndex() > -1)
     {
-        mTaskThread->setLayer(mSelectedLayer->originChild()->layer());
+        dataLayer = mSelectedLayer->originChild()->layer();
+        mTaskThread->setDataLayer(dataLayer);
+    }
+    else
+    {
+        return;
     }
     // 回归点设置
     if (ui->ckbRegressionPoints->isChecked())
@@ -433,48 +471,80 @@ void GwmGWROptionsDialog::updateFields()
     // 因变量设置
     if (ui->mDepVarComboBox->currentIndex() > -1)
     {
-        mTaskThread->setDepVar(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
+        mTaskThread->setDependentVariable(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
     }
     // 自变量设置
-    GwmLayerAttributeItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
+    GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
     if (selectedIndepVarModel)
     {
         if (selectedIndepVarModel->rowCount() > 0)
         {
-            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
+            mTaskThread->setIndependentVariables(selectedIndepVarModel->attributeItemList());
         }
         else if (ui->mVariableAutoSelectionCheck->isChecked())
         {
-            GwmLayerAttributeItemModel* indepVarModel = ui->mIndepVarSelector->indepVarModel();
+            GwmVariableItemModel* indepVarModel = ui->mIndepVarSelector->indepVarModel();
             if (indepVarModel)
             {
-                mTaskThread->setIndepVars(indepVarModel->attributeItemList());
+                mTaskThread->setIndependentVariables(indepVarModel->attributeItemList());
             }
         }
-        mTaskThread->setEnableIndepVarAutosel(ui->mVariableAutoSelectionCheck->isChecked());
-        mTaskThread->setModelSelThreshold(ui->mModelSelAICThreshold->value());
+        mTaskThread->setIsAutoselectIndepVars(ui->mVariableAutoSelectionCheck->isChecked());
+        mTaskThread->setIndepVarSelectionThreshold(ui->mModelSelAICThreshold->value());
     }
     // 带宽设置
     if (ui->mBwSizeAutomaticRadio->isChecked())
     {
-        mTaskThread->setIsBandwidthSizeAutoSel(true);
-        mTaskThread->setBandwidthSelectionApproach(bandwidthSelectionApproach());
+        mTaskThread->setIsAutoselectBandwidth(true);
+        mTaskThread->setBandwidthSelectionCriterionType(bandwidthSelectionApproach());
     }
     else if (ui->mBwSizeCustomizeRadio->isChecked())
     {
-        mTaskThread->setIsBandwidthSizeAutoSel(false);
-        mTaskThread->setBandwidth(this->bandwidthType(), this->bandwidthSize(), this->bandWidthUnit());
+        mTaskThread->setIsAutoselectBandwidth(false);
     }
-    mTaskThread->setBandwidthKernelFunction(this->bandwidthKernelFunction());
+    GwmSpatialWeight spatialWeight;
+    GwmBandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
+    spatialWeight.setWeight(weight);
     // 距离设置
-    auto distSrcType = this->distanceSourceType();
-    mTaskThread->setDistSrcType(distSrcType);
-    mTaskThread->setDistSrcParameters(this->distanceSourceParameters());
-    // 并行设置
-    if (distSrcType != GwmGWRTaskThread::DistanceSourceType::DMatFile)
+    int featureCount = dataLayer->featureCount();
+    if (ui->mDistTypeDmatRadio->isChecked())
     {
-        mTaskThread->setParallelMethodType(this->parallelMethod());
-        mTaskThread->setParallelParameter(this->parallelParameters());
+        QString filename = ui->mDistMatrixFileNameEdit->text();
+        GwmDMatDistance distance(featureCount, filename);
+        spatialWeight.setDistance(distance);
+    }
+    else if (ui->mDistTypeMinkowskiRadio->isChecked())
+    {
+        double theta = ui->mThetaValue->value();
+        double p = ui->mPValue->value();
+        GwmMinkwoskiDistance distance(featureCount, p, theta);
+        spatialWeight.setDistance(distance);
+    }
+    else
+    {
+        GwmCRSDistance distance(featureCount, dataLayer->crs().isGeographic());
+        spatialWeight.setDistance(distance);
+    }
+    mTaskThread->setSpatialWeight(spatialWeight);
+    // 并行设置
+    if (ui->mCalcParallelNoneRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
+    else if (ui->mCalcParallelMultithreadRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
+    }
+    else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::CUDA);
+        mTaskThread->setGroupSize(ui->mSampleGroupSize->value());
+        mTaskThread->setGPUId(ui->mGPUSelection->currentIndex());
+    }
+    else
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
     }
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
@@ -484,7 +554,7 @@ void GwmGWROptionsDialog::updateFields()
 void GwmGWROptionsDialog::enableAccept()
 {
     QString message;
-    if (mTaskThread->isValid(message))
+    if (mTaskThread->isValid())
     {
         ui->mCheckMessage->setText(tr("Valid."));
         ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
@@ -529,9 +599,4 @@ void GwmGWROptionsDialog::on_cbkRegressionPoints_toggled(bool checked)
     }
     ui->cbxHatmatrix->setEnabled(!checked);
     ui->cbxHatmatrix->setChecked(!checked);
-}
-
-void GwmGWROptionsDialog::on_cmbRegressionLayerSelect_currentIndexChanged(int index)
-{
-
 }

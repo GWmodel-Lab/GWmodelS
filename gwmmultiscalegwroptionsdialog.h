@@ -4,7 +4,8 @@
 #include <QDialog>
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
-#include "TaskThread/gwmmultiscalegwrtaskthread.h"
+#include "TaskThread/gwmmultiscalegwralgorithm.h"
+#include "TaskThread/iparallelable.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
 #include "Model/gwmparameterspecifiedoptionsmodel.h"
@@ -18,18 +19,18 @@ class GwmMultiscaleGWROptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmMultiscaleGWRTaskThread* thread,QWidget *parent = nullptr);
+    explicit GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmMultiscaleGWRAlgorithm* thread,QWidget *parent = nullptr);
     ~GwmMultiscaleGWROptionsDialog();
 
 private:
     Ui::GwmMultiscaleGWROptionsDialog *ui;
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
-    GwmMultiscaleGWRTaskThread* mTaskThread = nullptr;
-    GwmLayerAttributeItemModel* mDepVarModel;
+    GwmMultiscaleGWRAlgorithm* mTaskThread = nullptr;
+    GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
     GwmParameterSpecifiedOptionsModel* mParameterSpecifiedOptionsModel = nullptr;
-    QItemSelectionModel* mParameterSpecifiedOoptionsSelectionModel = nullptr;
+    QItemSelectionModel* mParameterSpecifiedOptionsSelectionModel = nullptr;
 
 public slots:
     void layerChanged(const int index);
@@ -59,18 +60,17 @@ public slots:
 public:
     QString crsRotateTheta();
     QString crsRotateP();
-    GwmGWRTaskThread::BandwidthType bandwidthType();
-    GwmGWRTaskThread::ParallelMethod approachType();
+    bool bandwidthType();
+    IParallelalbe::ParallelType parallelType();
     double bandwidthSize();
-    GwmGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
+    GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
-    GwmGWRTaskThread::KernelFunction bandwidthKernelFunction();
-    GwmGWRTaskThread::DistanceSourceType distanceSourceType();
+    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
+    GwmDistance::DistanceType distanceSourceType();
     QVariant distanceSourceParameters();
-    GwmGWRTaskThread::ParallelMethod parallelMethod();
     QVariant parallelParameters();
 
-    void setTaskThread(GwmGWRTaskThread* taskThread);
+    void setTaskThread(GwmMultiscaleGWRAlgorithm* taskThread);
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
@@ -78,6 +78,7 @@ public:
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
 private slots:
+    void onBwSelecionThresholdSpbChanged(int arg1);
 };
 
 #endif // GWMMULTISCALEGWROPTIONSDIALOG_H

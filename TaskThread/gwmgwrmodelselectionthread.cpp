@@ -7,15 +7,16 @@
 
 
 GwmGWRModelSelectionThread::GwmGWRModelSelectionThread()
+    : GwmGWRTaskThread()
 {
-    hasHatMatrix = false;
+//    hasHatMatrix = false;
 }
 
 GwmGWRModelSelectionThread::GwmGWRModelSelectionThread(const GwmGWRTaskThread &gwrTaskThread)
     : GwmGWRTaskThread(gwrTaskThread)
     , createdFromGWRTaskThread(true)
 {
-    hasHatMatrix = false;
+//    hasHatMatrix = false;
 }
 
 void GwmGWRModelSelectionThread::run()
@@ -28,6 +29,8 @@ void GwmGWRModelSelectionThread::run()
         mFeatureList.append(f);
     }
     it.rewind();
+
+    int nDp = mLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
     int process = 0;
     int total = (mIndepVars.size()+1)*mIndepVars.size()/2;
     mDataPoints = mat(mFeatureList.size(), 2);
@@ -50,11 +53,27 @@ void GwmGWRModelSelectionThread::run()
     {
         mBandwidthSize = getFixedBwUpper();
     }
+
+    // 回归点
+    if (mRegressionLayer)
+    {
+        mRegPoints = mat(nRp, 2);
+        it = mRegressionLayer->getFeatures();
+        for (int row = 0; it.nextFeature(f); row++)
+        {
+            QgsPointXY centroPoint = f.geometry().centroid().asPoint();
+            mRegPoints(row, 0) = centroPoint.x();
+            mRegPoints(row, 1) = centroPoint.y();
+        }
+    }
+    else mRegPoints = mDataPoints;
+
     for (int i = 0; i < mIndepVars.size(); i++)
     {
         vec AICcs = vec(mIndepVars.size() - i);
+
         for (int j = 0; j < mIndepVars.size() - i; j++)
-        {
+        {           
             inDepVarsIndex.append(mIndepVarsIndex[j]);
             QList<mat> XY = setXY(mDepVarIndex,inDepVarsIndex);
             if (XY.size() == 0)
@@ -63,7 +82,24 @@ void GwmGWRModelSelectionThread::run()
             }
             mX = XY[0];
             mY = XY[1];
-            AICcs[j] = gwRegAll();
+            arma::uword nVar = mX.n_cols;
+            mBetas = mat(nVar, nRp, fill::zeros);
+            if (hasHatMatrix)
+            {
+                mBetasSE = mat(nVar, nDp, fill::zeros);
+                mSHat = vec(2, fill::zeros);
+                mQDiag = vec(nDp, fill::zeros);
+                mRowSumBetasSE = mat(nDp, 1, fill::ones);
+            }
+            bool isStoreS = hasFTest && (nDp <= 8192);
+            // 解算
+            mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
+            const RegressionAll regression = regressionAll[mParallelMethodType];
+            bool isAllCorrect = (this->*regression)(hasHatMatrix, S);
+            if(isAllCorrect){
+                AICcs[j] = AICc(mY,mX,trans(mBetas),mSHat);
+            }
+//            AICcs[j] = gwRegAll();
             QStringList inDepVarsName;
             QList<int> inDepVarsIndexList;
             QString message1 = "";
@@ -95,6 +131,7 @@ QList<mat> GwmGWRModelSelectionThread::setXY(int depVarIndex, QList<int> inDepVa
 {
     mat X = mat(mFeatureList.size(), inDepVarsIndex.size() + 1);
     mat Y = vec(mFeatureList.size());
+
     QgsField depField = mLayer->fields()[depVarIndex];
     if (!isNumeric(depField.type()))
     {
@@ -137,6 +174,8 @@ QList<mat> GwmGWRModelSelectionThread::setXY(int depVarIndex, QList<int> inDepVa
         }
         else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
     }
+
+
     // 坐标旋转
     if (mDistSrcType == DistanceSourceType::Minkowski)
     {
@@ -453,6 +492,12 @@ void GwmGWRModelSelectionThread::plotModelOrder(QVariant data, QwtPlot *plot)
         curve2->attach(plot);
         i++;
     }
+    QwtLegend *legend = new QwtLegend();
+    QwtPlotItemList items = plot->itemList( QwtPlotItem::Rtti_PlotMarker );
+    for ( int i = 0; i < indepVarNameList.size(); i++ )
+    {
+        items[i]->setItemAttribute(QwtPlotItem::Legend,true);
+    }
     for (i = 1; i <= modelInDepVars.size(); i++)
     {
         int j = modelInDepVars[i-1].size();
@@ -464,12 +509,6 @@ void GwmGWRModelSelectionThread::plotModelOrder(QVariant data, QwtPlot *plot)
         text->setFont(QFont("MS Shell Dlg 2",int(10-numModels/15+i*3/numModels)));
         mX->setLabel(*text);
         mX->attach(plot);
-    }
-    QwtLegend *legend = new QwtLegend();
-    QwtPlotItemList items = plot->itemList( QwtPlotItem::Rtti_PlotMarker );
-    for ( int i = 0; i < indepVarNameList.size(); i++ )
-    {
-        items[i]->setItemAttribute(QwtPlotItem::Legend,true);
     }
     items = plot->itemList( QwtPlotItem::Rtti_PlotCurve );
     for ( int i = 0; i < items.size(); i++ )
@@ -485,38 +524,38 @@ void GwmGWRModelSelectionThread::plotModelOrder(QVariant data, QwtPlot *plot)
 
 double GwmGWRModelSelectionThread::getFixedBwUpper()
 {
-    double fixedBw = 0;
-    if(mDistSrcType == DistanceSourceType::Minkowski){
-        QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
-        double p = parameters["p"].toDouble();
-        for (int i = 0; i < mFeatureList.size(); i++){
-            vec dist = gwDist(mDataPoints, mDataPoints, i, p, 0.0, false, false);
-            double max = dist.max();
-            if(max > fixedBw){
-                fixedBw = max;
-            }
-        }
-    }
-    else if(mDistSrcType == DistanceSourceType::DMatFile){
-        for (int i = 0; i < mFeatureList.size(); i++){
-            vec dist = distanceDmat(i);
-            double max = dist.max();
-            if(max > fixedBw){
-                fixedBw = max;
-            }
-        }
-    }
-    else{
-        bool longlat = mLayer->crs().isGeographic();
-        for (int i = 0; i < mFeatureList.size(); i++){
-            vec dist = gwDist(mDataPoints, mDataPoints, i, 2.0, 0.0, longlat, false);
-            double max = dist.max();
-            if(max > fixedBw){
-                fixedBw = max;
-            }
-        }
-    }
-    return fixedBw;
+//    double fixedBw = 0;
+//    if(mDistSrcType == DistanceSourceType::Minkowski){
+//        QMap<QString, QVariant> parameters = mDistSrcParameters.toMap();
+//        double p = parameters["p"].toDouble();
+//        for (int i = 0; i < mFeatureList.size(); i++){
+//            vec dist = gwDist(mDataPoints, mDataPoints, i, p, 0.0, false, false);
+//            double max = dist.max();
+//            if(max > fixedBw){
+//                fixedBw = max;
+//            }
+//        }
+//    }
+//    else if(mDistSrcType == DistanceSourceType::DMatFile){
+//        for (int i = 0; i < mFeatureList.size(); i++){
+//            vec dist = distanceDmat(i);
+//            double max = dist.max();
+//            if(max > fixedBw){
+//                fixedBw = max;
+//            }
+//        }
+//    }
+//    else{
+//        bool longlat = mLayer->crs().isGeographic();
+//        for (int i = 0; i < mFeatureList.size(); i++){
+//            vec dist = gwDist(mDataPoints, mDataPoints, i, 2.0, 0.0, longlat, false);
+//            double max = dist.max();
+//            if(max > fixedBw){
+//                fixedBw = max;
+//            }
+//        }
+//    }
+    return DBL_MAX;
 }
 
 QList<QStringList> GwmGWRModelSelectionThread::getModelInDepVars(){

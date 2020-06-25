@@ -1,32 +1,21 @@
 #include "gwmlayerggwritem.h"
 
-GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmGGWRTaskThread* taskThread)
-    :GwmLayerGWRItem(parent,vector)
+GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmGeneralizedGWRAlgorithm* taskThread)
+    :GwmLayerBasicGWRItem(parent,vector)
 {
     if (taskThread)
     {
-        mDataPointsSize = taskThread->getFeatureList().size();
-        mDepVarIndex = taskThread->getDepVarIndex();
-        mIndepVarsIndex = taskThread->getIndepVarsIndex();
-        mIndepVarsOrigin = taskThread->indepVars();
-        mBandwidthType = taskThread->bandwidthType();
-        mBandwidthSize = (mBandwidthType == GwmGWRTaskThread::BandwidthType::Fixed ?
-                              taskThread->getBandwidthSizeOrigin() :
-                              taskThread->getBandwidthSize());
-        mBandwidthUnit = taskThread->getBandwidthUnit();
-        mBandwidthKernelFunction = taskThread->getBandwidthKernelFunction();
+        mDataPointsSize = taskThread->dataLayer()->featureCount();
+        mDepVar = taskThread->dependentVariable();
+        mIndepVars = taskThread->independentVariables();
+        mWeight = GwmBandwidthWeight(*static_cast<GwmBandwidthWeight*>(taskThread->spatialWeight().weight()));
+        mBetas = mat(taskThread->betas());
+        isBandwidthOptimized = taskThread->autoselectBandwidth();
+        mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();
+        hasHatmatrix = taskThread->hasHatMatrix();
+        isRegressionPointGiven = !(taskThread->regressionLayer() == nullptr);
         mDiagnostic = taskThread->getDiagnostic();
         mGLMDiagnostic = taskThread->getGLMDiagnostic();
-        mBetas = mat(taskThread->getBetas());
-        mModelSelModels = taskThread->getModelSelModels();
-        mModelSelAICcs = taskThread->getModelSelAICcs();
-        isBandwidthOptimized = taskThread->getIsBandwidthSizeAutoSel();
-        isModelOptimized = taskThread->enableIndepVarAutosel();
-        mBandwidthSelScores = taskThread->getBwScore();
-        mFTestResults = taskThread->fTestResults();
-        hasHatmatrix = taskThread->getHasHatMatrix();
-        hasFTest = taskThread->getHasFTest();
-        mFamily = taskThread->getFamily();
     }
 }
 
@@ -40,7 +29,7 @@ GwmGLMDiagnostic GwmLayerGGWRItem::GLMdiagnostic() const
     return mGLMDiagnostic;
 }
 
-GwmGGWRTaskThread::Family GwmLayerGGWRItem::family() const
+GwmGeneralizedGWRAlgorithm::Family GwmLayerGGWRItem::family() const
 {
     return mFamily;
 }

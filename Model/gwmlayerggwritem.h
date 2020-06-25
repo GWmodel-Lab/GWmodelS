@@ -2,14 +2,15 @@
 #define GWMLAYERGGWRITEM_H
 
 #include "gwmlayergwritem.h"
-#include "TaskThread/gwmggwrtaskthread.h"
+#include "TaskThread/gwmgeneralizedgwralgorithm.h"
+#include "gwmlayerbasicgwritem.h"
 
-class GwmLayerGGWRItem : public GwmLayerGWRItem
+class GwmLayerGGWRItem : public GwmLayerBasicGWRItem
 {
 public:
-    GwmLayerGGWRItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGGWRTaskThread* taskThread = nullptr);
+    GwmLayerGGWRItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGeneralizedGWRAlgorithm* taskThread = nullptr);
 
-    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::GGWR; }
+    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::GeneralizedGWR; }
 
     GwmGGWRDiagnostic diagnostic() const;
 
@@ -17,11 +18,11 @@ public:
 
     GwmGLMDiagnostic mGLMDiagnostic;
 
-    GwmGGWRTaskThread::Family mFamily;
+    GwmGeneralizedGWRAlgorithm::Family mFamily;
 
     GwmGLMDiagnostic GLMdiagnostic() const;
 
-    GwmGGWRTaskThread::Family family() const;
+    GwmGeneralizedGWRAlgorithm::Family family() const;
 };
 
 #endif // GWMLAYERGGWRITEM_H

@@ -2,7 +2,7 @@
 #define GWMPARAMETERSPECIFIEDOPTIONSMODEL_H
 
 #include <QAbstractListModel>
-#include "TaskThread/gwmmultiscalegwrtaskthread.h"
+#include "TaskThread/gwmmultiscalegwralgorithm.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 
 struct GwmParameterSpecifiedOption
@@ -11,15 +11,17 @@ struct GwmParameterSpecifiedOption
     int attributeIndex;
     bool checkState = false;
 
-    double bandwidthSize = 0;
-    QString bandwidthUnit = "x1";
-    GwmGWRTaskThread::BandwidthType bandwidthType = GwmGWRTaskThread::Adaptive;
-    GwmGWRTaskThread::KernelFunction kernel = GwmGWRTaskThread::Gaussian;
-    GwmMultiscaleGWRTaskThread::BandwidthSeledType bandwidthSeledType = GwmMultiscaleGWRTaskThread::Null;
-    GwmGWRTaskThread::BandwidthSelectionApproach approach = GwmGWRTaskThread::CV;
+    double bandwidthSize = 100.0;
+    bool adaptive = true;
+    GwmBandwidthWeight::KernelFunctionType kernel = GwmBandwidthWeight::KernelFunctionType::Gaussian;
+    GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Null;
+    GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType approach = GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV;
+    double threshold = 0.01;
 
-    GwmGWRTaskThread::DistanceSourceType distanceType = GwmGWRTaskThread::CRS;
-    QVariant distanceParameters = QVariant();
+    GwmDistance::DistanceType distanceType = GwmDistance::DistanceType::CRSDistance;
+    double p = 2.0;
+    double theta = 0.0;
+    QString dmatFile;
 
     bool predictorCentralization = true;
 };
@@ -46,7 +48,7 @@ public:
     GwmParameterSpecifiedOption* item(const QModelIndex &index);
     GwmParameterSpecifiedOption* item(const int row);
 
-    void syncWithAttributes(GwmLayerAttributeItemModel* attributeModel);
+    void syncWithAttributes(const GwmVariableItemModel* attributeModel);
 
 private:
     QList<GwmParameterSpecifiedOption> mItems;

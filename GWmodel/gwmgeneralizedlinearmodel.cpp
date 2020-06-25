@@ -1,7 +1,8 @@
 #include "gwmgeneralizedlinearmodel.h"
 #include "gwmpoissonmodel.h"
 #include "gwmbinomialmodel.h"
-#include "GWmodel.h"
+//#include "GWmodel.h"
+#include "TaskThread/gwmgeneralizedgwralgorithm.h"
 
 GwmGeneralizedLinearModel::GwmGeneralizedLinearModel()
 {
@@ -25,7 +26,7 @@ void GwmGeneralizedLinearModel::fit(){
     if(mOffset.is_empty()){
         mOffset = zeros(nObs);
     }
-    if(mFamily == GwmGGWRTaskThread::Family::Poisson){
+    if(mFamily == GwmGeneralizedGWRAlgorithm::Family::Poisson){
         //初始化模型
         mModel = new GwmPoissonModel();
         mModel->setY(mY);
@@ -69,10 +70,10 @@ void GwmGeneralizedLinearModel::fit(){
                 xadj.col(i) = mX.col(i)%w;
             }
             for (int i = 0; i < mX.n_rows; i++){
-                start.col(i) = gwReg(xadj,z%w,vec(mX.n_rows,fill::ones),i);
+                start.col(i) = GwmGeneralizedGWRAlgorithm::gwReg(xadj,z%w,vec(mX.n_rows,fill::ones),i);
             }
             mat starttrans = trans(start);
-            eta = gwFitted(mX , starttrans) ; //?不是很确定
+            eta = GwmGeneralizedGWRAlgorithm::Fitted(mX , starttrans) ; //?不是很确定
             mu = mModel->linkinv(eta + mOffset);
             vec devtemp = mModel->devResids(mY,mu,mWeight);
             mDev = sum(devtemp);
@@ -85,7 +86,7 @@ void GwmGeneralizedLinearModel::fit(){
                     ii++;
                     start = (start + coefold)/2;
                     mat starttrans = trans(start);
-                    eta = gwFitted(mX , starttrans);
+                    eta = GwmGeneralizedGWRAlgorithm::Fitted(mX , starttrans);
                     vec devtemp = mModel->devResids(mY,mu,mWeight);
                     mDev = sum(devtemp);
                 }
@@ -122,7 +123,7 @@ bool GwmGeneralizedLinearModel::setY(mat Y){
     return true;
 }
 
-bool GwmGeneralizedLinearModel::setFamily(GwmGGWRTaskThread::Family family){
+bool GwmGeneralizedLinearModel::setFamily(GwmGeneralizedGWRAlgorithm::Family family){
     mFamily = family;
     return true;
 }

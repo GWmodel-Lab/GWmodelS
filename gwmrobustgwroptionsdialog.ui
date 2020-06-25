@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>GWR Configure</string>
+   <string>Robust GWR Configure</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,1,0,0,0,0,0">
    <item>
@@ -615,7 +615,7 @@
       <item>
        <widget class="QStackedWidget" name="stackedWidget">
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="page">
          <layout class="QVBoxLayout" name="verticalLayout">
@@ -678,6 +678,16 @@
              <number>4096</number>
             </property>
            </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="mGPUSelection"/>
           </item>
          </layout>
         </widget>

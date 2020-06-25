@@ -5,14 +5,19 @@
 #include <QButtonGroup>
 #include <QFileDialog>
 
+#include <Model/gwmvariableitemmodel.h>
 
-GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmMultiscaleGWRTaskThread* thread,QWidget *parent) :
+#include <SpatialWeight/gwmcrsdistance.h>
+#include <SpatialWeight/gwmdmatdistance.h>
+#include <SpatialWeight/gwmminkwoskidistance.h>
+
+GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmMultiscaleGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmMultiscaleGWROptionsDialog),
     mMapLayerList(originItemList),
-    mDepVarModel(new GwmLayerAttributeItemModel),
-    mParameterSpecifiedOptionsModel(new GwmParameterSpecifiedOptionsModel),
-    mTaskThread(thread)
+    mTaskThread(thread),
+    mDepVarModel(new GwmVariableItemModel),
+    mParameterSpecifiedOptionsModel(new GwmParameterSpecifiedOptionsModel)
 {
     ui->setupUi(this);
     ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
@@ -30,12 +35,13 @@ GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroup
 
     ui->mMaxIterationSpb->setMaximum(INT_MAX);
     ui->mNLowerSpb->setMaximum(INT_MAX);
+    ui->mBandwidthOptimizeRetrySpb->setMaximum(INT_MAX);
 
     // Parameter Specified 参数设置
-    mParameterSpecifiedOoptionsSelectionModel = new QItemSelectionModel(mParameterSpecifiedOptionsModel);
+    mParameterSpecifiedOptionsSelectionModel = new QItemSelectionModel(mParameterSpecifiedOptionsModel);
     ui->lsvParameterSpecifiedParameterList->setModel(mParameterSpecifiedOptionsModel);
-    ui->lsvParameterSpecifiedParameterList->setSelectionModel(mParameterSpecifiedOoptionsSelectionModel);
-    connect(mParameterSpecifiedOoptionsSelectionModel, &QItemSelectionModel::currentChanged, this, &GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged);
+    ui->lsvParameterSpecifiedParameterList->setSelectionModel(mParameterSpecifiedOptionsSelectionModel);
+    connect(mParameterSpecifiedOptionsSelectionModel, &QItemSelectionModel::currentChanged, this, &GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged);
 
     QButtonGroup* bwTypeBtnGroup = new QButtonGroup(this);
     bwTypeBtnGroup->addButton(ui->mBwTypeAdaptiveRadio);
@@ -57,6 +63,7 @@ GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroup
     connect(ui->mBwSizeInitialRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onInitializeRadioToggled);
     connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onCustomizeRaidoToggled);
     connect(ui->mBwSizeAutomaticApprochCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmMultiscaleGWROptionsDialog::onBwSizeAutomaticApprochChanged);
+    connect(ui->mBwSelecionThresholdSpb, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmMultiscaleGWROptionsDialog::onBwSelecionThresholdSpbChanged);
     connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmMultiscaleGWROptionsDialog::onBwSizeAdaptiveSizeChanged);
     connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmMultiscaleGWROptionsDialog::onBwSizeAdaptiveUnitChanged);
     connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmMultiscaleGWROptionsDialog::onBwSizeFixedSizeChanged);
@@ -76,13 +83,14 @@ GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroup
     QButtonGroup* calcParallelTypeBtnGroup = new QButtonGroup(this);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
-    calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
+//    calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onMultithreadingRadioToggled);
-    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onGPURadioToggled);
+//    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onGPURadioToggled);
+    ui->mCalcParallelGPURadio->hide();
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);
@@ -93,11 +101,11 @@ GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroup
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mMaxIterationSpb, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeAutomaticApprochCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSelecionThresholdSpb, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
@@ -168,19 +176,17 @@ void GwmMultiscaleGWROptionsDialog::layerChanged(int index)
         QgsField field = fieldList[i];
         if (isNumeric(field.type()))
         {
-            GwmLayerAttributeItem* item = new GwmLayerAttributeItem();
-            item->setAttributeName(field.name());
-            item->setAttributeType(field.type());
-            item->setAttributeIndex(i);
-            mDepVarModel->appendRow(item);
+            GwmVariable item;
+            item.name = field.name();
+            item.type = field.type();
+            item.index = i;
+            item.isNumeric = field.isNumeric();
+            mDepVarModel->append(item);
             ui->mDepVarComboBox->addItem(field.name());
         }
     }
-    // Parameter Specified 参数
-//    if (mParameterSpecifiedOptionsModel)
-//        delete mParameterSpecifiedOptionsModel;
-//    mParameterSpecifiedOptionsModel = new GwmParameterSpecifiedOptionsModel(this);
-//    ui->lsvParameterSpecifiedParameterList->setModel(mParameterSpecifiedOptionsModel);
+    // 选带宽下限最小值
+    ui->mNLowerSpb->setMaximum(mSelectedLayer->originChild()->layer()->featureCount());
 }
 
 void GwmMultiscaleGWROptionsDialog::onDepVarChanged(const int index)
@@ -198,29 +204,29 @@ QString GwmMultiscaleGWROptionsDialog::crsRotateP()
     return ui->mPValue->text();
 }
 
-GwmGWRTaskThread::BandwidthType GwmMultiscaleGWROptionsDialog::bandwidthType()
+bool GwmMultiscaleGWROptionsDialog::bandwidthType()
 {
     if(ui->mBwTypeFixedRadio->isChecked()){
-        return GwmGWRTaskThread::BandwidthType::Fixed;
+        return false;
     }
     else if(ui->mBwTypeAdaptiveRadio->isChecked()){
-        return GwmGWRTaskThread::BandwidthType::Adaptive;
+        return true;
     }
-    else return GwmGWRTaskThread::BandwidthType::Fixed;
+    else return true;
 }
 
-GwmGWRTaskThread::ParallelMethod GwmMultiscaleGWROptionsDialog::approachType()
+IParallelalbe::ParallelType GwmMultiscaleGWROptionsDialog::parallelType()
 {
     if(ui->mCalcParallelNoneRadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::None;
+        return IParallelalbe::ParallelType::SerialOnly;
     }
     else if(ui->mCalcParallelMultithreadRadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::Multithread;
+        return IParallelalbe::ParallelType::OpenMP;
     }
     else if(ui->mCalcParallelGPURadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::GPU;
+        return IParallelalbe::ParallelType::CUDA;
     }
-    else return GwmGWRTaskThread::ParallelMethod::None;
+    else return IParallelalbe::ParallelType::SerialOnly;
 }
 
 void GwmMultiscaleGWROptionsDialog::onNoneRadioToggled(bool checked)
@@ -254,10 +260,10 @@ void GwmMultiscaleGWROptionsDialog::onAutomaticRadioToggled(bool checked)
         ui->mBwSizeSettingStack->setEnabled(false);
         ui->mBwSizeAutomaticApprochCombo->setEnabled(true);
         // 记录数据
-        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
+        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
         if (option)
         {
-            option->bandwidthSeledType = GwmMultiscaleGWRTaskThread::Null;
+            option->bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Null;
         }
     }
 }
@@ -268,11 +274,10 @@ void GwmMultiscaleGWROptionsDialog::onDistTypeCRSToggled(bool checked)
     {
         ui->mDistParamSettingStack->setCurrentIndex(0);
         // 记录数据
-        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
+        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
         if (option)
         {
-            option->distanceType = GwmGWRTaskThread::DistanceSourceType::CRS;
-            option->distanceParameters = QVariant();
+            option->distanceType = GwmDistance::DistanceType::CRSDistance;
         }
     }
 }
@@ -283,15 +288,12 @@ void GwmMultiscaleGWROptionsDialog::onDistTypeMinkowskiToggled(bool checked)
     {
         ui->mDistParamSettingStack->setCurrentIndex(1);
         // 记录数据
-        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
+        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
         if (option)
         {
-            option->distanceType = GwmGWRTaskThread::DistanceSourceType::Minkowski;
-            QMap<QString, QVariant> parameters = {
-                std::make_pair(QString("theta"), ui->mThetaValue->value()),
-                std::make_pair(QString("p"), ui->mPValue->value())
-            };
-            option->distanceParameters = parameters;
+            option->distanceType = GwmDistance::DistanceType::MinkwoskiDistance;
+            option->p = ui->mPValue->value();
+            option->theta = ui->mThetaValue->value();
         }
     }
 }
@@ -302,11 +304,11 @@ void GwmMultiscaleGWROptionsDialog::onDistTypeDmatToggled(bool checked)
     {
         ui->mDistParamSettingStack->setCurrentIndex(2);
         // 记录数据
-        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
+        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
         if (option)
         {
-            option->distanceType = GwmGWRTaskThread::DistanceSourceType::DMatFile;
-            option->distanceParameters = ui->mDistMatrixFileNameEdit->text();
+            option->distanceType = GwmDistance::DistanceType::DMatDistance;
+            option->dmatFile = ui->mDistMatrixFileNameEdit->text();
         }
     }
     ui->mCalcParallelGroup->setEnabled(!checked);
@@ -322,57 +324,62 @@ void GwmMultiscaleGWROptionsDialog::onDmatFileOpenClicked()
 void GwmMultiscaleGWROptionsDialog::onSelectedIndenpendentVariablesChanged()
 {
     mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector->selectedIndepVarModel());
+    ui->mNLowerSpb->setMinimum(ui->mIndepVarSelector->selectedIndepVarModel()->rowCount() + 1);
 }
 
-void GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged(const QModelIndex& currnet, const QModelIndex& previous)
+void GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged(const QModelIndex& current, const QModelIndex& previous)
 {
-    ui->mParameterSpecifiedOptionsLayout->setEnabled(currnet.isValid());
-    if (!currnet.isValid())
+    ui->mParameterSpecifiedOptionsLayout->setEnabled(current.isValid());
+    ui->mPSBandwidthSettingGroup->setEnabled(current.isValid());
+    ui->mPSDistanceSettingGroup->setEnabled(current.isValid());
+    ui->mPSOtherSettingGroup->setEnabled(current.isValid());
+
+    if (!current.isValid())
         return;
-    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(currnet);
+
+    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(current);
     if (option)
     {
         switch (option->bandwidthSeledType) {
-        case GwmMultiscaleGWRTaskThread::BandwidthSeledType::Null:
+        case GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Null:
             ui->mBwSizeAutomaticRadio->setChecked(true);
             break;
-        case GwmMultiscaleGWRTaskThread::BandwidthSeledType::Initial:
+        case GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Initial:
             ui->mBwSizeInitialRadio->setChecked(true);
             break;
-        case GwmMultiscaleGWRTaskThread::BandwidthSeledType::Specified:
+        case GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Specified:
             ui->mBwSizeCustomizeRadio->setChecked(true);
             break;
         default:
             break;
         }
         ui->mBwSizeAutomaticApprochCombo->setCurrentIndex(option->approach);
+        ui->mBwSelecionThresholdSpb->setValue(-log10(option->threshold));
         if (ui->mBwTypeAdaptiveRadio->isChecked())
         {
             ui->mBwSizeAdaptiveSize->setValue(option->bandwidthSize);
-            ui->mBwSizeAdaptiveUnit->setCurrentText(option->bandwidthUnit);
         }
         else if (ui->mBwTypeFixedRadio->isChecked())
         {
             ui->mBwSizeFixedSize->setValue(option->bandwidthSize);
-            ui->mBwSizeFixedUnit->setCurrentText(option->bandwidthUnit);
         }
         switch (option->distanceType) {
-        case GwmGWRTaskThread::DistanceSourceType::CRS:
+        case GwmDistance::DistanceType::CRSDistance:
             ui->mDistTypeCRSRadio->setChecked(true);
             break;
-        case GwmGWRTaskThread::DistanceSourceType::Minkowski:
+        case GwmDistance::DistanceType::MinkwoskiDistance:
             ui->mDistTypeMinkowskiRadio->setChecked(true);
-            ui->mPValue->setValue(option->distanceParameters.toMap()["p"].toDouble());
-            ui->mThetaValue->setValue(option->distanceParameters.toMap()["theta"].toDouble());
+            ui->mPValue->setValue(option->p);
+            ui->mThetaValue->setValue(option->theta);
             break;
-        case GwmGWRTaskThread::DistanceSourceType::DMatFile:
+        case GwmDistance::DistanceType::DMatDistance:
             ui->mDistTypeDmatRadio->setChecked(true);
-            ui->mDistMatrixFileNameEdit->setText(option->distanceParameters.toString());
+            ui->mDistMatrixFileNameEdit->setText(option->dmatFile);
             break;
         default:
             break;
         }
-        if (currnet.row() == 0)
+        if (current.row() == 0)
         {
             ui->ckbPredictorCentralization->setChecked(false);
             ui->ckbPredictorCentralization->setEnabled(false);
@@ -388,44 +395,65 @@ void GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged(const QMo
 void GwmMultiscaleGWROptionsDialog::onBwSizeAutomaticApprochChanged(int index)
 {
     // 记录数据
-    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
-    option->bandwidthType = (GwmGWRTaskThread::BandwidthType)index;
+    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
+    if (option)
+    {
+        option->approach = (GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType)index;
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onBwSizeAdaptiveSizeChanged(int size)
 {
-    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
-    option->bandwidthSize = size;
+    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
+    if (option)
+    {
+        option->bandwidthSize = bandwidthSize();
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onBwSizeAdaptiveUnitChanged(int index)
 {
-    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
-    option->bandwidthUnit = GwmGWRTaskThread::adaptiveBwUnitDict.keys()[index];
+    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
+    if (option)
+    {
+        option->bandwidthSize = bandwidthSize();
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onBwSizeFixedSizeChanged(double size)
 {
-    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
-    option->bandwidthSize = size;
+    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
+    if (option)
+    {
+        option->bandwidthSize = bandwidthSize();
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onBwSizeFixedUnitChanged(int index)
 {
-    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
-    option->bandwidthUnit = GwmGWRTaskThread::fixedBwUnitDict.keys()[index];
+    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
+    if (option)
+    {
+        option->bandwidthSize = bandwidthSize();
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onBwKernelFunctionChanged(int index)
 {
-    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
-    option->kernel = (GwmGWRTaskThread::KernelFunction)index;
+    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
+    if (option)
+    {
+        option->kernel = (GwmBandwidthWeight::KernelFunctionType)index;
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onPredictorCentralizationToggled(bool checked)
 {
-    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
-    option->predictorCentralization = checked;
+    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
+    if (option)
+    {
+        option->predictorCentralization = checked;
+    }
 }
 
 void GwmMultiscaleGWROptionsDialog::onCustomizeRaidoToggled(bool checked)
@@ -438,10 +466,10 @@ void GwmMultiscaleGWROptionsDialog::onCustomizeRaidoToggled(bool checked)
         ui->mBwSizeSettingStack->setEnabled(true);
         ui->mBwSizeAutomaticApprochCombo->setEnabled(false);
         // 记录数据
-        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
+        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
         if (option)
         {
-            option->bandwidthSeledType = GwmMultiscaleGWRTaskThread::Specified;
+            option->bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Specified;
         }
     }
 }
@@ -456,10 +484,10 @@ void GwmMultiscaleGWROptionsDialog::onInitializeRadioToggled(bool checked)
         ui->mBwSizeSettingStack->setEnabled(true);
         ui->mBwSizeAutomaticApprochCombo->setEnabled(true);
         // 记录数据
-        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOoptionsSelectionModel->currentIndex());
+        GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
         if (option)
         {
-            option->bandwidthSeledType = GwmMultiscaleGWRTaskThread::Initial;
+            option->bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Initial;
         }
     }
 }
@@ -469,7 +497,7 @@ void GwmMultiscaleGWROptionsDialog::onFixedRadioToggled(bool checked)
     ui->mBwSizeSettingStack->setCurrentIndex(1);
     for (int i = 0; i < mParameterSpecifiedOptionsModel->rowCount(); ++i)
     {
-        mParameterSpecifiedOptionsModel->item(i)->bandwidthType = GwmGWRTaskThread::Fixed;
+        mParameterSpecifiedOptionsModel->item(i)->adaptive = false;
     }
 }
 
@@ -478,30 +506,38 @@ void GwmMultiscaleGWROptionsDialog::onVariableRadioToggled(bool checked)
     ui->mBwSizeSettingStack->setCurrentIndex(0);
     for (int i = 0; i < mParameterSpecifiedOptionsModel->rowCount(); ++i)
     {
-        mParameterSpecifiedOptionsModel->item(i)->bandwidthType = GwmGWRTaskThread::Adaptive;
+        mParameterSpecifiedOptionsModel->item(i)->adaptive = true;
     }
 }
 
 double GwmMultiscaleGWROptionsDialog::bandwidthSize(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
-        return (double)ui->mBwSizeAdaptiveSize->value();
+        QList<double> unit = { 1, 10, 100, 1000 };
+        return ui->mBwSizeAdaptiveSize->value() * unit[ui->mBwSizeAdaptiveUnit->currentIndex()];
     }
     else
     {
-        return ui->mBwSizeFixedSize->value();
+        QList<double> unit = { 1.0, 1000.0, 1609.344 };
+        return ui->mBwSizeFixedSize->value() * unit[ui->mBwSizeAdaptiveUnit->currentIndex()];
     }
 }
 
-GwmGWRTaskThread::BandwidthSelectionApproach GwmMultiscaleGWROptionsDialog::bandwidthSelectionApproach()
+GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType GwmMultiscaleGWROptionsDialog::bandwidthSelectionApproach()
 {
     switch (ui->mBwSizeAutomaticApprochCombo->currentIndex())
     {
     case 0:
-        return GwmGWRTaskThread::CV;
+        return GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV;
     default:
-        return GwmGWRTaskThread::AIC;
+        return GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC;
     }
+}
+
+void GwmMultiscaleGWROptionsDialog::onBwSelecionThresholdSpbChanged(int value)
+{
+    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
+    option->threshold = pow(10.0, -value);
 }
 
 QString GwmMultiscaleGWROptionsDialog::bandWidthUnit(){
@@ -515,22 +551,22 @@ QString GwmMultiscaleGWROptionsDialog::bandWidthUnit(){
     }
 }
 
-GwmGWRTaskThread::KernelFunction GwmMultiscaleGWROptionsDialog::bandwidthKernelFunction()
+GwmBandwidthWeight::KernelFunctionType GwmMultiscaleGWROptionsDialog::bandwidthKernelFunction()
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
-    return GwmGWRTaskThread::KernelFunction(kernelSelected);
+    return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
-GwmGWRTaskThread::DistanceSourceType GwmMultiscaleGWROptionsDialog::distanceSourceType()
+GwmDistance::DistanceType GwmMultiscaleGWROptionsDialog::distanceSourceType()
 {
     if (ui->mDistTypeCRSRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
+        return GwmDistance::DistanceType::CRSDistance;
     else if (ui->mDistTypeDmatRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::DMatFile;
+        return GwmDistance::DistanceType::DMatDistance;
     else if (ui->mDistTypeMinkowskiRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::Minkowski;
+        return GwmDistance::DistanceType::MinkwoskiDistance;
     else
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
+        return GwmDistance::DistanceType::CRSDistance;
 }
 
 QVariant GwmMultiscaleGWROptionsDialog::distanceSourceParameters()
@@ -550,22 +586,6 @@ QVariant GwmMultiscaleGWROptionsDialog::distanceSourceParameters()
     else return QVariant();
 }
 
-GwmGWRTaskThread::ParallelMethod GwmMultiscaleGWROptionsDialog::parallelMethod()
-{
-    if (ui->mCalcParallelMultithreadRadio->isChecked())
-    {
-        return GwmGWRTaskThread::ParallelMethod::Multithread;
-    }
-    else if (ui->mCalcParallelGPURadio->isChecked())
-    {
-        return GwmGWRTaskThread::ParallelMethod::GPU;
-    }
-    else
-    {
-        return GwmGWRTaskThread::ParallelMethod::None;
-    }
-}
-
 QVariant GwmMultiscaleGWROptionsDialog::parallelParameters()
 {
     if (ui->mCalcParallelGPURadio->isChecked())
@@ -582,9 +602,9 @@ QVariant GwmMultiscaleGWROptionsDialog::parallelParameters()
     }
 }
 
-void GwmMultiscaleGWROptionsDialog::setTaskThread(GwmGWRTaskThread *taskThread)
+void GwmMultiscaleGWROptionsDialog::setTaskThread(GwmMultiscaleGWRAlgorithm* taskThread)
 {
-
+    mTaskThread = taskThread;
 }
 
 void GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable()
@@ -602,58 +622,99 @@ void GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable()
 
 void GwmMultiscaleGWROptionsDialog::updateFields()
 {
+    QgsVectorLayer* dataLayer;
     // 图层设置
     if (ui->mLayerComboBox->currentIndex() > -1)
     {
-        mTaskThread->setLayer(mSelectedLayer->originChild()->layer());
+        dataLayer = mSelectedLayer->originChild()->layer();
+        mTaskThread->setDataLayer(dataLayer);
     }
+    else return;
     // 因变量设置
     if (ui->mDepVarComboBox->currentIndex() > -1)
     {
-        mTaskThread->setDepVar(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
+        mTaskThread->setDependentVariable(mDepVarModel->item(ui->mDepVarComboBox->currentIndex()));
     }
     // 自变量设置
-    GwmLayerAttributeItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
+    GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
     if (selectedIndepVarModel)
     {
         if (selectedIndepVarModel->rowCount() > 0)
         {
-            mTaskThread->setIndepVars(selectedIndepVarModel->attributeItemList());
+            mTaskThread->setIndependentVariables(selectedIndepVarModel->attributeItemList());
         }
     }
     // 参数设置
     if (ui->mCriterionCVRckb->isChecked())
     {
-        mTaskThread->setCriterionType(GwmMultiscaleGWRTaskThread::CVR);
+        mTaskThread->setCriterionType(GwmMultiscaleGWRAlgorithm::CVR);
     }
     else
     {
-        mTaskThread->setCriterionType(GwmMultiscaleGWRTaskThread::dCVR);
+        mTaskThread->setCriterionType(GwmMultiscaleGWRAlgorithm::dCVR);
     }
     mTaskThread->setMaxIteration(ui->mMaxIterationSpb->value());
     mTaskThread->setCriterionThreshold(pow(10.0, -1.0 * ui->mIterationThresholdSpb->value()));
     mTaskThread->setBandwidthSelectRetryTimes(ui->mBandwidthOptimizeRetrySpb->value());
     mTaskThread->setAdaptiveLower(ui->mNLowerSpb->value());
     // Parameter Specified 设置
+    QList<GwmSpatialWeight> spatialWeights;
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> initilize;
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> approach;
+    QList<bool> preditorCentered;
+    QList<double> threshold;
     for (int i = 0; i < mParameterSpecifiedOptionsModel->rowCount(); ++i)
     {
         GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(i);
-        mTaskThread->setBandwidthSeled(i, option->bandwidthSeledType);
-        mTaskThread->setBandwidthSelectionApproach(i, option->approach);
-        mTaskThread->setBandwidthType(i, option->bandwidthType);
-        mTaskThread->setInitialBandwidthSize(i, option->bandwidthSize);
-        mTaskThread->setBandwidthUnit(i, option->bandwidthUnit);
-        mTaskThread->setBandwidthKernel(i, option->kernel);
-        mTaskThread->setDistanceSource(i, option->distanceType);
-        mTaskThread->setDistanceParameter(i, option->distanceParameters);
-        mTaskThread->setPreditorCentered(i, option->predictorCentralization);
+        initilize.append(option->bandwidthSeledType);
+        approach.append(option->approach);
+        preditorCentered.append(option->predictorCentralization);
+        threshold.append(option->threshold);
+        GwmSpatialWeight sw;
+        GwmBandwidthWeight weight(option->bandwidthSize, option->adaptive, option->kernel);
+        sw.setWeight(weight);
+        // 距离设置
+        int featureCount = dataLayer->featureCount();
+        if (ui->mDistTypeDmatRadio->isChecked())
+        {
+            int featureCount = dataLayer->featureCount();
+            GwmDMatDistance distance(featureCount, option->dmatFile);
+            sw.setDistance(distance);
+        }
+        else if (ui->mDistTypeMinkowskiRadio->isChecked())
+        {
+            GwmMinkwoskiDistance distance(featureCount, option->p, option->theta);
+            sw.setDistance(distance);
+        }
+        else
+        {
+            GwmCRSDistance distance(featureCount, dataLayer->crs().isGeographic());
+            sw.setDistance(distance);
+        }
+        spatialWeights.append(sw);
     }
+    mTaskThread->setSpatialWeights(spatialWeights);
+    mTaskThread->setBandwidthInitilize(initilize);
+    mTaskThread->setBandwidthSelectionApproach(approach);
+    mTaskThread->setPreditorCentered(preditorCentered);
+    mTaskThread->setBandwidthSelectThreshold(threshold);
     // 并行设置
-    auto distSrcType = this->distanceSourceType();
-    if (distSrcType != GwmGWRTaskThread::DistanceSourceType::DMatFile)
+    if (ui->mCalcParallelNoneRadio->isChecked())
     {
-        mTaskThread->setParallelMethodType(this->parallelMethod());
-        mTaskThread->setParallelParameter(this->parallelParameters());
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
+    else if (ui->mCalcParallelMultithreadRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
+    }
+    else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::CUDA);
+    }
+    else
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
     }
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
@@ -662,7 +723,7 @@ void GwmMultiscaleGWROptionsDialog::updateFields()
 void GwmMultiscaleGWROptionsDialog::enableAccept()
 {
     QString message;
-    if (mTaskThread->isValid(message))
+    if (mTaskThread->isValid())
     {
         ui->mCheckMessage->setText(tr("Valid."));
         ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);

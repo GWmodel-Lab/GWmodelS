@@ -23,7 +23,7 @@ QMap<GwmGWRTaskThread::BandwidthType, QString> GwmPropertyGWRTab::bandwidthTypeN
     std::make_pair(GwmGWRTaskThread::BandwidthType::Fixed, QStringLiteral("Fixed bandwidth:"))
 };
 
-GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerGWRItem* item) :
+GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerBasicGWRItem *item) :
     QWidget(parent),
     ui(new Ui::GwmPropertyGWRTab),
     mLayerItem(item),
@@ -34,7 +34,7 @@ GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerGWRItem* item) :
     ui->setupUi(this);
     if (item)
     {
-        if (item->getIsModelOptimized())
+        if (item->modelOptimized())
         {
             mModelSelVarsPlot = new GwmPlot();
             mModelSelAICsPlot = new GwmPlot();
@@ -45,7 +45,7 @@ GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerGWRItem* item) :
         {
             ui->grpModelSelView->hide();
         }
-        if (item->getIsBandwidthOptimized())
+        if (item->bandwidthOptimized())
         {
             mBandwidthSelPlot = new GwmPlot();
             ui->grpBwSelView->layout()->addWidget(mBandwidthSelPlot);
@@ -55,11 +55,11 @@ GwmPropertyGWRTab::GwmPropertyGWRTab(QWidget *parent, GwmLayerGWRItem* item) :
         {
             ui->grpBwSelView->hide();
         }
-        if (!item->getHasHatmatrix())
+        if (!item->hatmatrix())
         {
             ui->grpDiagnostic->hide();
         }
-        if (!item->getHasFTest())
+        if (!item->fTest())
         {
             ui->grpFTest->hide();
         }
@@ -75,21 +75,23 @@ void GwmPropertyGWRTab::updateUI()
 {
     if (!mLayerItem)
         return;
-    ui->lblKernelFunction->setText(kernelFunctionNameDict[mLayerItem->bandwidthKernelFunction()]);
-    ui->lblBandwidthType->setText(bandwidthTypeNameDict[mLayerItem->bandwidthType()]);
-    if (mLayerItem->bandwidthType() == GwmGWRTaskThread::BandwidthType::Adaptive)
+
+    GwmBandwidthWeight weight = mLayerItem->weight();
+    ui->lblKernelFunction->setText(GwmBandwidthWeight::KernelFunctionTypeNameMapper.name(weight.kernel()));
+    ui->lblBandwidthType->setText(weight.adaptive() ? tr("Adaptive") : tr("Fixed"));
+    if (weight.adaptive())
     {
-        QString bwSizeString = QString("%1 (number of nearest neighbours)").arg(int(mLayerItem->bandwidthSize()));
+        QString bwSizeString = QString("%1 (number of nearest neighbours)").arg(int(weight.bandwidth()));
         ui->lblBandwidthSize->setText(bwSizeString);
     }
     else
     {
         QString bwSizeString = QString("%1 %2")
-                .arg(mLayerItem->bandwidthSize(), 0, 'f', 12)
-                .arg(mLayerItem->bandwidthUnit());
+                .arg(weight.bandwidth(), 0, 'f', 12)
+                .arg(weight.bandwidth());
         ui->lblBandwidthSize->setText(bwSizeString);
     }
-    if (mLayerItem->getIsRegressionPointGiven())
+    if (mLayerItem->regressionPointGiven())
     {
         ui->lblRegressionPoints->setText(tr("A seperate set of regression points is used."));
     }
@@ -103,9 +105,9 @@ void GwmPropertyGWRTab::updateUI()
     }
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
 
-    if (mLayerItem->getHasHatmatrix())
+    if (mLayerItem->hatmatrix())
     {
-        GwmGWRDiagnostic diagnostic = mLayerItem->diagnostic();
+        GwmDiagnostic diagnostic = mLayerItem->diagnostic();
         ui->lblENP->setText(QString("%1").arg(diagnostic.ENP, 0, 'f', 6));
         ui->lblEDF->setText(QString("%1").arg(diagnostic.EDF, 0, 'f', 6));
         ui->lblAIC->setText(QString("%1").arg(diagnostic.AIC, 0, 'f', 6));
@@ -116,17 +118,8 @@ void GwmPropertyGWRTab::updateUI()
     }
 
     // 计算四分位数
-    QList<int> indepVarsIndex = mLayerItem->getIndepVarIndex();
-    QList<GwmLayerAttributeItem*> indepVars, originIndepVars = mLayerItem->getIndepVarsOrigin();
-    for (int index : indepVarsIndex)
-    {
-        for (GwmLayerAttributeItem* item : originIndepVars)
-        {
-            if (item->attributeIndex() == index)
-                indepVars.append(item);
-        }
-    }
-    ui->tbwCoefficient->setRowCount(indepVarsIndex.size() + 1);
+    QList<GwmVariable> indepVars = mLayerItem->indepVars();
+    ui->tbwCoefficient->setRowCount(indepVars.size() + 1);
     ui->tbwCoefficient->setColumnCount(6);
     ui->tbwCoefficient->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     QStringList headers = QStringList() << tr("Name") << tr("Min") << tr("1st Qu") << tr("Median") << tr("3rd Qu") << tr("Max");
@@ -136,7 +129,7 @@ void GwmPropertyGWRTab::updateUI()
     for (uword r = 0; r < betas.n_cols; r++)
     {
         vec q = quantile(betas.col(r), p);
-        QString name = (r == 0) ? QStringLiteral("Intercept") : indepVars[r - 1]->attributeName();
+        QString name = (r == 0) ? QStringLiteral("Intercept") : indepVars[r - 1].name;
         QTableWidgetItem* nameItem = new QTableWidgetItem(name);
         nameItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
         ui->tbwCoefficient->setItem(r, 0, nameItem);
@@ -150,43 +143,24 @@ void GwmPropertyGWRTab::updateUI()
     }
 
     // 绘制可视化图标
-    if (mLayerItem->getIsModelOptimized())
+    if (mLayerItem->modelOptimized())
     {
-        QMap<QString, QVariant> data;
-        QList<QVariant> indepVarNames, modelSelModels, modelSelAICcs;
-        for (GwmLayerAttributeItem* item : mLayerItem->getIndepVarsOrigin())
-        {
-            indepVarNames.append(item->attributeName());
-        }
-        data["indepVarNames"] = (indepVarNames);
-        for (QStringList modelStringList : mLayerItem->modelSelModels())
-        {
-            modelSelModels.append(modelStringList);
-        }
-        data["modelSelModels"] = (modelSelModels);
-        for (double aic : mLayerItem->modelSelAICcs())
-        {
-            modelSelAICcs.append(aic);
-        }
-        data["modelSelAICcs"] = (modelSelAICcs);
-        GwmGWRModelSelectionThread::plotModelOrder(data, mModelSelVarsPlot);
-        GwmGWRModelSelectionThread::plotModelAICcs(data, mModelSelAICsPlot);
+        IndepVarsCriterionList models = mLayerItem->modelSelModels();
+        QVariant data = QVariant::fromValue(models);
+        GwmIndependentVariableSelector::PlotModelOrder(data, mModelSelVarsPlot);
+        GwmIndependentVariableSelector::PlotModelAICcs(data, mModelSelAICsPlot);
     }
 
-    if(mLayerItem->getIsBandwidthOptimized())
+    if(mLayerItem->bandwidthOptimized())
     {
-        QMap<double, double> bwScores = mLayerItem->getBandwidthSelScores();
-        QList<QVariant> plotData;
-        for (auto i = bwScores.constBegin(); i != bwScores.constEnd(); i++)
-        {
-            plotData.append(QVariant(QPointF(i.key(), i.value())));
-        }
-        GwmBandwidthSelectTaskThread::plotBandwidthResult(plotData, mBandwidthSelPlot);
+        BandwidthCriterionList bwScores = mLayerItem->bandwidthSelScores();
+        QVariant data = QVariant::fromValue(bwScores);
+        GwmBandwidthSizeSelector::PlotBandwidthResult(data, mBandwidthSelPlot);
     }
 
     // F检验结果
-    QList<GwmFTestResult> fTestResults = mLayerItem->getFTestResults();
-    if (mLayerItem->getHasFTest() && fTestResults.size() > 0)
+    GwmBasicGWRAlgorithm::FTestResultPack fTestResults = mLayerItem->fTestResults();
+    if (mLayerItem->fTest())
     {
         QStandardItemModel* model = new QStandardItemModel(4, 5);
         model->setHorizontalHeaderLabels(
@@ -196,10 +170,10 @@ void GwmPropertyGWRTab::updateUI()
                     << tr("Denominator DF")
                     << QStringLiteral("Pr(>)"));
         ui->trvFTest->setModel(model);
-        GwmFTestResult f1 = fTestResults.takeFirst(),
-                f2 = fTestResults.takeFirst(),
-                f4 = fTestResults.takeFirst();
-        QList<GwmFTestResult> f3 = fTestResults;
+        GwmFTestResult f1 = fTestResults.f1,
+                f2 = fTestResults.f2,
+                f4 = fTestResults.f4;
+        QList<GwmFTestResult> f3 = fTestResults.f3;
         // F1
         model->setItem(0, 0, new QStandardItem(tr("F1 test")));
         model->setItem(0, 1, new QStandardItem(QString("%1").arg(f1.s, 0, 'f', 4)));
@@ -223,7 +197,7 @@ void GwmPropertyGWRTab::updateUI()
         model->setItem(2, 0, f3Item);
         for (int i = 0; i < f3.size(); i++)
         {
-            QString name = i == 0 ? tr("Intercept") : indepVars[i - 1]->attributeName();
+            QString name = i == 0 ? tr("Intercept") : indepVars[i - 1].name;
             f3Item->appendRow(new QStandardItem(name));
             f3Item->setChild(i, 1, new QStandardItem(QString("%1").arg(f3[i].s, 0, 'f', 4)));
             f3Item->setChild(i, 2, new QStandardItem(QString("%1").arg(f3[i].df1, 0, 'f', 4)));
