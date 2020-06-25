@@ -183,10 +183,6 @@ void GwmGWROptionsDialog::layerChanged(int index)
         QgsField field = fieldList[i];
         if (isNumeric(field.type()))
         {
-//            GwmLayerAttributeItem* item = new GwmLayerAttributeItem();
-//            item->setAttributeName(field.name());
-//            item->setAttributeType(field.type());
-//            item->setAttributeIndex(i);
             GwmVariable item;
             item.name = field.name();
             item.type = field.type();

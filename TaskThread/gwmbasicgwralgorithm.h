@@ -144,7 +144,9 @@ protected:
     }
 
 protected:
-    void createResultLayer(CreateResultLayerData data);
+
+    void createResultLayer(CreateResultLayerData data,QString name = QStringLiteral("_GWR"));
+
     void initCuda(IGWmodelCUDA *cuda, const mat &x, const vec &y);
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight);

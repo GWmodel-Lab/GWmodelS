@@ -1,5 +1,6 @@
 #include "gwmpoissonmodel.h"
-#include "GWmodel.h"
+//#include "GWmodel.h"
+#include "TaskThread/gwmggwralgorithm.h"
 
 GwmPoissonModel::GwmPoissonModel()
 {
@@ -18,7 +19,15 @@ mat GwmPoissonModel::muStart(){
 
 
 mat GwmPoissonModel::linkinv(mat eta){
-    return exp(eta);
+    mat res = exp(eta);
+    double eps = 2.220446e-16;
+    if(res.min() > eps){
+        return res;
+    }
+    for(int i = 0; i < eta.n_rows; i++){
+        res(i) = res(i) > eps? res(i) : eps;
+    }
+    return res;
 }
 
 mat GwmPoissonModel::variance(mat mu){
@@ -26,18 +35,35 @@ mat GwmPoissonModel::variance(mat mu){
 }
 
 mat GwmPoissonModel::devResids(mat y, mat mu, mat weights){
-    mat r = mu % weights;
-    r = (weights % (y % log(y/mu) - (y - mu)));
+    mat r = mu % weights;  
+    if( y.min() > 0){
+        r = (weights % (y % log(y/mu) - (y - mu)));
+    }
+    else{
+        for(int i = 0; i < y.n_rows; i++){
+            if(y(i) > 0){
+                r(i) = (weights(i) * (y(i) * log(y(i)/mu(i)) - (y(i) - mu(i))));
+            }
+        }
+    }
     return 2 * r;
 }
 
 double GwmPoissonModel::aic(mat y,mat n,mat mu,mat wt,double dev){
-    vec temp = dpois(y, mu) % wt;
+    vec temp = GwmGGWRAlgorithm::dpois(y, mu) % wt;
     return -2 * sum(temp);
 }
 
 mat GwmPoissonModel::muEta(mat eta){
-    return exp(eta);
+    mat res = exp(eta);
+    double eps = 2.220446e-16;
+    if(res.min() > eps){
+        return res;
+    }
+    for(int i = 0; i < eta.n_rows; i++){
+        res(i) = res(i) > eps? res(i) : eps;
+    }
+    return res;
 }
 
 bool GwmPoissonModel::valideta(mat eta){
@@ -52,7 +78,8 @@ bool GwmPoissonModel::validmu(mat mu){
 }
 
 mat GwmPoissonModel::linkfun(mat muStart){
-    return log(muStart);
+    mat res = log(muStart);
+    return res;
 }
 
 bool GwmPoissonModel::setY(mat y){

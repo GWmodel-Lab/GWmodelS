@@ -73,10 +73,12 @@ SOURCES += \
     TaskThread/gwmbasicgwralgorithm.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
     TaskThread/gwmgeographicalweightedregressionalgorithm.cpp \
-    TaskThread/gwmggwrbandwidthselectionthread.cpp \
-    TaskThread/gwmggwrtaskthread.cpp \
+    TaskThread/gwmggwralgorithm.cpp \
+#    TaskThread/gwmggwrbandwidthselectionthread.cpp \
+#    TaskThread/gwmggwrtaskthread.cpp \
 #    TaskThread/gwmgwpcataskthread.cpp \
     TaskThread/gwmgwpcataskthread.cpp \
+    TaskThread/gwmggwrbandwidthsizeselector.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
     TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmgwsstaskthread.cpp \
@@ -186,10 +188,12 @@ HEADERS += \
     TaskThread/gwmbandwidthsizeselector.h \
     TaskThread/gwmbasicgwralgorithm.h \
     TaskThread/gwmgeographicalweightedregressionalgorithm.h \
-    TaskThread/gwmggwrbandwidthselectionthread.h \
-    TaskThread/gwmggwrtaskthread.h \
+    TaskThread/gwmggwralgorithm.h \
+#    TaskThread/gwmggwrbandwidthselectionthread.h \
+#    TaskThread/gwmggwrtaskthread.h \
 #    TaskThread/gwmgwpcataskthread.h \
     TaskThread/gwmgwpcataskthread.h \
+    TaskThread/gwmggwrbandwidthsizeselector.h \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmgwsstaskthread.h \
@@ -417,8 +421,8 @@ HEADERS += \
     TaskThread/gwmbandwidthsizeselector.h \
     TaskThread/gwmbasicgwralgorithm.h \
     TaskThread/gwmgeographicalweightedregressionalgorithm.h \
-    TaskThread/gwmggwrbandwidthselectionthread.h \
-    TaskThread/gwmggwrtaskthread.h \
+#    TaskThread/gwmggwrbandwidthselectionthread.h \
+#    TaskThread/gwmggwrtaskthread.h \
 #    TaskThread/gwmgwpcataskthread.h \
     TaskThread/gwmgwrmodelselectionthread.h \
     TaskThread/gwmgwrtaskthread.h \

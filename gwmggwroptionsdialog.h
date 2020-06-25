@@ -4,8 +4,8 @@
 #include <QDialog>
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
-#include "TaskThread/gwmggwrtaskthread.h"
-#include "Model/gwmlayerattributeitemmodel.h"
+#include "TaskThread/gwmggwralgorithm.h"
+#include "Model/gwmvariableitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
 
 namespace Ui {
@@ -17,15 +17,15 @@ class GwmGGWROptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GwmGGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGGWRTaskThread* thread,QWidget *parent = nullptr);
+    explicit GwmGGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGGWRAlgorithm* thread,QWidget *parent = nullptr);
     ~GwmGGWROptionsDialog();
 
 private:
     Ui::GwmGGWROptionsDialog *ui;
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
-    GwmGGWRTaskThread* mTaskThread = nullptr;
-    GwmLayerAttributeItemModel* mDepVarModel;
+    GwmGGWRAlgorithm* mTaskThread = nullptr;
+    GwmVariableItemModel* mDepVarModel;
     bool isNumeric(QVariant::Type type);
 
 public slots:
@@ -48,22 +48,22 @@ public slots:
 public:
     QString crsRotateTheta();
     QString crsRotateP();
-    GwmGWRTaskThread::BandwidthType bandwidthType();
+    bool bandwidthType();
     GwmGWRTaskThread::ParallelMethod approachType();
     double bandwidthSize();
-    GwmGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
+    GwmGGWRAlgorithm::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
-    GwmGWRTaskThread::KernelFunction bandwidthKernelFunction();
+    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     GwmGWRTaskThread::DistanceSourceType distanceSourceType();
     QVariant distanceSourceParameters();
     GwmGWRTaskThread::ParallelMethod parallelMethod();
     QVariant parallelParameters();
     double epsilonSize();
     QString epsilonUnit();
-    GwmGGWRTaskThread::Family distributionFunction();
+    GwmGGWRAlgorithm::Family distributionFunction();
     int maxiter();
 
-    void setTaskThread(GwmGGWRTaskThread* taskThread);
+    void setTaskThread(GwmGGWRAlgorithm* taskThread);
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
