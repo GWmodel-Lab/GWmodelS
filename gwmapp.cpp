@@ -63,6 +63,14 @@
 #include "gwmgwpcaoptionsdialog.h"
 #include "Model/gwmlayergwpcaitem.h"
 
+#include "gwmcoordtranssettingdialog.h"
+#include "gwmgwroptionsdialog.h"
+#include "gwmcsvtodatdialog.h"
+
+#include "gwmrobustgwroptionsdialog.h"
+#include "gwmlcrgwroptionsdialog.h"
+#include "gwmgwpcaoptionsdialog.h"
+
 GwmApp::GwmApp(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)

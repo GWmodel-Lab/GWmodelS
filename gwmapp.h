@@ -2,7 +2,18 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "mainwidget.h"
+#include <QWidget>
+#include <qgsmapcanvas.h>
+#include <qgsmaplayer.h>
+#include <qgsmaptoolpan.h>
+#include <qgssymbolselectordialog.h>
+
+#include "gwmtoolbar.h"
+#include "gwmfeaturepanel.h"
+#include "gwmmaptoolidentifyfeature.h"
+#include "gwmpropertypanel.h"
+
+#include "symbolwindow/gwmsymbolwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
