@@ -4,16 +4,25 @@
 
 #include <qgsgui.h>
 #include <qgslayoutitemguiregistry.h>
+#include <qgslayoutpagepropertieswidget.h>
 #include <qgslayoutviewtooladditem.h>
 #include <qgslayoutviewtooladdnodeitem.h>
 #include <qgslayoutview.h>
 #include <qgslayoutruler.h>
 
+
+bool GwmLayoutDesigner::sInitializedRegistry = false;
+
+
 GwmLayoutDesigner::GwmLayoutDesigner(QWidget *parent)
 	: QMainWindow(parent)
+	, mToolsActionGroup(new QActionGroup(this))
 {
+	if (!sInitializedRegistry)
+	{
+		initializeRegistry();
+	}
 	setupUi(this);
-
 
 	setAttribute(Qt::WA_DeleteOnClose);
 	setDockOptions(dockOptions() | QMainWindow::GroupedDragging);
@@ -33,6 +42,19 @@ GwmLayoutDesigner::GwmLayoutDesigner(QWidget *parent)
 
 GwmLayoutDesigner::~GwmLayoutDesigner()
 {
+}
+
+void GwmLayoutDesigner::initializeRegistry()
+{
+	sInitializedRegistry = true;
+	auto createPageWidget = ([](QgsLayoutItem * item)->QgsLayoutItemBaseWidget *
+	{
+		std::unique_ptr< QgsLayoutPagePropertiesWidget > newWidget = qgis::make_unique< QgsLayoutPagePropertiesWidget >(nullptr, item);
+		return newWidget.release();
+	});
+
+	QgsGui::layoutItemGuiRegistry()->addLayoutItemGuiMetadata(new QgsLayoutItemGuiMetadata(QgsLayoutItemRegistry::LayoutPage, QObject::tr("Page"), QIcon(), createPageWidget, nullptr, QString(), false, QgsLayoutItemAbstractGuiMetadata::FlagNoCreationTools));
+
 }
 
 void GwmLayoutDesigner::showRulers(bool visible)
@@ -181,4 +203,12 @@ void GwmLayoutDesigner::activateNewItemCreationTool(int id, bool nodeBasedItem)
 		if (mView)
 			mView->setTool(mAddNodeItemTool);
 	}
+}
+
+void GwmLayoutDesigner::activate()
+{
+	show();
+	raise();
+	setWindowState(windowState() & ~Qt::WindowMinimized);
+	activateWindow();
 }

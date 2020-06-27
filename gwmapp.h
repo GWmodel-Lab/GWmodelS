@@ -7,6 +7,9 @@
 #include <qgsmaplayer.h>
 #include <qgsmaptoolpan.h>
 #include <qgssymbolselectordialog.h>
+#include <qgslayoutcustomdrophandler.h>
+#include <qgsapplication.h>
+#include <qgsruntimeprofiler.h>
 
 #include "gwmtoolbar.h"
 #include "gwmfeaturepanel.h"
@@ -51,6 +54,34 @@ private:
     void setupFeaturePanel();
     void setupPropertyPanel();
     void setupMapPanel();
+	void initLayouts();
+
+	void startProfile(const QString &name)
+	{
+		QgsApplication::profiler()->start(name);
+	}
+
+	void endProfile()
+	{
+		QgsApplication::profiler()->end();
+	}
+
+	void functionProfile(void (GwmApp::*fnc)(), GwmApp *instance, const QString &name)
+	{
+		startProfile(name);
+		(instance->*fnc)();
+		endProfile();
+	}
+
+	void registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler)
+	{
+		if (!mCustomLayoutDropHandlers.contains(handler))
+			mCustomLayoutDropHandlers << handler;
+	}
+	void unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler)
+	{
+		mCustomLayoutDropHandlers.removeOne(handler);
+	}
 
     void addLayerToModel(QgsVectorLayer* layer);
     void createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
@@ -124,6 +155,10 @@ private:
 
     GwmFeaturePanel* mFeaturePanel;
     GwmPropertyPanel* mPropertyPanel;
+
+	QVector<QPointer<QgsLayoutCustomDropHandler>> mCustomLayoutDropHandlers;
+	QgsLayoutCustomDropHandler *mLayoutQptDropHandler = nullptr;
+	QgsLayoutCustomDropHandler *mLayoutImageDropHandler = nullptr;
 
     GwmLayerItemModel* mMapModel;
     QgsMapCanvas* mMapCanvas;

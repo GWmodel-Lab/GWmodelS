@@ -14,18 +14,26 @@ class GwmLayoutDesigner : public QMainWindow, public Ui::GwmLayoutDesigner
 {
 	Q_OBJECT
 
+private:
+	static bool sInitializedRegistry;
+
 public:
 	GwmLayoutDesigner(QWidget *parent = nullptr);
 	~GwmLayoutDesigner();
 
+public:
+	void activate();
+
+
 private:
+	void initializeRegistry();
+
 	void showRulers(bool visible);
 
 	void createLayoutView();
 
 	void itemTypeAdded(int id);
 	void activateNewItemCreationTool(int id, bool nodeBasedItem);
-
 
 
 private:

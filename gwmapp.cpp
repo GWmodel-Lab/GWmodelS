@@ -27,6 +27,7 @@
 #include <qgsprojectionselectionwidget.h>
 #include <qgsproviderregistry.h>
 #include <qgsdatumtransformdialog.h>
+#include <qgslayoutguiutils.h>
 
 #include "gwmopenxyeventlayerdialog.h"
 #include "gwmprogressdialog.h"
@@ -71,6 +72,8 @@
 #include "gwmlcrgwroptionsdialog.h"
 #include "gwmgwpcaoptionsdialog.h"
 
+#include "Layout/gwmlayoutdesigner.h"
+
 
 GwmApp* GwmApp::mInstance = nullptr;
 
@@ -80,6 +83,16 @@ GwmApp::GwmApp(QWidget *parent)
     , ui(new Ui::MainWindow)
 	, mMapModel(new GwmLayerItemModel)
 {
+	if (mInstance)
+	{
+		QMessageBox::critical(
+			this,
+			tr("Multiple Instances of GwmApp"),
+			tr("Multiple instances of GWmodel Desktop application object detected.\nPlease contact the developers.\n"));
+		abort();
+	}
+	mInstance = this;
+
     ui->setupUi(this);
     setupMenus();
     setAttribute(Qt::WA_QuitOnClose);
@@ -89,7 +102,9 @@ GwmApp::GwmApp(QWidget *parent)
     setupPropertyPanel();
     QgsGui::editorWidgetRegistry()->initEditors(mMapCanvas);
 
-    mInstance = this;
+	functionProfile(&GwmApp::initLayouts, this, QStringLiteral("Initialize layouts support"));
+
+
 }
 
 GwmApp::~GwmApp()
@@ -208,6 +223,14 @@ void GwmApp::setupToolbar()
     connect(ui->actionGWR, &QAction::triggered,this,&GwmApp::onGWRBtnClicked);
     connect(ui->actionGWSS, &QAction::triggered,this,&GwmApp::onGWSSBtnClicked);
     connect(ui->actionGWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
+
+	connect(ui->actionNew_Layout, &QAction::triggered, this, [=]()
+	{
+		GwmLayoutDesigner* layoutDesigner = new GwmLayoutDesigner();
+		layoutDesigner->show();
+		layoutDesigner->activate();
+		layoutDesigner->raise();
+	});
 }
 
 void GwmApp::setupFeaturePanel()
@@ -979,4 +1002,14 @@ void GwmApp::onGWPCABtnClicked()
             mMapModel->appentItem(gwrItem, selectedIndex);
         }
     }
+}
+
+void GwmApp::initLayouts()
+{
+	QgsLayoutGuiUtils::registerGuiForKnownItemTypes(mMapCanvas);
+
+	//mLayoutQptDropHandler = new QgsLayoutQptDropHandler(this);
+	//registerCustomLayoutDropHandler(mLayoutQptDropHandler);
+	//mLayoutImageDropHandler = new QgsLayoutImageDropHandler(this);
+	//registerCustomLayoutDropHandler(mLayoutImageDropHandler);
 }

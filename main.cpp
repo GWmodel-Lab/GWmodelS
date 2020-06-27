@@ -9,6 +9,7 @@
 #include <qgsproviderregistry.h>
 #include <qgsproject.h>
 #include <qgscoordinatereferencesystem.h>
+#include <qgslayoutitemguiregistry.h>
 
 #include "TaskThread/gwmtaskthread.h"
 
