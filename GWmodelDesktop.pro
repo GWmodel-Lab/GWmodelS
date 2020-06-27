@@ -108,6 +108,7 @@ SOURCES += \
 #    attributetable/qgsvectorlayerselectionmanager.cpp \
     attributetable/qgsfieldcalculator.cpp \
     attributetable/qgsguivectorlayertools.cpp \
+    gwmapp.cpp \
     gwmattributetabledialog.cpp \
     gwmcoordtranssettingdialog.cpp \
     TaskThread/gwmcoordtransthread.cpp \
@@ -139,9 +140,7 @@ SOURCES += \
     gwmscalablegwroptionsdialog.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
-    main.cpp \
-    mainwidget.cpp \
-    mainwindow.cpp
+    main.cpp
 
 HEADERS += \
     DelimitedText/qgsdelimitedtextfeatureiterator.h \
@@ -230,6 +229,7 @@ HEADERS += \
     attributetable/qgsaddattrdialog.h \
     attributetable/qgsfieldcalculator.h \
     attributetable/qgsguivectorlayertools.h \
+    gwmapp.h \
     gwmattributetabledialog.h \
     gwmcoordtranssettingdialog.h \
     TaskThread/gwmcoordtransthread.h \
@@ -263,8 +263,6 @@ HEADERS += \
     SpatialWeight/gwmweight.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
-    mainwidget.h \
-    mainwindow.h \
     prefix.h
     qgsattributetableviewextend.h
 
@@ -275,6 +273,7 @@ FORMS += \
     PropertyPanelTabs/gwmpropertygwsstab.ui \
     PropertyPanelTabs/gwmpropertymultiscalegwrtab.ui \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.ui \
+    gwmapp.ui \
     gwmcoordtranssettingdialog.ui \
     gwmcsvtodatdialog.ui \
     gwmfeaturepanel.ui \
@@ -295,7 +294,6 @@ FORMS += \
     gwmscalablegwroptionsdialog.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
-    mainwindow.ui \
     qgsaddattrdialogbase.ui \
     qgsattributetabledialog.ui \
     qgscoordinateoperationwidgetbase.ui \
@@ -459,6 +457,7 @@ HEADERS += \
     attributetable/qgsaddattrdialog.h \
     attributetable/qgsfieldcalculator.h \
     attributetable/qgsguivectorlayertools.h \
+    gwmapp.h \
     gwmattributetabledialog.h \
     gwmcoordtranssettingdialog.h \
     TaskThread/gwmcoordtransthread.h \
@@ -490,8 +489,6 @@ HEADERS += \
     SpatialWeight/gwmweight.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
-    mainwidget.h \
-    mainwindow.h \
     prefix.h
     qgsattributetableviewextend.h
 
@@ -501,6 +498,7 @@ FORMS += \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
     PropertyPanelTabs/gwmpropertymultiscalegwrtab.ui \
     PropertyPanelTabs/gwmpropertyscalablegwrtab.ui \
+    gwmapp.ui \
     gwmcoordtranssettingdialog.ui \
     gwmcsvtodatdialog.ui \
     gwmfeaturepanel.ui \
@@ -519,7 +517,6 @@ FORMS += \
     gwmscalablegwroptionsdialog.ui \
     gwmtoolbar.ui \
     mainwidget.ui \
-    mainwindow.ui \
     qgsaddattrdialogbase.ui \
     qgsattributetabledialog.ui \
     qgscoordinateoperationwidgetbase.ui \

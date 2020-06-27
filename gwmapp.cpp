@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "gwmapp.h"
 #include "ui_mainwindow.h"
 
 #include <QMenuBar>
@@ -63,7 +63,7 @@
 #include "gwmgwpcaoptionsdialog.h"
 #include "Model/gwmlayergwpcaitem.h"
 
-MainWindow::MainWindow(QWidget *parent)
+GwmApp::GwmApp(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
@@ -77,26 +77,26 @@ MainWindow::MainWindow(QWidget *parent)
     QgsGui::editorWidgetRegistry()->initEditors(mMapCanvas);
 }
 
-MainWindow::~MainWindow()
+GwmApp::~GwmApp()
 {
     delete ui;
 }
 
-void MainWindow::setupMenus()
+void GwmApp::setupMenus()
 {
-    connect(ui->action_ESRI_Shapefile, &QAction::triggered, this, &MainWindow::openFileImportShapefile);
-    connect(ui->actionGeo_Json, &QAction::triggered, this, &MainWindow::openFileImportJson);
-    connect(ui->action_CSV, &QAction::triggered, this, &MainWindow::openFileImportCsv);
-    connect(ui->action_CsvToDat, &QAction::triggered, this, &MainWindow::onCsvToDat);
-    connect(ui->actionRobustGWR,&QAction::triggered,this,&MainWindow::onRobustGWR);
-    connect(ui->actionScalable_GWR, &QAction::triggered,this,&MainWindow::onScalableGWRBtnClicked);
-    connect(ui->action_GGWR,&QAction::triggered, this, &MainWindow::onGGWRBtnClicked);
-    connect(ui->actionLocal_collinearity_GWR,&QAction::triggered, this, &MainWindow::onLcrGWRBtnClicked);
-    connect(ui->actionMultiscale_GWR,&QAction::triggered, this, &MainWindow::onMultiscaleGWRBtnClicked);
-    connect(ui->actionBasic_GWR,&QAction::triggered, this, &MainWindow::onGWRBtnClicked);
+    connect(ui->action_ESRI_Shapefile, &QAction::triggered, this, &GwmApp::openFileImportShapefile);
+    connect(ui->actionGeo_Json, &QAction::triggered, this, &GwmApp::openFileImportJson);
+    connect(ui->action_CSV, &QAction::triggered, this, &GwmApp::openFileImportCsv);
+    connect(ui->action_CsvToDat, &QAction::triggered, this, &GwmApp::onCsvToDat);
+    connect(ui->actionRobustGWR,&QAction::triggered,this,&GwmApp::onRobustGWR);
+    connect(ui->actionScalable_GWR, &QAction::triggered,this,&GwmApp::onScalableGWRBtnClicked);
+    connect(ui->action_GGWR,&QAction::triggered, this, &GwmApp::onGGWRBtnClicked);
+    connect(ui->actionLocal_collinearity_GWR,&QAction::triggered, this, &GwmApp::onLcrGWRBtnClicked);
+    connect(ui->actionMultiscale_GWR,&QAction::triggered, this, &GwmApp::onMultiscaleGWRBtnClicked);
+    connect(ui->actionBasic_GWR,&QAction::triggered, this, &GwmApp::onGWRBtnClicked);
 }
 
-void MainWindow::toggleToolbarGeneral(bool flag)
+void GwmApp::toggleToolbarGeneral(bool flag)
 {
     ui->actionZoom_to_Layer->setEnabled(flag);
     ui->actionZoom_to_Area->setEnabled(flag);
@@ -104,7 +104,7 @@ void MainWindow::toggleToolbarGeneral(bool flag)
     ui->actionSave_Layer_As->setEnabled(flag);
 }
 
-void MainWindow::openFileImportShapefile(){
+void GwmApp::openFileImportShapefile(){
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open ESRI Shapefile"), tr(""), tr("ESRI Shapefile (*.shp)"));
     QFileInfo fileInfo(filePath);
     if (fileInfo.exists())
@@ -114,19 +114,19 @@ void MainWindow::openFileImportShapefile(){
     }
 }
 
-void MainWindow::openFileImportJson()
+void GwmApp::openFileImportJson()
 {
     QFileDialog::getOpenFileName(this, tr("Open GeoJson"), tr(""), tr("GeoJson (*.json *.geojson)"));
 }
 
-void MainWindow::openFileImportCsv()
+void GwmApp::openFileImportCsv()
 {
     GwmOpenXYEventLayerDialog* dialog = new GwmOpenXYEventLayerDialog(this);
-    connect(dialog, &GwmOpenXYEventLayerDialog::addVectorLayerSignal, this, &MainWindow::createLayerToModel);
+    connect(dialog, &GwmOpenXYEventLayerDialog::addVectorLayerSignal, this, &GwmApp::createLayerToModel);
     dialog->show();
 }
 
-void MainWindow::onCsvToDat()
+void GwmApp::onCsvToDat()
 {
     GwmCsvToDatDialog* csvtodatDlg = new GwmCsvToDatDialog();
     if(csvtodatDlg->exec() == QDialog::Accepted){
@@ -145,17 +145,17 @@ void MainWindow::onCsvToDat()
     }
 }
 
-void MainWindow::onSelectMode()
+void GwmApp::onSelectMode()
 {
     mMapCanvas->setMapTool(mMapIdentifyTool);
 }
 
-void MainWindow::onNavigateMode()
+void GwmApp::onNavigateMode()
 {
     mMapCanvas->setMapTool(mMapPanTool);
 }
 
-void MainWindow::onEditMode()
+void GwmApp::onEditMode()
 {
 //    QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerList[0];
 //    layer->selectAll();
@@ -171,53 +171,53 @@ void MainWindow::onEditMode()
     }
 }
 
-void MainWindow::setupToolbar()
+void GwmApp::setupToolbar()
 {
     // 连接信号槽
-    connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::openFileImportShapefile);
-    connect(ui->actionOpen_XY_Coordinate_Layer, &QAction::triggered, this, &MainWindow::openFileImportCsv);
+    connect(ui->actionOpen, &QAction::triggered, this, &GwmApp::openFileImportShapefile);
+    connect(ui->actionOpen_XY_Coordinate_Layer, &QAction::triggered, this, &GwmApp::openFileImportCsv);
 //    connect(ui->action, &QAction::triggered, this, &MainWindow::openFileImportJson);
 //    connect(ui-, &QAction::triggered, this, &MainWindow::openFileImportCsv);
-    connect(ui->actionSelect_Feature, &QAction::triggered, this, &MainWindow::onSelectMode);
-    connect(ui->actionPan, &QAction::triggered, this, &MainWindow::onNavigateMode);
-    connect(ui->actionEdit, &QAction::triggered, this, &MainWindow::onEditMode);
-    connect(ui->actionSave_Layer, &QAction::triggered, this, &MainWindow::onSaveLayer);
-    connect(ui->actionSave_Layer_As, &QAction::triggered, this, &MainWindow::onExportLayerAsShpfile);
-    connect(ui->actionZoom_to_Area, &QAction::triggered,this,&MainWindow::onZoomToSelection);
-    connect(ui->actionZoom_to_Layer, &QAction::triggered,this,&MainWindow::onZoomToLayerBtn);
-    connect(ui->actionZoom_Full_Extent, &QAction::triggered, this, &MainWindow::onFullScreen);
+    connect(ui->actionSelect_Feature, &QAction::triggered, this, &GwmApp::onSelectMode);
+    connect(ui->actionPan, &QAction::triggered, this, &GwmApp::onNavigateMode);
+    connect(ui->actionEdit, &QAction::triggered, this, &GwmApp::onEditMode);
+    connect(ui->actionSave_Layer, &QAction::triggered, this, &GwmApp::onSaveLayer);
+    connect(ui->actionSave_Layer_As, &QAction::triggered, this, &GwmApp::onExportLayerAsShpfile);
+    connect(ui->actionZoom_to_Area, &QAction::triggered,this,&GwmApp::onZoomToSelection);
+    connect(ui->actionZoom_to_Layer, &QAction::triggered,this,&GwmApp::onZoomToLayerBtn);
+    connect(ui->actionZoom_Full_Extent, &QAction::triggered, this, &GwmApp::onFullScreen);
 
-    connect(ui->actionGWR, &QAction::triggered,this,&MainWindow::onGWRBtnClicked);
-    connect(ui->actionGWSS, &QAction::triggered,this,&MainWindow::onGWSSBtnClicked);
-    connect(ui->actionGWPCA, &QAction::triggered,this,&MainWindow::onGWPCABtnClicked);
+    connect(ui->actionGWR, &QAction::triggered,this,&GwmApp::onGWRBtnClicked);
+    connect(ui->actionGWSS, &QAction::triggered,this,&GwmApp::onGWSSBtnClicked);
+    connect(ui->actionGWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
 }
 
-void MainWindow::setupFeaturePanel()
+void GwmApp::setupFeaturePanel()
 {
     mFeaturePanel = ui->featurePanel;
     mFeaturePanel->setMapModel(mMapModel);
     // 连接信号槽
-    connect(mFeaturePanel, &GwmFeaturePanel::showAttributeTableSignal,this, &MainWindow::onShowAttributeTable);
-    connect(mFeaturePanel, &GwmFeaturePanel::zoomToLayerSignal, this, &MainWindow::onZoomToLayer);
-    connect(mFeaturePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &MainWindow::onShowLayerProperty);
-    connect(mFeaturePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &MainWindow::onFeaturePanelRowOrderChanged);
-    connect(mFeaturePanel, &GwmFeaturePanel::showSymbolSettingSignal, this, &MainWindow::onShowSymbolSetting);
-    connect(mFeaturePanel, &GwmFeaturePanel::showCoordinateTransDlg,this,&MainWindow::onShowCoordinateTransDlg);
-    connect(mFeaturePanel, &GwmFeaturePanel::currentChanged,this,&MainWindow::onFeaturePanelCurrentChanged);
-    connect(mFeaturePanel,&GwmFeaturePanel::sendDataSigCsv,this,&MainWindow::onExportLayerAsCsv);
+    connect(mFeaturePanel, &GwmFeaturePanel::showAttributeTableSignal,this, &GwmApp::onShowAttributeTable);
+    connect(mFeaturePanel, &GwmFeaturePanel::zoomToLayerSignal, this, &GwmApp::onZoomToLayer);
+    connect(mFeaturePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &GwmApp::onShowLayerProperty);
+    connect(mFeaturePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &GwmApp::onFeaturePanelRowOrderChanged);
+    connect(mFeaturePanel, &GwmFeaturePanel::showSymbolSettingSignal, this, &GwmApp::onShowSymbolSetting);
+    connect(mFeaturePanel, &GwmFeaturePanel::showCoordinateTransDlg,this,&GwmApp::onShowCoordinateTransDlg);
+    connect(mFeaturePanel, &GwmFeaturePanel::currentChanged,this,&GwmApp::onFeaturePanelCurrentChanged);
+    connect(mFeaturePanel,&GwmFeaturePanel::sendDataSigCsv,this,&GwmApp::onExportLayerAsCsv);
     connect(ui->featureSortUpBtn, &QAbstractButton::clicked, mFeaturePanel, &GwmFeaturePanel::onSortUpBtnClicked);
     connect(ui->featureSortDownBtn, &QAbstractButton::clicked, mFeaturePanel, &GwmFeaturePanel::onSortDownBtnClicked);
     connect(ui->featureRemoveBtn, &QAbstractButton::clicked, mFeaturePanel, &GwmFeaturePanel::removeLayer);
     connect(ui->featureSymbolBtn, &QAbstractButton::clicked, mFeaturePanel, &GwmFeaturePanel::symbol);
 }
 
-void MainWindow::setupPropertyPanel()
+void GwmApp::setupPropertyPanel()
 {
     mPropertyPanel = ui->propertyPanel;
     mPropertyPanel->setMapModel(mMapModel);
 }
 
-void MainWindow::setupMapPanel()
+void GwmApp::setupMapPanel()
 {
     mMapCanvas = ui->mapCanvas;
     mMapCanvas->setDestinationCrs(QgsProject::instance()->crs());
@@ -227,14 +227,14 @@ void MainWindow::setupMapPanel()
     mMapCanvas->setMapTool(mMapIdentifyTool);
 
     // 连接信号槽
-    connect(mMapModel, &GwmLayerItemModel::layerAddedSignal, this, &MainWindow::onMapModelChanged);
-    connect(mMapModel, &GwmLayerItemModel::layerRemovedSignal, this, &MainWindow::onMapModelChanged);
-    connect(mMapModel, &GwmLayerItemModel::layerItemChangedSignal, this, &MainWindow::onMapModelChanged);
-    connect(mMapModel, &GwmLayerItemModel::layerItemMovedSignal, this, &MainWindow::onMapModelChanged);
-    connect(mMapCanvas, &QgsMapCanvas::selectionChanged, this, &MainWindow::onMapSelectionChanged);
+    connect(mMapModel, &GwmLayerItemModel::layerAddedSignal, this, &GwmApp::onMapModelChanged);
+    connect(mMapModel, &GwmLayerItemModel::layerRemovedSignal, this, &GwmApp::onMapModelChanged);
+    connect(mMapModel, &GwmLayerItemModel::layerItemChangedSignal, this, &GwmApp::onMapModelChanged);
+    connect(mMapModel, &GwmLayerItemModel::layerItemMovedSignal, this, &GwmApp::onMapModelChanged);
+    connect(mMapCanvas, &QgsMapCanvas::selectionChanged, this, &GwmApp::onMapSelectionChanged);
 }
 
-void MainWindow::addLayerToModel(QgsVectorLayer *layer)
+void GwmApp::addLayerToModel(QgsVectorLayer *layer)
 {
     if (layer->isValid())
     {
@@ -242,7 +242,7 @@ void MainWindow::addLayerToModel(QgsVectorLayer *layer)
     }
 }
 
-void MainWindow::createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey)
+void GwmApp::createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey)
 {
     qDebug() << "[MainWindow::addLayerToModel]"
              << uri << layerName << providerKey;
@@ -254,7 +254,7 @@ void MainWindow::createLayerToModel(const QString &uri, const QString &layerName
     else delete vectorLayer;
 }
 
-void MainWindow::onFeaturePanelCurrentChanged(const QModelIndex &current,const QModelIndex &previous){
+void GwmApp::onFeaturePanelCurrentChanged(const QModelIndex &current,const QModelIndex &previous){
 //    qDebug() << current;
 //    qDebug() << previous;
     if(current.isValid()){
@@ -295,7 +295,7 @@ void MainWindow::onFeaturePanelCurrentChanged(const QModelIndex &current,const Q
     }
 }
 
-void MainWindow::onZoomToLayer(const QModelIndex &index)
+void GwmApp::onZoomToLayer(const QModelIndex &index)
 {
     qDebug() << "[MainWindow::onZoomToLayer]"
              << "index:" << index;
@@ -312,14 +312,14 @@ void MainWindow::onZoomToLayer(const QModelIndex &index)
     }
 }
 
-void MainWindow::onFullScreen()
+void GwmApp::onFullScreen()
 {
     auto extent = mMapCanvas->fullExtent();
     mMapCanvas->setExtent(extent);
     mMapCanvas->refresh();
 }
 
-void MainWindow::onSaveLayer()
+void GwmApp::onSaveLayer()
 {
     QModelIndexList selected = mFeaturePanel->selectionModel()->selectedIndexes();
     for (QModelIndex index : selected)
@@ -362,12 +362,12 @@ void MainWindow::onSaveLayer()
     }
 }
 
-void MainWindow::onExportLayerAsShpfile()
+void GwmApp::onExportLayerAsShpfile()
 {
     onExportLayer(tr("ESRI Shapefile (*.shp)"));
 }
 
-void MainWindow::onExportLayerAsCsv(const QModelIndex &index)
+void GwmApp::onExportLayerAsCsv(const QModelIndex &index)
 {
 //    onExportLayer(tr("CSV (*.csv)"));
     GwmLayerItem* item = mMapModel->itemFromIndex(index);
@@ -415,7 +415,7 @@ void MainWindow::onExportLayerAsCsv(const QModelIndex &index)
     }
 }
 
-void MainWindow::onExportLayer(QString filetype)
+void GwmApp::onExportLayer(QString filetype)
 {
     QModelIndexList selected = mFeaturePanel->selectionModel()->selectedIndexes();
     for (QModelIndex index : selected)
@@ -452,14 +452,14 @@ void MainWindow::onExportLayer(QString filetype)
     }
 }
 
-void MainWindow::onZoomToLayerBtn(){
+void GwmApp::onZoomToLayerBtn(){
     QModelIndexList selected = mFeaturePanel->selectionModel()->selectedIndexes();
     for (QModelIndex index : selected){
         onZoomToLayer(index);
     }
 }
 
-void MainWindow::onZoomToSelection(){
+void GwmApp::onZoomToSelection(){
     QModelIndexList selected = mFeaturePanel->selectionModel()->selectedIndexes();
     for (QModelIndex index : selected){
         GwmLayerItem* item = mMapModel->itemFromIndex(index);
@@ -469,7 +469,7 @@ void MainWindow::onZoomToSelection(){
     }
 }
 
-bool MainWindow::askUserForDatumTransfrom(const QgsCoordinateReferenceSystem &sourceCrs, const QgsCoordinateReferenceSystem &destinationCrs, const QgsMapLayer *layer)
+bool GwmApp::askUserForDatumTransfrom(const QgsCoordinateReferenceSystem &sourceCrs, const QgsCoordinateReferenceSystem &destinationCrs, const QgsMapLayer *layer)
 {
     Q_ASSERT( qApp->thread() == QThread::currentThread() );
 
@@ -503,7 +503,7 @@ bool MainWindow::askUserForDatumTransfrom(const QgsCoordinateReferenceSystem &so
     return QgsDatumTransformDialog::run( sourceCrs, destinationCrs, this, mMapCanvas, title );
 }
 
-void MainWindow::onMapSelectionChanged(QgsVectorLayer *layer)
+void GwmApp::onMapSelectionChanged(QgsVectorLayer *layer)
 {
     qDebug() << "[MainWindow]" << "Map Selection Changed: (layer " << layer->name() << ")";
     // 移除旧的橡皮条
@@ -531,7 +531,7 @@ void MainWindow::onMapSelectionChanged(QgsVectorLayer *layer)
     }
 }
 
-void MainWindow::onMapModelChanged()
+void GwmApp::onMapModelChanged()
 {
     mMapLayerList = mMapModel->toMapLayerList();
     mMapCanvas->setLayers(mMapLayerList);
@@ -547,13 +547,13 @@ void MainWindow::onMapModelChanged()
     mMapCanvas->refresh();
 }
 
-void MainWindow::onShowLayerProperty(const QModelIndex &index)
+void GwmApp::onShowLayerProperty(const QModelIndex &index)
 {
     mPropertyPanel->addPropertyTab(index);
 }
 
 
-void MainWindow::onFeaturePanelRowOrderChanged(int from, int dest)
+void GwmApp::onFeaturePanelRowOrderChanged(int from, int dest)
 {
     qDebug() << "[MainWindow::onFeaturePanelRowOrderChanged]"
              << "layer list size" << mMapLayerList.size();
@@ -563,7 +563,7 @@ void MainWindow::onFeaturePanelRowOrderChanged(int from, int dest)
 }
 
 // 属性表
-void MainWindow::onShowAttributeTable(const QModelIndex &index)
+void GwmApp::onShowAttributeTable(const QModelIndex &index)
 {
     // qDebug() << 123;
     qDebug() << "[MainWindow::onShowAttributeTable]"
@@ -577,7 +577,7 @@ void MainWindow::onShowAttributeTable(const QModelIndex &index)
     }
 }
 
-void MainWindow::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list)
+void GwmApp::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list)
 {
     for (QgsFeatureId id : list)
     {
@@ -585,14 +585,14 @@ void MainWindow::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatur
                  << "id:" << id;
     }
 }
-void MainWindow::onShowSymbolSetting(const QModelIndex &index)
+void GwmApp::onShowSymbolSetting(const QModelIndex &index)
 {
     createSymbolWindow(index);
-    connect(mSymbolWindow,&GwmSymbolWindow::canvasRefreshSingal,this,&MainWindow::refreshCanvas);
+    connect(mSymbolWindow,&GwmSymbolWindow::canvasRefreshSingal,this,&GwmApp::refreshCanvas);
     mSymbolWindow->show();
 }
 
-bool MainWindow::eventFilter(QObject *obj, QEvent *e)
+bool GwmApp::eventFilter(QObject *obj, QEvent *e)
 {
     if (obj == mMapCanvas)
     {
@@ -608,11 +608,11 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
     return false;
 }
 
-void MainWindow::refreshCanvas(){
+void GwmApp::refreshCanvas(){
     mMapCanvas->refresh();
 }
 
-void MainWindow::createSymbolWindow(const QModelIndex &index)
+void GwmApp::createSymbolWindow(const QModelIndex &index)
 {
     GwmLayerItem* item = mMapModel->itemFromIndex(index);
     QgsVectorLayer* layer = mMapModel->layerFromItem(item);
@@ -623,7 +623,7 @@ void MainWindow::createSymbolWindow(const QModelIndex &index)
 }
 
 // 投影到坐标系
-void MainWindow::onShowCoordinateTransDlg(const QModelIndex &index)
+void GwmApp::onShowCoordinateTransDlg(const QModelIndex &index)
 {
     // qDebug() << index;
     // 获取当前矢量图层
@@ -651,7 +651,7 @@ void MainWindow::onShowCoordinateTransDlg(const QModelIndex &index)
 }
 
 
-void MainWindow::onGWRBtnClicked()
+void GwmApp::onGWRBtnClicked()
 {
     GwmBasicGWRAlgorithm* gwrTaskThread = new GwmBasicGWRAlgorithm();
     GwmGWROptionsDialog* gwrOptionDialog = new GwmGWROptionsDialog(mMapModel->rootChildren(), gwrTaskThread);
@@ -683,7 +683,7 @@ void MainWindow::onGWRBtnClicked()
     }
 }
 
-void MainWindow::onGWRNewBtnClicked()
+void GwmApp::onGWRNewBtnClicked()
 {
     GwmBasicGWRAlgorithm* algorithm = new GwmBasicGWRAlgorithm();
     QgsVectorLayer* dataLayer = static_cast<GwmLayerGroupItem*>(mMapModel->rootChildren()[0])->originChild()->layer();
@@ -720,7 +720,7 @@ void MainWindow::onGWRNewBtnClicked()
     }
 }
 
-void MainWindow::onGWSSBtnClicked()
+void GwmApp::onGWSSBtnClicked()
 {
     GwmGWSSTaskThread* gwssTaskThread = new GwmGWSSTaskThread();
     GwmGWSSOptionsDialog* gwssOptionDialog = new GwmGWSSOptionsDialog(mMapModel->rootChildren(), gwssTaskThread);
@@ -753,7 +753,7 @@ void MainWindow::onGWSSBtnClicked()
 
 }
 
-void MainWindow::onScalableGWRBtnClicked()
+void GwmApp::onScalableGWRBtnClicked()
 {
     GwmScalableGWRAlgorithm* gwrTaskThread = new GwmScalableGWRAlgorithm();
     GwmScalableGWROptionsDialog* gwrOptionDialog = new GwmScalableGWROptionsDialog(mMapModel->rootChildren(), gwrTaskThread);
@@ -785,7 +785,7 @@ void MainWindow::onScalableGWRBtnClicked()
     }
 }
 
-void MainWindow::onMultiscaleGWRBtnClicked()
+void GwmApp::onMultiscaleGWRBtnClicked()
 {
     GwmMultiscaleGWRAlgorithm* gwrTaskThread = new GwmMultiscaleGWRAlgorithm();
     GwmMultiscaleGWROptionsDialog* gwrOptionDialog = new GwmMultiscaleGWROptionsDialog(mMapModel->rootChildren(), gwrTaskThread);
@@ -817,7 +817,7 @@ void MainWindow::onMultiscaleGWRBtnClicked()
     }
 }
 
-void MainWindow::onRobustGWR()
+void GwmApp::onRobustGWR()
 {
     GwmRobustGWRAlgorithm* gwrRobustTaskThread = new GwmRobustGWRAlgorithm();
     GwmRobustGWROptionsDialog* gwrRobustOptionDialog = new GwmRobustGWROptionsDialog(mMapModel->rootChildren(), gwrRobustTaskThread);
@@ -849,7 +849,7 @@ void MainWindow::onRobustGWR()
     }
 }
 
-void MainWindow::onRobustGWRBtnClicked()
+void GwmApp::onRobustGWRBtnClicked()
 {
     GwmRobustGWRAlgorithm* gwrRobustTaskThread = new GwmRobustGWRAlgorithm();
     GwmRobustGWROptionsDialog* gwrRobustOptionDialog = new GwmRobustGWROptionsDialog(mMapModel->rootChildren(), gwrRobustTaskThread);
@@ -881,7 +881,7 @@ void MainWindow::onRobustGWRBtnClicked()
     }
 }
 
-void MainWindow::onLcrGWRBtnClicked()
+void GwmApp::onLcrGWRBtnClicked()
 {
     GwmLocalCollinearityGWRAlgorithm * lcrGWRTaskThread = new GwmLocalCollinearityGWRAlgorithm();
     GwmLcrGWROptionsDialog* gwrLcrOptionDialog = new GwmLcrGWROptionsDialog(mMapModel->rootChildren(), lcrGWRTaskThread);
@@ -913,7 +913,7 @@ void MainWindow::onLcrGWRBtnClicked()
     }
 }
 
-void MainWindow::onGGWRBtnClicked(){
+void GwmApp::onGGWRBtnClicked(){
     GwmGeneralizedGWRAlgorithm* ggwrTaskThread = new GwmGeneralizedGWRAlgorithm();
     GwmGGWROptionsDialog* ggwrOptionDialog = new GwmGGWROptionsDialog(this->mMapModel->rootChildren(), ggwrTaskThread);
     QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
@@ -944,7 +944,7 @@ void MainWindow::onGGWRBtnClicked(){
     }
 }
 
-void MainWindow::onGWPCABtnClicked()
+void GwmApp::onGWPCABtnClicked()
 {
     GwmGWPCATaskThread* gwpcaTaskThread = new GwmGWPCATaskThread();
     GwmGWPCAOptionsDialog* gwpcaOptionDialog = new GwmGWPCAOptionsDialog(mMapModel->rootChildren(), gwpcaTaskThread);

@@ -8,13 +8,13 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
+class GwmApp : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    GwmApp(QWidget *parent = nullptr);
+    ~GwmApp();
 public:
     bool eventFilter(QObject* obj, QEvent* e);
 
