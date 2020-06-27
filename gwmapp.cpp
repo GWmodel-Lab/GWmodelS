@@ -71,6 +71,10 @@
 #include "gwmlcrgwroptionsdialog.h"
 #include "gwmgwpcaoptionsdialog.h"
 
+
+GwmApp* GwmApp::mInstance = nullptr;
+
+
 GwmApp::GwmApp(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -83,6 +87,8 @@ GwmApp::GwmApp(QWidget *parent)
     setupFeaturePanel();
     setupPropertyPanel();
     QgsGui::editorWidgetRegistry()->initEditors(mMapCanvas);
+
+    mInstance = this;
 }
 
 GwmApp::~GwmApp()
@@ -92,9 +98,9 @@ GwmApp::~GwmApp()
 
 void GwmApp::setupMenus()
 {
-    connect(ui->action_ESRI_Shapefile, &QAction::triggered, this, &GwmApp::openFileImportShapefile);
-    connect(ui->actionGeo_Json, &QAction::triggered, this, &GwmApp::openFileImportJson);
-    connect(ui->action_CSV, &QAction::triggered, this, &GwmApp::openFileImportCsv);
+    connect(ui->action_ESRI_Shapefile, &QAction::triggered, this, &GwmApp::onOpenFileImportShapefile);
+    connect(ui->actionGeo_Json, &QAction::triggered, this, &GwmApp::onOpenFileImportJson);
+    connect(ui->action_CSV, &QAction::triggered, this, &GwmApp::onOpenFileImportCsv);
     connect(ui->action_CsvToDat, &QAction::triggered, this, &GwmApp::onCsvToDat);
     connect(ui->actionRobustGWR,&QAction::triggered,this,&GwmApp::onRobustGWR);
     connect(ui->actionScalable_GWR, &QAction::triggered,this,&GwmApp::onScalableGWRBtnClicked);
@@ -112,7 +118,7 @@ void GwmApp::toggleToolbarGeneral(bool flag)
     ui->actionSave_Layer_As->setEnabled(flag);
 }
 
-void GwmApp::openFileImportShapefile(){
+void GwmApp::onOpenFileImportShapefile(){
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open ESRI Shapefile"), tr(""), tr("ESRI Shapefile (*.shp)"));
     QFileInfo fileInfo(filePath);
     if (fileInfo.exists())
@@ -122,12 +128,12 @@ void GwmApp::openFileImportShapefile(){
     }
 }
 
-void GwmApp::openFileImportJson()
+void GwmApp::onOpenFileImportJson()
 {
     QFileDialog::getOpenFileName(this, tr("Open GeoJson"), tr(""), tr("GeoJson (*.json *.geojson)"));
 }
 
-void GwmApp::openFileImportCsv()
+void GwmApp::onOpenFileImportCsv()
 {
     GwmOpenXYEventLayerDialog* dialog = new GwmOpenXYEventLayerDialog(this);
     connect(dialog, &GwmOpenXYEventLayerDialog::addVectorLayerSignal, this, &GwmApp::createLayerToModel);
@@ -153,16 +159,6 @@ void GwmApp::onCsvToDat()
     }
 }
 
-void GwmApp::onSelectMode()
-{
-    mMapCanvas->setMapTool(mMapIdentifyTool);
-}
-
-void GwmApp::onNavigateMode()
-{
-    mMapCanvas->setMapTool(mMapPanTool);
-}
-
 void GwmApp::onEditMode()
 {
 //    QgsVectorLayer* layer = (QgsVectorLayer*) mapLayerList[0];
@@ -182,18 +178,31 @@ void GwmApp::onEditMode()
 void GwmApp::setupToolbar()
 {
     // 连接信号槽
-    connect(ui->actionOpen, &QAction::triggered, this, &GwmApp::openFileImportShapefile);
-    connect(ui->actionOpen_XY_Coordinate_Layer, &QAction::triggered, this, &GwmApp::openFileImportCsv);
+    connect(ui->actionOpen, &QAction::triggered, this, &GwmApp::onOpenFileImportShapefile);
+    connect(ui->actionOpen_XY_Coordinate_Layer, &QAction::triggered, this, &GwmApp::onOpenFileImportCsv);
 //    connect(ui->action, &QAction::triggered, this, &MainWindow::openFileImportJson);
 //    connect(ui-, &QAction::triggered, this, &MainWindow::openFileImportCsv);
-    connect(ui->actionSelect_Feature, &QAction::triggered, this, &GwmApp::onSelectMode);
-    connect(ui->actionPan, &QAction::triggered, this, &GwmApp::onNavigateMode);
+    connect(ui->actionSelect_Feature, &QAction::triggered, this, [&]()
+    {
+        mMapCanvas->setMapTool(mMapIdentifyTool);
+    });
+    connect(ui->actionPan, &QAction::triggered, this, [&]()
+    {
+        mMapCanvas->setMapTool(mMapPanTool);
+    });
     connect(ui->actionEdit, &QAction::triggered, this, &GwmApp::onEditMode);
     connect(ui->actionSave_Layer, &QAction::triggered, this, &GwmApp::onSaveLayer);
-    connect(ui->actionSave_Layer_As, &QAction::triggered, this, &GwmApp::onExportLayerAsShpfile);
+    connect(ui->actionSave_Layer_As, &QAction::triggered, this, [&]()
+    {
+        onExportLayer(tr("ESRI Shapefile (*.shp)"));
+    });
     connect(ui->actionZoom_to_Area, &QAction::triggered,this,&GwmApp::onZoomToSelection);
     connect(ui->actionZoom_to_Layer, &QAction::triggered,this,&GwmApp::onZoomToLayerBtn);
-    connect(ui->actionZoom_Full_Extent, &QAction::triggered, this, &GwmApp::onFullScreen);
+    connect(ui->actionZoom_Full_Extent, &QAction::triggered, this, [&]()
+    {
+        mMapCanvas->setExtent(mMapCanvas->fullExtent());
+        mMapCanvas->refresh();
+    });
 
     connect(ui->actionGWR, &QAction::triggered,this,&GwmApp::onGWRBtnClicked);
     connect(ui->actionGWSS, &QAction::triggered,this,&GwmApp::onGWSSBtnClicked);
@@ -320,13 +329,6 @@ void GwmApp::onZoomToLayer(const QModelIndex &index)
     }
 }
 
-void GwmApp::onFullScreen()
-{
-    auto extent = mMapCanvas->fullExtent();
-    mMapCanvas->setExtent(extent);
-    mMapCanvas->refresh();
-}
-
 void GwmApp::onSaveLayer()
 {
     QModelIndexList selected = mFeaturePanel->selectionModel()->selectedIndexes();
@@ -368,11 +370,6 @@ void GwmApp::onSaveLayer()
             }
         }
     }
-}
-
-void GwmApp::onExportLayerAsShpfile()
-{
-    onExportLayer(tr("ESRI Shapefile (*.shp)"));
 }
 
 void GwmApp::onExportLayerAsCsv(const QModelIndex &index)
@@ -596,7 +593,10 @@ void GwmApp::onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId>
 void GwmApp::onShowSymbolSetting(const QModelIndex &index)
 {
     createSymbolWindow(index);
-    connect(mSymbolWindow,&GwmSymbolWindow::canvasRefreshSingal,this,&GwmApp::refreshCanvas);
+    connect(mSymbolWindow,&GwmSymbolWindow::canvasRefreshSingal,this,[&]()
+    {
+        mMapCanvas->refresh();
+    });
     mSymbolWindow->show();
 }
 
@@ -614,10 +614,6 @@ bool GwmApp::eventFilter(QObject *obj, QEvent *e)
         }
     }
     return false;
-}
-
-void GwmApp::refreshCanvas(){
-    mMapCanvas->refresh();
 }
 
 void GwmApp::createSymbolWindow(const QModelIndex &index)
