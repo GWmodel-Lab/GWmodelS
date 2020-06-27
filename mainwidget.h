@@ -35,33 +35,6 @@ public:
     explicit MainWidget(QWidget *parent = nullptr);
     ~MainWidget();
 
-
-private:
-    Ui::MainWidget* ui;
-    GwmToolbar* toolbar;
-    GwmFeaturePanel* featurePanel;
-    GwmPropertyPanel* propertyPanel;
-
-    GwmLayerItemModel* mapModel;
-    QgsMapCanvas* mapCanvas;
-    QList<QgsMapLayer*> mapLayerList;
-    QgsMapTool* mapPanTool;
-    QgsMapTool* mapIdentifyTool;
-    QMap<QgsVectorLayer*, QList<QgsRubberBand*>> mapLayerRubberDict;
-
-
-
-    GwmSymbolWindow* symbolWindow;
-
-public slots:
-    void openFileImportShapefile();
-    void openFileImportJson();
-    void openFileImportCsv();
-    void onShowSymbolSetting(const QModelIndex &index);
-    void onCsvToDat();
-    void onRobustGWR();
-    void onGGWRBtnClicked();
-
 public:
     bool eventFilter(QObject* obj, QEvent* e);
 
@@ -87,7 +60,15 @@ private:
 
     bool askUserForDatumTransfrom(const QgsCoordinateReferenceSystem& sourceCrs, const QgsCoordinateReferenceSystem& destinationCrs, const QgsMapLayer* layer = nullptr);
 
+
 public slots:
+    void openFileImportShapefile();
+    void openFileImportJson();
+    void openFileImportCsv();
+    void onShowSymbolSetting(const QModelIndex &index);
+    void onCsvToDat();
+    void onRobustGWR();
+    void onGGWRBtnClicked();
     void onMapSelectionChanged(QgsVectorLayer* layer);
 
     /**
@@ -127,13 +108,25 @@ public slots:
 
     void onRobustGWRBtnClicked();
 
-   // void transformCoordinate(const QgsCoordinateReferenceSystem des, const QModelIndex& index);
-
-    //void setNewCoordinate(QgsCoordinateReferenceSystem,QString,QModelIndex);
-
     void onLcrGWRBtnClicked();
 
     void onGWPCABtnClicked();
+
+
+private:
+    Ui::MainWidget* ui;
+    GwmToolbar* mToolbar;
+    GwmFeaturePanel* mFeaturePanel;
+    GwmPropertyPanel* mPropertyPanel;
+
+    GwmLayerItemModel* mMapModel;
+    QgsMapCanvas* mMapCanvas;
+    QList<QgsMapLayer*> mMapLayerList;
+    QgsMapTool* mMapPanTool;
+    QgsMapTool* mMapIdentifyTool;
+    QMap<QgsVectorLayer*, QList<QgsRubberBand*>> mMapLayerRubberDict;
+
+    GwmSymbolWindow* mSymbolWindow;
 };
 
 #endif // MAINLAYOUT_H
