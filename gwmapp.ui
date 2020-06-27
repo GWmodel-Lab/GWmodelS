@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -81,6 +81,18 @@
    </attribute>
    <widget class="QWidget" name="dockPanelWidget">
     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <property name="spacing">
@@ -186,7 +198,7 @@
    <property name="minimumSize">
     <size>
      <width>240</width>
-     <height>35</height>
+     <height>38</height>
     </size>
    </property>
    <property name="features">
