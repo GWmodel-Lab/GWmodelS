@@ -1,7 +1,5 @@
 #include "gwmattributetabledialog.h"
 
-#include "mainwidget.h"
-
 #include "attributetable/qgsfieldcalculator.h"
 
 #include <QMessageBox>
@@ -139,15 +137,15 @@ GwmAttributeTableDialog::GwmAttributeTableDialog(QgsVectorLayer *theVecLayer,Qgs
     mActionRemoveAttribute->setEnabled( canDeleteAttributes && this->currentLayer->isEditable() );
     if ( !canDeleteFeatures )
     {
-      mToolbar->removeAction( mActionDeleteSelected );
-      mToolbar->removeAction( mActionCutSelectedRows );
+        mToolbar->removeAction( mActionDeleteSelected );
+        mToolbar->removeAction( mActionCutSelectedRows );
     }
     mActionAddFeature->setEnabled( canAddFeatures && this->currentLayer->isEditable() );
     mActionPasteFeatures->setEnabled( canAddFeatures && this->currentLayer->isEditable() );
     if ( !canAddFeatures )
     {
-      mToolbar->removeAction( mActionAddFeature );
-      mToolbar->removeAction( mActionPasteFeatures );
+        mToolbar->removeAction( mActionAddFeature );
+        mToolbar->removeAction( mActionPasteFeatures );
     }
 
     mMainViewButtonGroup->setId( mTableViewButton, QgsDualView::AttributeTable );
@@ -155,16 +153,16 @@ GwmAttributeTableDialog::GwmAttributeTableDialog(QgsVectorLayer *theVecLayer,Qgs
 
     switch ( initialMode )
     {
-      case QgsAttributeTableFilterModel::ShowVisible:
+    case QgsAttributeTableFilterModel::ShowVisible:
         mFeatureFilterWidget->filterVisible();
         break;
 
-      case QgsAttributeTableFilterModel::ShowSelected:
+    case QgsAttributeTableFilterModel::ShowSelected:
         mFeatureFilterWidget->filterSelected();
         break;
 
-      case QgsAttributeTableFilterModel::ShowAll:
-      default:
+    case QgsAttributeTableFilterModel::ShowAll:
+    default:
         mFeatureFilterWidget->filterShowAll();
         break;
     }
@@ -181,7 +179,7 @@ GwmAttributeTableDialog::GwmAttributeTableDialog(QgsVectorLayer *theVecLayer,Qgs
     int initialView = settings.value( QStringLiteral( "qgis/attributeTableView" ), -1 ).toInt();
     if ( initialView < 0 )
     {
-      initialView = settings.value( QStringLiteral( "qgis/attributeTableLastView" ), QgsDualView::AttributeTable ).toInt();
+        initialView = settings.value( QStringLiteral( "qgis/attributeTableLastView" ), QgsDualView::AttributeTable ).toInt();
     }
     mMainView->setView( static_cast< QgsDualView::ViewMode >( initialView ) );
     mMainViewButtonGroup->button( initialView )->setChecked( true );
@@ -205,17 +203,17 @@ void GwmAttributeTableDialog::mActionToggleEditing_toggled(bool)
         return;
     }
     if(this->currentLayer->isEditable() && mMainView->tableView()->indexWidget(mMainView->tableView()->currentIndex())){
-    //if(!this->currentLayer->isEditable()){
+        //if(!this->currentLayer->isEditable()){
         mMainView->tableView()->indexWidget( mMainView->tableView()->currentIndex() )->setEnabled( false );
         //qDebug() << 3;
     }
-//    if(!this->currentLayer->isEditable())
-//    {
-//        mActionToggleEditing->setChecked(false);
-//        mActionToggleEditing->setEnabled( false );
-//        this->currentLayer->startEditing();
-//        editingToggled();
-//    }
+    //    if(!this->currentLayer->isEditable())
+    //    {
+    //        mActionToggleEditing->setChecked(false);
+    //        mActionToggleEditing->setEnabled( false );
+    //        this->currentLayer->startEditing();
+    //        editingToggled();
+    //    }
     if(!toggleEditing2(this->currentLayer))
     {
         editingToggled();
@@ -238,7 +236,7 @@ void GwmAttributeTableDialog::editingToggled()
     updateMultiEditButtonState();
     if ( this->currentLayer->isEditable() )
     {
-      mActionSearchForm->setChecked( false );
+        mActionSearchForm->setChecked( false );
     }
     mActionToggleEditing->blockSignals( false );
 
@@ -258,31 +256,31 @@ void GwmAttributeTableDialog::editingToggled()
     mUpdateExpressionBox->setVisible( this->currentLayer->isEditable() );
     if ( this->currentLayer->isEditable() && mFieldCombo->currentIndex() == -1 )
     {
-      mFieldCombo->setCurrentIndex( 0 );
+        mFieldCombo->setCurrentIndex( 0 );
     }
     // not necessary to set table read only if layer is not editable
     // because model always reflects actual state when returning item flags
     QList<QgsAction> actions = this->currentLayer->actions()->actions( QStringLiteral( "Layer" ) );
     if ( actions.isEmpty() )
     {
-      //qDebug() << 1;
-      mActionFeatureActions->setVisible( false );
+        //qDebug() << 1;
+        mActionFeatureActions->setVisible( false );
     }
     else
     {
-      QMenu *actionMenu = new QMenu();
-      const auto constActions = actions;
-      for ( const QgsAction &action : constActions )
-      {
-        if ( !this->currentLayer->isEditable() && action.isEnabledOnlyWhenEditable() )
-          continue;
+        QMenu *actionMenu = new QMenu();
+        const auto constActions = actions;
+        for ( const QgsAction &action : constActions )
+        {
+            if ( !this->currentLayer->isEditable() && action.isEnabledOnlyWhenEditable() )
+                continue;
 
-        QAction *qAction = actionMenu->addAction( action.icon(), action.shortTitle() );
-        qAction->setToolTip( action.name() );
-        qAction->setData( QVariant::fromValue<QgsAction>( action ) );
-        connect( qAction, &QAction::triggered, this, &GwmAttributeTableDialog::layerActionTriggered );
-      }
-      mActionFeatureActions->setMenu( actionMenu );
+            QAction *qAction = actionMenu->addAction( action.icon(), action.shortTitle() );
+            qAction->setToolTip( action.name() );
+            qAction->setData( QVariant::fromValue<QgsAction>( action ) );
+            connect( qAction, &QAction::triggered, this, &GwmAttributeTableDialog::layerActionTriggered );
+        }
+        mActionFeatureActions->setMenu( actionMenu );
     }
 }
 
@@ -295,54 +293,54 @@ void GwmAttributeTableDialog::mActionSelectAll_triggered()
 // 反选功能
 void GwmAttributeTableDialog::mActionInvertSelection_triggered()
 {
-  this->currentLayer->invertSelection();
+    this->currentLayer->invertSelection();
 }
 
 // 删除所选
 void GwmAttributeTableDialog::mActionRemoveSelection_triggered()
 {
-  this->currentLayer->removeSelection();
+    this->currentLayer->removeSelection();
 }
 
 // 置顶属性表所选要素
 void GwmAttributeTableDialog::mActionSelectedToTop_toggled( bool checked )
 {
-  if ( checked )
-  {
-    mMainView->setSelectedOnTop( true );
-  }
-  else
-  {
-    mMainView->setSelectedOnTop( false );
-  }
+    if ( checked )
+    {
+        mMainView->setSelectedOnTop( true );
+    }
+    else
+    {
+        mMainView->setSelectedOnTop( false );
+    }
 }
 
 // 缩放所选要素
 void GwmAttributeTableDialog::mActionPanMapToSelectedRows_triggered()
 {
-  this->mymapCanvas->panToSelected( this->currentLayer );
+    this->mymapCanvas->panToSelected( this->currentLayer );
 }
 
 // 缩放所选要素-更大
 void GwmAttributeTableDialog::mActionZoomMapToSelectedRows_triggered()
 {
-  this->mymapCanvas->zoomToSelected( this->currentLayer );
+    this->mymapCanvas->zoomToSelected( this->currentLayer );
 }
 
 // 打开要素计算器
 void GwmAttributeTableDialog::mActionOpenFieldCalculator_triggered()
 {
-  QgsAttributeTableModel *masterModel = mMainView->masterModel();
-  QgsFieldCalculator calc( this->currentLayer, this );
-  if ( calc.exec() == QDialog::Accepted )
-  {
-    int col = masterModel->fieldCol( calc.changedAttributeId() );
-
-    if ( col >= 0 )
+    QgsAttributeTableModel *masterModel = mMainView->masterModel();
+    QgsFieldCalculator calc( this->currentLayer, this );
+    if ( calc.exec() == QDialog::Accepted )
     {
-      masterModel->reload( masterModel->index( 0, col ), masterModel->index( masterModel->rowCount() - 1, col ) );
+        int col = masterModel->fieldCol( calc.changedAttributeId() );
+
+        if ( col >= 0 )
+        {
+            masterModel->reload( masterModel->index( 0, col ), masterModel->index( masterModel->rowCount() - 1, col ) );
+        }
     }
-  }
 }
 
 //
@@ -362,340 +360,340 @@ void GwmAttributeTableDialog::layerActionTriggered()
 
 void GwmAttributeTableDialog::updateMultiEditButtonState()
 {
-  if ( ! this->currentLayer || ( this->currentLayer->editFormConfig().layout() == QgsEditFormConfig::EditorLayout::UiFileLayout ) )
-    return;
+    if ( ! this->currentLayer || ( this->currentLayer->editFormConfig().layout() == QgsEditFormConfig::EditorLayout::UiFileLayout ) )
+        return;
 
-  mActionToggleMultiEdit->setEnabled( this->currentLayer->isEditable() );
+    mActionToggleMultiEdit->setEnabled( this->currentLayer->isEditable() );
 
-  if ( !this->currentLayer->isEditable() || ( this->currentLayer->isEditable() && mMainView->view() != QgsDualView::AttributeEditor ) )
-  {
-    mActionToggleMultiEdit->setChecked( false );
-  }
+    if ( !this->currentLayer->isEditable() || ( this->currentLayer->isEditable() && mMainView->view() != QgsDualView::AttributeEditor ) )
+    {
+        mActionToggleMultiEdit->setChecked( false );
+    }
 }
 
 void GwmAttributeTableDialog::updateFieldFromExpression()
 {
-  bool filtered = mMainView->filterMode() != QgsAttributeTableFilterModel::ShowAll;
-  QgsFeatureIds filteredIds = filtered ? mMainView->filteredFeatures() : QgsFeatureIds();
-  runFieldCalculation( this->currentLayer, mFieldCombo->currentField(), mUpdateExpressionText->asExpression(), filteredIds );
+    bool filtered = mMainView->filterMode() != QgsAttributeTableFilterModel::ShowAll;
+    QgsFeatureIds filteredIds = filtered ? mMainView->filteredFeatures() : QgsFeatureIds();
+    runFieldCalculation( this->currentLayer, mFieldCombo->currentField(), mUpdateExpressionText->asExpression(), filteredIds );
 }
 
 void GwmAttributeTableDialog::updateFieldFromExpressionSelected()
 {
-  QgsFeatureIds filteredIds = this->currentLayer->selectedFeatureIds();
-  runFieldCalculation( this->currentLayer, mFieldCombo->currentField(), mUpdateExpressionText->asExpression(), filteredIds );
+    QgsFeatureIds filteredIds = this->currentLayer->selectedFeatureIds();
+    runFieldCalculation( this->currentLayer, mFieldCombo->currentField(), mUpdateExpressionText->asExpression(), filteredIds );
 }
 
 void GwmAttributeTableDialog::runFieldCalculation( QgsVectorLayer *layer, const QString &fieldName, const QString &expression, const QgsFeatureIds &filteredIds )
 {
-  int fieldindex = layer->fields().indexFromName( fieldName );
-  if ( fieldindex < 0 )
-  {
-    // this shouldn't happen... but it did. There's probably some deeper underlying issue
-    // but we may as well play it safe here.
-    QMessageBox::critical( nullptr, tr( "Update Attributes" ), tr( "An error occurred while trying to update the field %1" ).arg( fieldName ) );
-    return;
-  }
-
-  QgsTemporaryCursorOverride cursorOverride( Qt::WaitCursor );
-  currentLayer->beginEditCommand( QStringLiteral( "Field calculator" ) );
-
-  bool calculationSuccess = true;
-  QString error;
-
-  QgsExpression exp( expression );
-  QgsDistanceArea da;
-  da.setSourceCrs( currentLayer->crs(), QgsProject::instance()->transformContext() );
-  da.setEllipsoid( QgsProject::instance()->ellipsoid() );
-  exp.setGeomCalculator( &da );
-  exp.setDistanceUnits( QgsProject::instance()->distanceUnits() );
-  exp.setAreaUnits( QgsProject::instance()->areaUnits() );
-  bool useGeometry = exp.needsGeometry();
-
-  QgsFeatureRequest request( mMainView->masterModel()->request() );
-  useGeometry |= !request.filterRect().isNull();
-  request.setFlags( useGeometry ? QgsFeatureRequest::NoFlags : QgsFeatureRequest::NoGeometry );
-
-  int rownum = 1;
-
-  QgsExpressionContext context( QgsExpressionContextUtils::globalProjectLayerScopes( layer ) );
-  exp.prepare( &context );
-
-  QgsField fld = layer->fields().at( fieldindex );
-
-  QSet< QString >referencedColumns = exp.referencedColumns();
-  referencedColumns.insert( fld.name() ); // need existing column value to store old attribute when changing field values
-  request.setSubsetOfAttributes( referencedColumns, layer->fields() );
-
-  //go through all the features and change the new attributes
-  QgsFeatureIterator fit = layer->getFeatures( request );
-
-  std::unique_ptr< QgsScopedProxyProgressTask > task = qgis::make_unique< QgsScopedProxyProgressTask >( tr( "Calculating field" ) );
-
-  long long count = !filteredIds.isEmpty() ? filteredIds.size() : layer->featureCount();
-  long long i = 0;
-
-  QgsFeature feature;
-  while ( fit.nextFeature( feature ) )
-  {
-    if ( !filteredIds.isEmpty() && !filteredIds.contains( feature.id() ) )
+    int fieldindex = layer->fields().indexFromName( fieldName );
+    if ( fieldindex < 0 )
     {
-      continue;
+        // this shouldn't happen... but it did. There's probably some deeper underlying issue
+        // but we may as well play it safe here.
+        QMessageBox::critical( nullptr, tr( "Update Attributes" ), tr( "An error occurred while trying to update the field %1" ).arg( fieldName ) );
+        return;
     }
 
-    i++;
-    task->setProgress( i / static_cast< double >( count ) * 100 );
+    QgsTemporaryCursorOverride cursorOverride( Qt::WaitCursor );
+    currentLayer->beginEditCommand( QStringLiteral( "Field calculator" ) );
 
-    context.setFeature( feature );
-    context.lastScope()->addVariable( QgsExpressionContextScope::StaticVariable( QStringLiteral( "row_number" ), rownum, true ) );
+    bool calculationSuccess = true;
+    QString error;
 
-    QVariant value = exp.evaluate( &context );
-    ( void )fld.convertCompatible( value );
-    // Bail if we have a update error
-    if ( exp.hasEvalError() )
+    QgsExpression exp( expression );
+    QgsDistanceArea da;
+    da.setSourceCrs( currentLayer->crs(), QgsProject::instance()->transformContext() );
+    da.setEllipsoid( QgsProject::instance()->ellipsoid() );
+    exp.setGeomCalculator( &da );
+    exp.setDistanceUnits( QgsProject::instance()->distanceUnits() );
+    exp.setAreaUnits( QgsProject::instance()->areaUnits() );
+    bool useGeometry = exp.needsGeometry();
+
+    QgsFeatureRequest request( mMainView->masterModel()->request() );
+    useGeometry |= !request.filterRect().isNull();
+    request.setFlags( useGeometry ? QgsFeatureRequest::NoFlags : QgsFeatureRequest::NoGeometry );
+
+    int rownum = 1;
+
+    QgsExpressionContext context( QgsExpressionContextUtils::globalProjectLayerScopes( layer ) );
+    exp.prepare( &context );
+
+    QgsField fld = layer->fields().at( fieldindex );
+
+    QSet< QString >referencedColumns = exp.referencedColumns();
+    referencedColumns.insert( fld.name() ); // need existing column value to store old attribute when changing field values
+    request.setSubsetOfAttributes( referencedColumns, layer->fields() );
+
+    //go through all the features and change the new attributes
+    QgsFeatureIterator fit = layer->getFeatures( request );
+
+    std::unique_ptr< QgsScopedProxyProgressTask > task = qgis::make_unique< QgsScopedProxyProgressTask >( tr( "Calculating field" ) );
+
+    long long count = !filteredIds.isEmpty() ? filteredIds.size() : layer->featureCount();
+    long long i = 0;
+
+    QgsFeature feature;
+    while ( fit.nextFeature( feature ) )
     {
-      calculationSuccess = false;
-      error = exp.evalErrorString();
-      break;
+        if ( !filteredIds.isEmpty() && !filteredIds.contains( feature.id() ) )
+        {
+            continue;
+        }
+
+        i++;
+        task->setProgress( i / static_cast< double >( count ) * 100 );
+
+        context.setFeature( feature );
+        context.lastScope()->addVariable( QgsExpressionContextScope::StaticVariable( QStringLiteral( "row_number" ), rownum, true ) );
+
+        QVariant value = exp.evaluate( &context );
+        ( void )fld.convertCompatible( value );
+        // Bail if we have a update error
+        if ( exp.hasEvalError() )
+        {
+            calculationSuccess = false;
+            error = exp.evalErrorString();
+            break;
+        }
+        else
+        {
+            QVariant oldvalue = feature.attributes().value( fieldindex );
+            currentLayer->changeAttributeValue( feature.id(), fieldindex, value, oldvalue );
+        }
+
+        rownum++;
+    }
+
+    cursorOverride.release();
+    task.reset();
+
+    if ( !calculationSuccess )
+    {
+        QMessageBox::critical( nullptr, tr( "Update Attributes" ), tr( "An error occurred while evaluating the calculation string:\n%1" ).arg( error ) );
+        currentLayer->destroyEditCommand();
     }
     else
     {
-      QVariant oldvalue = feature.attributes().value( fieldindex );
-      currentLayer->changeAttributeValue( feature.id(), fieldindex, value, oldvalue );
+        currentLayer->endEditCommand();
+
+        // refresh table with updated values
+        // fixes https://github.com/qgis/QGIS/issues/25210
+        QgsAttributeTableModel *masterModel = mMainView->masterModel();
+        int modelColumn = masterModel->fieldCol( fieldindex );
+        masterModel->reload( masterModel->index( 0, modelColumn ), masterModel->index( masterModel->rowCount() - 1, modelColumn ) );
     }
-
-    rownum++;
-  }
-
-  cursorOverride.release();
-  task.reset();
-
-  if ( !calculationSuccess )
-  {
-    QMessageBox::critical( nullptr, tr( "Update Attributes" ), tr( "An error occurred while evaluating the calculation string:\n%1" ).arg( error ) );
-    currentLayer->destroyEditCommand();
-  }
-  else
-  {
-    currentLayer->endEditCommand();
-
-    // refresh table with updated values
-    // fixes https://github.com/qgis/QGIS/issues/25210
-    QgsAttributeTableModel *masterModel = mMainView->masterModel();
-    int modelColumn = masterModel->fieldCol( fieldindex );
-    masterModel->reload( masterModel->index( 0, modelColumn ), masterModel->index( masterModel->rowCount() - 1, modelColumn ) );
-  }
 }
 
 void GwmAttributeTableDialog::updateButtonStatus( const QString &fieldName, bool isValid )
 {
-  Q_UNUSED( fieldName )
-  mRunFieldCalc->setEnabled( isValid );
+    Q_UNUSED( fieldName )
+    mRunFieldCalc->setEnabled( isValid );
 }
 
 void GwmAttributeTableDialog::updateTitle()
 {
-  if ( ! this->currentLayer )
-  {
-    return;
-  }
-//  QWidget *w = mDock ? qobject_cast<QWidget *>( mDock )
-//               : mDialog ? qobject_cast<QWidget *>( mDialog )
-//               : qobject_cast<QWidget *>( this );
-//  w->setWindowTitle( tr( " %1 :: Features Total: %2, Filtered: %3, Selected: %4" )
-//                     .arg( mLayer->name() )
-//                     .arg( std::max( static_cast< long >( mMainView->featureCount() ), mLayer->featureCount() ) ) // layer count may be estimated, so use larger of the two
-//                     .arg( mMainView->filteredFeatureCount() )
-//                     .arg( mLayer->selectedFeatureCount() )
-//                   );
+    if ( ! this->currentLayer )
+    {
+        return;
+    }
+    //  QWidget *w = mDock ? qobject_cast<QWidget *>( mDock )
+    //               : mDialog ? qobject_cast<QWidget *>( mDialog )
+    //               : qobject_cast<QWidget *>( this );
+    //  w->setWindowTitle( tr( " %1 :: Features Total: %2, Filtered: %3, Selected: %4" )
+    //                     .arg( mLayer->name() )
+    //                     .arg( std::max( static_cast< long >( mMainView->featureCount() ), mLayer->featureCount() ) ) // layer count may be estimated, so use larger of the two
+    //                     .arg( mMainView->filteredFeatureCount() )
+    //                     .arg( mLayer->selectedFeatureCount() )
+    //                   );
 
-  if ( mMainView->filterMode() == QgsAttributeTableFilterModel::ShowAll )
-    mRunFieldCalc->setText( tr( "Update All" ) );
-  else
-    mRunFieldCalc->setText( tr( "Update Filtered" ) );
+    if ( mMainView->filterMode() == QgsAttributeTableFilterModel::ShowAll )
+        mRunFieldCalc->setText( tr( "Update All" ) );
+    else
+        mRunFieldCalc->setText( tr( "Update Filtered" ) );
 
-  bool canDeleteFeatures = this->currentLayer->dataProvider()->capabilities() & QgsVectorDataProvider::DeleteFeatures;
-  bool enabled = this->currentLayer->selectedFeatureCount() > 0;
-  mRunFieldCalcSelected->setEnabled( enabled );
-  mActionDeleteSelected->setEnabled( canDeleteFeatures && this->currentLayer->isEditable() && enabled );
-  mActionCutSelectedRows->setEnabled( canDeleteFeatures && this->currentLayer->isEditable() && enabled );
-  mActionCopySelectedRows->setEnabled( enabled );
+    bool canDeleteFeatures = this->currentLayer->dataProvider()->capabilities() & QgsVectorDataProvider::DeleteFeatures;
+    bool enabled = this->currentLayer->selectedFeatureCount() > 0;
+    mRunFieldCalcSelected->setEnabled( enabled );
+    mActionDeleteSelected->setEnabled( canDeleteFeatures && this->currentLayer->isEditable() && enabled );
+    mActionCutSelectedRows->setEnabled( canDeleteFeatures && this->currentLayer->isEditable() && enabled );
+    mActionCopySelectedRows->setEnabled( enabled );
 }
 
 void GwmAttributeTableDialog::mActionAddAttribute_triggered()
 {
-  if ( !this->currentLayer )
-  {
-    return;
-  }
-
-  QgsAttributeTableModel *masterModel = mMainView->masterModel();
-
-  QgsAddAttrDialog dialog( this->currentLayer, this );
-  if ( dialog.exec() == QDialog::Accepted )
-  {
-    this->currentLayer->beginEditCommand( tr( "Attribute added" ) );
-    if ( this->currentLayer->addAttribute( dialog.field() ) )
+    if ( !this->currentLayer )
     {
-      this->currentLayer->endEditCommand();
-    }
-    else
-    {
-      this->currentLayer->destroyEditCommand();
-      QMessageBox::critical( this, tr( "Add Field" ), tr( "Failed to add field '%1' of type '%2'. Is the field name unique?" ).arg( dialog.field().name(), dialog.field().typeName() ) );
-    }
-
-
-    // update model - a field has been added or updated
-    masterModel->reload( masterModel->index( 0, 0 ), masterModel->index( masterModel->rowCount() - 1, masterModel->columnCount() - 1 ) );
-  }
-}
-
-void GwmAttributeTableDialog::mActionRemoveAttribute_triggered()
-{
-  if ( !this->currentLayer )
-  {
-    return;
-  }
-
-  QgsDelAttrDialog dialog( this->currentLayer );
-  if ( dialog.exec() == QDialog::Accepted )
-  {
-    QList<int> attributes = dialog.selectedAttributes();
-    if ( attributes.empty() )
-    {
-      return;
+        return;
     }
 
     QgsAttributeTableModel *masterModel = mMainView->masterModel();
 
-    this->currentLayer->beginEditCommand( tr( "Deleted attribute" ) );
-    if ( this->currentLayer->deleteAttributes( attributes ) )
+    QgsAddAttrDialog dialog( this->currentLayer, this );
+    if ( dialog.exec() == QDialog::Accepted )
     {
-      this->currentLayer->endEditCommand();
+        this->currentLayer->beginEditCommand( tr( "Attribute added" ) );
+        if ( this->currentLayer->addAttribute( dialog.field() ) )
+        {
+            this->currentLayer->endEditCommand();
+        }
+        else
+        {
+            this->currentLayer->destroyEditCommand();
+            QMessageBox::critical( this, tr( "Add Field" ), tr( "Failed to add field '%1' of type '%2'. Is the field name unique?" ).arg( dialog.field().name(), dialog.field().typeName() ) );
+        }
+
+
+        // update model - a field has been added or updated
+        masterModel->reload( masterModel->index( 0, 0 ), masterModel->index( masterModel->rowCount() - 1, masterModel->columnCount() - 1 ) );
     }
-    else
+}
+
+void GwmAttributeTableDialog::mActionRemoveAttribute_triggered()
+{
+    if ( !this->currentLayer )
     {
-      //QgisApp::instance()->messageBar()->pushMessage( tr( "Attribute error" ), tr( "The attribute(s) could not be deleted" ), Qgis::Warning, QgisApp::instance()->messageTimeout() );
-      this->currentLayer->destroyEditCommand();
+        return;
     }
-    // update model - a field has been added or updated
-    masterModel->reload( masterModel->index( 0, 0 ), masterModel->index( masterModel->rowCount() - 1, masterModel->columnCount() - 1 ) );
-  }
+
+    QgsDelAttrDialog dialog( this->currentLayer );
+    if ( dialog.exec() == QDialog::Accepted )
+    {
+        QList<int> attributes = dialog.selectedAttributes();
+        if ( attributes.empty() )
+        {
+            return;
+        }
+
+        QgsAttributeTableModel *masterModel = mMainView->masterModel();
+
+        this->currentLayer->beginEditCommand( tr( "Deleted attribute" ) );
+        if ( this->currentLayer->deleteAttributes( attributes ) )
+        {
+            this->currentLayer->endEditCommand();
+        }
+        else
+        {
+            //QgisApp::instance()->messageBar()->pushMessage( tr( "Attribute error" ), tr( "The attribute(s) could not be deleted" ), Qgis::Warning, QgisApp::instance()->messageTimeout() );
+            this->currentLayer->destroyEditCommand();
+        }
+        // update model - a field has been added or updated
+        masterModel->reload( masterModel->index( 0, 0 ), masterModel->index( masterModel->rowCount() - 1, masterModel->columnCount() - 1 ) );
+    }
 }
 
 bool GwmAttributeTableDialog::toggleEditing2( QgsMapLayer *layer, bool allowCancel )
 {
-  QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( layer );
-  if ( !vlayer )
-  {
-    return false;
-  }
-
-  bool res = true;
-
-  QString connString = QgsDataSourceUri( vlayer->source() ).connectionInfo();
-  QString key = vlayer->providerType();
-
-  QMap< QPair< QString, QString>, QgsTransactionGroup *> transactionGroups = QgsProject::instance()->transactionGroups();
-  QMap< QPair< QString, QString>, QgsTransactionGroup *>::iterator tIt = transactionGroups .find( qMakePair( key, connString ) );
-  QgsTransactionGroup *tg = ( tIt != transactionGroups.end() ? tIt.value() : nullptr );
-
-  bool isModified = false;
-
-  // Assume changes if: a) the layer reports modifications or b) its transaction group was modified
-  if ( vlayer->isModified() )
-    isModified  = true;
-
-  if ( !vlayer->isEditable() && !vlayer->readOnly() )
-  {
-    if ( !( vlayer->dataProvider()->capabilities() & QgsVectorDataProvider::EditingCapabilities ) )
+    QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( layer );
+    if ( !vlayer )
     {
-      mActionToggleEditing->setChecked( false );
-      mActionToggleEditing->setEnabled( false );
-//      visibleMessageBar()->pushMessage( tr( "Start editing failed" ),
-//                                        tr( "Provider cannot be opened for editing" ),
-//                                        Qgis::Info, messageTimeout() );
-      return false;
+        return false;
     }
 
-    vlayer->startEditing();
+    bool res = true;
 
-    QgsSettings settings;
-    QString markerType = settings.value( QStringLiteral( "qgis/digitizing/marker_style" ), "Cross" ).toString();
-    bool markSelectedOnly = settings.value( QStringLiteral( "qgis/digitizing/marker_only_for_selected" ), true ).toBool();
+    QString connString = QgsDataSourceUri( vlayer->source() ).connectionInfo();
+    QString key = vlayer->providerType();
 
-    // redraw only if markers will be drawn
-    if ( ( !markSelectedOnly || vlayer->selectedFeatureCount() > 0 ) &&
-         ( markerType == QLatin1String( "Cross" ) || markerType == QLatin1String( "SemiTransparentCircle" ) ) )
+    QMap< QPair< QString, QString>, QgsTransactionGroup *> transactionGroups = QgsProject::instance()->transactionGroups();
+    QMap< QPair< QString, QString>, QgsTransactionGroup *>::iterator tIt = transactionGroups .find( qMakePair( key, connString ) );
+    QgsTransactionGroup *tg = ( tIt != transactionGroups.end() ? tIt.value() : nullptr );
+
+    bool isModified = false;
+
+    // Assume changes if: a) the layer reports modifications or b) its transaction group was modified
+    if ( vlayer->isModified() )
+        isModified  = true;
+
+    if ( !vlayer->isEditable() && !vlayer->readOnly() )
     {
-      vlayer->triggerRepaint();
-    }
-  }
-  else if ( isModified )
-  {
-    QMessageBox::StandardButtons buttons = QMessageBox::Save | QMessageBox::Discard;
-    if ( allowCancel )
-      buttons |= QMessageBox::Cancel;
-
-    switch ( QMessageBox::question( nullptr,
-                                    tr( "Stop Editing" ),
-                                    tr( "Do you want to save the changes to layer %1?" ).arg( vlayer->name() ),
-                                    buttons ) )
-    {
-      case QMessageBox::Cancel:
-        res = false;
-        break;
-
-      case QMessageBox::Save:
-        QApplication::setOverrideCursor( Qt::WaitCursor );
-
-        if ( !vlayer->commitChanges() )
+        if ( !( vlayer->dataProvider()->capabilities() & QgsVectorDataProvider::EditingCapabilities ) )
         {
-          //commitError( vlayer );
-          // Leave the in-memory editing state alone,
-          // to give the user a chance to enter different values
-          // and try the commit again later
-          res = false;
+            mActionToggleEditing->setChecked( false );
+            mActionToggleEditing->setEnabled( false );
+            //      visibleMessageBar()->pushMessage( tr( "Start editing failed" ),
+            //                                        tr( "Provider cannot be opened for editing" ),
+            //                                        Qgis::Info, messageTimeout() );
+            return false;
         }
 
-        vlayer->triggerRepaint();
+        vlayer->startEditing();
 
-        QApplication::restoreOverrideCursor();
-        break;
+        QgsSettings settings;
+        QString markerType = settings.value( QStringLiteral( "qgis/digitizing/marker_style" ), "Cross" ).toString();
+        bool markSelectedOnly = settings.value( QStringLiteral( "qgis/digitizing/marker_only_for_selected" ), true ).toBool();
 
-      case QMessageBox::Discard:
-      {
-        QApplication::setOverrideCursor( Qt::WaitCursor );
+        // redraw only if markers will be drawn
+        if ( ( !markSelectedOnly || vlayer->selectedFeatureCount() > 0 ) &&
+             ( markerType == QLatin1String( "Cross" ) || markerType == QLatin1String( "SemiTransparentCircle" ) ) )
+        {
+            vlayer->triggerRepaint();
+        }
+    }
+    else if ( isModified )
+    {
+        QMessageBox::StandardButtons buttons = QMessageBox::Save | QMessageBox::Discard;
+        if ( allowCancel )
+            buttons |= QMessageBox::Cancel;
 
+        switch ( QMessageBox::question( nullptr,
+                                        tr( "Stop Editing" ),
+                                        tr( "Do you want to save the changes to layer %1?" ).arg( vlayer->name() ),
+                                        buttons ) )
+        {
+        case QMessageBox::Cancel:
+            res = false;
+            break;
+
+        case QMessageBox::Save:
+            QApplication::setOverrideCursor( Qt::WaitCursor );
+
+            if ( !vlayer->commitChanges() )
+            {
+                //commitError( vlayer );
+                // Leave the in-memory editing state alone,
+                // to give the user a chance to enter different values
+                // and try the commit again later
+                res = false;
+            }
+
+            vlayer->triggerRepaint();
+
+            QApplication::restoreOverrideCursor();
+            break;
+
+        case QMessageBox::Discard:
+        {
+            QApplication::setOverrideCursor( Qt::WaitCursor );
+
+            //QgsCanvasRefreshBlocker refreshBlocker;
+            if ( !vlayer->rollBack() )
+            {
+                //          visibleMessageBar()->pushMessage( tr( "Error" ),
+                //                                            tr( "Problems during roll back" ),
+                //                                            Qgis::Critical );
+                res = false;
+            }
+
+            vlayer->triggerRepaint();
+
+            QApplication::restoreOverrideCursor();
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+    else //layer not modified
+    {
         //QgsCanvasRefreshBlocker refreshBlocker;
-        if ( !vlayer->rollBack() )
-        {
-//          visibleMessageBar()->pushMessage( tr( "Error" ),
-//                                            tr( "Problems during roll back" ),
-//                                            Qgis::Critical );
-          res = false;
-        }
-
+        vlayer->rollBack();
+        res = true;
         vlayer->triggerRepaint();
-
-        QApplication::restoreOverrideCursor();
-        break;
-      }
-
-      default:
-        break;
     }
-  }
-  else //layer not modified
-  {
-    //QgsCanvasRefreshBlocker refreshBlocker;
-    vlayer->rollBack();
-    res = true;
-    vlayer->triggerRepaint();
-  }
 
-  return res;
+    return res;
 }
 
 void GwmAttributeTableDialog::mActionSaveEdits_triggered()
@@ -705,169 +703,169 @@ void GwmAttributeTableDialog::mActionSaveEdits_triggered()
 
 void GwmAttributeTableDialog::saveEdits( QgsMapLayer *layer, bool leaveEditable, bool triggerRepaint )
 {
-  QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( layer );
-  if ( !vlayer || !vlayer->isEditable() || !vlayer->isModified() )
-    return;
+    QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( layer );
+    if ( !vlayer || !vlayer->isEditable() || !vlayer->isModified() )
+        return;
 
-//  if ( vlayer == activeLayer() )
-//    mSaveRollbackInProgress = true;
+    //  if ( vlayer == activeLayer() )
+    //    mSaveRollbackInProgress = true;
 
-  if ( !vlayer->commitChanges() )
-  {
-//    mSaveRollbackInProgress = false;
-//    commitError( vlayer );
-  }
+    if ( !vlayer->commitChanges() )
+    {
+        //    mSaveRollbackInProgress = false;
+        //    commitError( vlayer );
+    }
 
-  if ( leaveEditable )
-  {
-    vlayer->startEditing();
-  }
-  if ( triggerRepaint )
-  {
-    vlayer->triggerRepaint();
-  }
+    if ( leaveEditable )
+    {
+        vlayer->startEditing();
+    }
+    if ( triggerRepaint )
+    {
+        vlayer->triggerRepaint();
+    }
 }
 
 void GwmAttributeTableDialog::mActionDeleteSelected_triggered()
 {
-  deleteSelected( currentLayer, this );
+    deleteSelected( currentLayer, this );
 }
 
 void GwmAttributeTableDialog::deleteSelected( QgsMapLayer *layer, QWidget *parent, bool checkFeaturesVisible )
 {
-//  if ( !layer )
-//  {
-//    layer = mLayerTreeView->currentLayer();
-//  }
+    //  if ( !layer )
+    //  {
+    //    layer = mLayerTreeView->currentLayer();
+    //  }
 
-  if ( !parent )
-  {
-    parent = this;
-  }
-
-  if ( !layer )
-  {
-//    visibleMessageBar()->pushMessage( tr( "No Layer Selected" ),
-//                                      tr( "To delete features, you must select a vector layer in the legend" ),
-//                                      Qgis::Info, messageTimeout() );
-    return;
-  }
-
-  QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( layer );
-  if ( !vlayer )
-  {
-//    visibleMessageBar()->pushMessage( tr( "No Vector Layer Selected" ),
-//                                      tr( "Deleting features only works on vector layers" ),
-//                                      Qgis::Info, messageTimeout() );
-    return;
-  }
-
-  if ( !( vlayer->dataProvider()->capabilities() & QgsVectorDataProvider::DeleteFeatures ) )
-  {
-//    visibleMessageBar()->pushMessage( tr( "Provider does not support deletion" ),
-//                                      tr( "Data provider does not support deleting features" ),
-//                                      Qgis::Info, messageTimeout() );
-    return;
-  }
-
-  if ( !vlayer->isEditable() )
-  {
-//    visibleMessageBar()->pushMessage( tr( "Layer not editable" ),
-//                                      tr( "The current layer is not editable. Choose 'Start editing' in the digitizing toolbar." ),
-//                                      Qgis::Info, messageTimeout() );
-    return;
-  }
-
-  //validate selection
-  const int numberOfSelectedFeatures = vlayer->selectedFeatureCount();
-  if ( numberOfSelectedFeatures == 0 )
-  {
-//    visibleMessageBar()->pushMessage( tr( "No Features Selected" ),
-//                                      tr( "The current layer has no selected features" ),
-//                                      Qgis::Info, messageTimeout() );
-    return;
-  }
-  //display a warning
-  if ( checkFeaturesVisible )
-  {
-    QgsFeature feat;
-    QgsFeatureIterator it = vlayer->getSelectedFeatures( QgsFeatureRequest().setNoAttributes() );
-    bool allFeaturesInView = true;
-    QgsRectangle viewRect = this->mymapCanvas->mapSettings().mapToLayerCoordinates( vlayer, this->mymapCanvas->extent() );
-
-    while ( it.nextFeature( feat ) )
+    if ( !parent )
     {
-      if ( allFeaturesInView && !viewRect.intersects( feat.geometry().boundingBox() ) )
-      {
-        allFeaturesInView = false;
-        break;
-      }
+        parent = this;
     }
 
-    if ( !allFeaturesInView )
+    if ( !layer )
     {
-      // for extra safety to make sure we are not removing geometries by accident
-      int res = QMessageBox::warning( this->mymapCanvas, tr( "Delete %n feature(s) from layer \"%1\"", nullptr, numberOfSelectedFeatures ).arg( vlayer->name() ),
-                                      tr( "Some of the selected features are outside of the current map view. Would you still like to continue?" ),
-                                      QMessageBox::Yes | QMessageBox::No );
-      if ( res != QMessageBox::Yes )
+        //    visibleMessageBar()->pushMessage( tr( "No Layer Selected" ),
+        //                                      tr( "To delete features, you must select a vector layer in the legend" ),
+        //                                      Qgis::Info, messageTimeout() );
         return;
     }
-  }
 
-  vlayer->beginEditCommand( tr( "Features deleted" ) );
-  int deletedCount = 0;
-  if ( !vlayer->deleteSelectedFeatures( &deletedCount ) )
-  {
-//    visibleMessageBar()->pushMessage( tr( "Problem deleting features" ),
-//                                      tr( "A problem occurred during deletion from layer \"%1\". %n feature(s) not deleted.", nullptr, numberOfSelectedFeatures - deletedCount ).arg( vlayer->name() ),
-//                                      Qgis::Warning );
-  }
-  else
-  {
-//    showStatusMessage( tr( "%n feature(s) deleted.", "number of features deleted", numberOfSelectedFeatures ) );
-  }
+    QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( layer );
+    if ( !vlayer )
+    {
+        //    visibleMessageBar()->pushMessage( tr( "No Vector Layer Selected" ),
+        //                                      tr( "Deleting features only works on vector layers" ),
+        //                                      Qgis::Info, messageTimeout() );
+        return;
+    }
 
-  vlayer->endEditCommand();
+    if ( !( vlayer->dataProvider()->capabilities() & QgsVectorDataProvider::DeleteFeatures ) )
+    {
+        //    visibleMessageBar()->pushMessage( tr( "Provider does not support deletion" ),
+        //                                      tr( "Data provider does not support deleting features" ),
+        //                                      Qgis::Info, messageTimeout() );
+        return;
+    }
+
+    if ( !vlayer->isEditable() )
+    {
+        //    visibleMessageBar()->pushMessage( tr( "Layer not editable" ),
+        //                                      tr( "The current layer is not editable. Choose 'Start editing' in the digitizing toolbar." ),
+        //                                      Qgis::Info, messageTimeout() );
+        return;
+    }
+
+    //validate selection
+    const int numberOfSelectedFeatures = vlayer->selectedFeatureCount();
+    if ( numberOfSelectedFeatures == 0 )
+    {
+        //    visibleMessageBar()->pushMessage( tr( "No Features Selected" ),
+        //                                      tr( "The current layer has no selected features" ),
+        //                                      Qgis::Info, messageTimeout() );
+        return;
+    }
+    //display a warning
+    if ( checkFeaturesVisible )
+    {
+        QgsFeature feat;
+        QgsFeatureIterator it = vlayer->getSelectedFeatures( QgsFeatureRequest().setNoAttributes() );
+        bool allFeaturesInView = true;
+        QgsRectangle viewRect = this->mymapCanvas->mapSettings().mapToLayerCoordinates( vlayer, this->mymapCanvas->extent() );
+
+        while ( it.nextFeature( feat ) )
+        {
+            if ( allFeaturesInView && !viewRect.intersects( feat.geometry().boundingBox() ) )
+            {
+                allFeaturesInView = false;
+                break;
+            }
+        }
+
+        if ( !allFeaturesInView )
+        {
+            // for extra safety to make sure we are not removing geometries by accident
+            int res = QMessageBox::warning( this->mymapCanvas, tr( "Delete %n feature(s) from layer \"%1\"", nullptr, numberOfSelectedFeatures ).arg( vlayer->name() ),
+                                            tr( "Some of the selected features are outside of the current map view. Would you still like to continue?" ),
+                                            QMessageBox::Yes | QMessageBox::No );
+            if ( res != QMessageBox::Yes )
+                return;
+        }
+    }
+
+    vlayer->beginEditCommand( tr( "Features deleted" ) );
+    int deletedCount = 0;
+    if ( !vlayer->deleteSelectedFeatures( &deletedCount ) )
+    {
+        //    visibleMessageBar()->pushMessage( tr( "Problem deleting features" ),
+        //                                      tr( "A problem occurred during deletion from layer \"%1\". %n feature(s) not deleted.", nullptr, numberOfSelectedFeatures - deletedCount ).arg( vlayer->name() ),
+        //                                      Qgis::Warning );
+    }
+    else
+    {
+        //    showStatusMessage( tr( "%n feature(s) deleted.", "number of features deleted", numberOfSelectedFeatures ) );
+    }
+
+    vlayer->endEditCommand();
 }
 
 void GwmAttributeTableDialog::mActionAddFeature_triggered()
 {
-  if ( !currentLayer->isEditable() )
-    return;
+    if ( !currentLayer->isEditable() )
+        return;
 
-  QgsAttributeTableModel *masterModel = mMainView->masterModel();
+    QgsAttributeTableModel *masterModel = mMainView->masterModel();
 
-  QgsFeature f;
-  QgsFeatureAction action( tr( "Geometryless feature added" ), f, currentLayer, QString(), -1, this );
-  action.setForceSuppressFormPopup( true ); // we're already showing the table, allowing users to enter the new feature's attributes directly
-  if ( action.addFeature() )
-  {
-    masterModel->reload( masterModel->index( 0, 0 ), masterModel->index( masterModel->rowCount() - 1, masterModel->columnCount() - 1 ) );
-  }
+    QgsFeature f;
+    QgsFeatureAction action( tr( "Geometryless feature added" ), f, currentLayer, QString(), -1, this );
+    action.setForceSuppressFormPopup( true ); // we're already showing the table, allowing users to enter the new feature's attributes directly
+    if ( action.addFeature() )
+    {
+        masterModel->reload( masterModel->index( 0, 0 ), masterModel->index( masterModel->rowCount() - 1, masterModel->columnCount() - 1 ) );
+    }
 }
 
 void GwmAttributeTableDialog::formFilterSet( const QString &filter, QgsAttributeForm::FilterType type )
 {
-  setFilterExpression( filter, type, true );
+    setFilterExpression( filter, type, true );
 }
 void GwmAttributeTableDialog::setFilterExpression( const QString &filterString, QgsAttributeForm::FilterType type,
-    bool alwaysShowFilter )
+                                                   bool alwaysShowFilter )
 {
-  mFeatureFilterWidget->setFilterExpression( filterString, type, alwaysShowFilter );
+    mFeatureFilterWidget->setFilterExpression( filterString, type, alwaysShowFilter );
 }
 void GwmAttributeTableDialog::viewModeChanged( QgsAttributeEditorContext::Mode mode )
 {
-  if ( mode != QgsAttributeEditorContext::SearchMode )
-    mActionSearchForm->setChecked( false );
+    if ( mode != QgsAttributeEditorContext::SearchMode )
+        mActionSearchForm->setChecked( false );
 }
 
 void GwmAttributeTableDialog::mActionExpressionSelect_triggered()
 {
-  QgsExpressionSelectionDialog *dlg = new QgsExpressionSelectionDialog( currentLayer );
-  //dlg->setMessageBar( QgisApp::instance()->messageBar() );
-  dlg->setAttribute( Qt::WA_DeleteOnClose );
-  dlg->show();
+    QgsExpressionSelectionDialog *dlg = new QgsExpressionSelectionDialog( currentLayer );
+    //dlg->setMessageBar( QgisApp::instance()->messageBar() );
+    dlg->setAttribute( Qt::WA_DeleteOnClose );
+    dlg->show();
 }
 
 //新功能测试
@@ -880,10 +878,10 @@ void GwmAttributeTableDialog::mActionCopySelectedRows_triggered()
 }
 void GwmAttributeTableDialog::mActionPasteFeatures_triggered()
 {
-//    qDebug()<< currentLayer->fields()[0].typeName();
-//    qDebug()<< currentLayer->fields()[1].typeName();
-//    qDebug()<< currentLayer->fields()[2].typeName();
-//    qDebug()<< currentLayer->fields()[3].typeName();
+    //    qDebug()<< currentLayer->fields()[0].typeName();
+    //    qDebug()<< currentLayer->fields()[1].typeName();
+    //    qDebug()<< currentLayer->fields()[2].typeName();
+    //    qDebug()<< currentLayer->fields()[3].typeName();
     //qDebug()<< currentLayer->fields()[4].typeName();
 }
 
@@ -894,181 +892,181 @@ void GwmAttributeTableDialog::on_actionDummy_triggered()
     QgsDelAttrDialog dialog( currentLayer );
     if ( dialog.exec() == QDialog::Accepted )
     {
-      QList<int> attributes = dialog.selectedAttributes();
-      if ( attributes.empty() )
-      {
-        return;
-      }
-      //qDebug() << attributes[0];
-      fieldindex = attributes[0];
-      //判断类型是否是字符串或是浮点数
-      //if(currentLayer->fields()[fieldindex].)
-      if(currentLayer->fields()[fieldindex].typeName() != "String" && currentLayer->fields()[fieldindex].typeName()!="Integer"){
-          QMessageBox::warning(NULL,"warning","该属性列不能生成dommy!",QMessageBox::Ok | QMessageBox::Cancel,QMessageBox::Ok);
-          return;
-      }else if(currentLayer->fields()[fieldindex].typeName() == "String"){
-          //字符串类型
-          QgsFeatureIterator featureIt = currentLayer->getFeatures();
-          QgsFeatureIterator featureIt2 = currentLayer->getFeatures();
-          QgsFeatureIterator featureIt3 = currentLayer->getFeatures();
-          QgsFeature feature;
-          QgsFeature feature2;
-          QgsFeature feature3;
-          QString fieldName = currentLayer->fields().names()[fieldindex];
-          //int fieldindex = currentLayer->fields().indexFromName(fieldName);
+        QList<int> attributes = dialog.selectedAttributes();
+        if ( attributes.empty() )
+        {
+            return;
+        }
+        //qDebug() << attributes[0];
+        fieldindex = attributes[0];
+        //判断类型是否是字符串或是浮点数
+        //if(currentLayer->fields()[fieldindex].)
+        if(currentLayer->fields()[fieldindex].typeName() != "String" && currentLayer->fields()[fieldindex].typeName()!="Integer"){
+            QMessageBox::warning(NULL,"warning","该属性列不能生成dommy!",QMessageBox::Ok | QMessageBox::Cancel,QMessageBox::Ok);
+            return;
+        }else if(currentLayer->fields()[fieldindex].typeName() == "String"){
+            //字符串类型
+            QgsFeatureIterator featureIt = currentLayer->getFeatures();
+            QgsFeatureIterator featureIt2 = currentLayer->getFeatures();
+            QgsFeatureIterator featureIt3 = currentLayer->getFeatures();
+            QgsFeature feature;
+            QgsFeature feature2;
+            QgsFeature feature3;
+            QString fieldName = currentLayer->fields().names()[fieldindex];
+            //int fieldindex = currentLayer->fields().indexFromName(fieldName);
 
-          int Arrlength = 0;
-          int Arrlength2 = 0;
-          //第一次循环
-          while(featureIt2.nextFeature(feature2)){
-              Arrlength++;
-          }
-          //qDebug() << i;
-          //动态生成数组
-          QString *a = new QString[Arrlength];
-          //第二次循环
-          while(featureIt.nextFeature(feature)){
-              //qDebug() << (feature.attributes().value(fieldindex));
-              a[Arrlength2] = (feature.attributes().value(fieldindex)).toString();
-              Arrlength2++;
-          }
-          QString *tmp = new QString[Arrlength];
-          //m记录当前tmp到底存了多少个元素
-          int m = 0;
-          for (int i = 0; i < Arrlength; i++)
-             {
-                 int j = 0;
-                 for (; j < m; j++)
-                 {
-                     if (a[i] == tmp[j])//拿a[i]依次与tmp里的元素对比
-                         break; // 找到相同的了
-                 }
+            int Arrlength = 0;
+            int Arrlength2 = 0;
+            //第一次循环
+            while(featureIt2.nextFeature(feature2)){
+                Arrlength++;
+            }
+            //qDebug() << i;
+            //动态生成数组
+            QString *a = new QString[Arrlength];
+            //第二次循环
+            while(featureIt.nextFeature(feature)){
+                //qDebug() << (feature.attributes().value(fieldindex));
+                a[Arrlength2] = (feature.attributes().value(fieldindex)).toString();
+                Arrlength2++;
+            }
+            QString *tmp = new QString[Arrlength];
+            //m记录当前tmp到底存了多少个元素
+            int m = 0;
+            for (int i = 0; i < Arrlength; i++)
+            {
+                int j = 0;
+                for (; j < m; j++)
+                {
+                    if (a[i] == tmp[j])//拿a[i]依次与tmp里的元素对比
+                        break; // 找到相同的了
+                }
 
-                 if (j == m)
-                 { // 没有找到一个相同的，把a中此元素放入tmp里
-                     tmp[m] = a[i];
-                     m++;
-                 }
-             }
-          qDebug() << m;
-          // 结果数组
-          //原始图层属性长度
-          int OldLen = currentLayer->fields().size();
-          // m为数组长度
-          QString *result = new QString[m];
-          for (int i = 0; i < m; i++)
-          {
-              result[i] = tmp[i];
-          }
-          //添加属性
-          QString *newfield = new QString[m];
-        //  currentLayer->startEditing();
-          currentLayer->beginEditCommand( tr( "Attribute added" ) );
-          for(int i=0;i<m;i++){
-              newfield[i] = "";
-              newfield[i].append(fieldName).append("_").append(result[i]);
-      //        qDebug() << newfield[i];
-      //        qDebug() << QgsField(newfield[i]);
-              currentLayer->addAttribute(QgsField(newfield[i],QVariant::Int,"integer",1,0,""));
-          }
-          //qDebug() << currentLayer->fields().names();
-          //循环赋值
-          while(featureIt3.nextFeature(feature3))
-          {
-              for(int i=0;i<m;i++){
-                  QVariant oldvalue = feature3.attributes().value( OldLen+i );
-                  //判断是添加1还是0
-                  if(newfield[i].contains(feature3.attributes().value(fieldindex).toString()) && feature3.attributes().value(fieldindex).toString()!=""){
-                      currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 1, oldvalue );
-                  }else{
-                      currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 0, oldvalue );
-                  }
-              }
-          }
-          currentLayer->endEditCommand();
-      }else if(currentLayer->fields()[fieldindex].typeName() == "Integer"){
-          //字符串类型
-          QgsFeatureIterator featureIt = currentLayer->getFeatures();
-          QgsFeatureIterator featureIt2 = currentLayer->getFeatures();
-          QgsFeatureIterator featureIt3 = currentLayer->getFeatures();
-          QgsFeature feature;
-          QgsFeature feature2;
-          QgsFeature feature3;
-          QString fieldName = currentLayer->fields().names()[fieldindex];
-          //int fieldindex = currentLayer->fields().indexFromName(fieldName);
+                if (j == m)
+                { // 没有找到一个相同的，把a中此元素放入tmp里
+                    tmp[m] = a[i];
+                    m++;
+                }
+            }
+            qDebug() << m;
+            // 结果数组
+            //原始图层属性长度
+            int OldLen = currentLayer->fields().size();
+            // m为数组长度
+            QString *result = new QString[m];
+            for (int i = 0; i < m; i++)
+            {
+                result[i] = tmp[i];
+            }
+            //添加属性
+            QString *newfield = new QString[m];
+            //  currentLayer->startEditing();
+            currentLayer->beginEditCommand( tr( "Attribute added" ) );
+            for(int i=0;i<m;i++){
+                newfield[i] = "";
+                newfield[i].append(fieldName).append("_").append(result[i]);
+                //        qDebug() << newfield[i];
+                //        qDebug() << QgsField(newfield[i]);
+                currentLayer->addAttribute(QgsField(newfield[i],QVariant::Int,"integer",1,0,""));
+            }
+            //qDebug() << currentLayer->fields().names();
+            //循环赋值
+            while(featureIt3.nextFeature(feature3))
+            {
+                for(int i=0;i<m;i++){
+                    QVariant oldvalue = feature3.attributes().value( OldLen+i );
+                    //判断是添加1还是0
+                    if(newfield[i].contains(feature3.attributes().value(fieldindex).toString()) && feature3.attributes().value(fieldindex).toString()!=""){
+                        currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 1, oldvalue );
+                    }else{
+                        currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 0, oldvalue );
+                    }
+                }
+            }
+            currentLayer->endEditCommand();
+        }else if(currentLayer->fields()[fieldindex].typeName() == "Integer"){
+            //字符串类型
+            QgsFeatureIterator featureIt = currentLayer->getFeatures();
+            QgsFeatureIterator featureIt2 = currentLayer->getFeatures();
+            QgsFeatureIterator featureIt3 = currentLayer->getFeatures();
+            QgsFeature feature;
+            QgsFeature feature2;
+            QgsFeature feature3;
+            QString fieldName = currentLayer->fields().names()[fieldindex];
+            //int fieldindex = currentLayer->fields().indexFromName(fieldName);
 
-          int Arrlength = 0;
-          int Arrlength2 = 0;
-          //第一次循环
-          while(featureIt2.nextFeature(feature2)){
-              Arrlength++;
-          }
-          //qDebug() << i;
-          //动态生成数组
-          int *a = new int[Arrlength];
-          //第二次循环
-          while(featureIt.nextFeature(feature)){
-              //qDebug() << (feature.attributes().value(fieldindex));
-              a[Arrlength2] = (feature.attributes().value(fieldindex)).toInt();
-              Arrlength2++;
-          }
-          int *tmp = new int[Arrlength];
-          //m记录当前tmp到底存了多少个元素
-          int m = 0;
-          for (int i = 0; i < Arrlength; i++)
-             {
-                 int j = 0;
-                 for (; j < m; j++)
-                 {
-                     if (a[i] == tmp[j])//拿a[i]依次与tmp里的元素对比
-                         break; // 找到相同的了
-                 }
+            int Arrlength = 0;
+            int Arrlength2 = 0;
+            //第一次循环
+            while(featureIt2.nextFeature(feature2)){
+                Arrlength++;
+            }
+            //qDebug() << i;
+            //动态生成数组
+            int *a = new int[Arrlength];
+            //第二次循环
+            while(featureIt.nextFeature(feature)){
+                //qDebug() << (feature.attributes().value(fieldindex));
+                a[Arrlength2] = (feature.attributes().value(fieldindex)).toInt();
+                Arrlength2++;
+            }
+            int *tmp = new int[Arrlength];
+            //m记录当前tmp到底存了多少个元素
+            int m = 0;
+            for (int i = 0; i < Arrlength; i++)
+            {
+                int j = 0;
+                for (; j < m; j++)
+                {
+                    if (a[i] == tmp[j])//拿a[i]依次与tmp里的元素对比
+                        break; // 找到相同的了
+                }
 
-                 if (j == m)
-                 { // 没有找到一个相同的，把a中此元素放入tmp里
-                     tmp[m] = a[i];
-                     m++;
-                 }
-             }
-          qDebug() << m;
-          // 结果数组
-          //原始图层属性长度
-          int OldLen = currentLayer->fields().size();
-          // m为数组长度
-          int *result = new int[m];
-          for (int i = 0; i < m; i++)
-          {
-              result[i] = tmp[i];
-          }
-          //添加属性
-          QString *newfield = new QString[m];
-        //  currentLayer->startEditing();
-          currentLayer->beginEditCommand( tr( "Attribute added" ) );
-          for(int i=0;i<m;i++){
-              newfield[i] = "";
-              std::stringstream ss;
-              ss<<result[i];
-              newfield[i].append(fieldName).append("_").append(QString::fromStdString(ss.str()));
-      //        qDebug() << newfield[i];
-      //        qDebug() << QgsField(newfield[i]);
-              currentLayer->addAttribute(QgsField(newfield[i],QVariant::Int,"integer",1,0,""));
-          }
-          //qDebug() << currentLayer->fields().names();
-          //循环赋值
-          while(featureIt3.nextFeature(feature3))
-          {
-              for(int i=0;i<m;i++){
-                  QVariant oldvalue = feature3.attributes().value( OldLen+i );
-                  //qDebug() << feature3.attributes().value(fieldindex).toString();
-                  //判断是添加1还是0
-                  if(newfield[i].contains(feature3.attributes().value(fieldindex).toString()) && feature3.attributes().value(fieldindex).toString()!=""){
-                      currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 1, oldvalue );
-                  }else{
-                      currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 0, oldvalue );
-                  }
-              }
-          }
-          currentLayer->endEditCommand();
-      }
+                if (j == m)
+                { // 没有找到一个相同的，把a中此元素放入tmp里
+                    tmp[m] = a[i];
+                    m++;
+                }
+            }
+            qDebug() << m;
+            // 结果数组
+            //原始图层属性长度
+            int OldLen = currentLayer->fields().size();
+            // m为数组长度
+            int *result = new int[m];
+            for (int i = 0; i < m; i++)
+            {
+                result[i] = tmp[i];
+            }
+            //添加属性
+            QString *newfield = new QString[m];
+            //  currentLayer->startEditing();
+            currentLayer->beginEditCommand( tr( "Attribute added" ) );
+            for(int i=0;i<m;i++){
+                newfield[i] = "";
+                std::stringstream ss;
+                ss<<result[i];
+                newfield[i].append(fieldName).append("_").append(QString::fromStdString(ss.str()));
+                //        qDebug() << newfield[i];
+                //        qDebug() << QgsField(newfield[i]);
+                currentLayer->addAttribute(QgsField(newfield[i],QVariant::Int,"integer",1,0,""));
+            }
+            //qDebug() << currentLayer->fields().names();
+            //循环赋值
+            while(featureIt3.nextFeature(feature3))
+            {
+                for(int i=0;i<m;i++){
+                    QVariant oldvalue = feature3.attributes().value( OldLen+i );
+                    //qDebug() << feature3.attributes().value(fieldindex).toString();
+                    //判断是添加1还是0
+                    if(newfield[i].contains(feature3.attributes().value(fieldindex).toString()) && feature3.attributes().value(fieldindex).toString()!=""){
+                        currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 1, oldvalue );
+                    }else{
+                        currentLayer->changeAttributeValue( feature3.id(), OldLen+i, 0, oldvalue );
+                    }
+                }
+            }
+            currentLayer->endEditCommand();
+        }
     }
 }
