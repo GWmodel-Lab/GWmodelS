@@ -103,7 +103,7 @@ void GwmLayoutDesigner::createLayoutView()
 	mHorizontalRuler->setContextMenu(rulerMenu);
 	mVerticalRuler->setContextMenu(rulerMenu);
 
-	mView = new QgsLayoutView();
+	mView = new QgsLayoutView(mViewFrame);
 	//mView->setMapCanvas( mQgis->mapCanvas() );
 	mView->setContentsMargins(0, 0, 0, 0);
 	mView->setHorizontalRuler(mHorizontalRuler);
