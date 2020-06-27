@@ -293,7 +293,6 @@ FORMS += \
     gwmsaveascsvdialog.ui \
     gwmscalablegwroptionsdialog.ui \
     gwmtoolbar.ui \
-    mainwidget.ui \
     qgsaddattrdialogbase.ui \
     qgsattributetabledialog.ui \
     qgscoordinateoperationwidgetbase.ui \
@@ -516,7 +515,6 @@ FORMS += \
     gwmsaveascsvdialog.ui \
     gwmscalablegwroptionsdialog.ui \
     gwmtoolbar.ui \
-    mainwidget.ui \
     qgsaddattrdialogbase.ui \
     qgsattributetabledialog.ui \
     qgscoordinateoperationwidgetbase.ui \
