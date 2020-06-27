@@ -1,5 +1,5 @@
 #include "gwmapp.h"
-#include "ui_mainwindow.h"
+#include "ui_gwmapp.h"
 
 #include <QMenuBar>
 #include <QAction>
