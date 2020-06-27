@@ -78,6 +78,7 @@ GwmApp* GwmApp::mInstance = nullptr;
 GwmApp::GwmApp(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+	, mMapModel(new GwmLayerItemModel)
 {
     ui->setupUi(this);
     setupMenus();
