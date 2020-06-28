@@ -10,11 +10,13 @@
 #include <qgslayoutcustomdrophandler.h>
 #include <qgsapplication.h>
 #include <qgsruntimeprofiler.h>
+#include <qgsmasterlayoutinterface.h>
 
 #include "gwmtoolbar.h"
 #include "gwmfeaturepanel.h"
 #include "gwmmaptoolidentifyfeature.h"
 #include "gwmpropertypanel.h"
+#include "Layout/gwmlayoutdesigner.h"
 
 #include "symbolwindow/gwmsymbolwindow.h"
 
@@ -25,15 +27,6 @@ QT_END_NAMESPACE
 class GwmApp : public QMainWindow
 {
     Q_OBJECT
-
-public:
-    static GwmApp* Instance()
-    {
-        return mInstance;
-    }
-
-private:
-    static GwmApp* mInstance;
 
 
 public:
@@ -51,7 +44,7 @@ public:
 
 private:
     void setupToolbar();
-    void setupFeaturePanel();
+	void setupFeaturePanel();
     void setupPropertyPanel();
     void setupMapPanel();
 	void initLayouts();
@@ -73,15 +66,23 @@ private:
 		endProfile();
 	}
 
+
+private:
+	GwmLayoutDesigner* createPrintLayout(const QString& t);
+	GwmLayoutDesigner* openLayoutDesignerDialog(QgsMasterLayoutInterface* layout);
+
 	void registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler)
 	{
 		if (!mCustomLayoutDropHandlers.contains(handler))
 			mCustomLayoutDropHandlers << handler;
 	}
+
 	void unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler)
 	{
 		mCustomLayoutDropHandlers.removeOne(handler);
 	}
+
+private:
 
     void addLayerToModel(QgsVectorLayer* layer);
     void createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
@@ -90,11 +91,6 @@ private:
     // 要素区属性表窗口
     void onShowAttributeTable(const QModelIndex &index);
     void onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list);
-
-    /**
-     * @brief 从模型中导出地图所需要显示的图层
-     */
-    void deriveLayersFromModel();
 
     bool askUserForDatumTransfrom(const QgsCoordinateReferenceSystem& sourceCrs, const QgsCoordinateReferenceSystem& destinationCrs, const QgsMapLayer* layer = nullptr);
 
@@ -146,6 +142,7 @@ public slots:
 
     void onGWPCABtnClicked();
 
+	
 private:
     void setupMenus();
     void toggleToolbarGeneral(bool flag);
@@ -170,6 +167,16 @@ private:
     GwmSymbolWindow* mSymbolWindow;
 
 //    MainWidget* mainWidget;
+
+public:		// 静态
+	static GwmApp* Instance()
+	{
+		return mInstance;
+	}
+
+private:
+	static GwmApp* mInstance;
+
 };
 
 

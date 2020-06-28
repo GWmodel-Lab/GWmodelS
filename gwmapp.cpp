@@ -10,6 +10,7 @@
 #include <QMouseEvent>
 #include <QDebug>
 
+#include <qgsproject.h>
 #include <qgsvectorlayer.h>
 #include <qgsrenderer.h>
 
@@ -28,6 +29,8 @@
 #include <qgsproviderregistry.h>
 #include <qgsdatumtransformdialog.h>
 #include <qgslayoutguiutils.h>
+#include <qgsprintlayout.h>
+#include <qgslayoutmanager.h>
 
 #include "gwmopenxyeventlayerdialog.h"
 #include "gwmprogressdialog.h"
@@ -224,12 +227,10 @@ void GwmApp::setupToolbar()
     connect(ui->actionGWSS, &QAction::triggered,this,&GwmApp::onGWSSBtnClicked);
     connect(ui->actionGWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
 
-	connect(ui->actionNew_Layout, &QAction::triggered, this, [=]()
+	connect(ui->actionNew_Layout, &QAction::triggered, this, [&]()
 	{
-		GwmLayoutDesigner* layoutDesigner = new GwmLayoutDesigner();
-		layoutDesigner->show();
-		layoutDesigner->activate();
-		layoutDesigner->raise();
+		QString title;
+		createPrintLayout(title);
 	});
 }
 
@@ -273,6 +274,33 @@ void GwmApp::setupMapPanel()
     connect(mMapModel, &GwmLayerItemModel::layerItemChangedSignal, this, &GwmApp::onMapModelChanged);
     connect(mMapModel, &GwmLayerItemModel::layerItemMovedSignal, this, &GwmApp::onMapModelChanged);
     connect(mMapCanvas, &QgsMapCanvas::selectionChanged, this, &GwmApp::onMapSelectionChanged);
+}
+
+GwmLayoutDesigner* GwmApp::createPrintLayout(const QString& t)
+{
+	QString title = t;
+	if (title.isEmpty())
+	{
+		title = QgsProject::instance()->layoutManager()->generateUniqueTitle(QgsMasterLayoutInterface::PrintLayout);
+	}
+
+	QgsPrintLayout* layout = new QgsPrintLayout(QgsProject::instance());
+	layout->setName(title);
+	layout->initializeDefaults();
+	if (QgsProject::instance()->layoutManager()->addLayout(layout))
+		return openLayoutDesignerDialog(layout);
+	else
+		return nullptr;
+
+}
+
+GwmLayoutDesigner * GwmApp::openLayoutDesignerDialog(QgsMasterLayoutInterface * layout)
+{
+	GwmLayoutDesigner* designer = new GwmLayoutDesigner();
+	designer->setMasterLayout(layout);
+	//connect(desinger, &GwmLayoutDesigner::abou)
+	designer->open();
+	return designer;
 }
 
 void GwmApp::addLayerToModel(QgsVectorLayer *layer)
