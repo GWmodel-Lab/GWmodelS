@@ -77,9 +77,17 @@
 
 #include "Layout/gwmlayoutdesigner.h"
 
+static bool cmpByText_(QAction *a, QAction *b)
+{
+	return QString::localeAwareCompare(a->text(), b->text()) < 0;
+}
+
+GwmApp * GwmApp::Instance()
+{
+	return mInstance;
+}
 
 GwmApp* GwmApp::mInstance = nullptr;
-
 
 GwmApp::GwmApp(QWidget *parent)
     : QMainWindow(parent)
@@ -1030,6 +1038,29 @@ void GwmApp::onGWPCABtnClicked()
             mMapModel->appentItem(gwrItem, selectedIndex);
         }
     }
+}
+
+void GwmApp::populateLayoutsMenu(QMenu * menu)
+{
+	menu->clear();
+	QList<QAction *> acts;
+	const QList< QgsMasterLayoutInterface * > layouts = QgsProject::instance()->layoutManager()->layouts();
+	acts.reserve(layouts.size());
+	for (QgsMasterLayoutInterface *layout : layouts)
+	{
+		QAction *a = new QAction(layout->name(), menu);
+		connect(a, &QAction::triggered, this, [this, layout]
+		{
+			openLayoutDesignerDialog(layout);
+		});
+		acts << a;
+	}
+	if (acts.size() > 1)
+	{
+		// sort actions by text
+		std::sort(acts.begin(), acts.end(), cmpByText_);
+	}
+	menu->addActions(acts);
 }
 
 void GwmApp::initLayouts()

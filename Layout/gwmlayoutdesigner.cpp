@@ -31,8 +31,20 @@
 #include <qgslayoutguidewidget.h>
 #include <qgsmessagebar.h>
 #include <qgsprojectviewsettings.h>
+#include <qgslayoutatlas.h>
 
 #include "gwmapp.h"
+
+
+#define FIT_LAYOUT -101
+#define FIT_LAYOUT_WIDTH -102
+
+
+static bool cmpByText_(QAction *a, QAction *b)
+{
+	return QString::localeAwareCompare(a->text(), b->text()) < 0;
+}
+
 
 GwmLayoutDesignerInterface::GwmLayoutDesignerInterface(GwmLayoutDesigner * dialog)
 	: QgsLayoutDesignerInterface(dialog)
@@ -144,7 +156,51 @@ GwmLayoutDesigner::GwmLayoutDesigner(QWidget *parent)
 
 	createLayoutTools();
 	createCutCopyPasteActions();
+
+	setupStatusBar();
+
+	connect(mView, &QgsLayoutView::itemFocused, this, [=](QgsLayoutItem * item)
+	{
+		showItemOptions(item, false);
+	});
+
+	setupPreviewActions();
+	setupToolbars();
+
 	createDocks();
+
+	mActionAtlasPreview->setEnabled(false);
+	mActionAtlasPreview->setChecked(false);
+	mActionAtlasFirst->setEnabled(false);
+	mActionAtlasLast->setEnabled(false);
+	mActionAtlasNext->setEnabled(false);
+	mActionAtlasPrev->setEnabled(false);
+	mActionPrintAtlas->setEnabled(false);
+	mAtlasPageComboBox->setEnabled(false);
+	mActionExportAtlasAsImage->setEnabled(false);
+	mActionExportAtlasAsSVG->setEnabled(false);
+	mActionExportAtlasAsPDF->setEnabled(false);
+
+	mLayoutsMenu->setObjectName(QStringLiteral("mLayoutsMenu"));
+	connect(mLayoutsMenu, &QMenu::aboutToShow, this, [&]()
+	{
+		GwmApp::Instance()->populateLayoutsMenu(mLayoutMenu);
+	});
+
+	QList<QAction *> actions = mPanelsMenu->actions();
+	std::sort(actions.begin(), actions.end(), cmpByText_);
+	mPanelsMenu->insertActions(nullptr, actions);
+
+	actions = mToolbarMenu->actions();
+	std::sort(actions.begin(), actions.end(), cmpByText_);
+	mToolbarMenu->insertActions(nullptr, actions);
+
+	//restoreWindowState();
+
+	//listen out to status bar updates from the view
+	//connect(mView, &QgsLayoutView::statusMessage, this, &GwmLayoutDesigner::statusMessageReceived);
+
+	connect(QgsProject::instance(), &QgsProject::isDirtyChanged, this, &GwmLayoutDesigner::updateWindowTitle);
 }
 
 GwmLayoutDesigner::~GwmLayoutDesigner()
@@ -407,6 +463,287 @@ void GwmLayoutDesigner::createLayoutPropertiesWidget()
 	mGuideWidget = new QgsLayoutGuideWidget(mGuideDock, mLayout, mView);
 	mGuideWidget->setDockMode(true);
 	mGuideStack->setMainPanel(mGuideWidget);
+}
+
+void GwmLayoutDesigner::setupToolbars()
+{
+	// Panel and toolbar submenus
+	mToolbarMenu->addAction(mLayoutToolbar->toggleViewAction());
+	mToolbarMenu->addAction(mNavigationToolbar->toggleViewAction());
+	mToolbarMenu->addAction(mToolsToolbar->toggleViewAction());
+	mToolbarMenu->addAction(mActionsToolbar->toggleViewAction());
+	mToolbarMenu->addAction(mAtlasToolbar->toggleViewAction());
+	mToolbarMenu->addAction(mReportToolbar->toggleViewAction());
+
+	//connect(mActionToggleFullScreen, &QAction::toggled, this, &GwmLayoutDesigner::toggleFullScreen);
+
+	//mMenuProvider = new QgsLayoutAppMenuProvider(this);
+	//mView->setMenuProvider(mMenuProvider);
+
+	connect(mActionRefreshView, &QAction::triggered, this, &GwmLayoutDesigner::refreshLayout);
+	//connect(mActionSaveProject, &QAction::triggered, this, &GwmLayoutDesigner::saveProject);
+	//connect(mActionNewLayout, &QAction::triggered, this, &GwmLayoutDesigner::newLayout);
+	//connect(mActionLayoutManager, &QAction::triggered, this, &GwmLayoutDesigner::showManager);
+	//connect(mActionRemoveLayout, &QAction::triggered, this, &GwmLayoutDesigner::deleteLayout);
+
+	//connect(mActionPrint, &QAction::triggered, this, &GwmLayoutDesigner::print);
+	//connect(mActionExportAsImage, &QAction::triggered, this, &GwmLayoutDesigner::exportToRaster);
+	//connect(mActionExportAsPDF, &QAction::triggered, this, &GwmLayoutDesigner::exportToPdf);
+	//connect(mActionExportAsSVG, &QAction::triggered, this, &GwmLayoutDesigner::exportToSvg);
+
+	//connect(mActionShowGrid, &QAction::triggered, this, &GwmLayoutDesigner::showGrid);
+	//connect(mActionSnapGrid, &QAction::triggered, this, &GwmLayoutDesigner::snapToGrid);
+
+	//connect(mActionShowGuides, &QAction::triggered, this, &GwmLayoutDesigner::showGuides);
+	//connect(mActionSnapGuides, &QAction::triggered, this, &GwmLayoutDesigner::snapToGuides);
+	//connect(mActionSmartGuides, &QAction::triggered, this, &GwmLayoutDesigner::snapToItems);
+
+	//connect(mActionShowBoxes, &QAction::triggered, this, &GwmLayoutDesigner::showBoxes);
+	//connect(mActionShowPage, &QAction::triggered, this, &GwmLayoutDesigner::showPages);
+
+	//connect(mActionPasteInPlace, &QAction::triggered, this, &GwmLayoutDesigner::pasteInPlace);
+	//connect(mActionAtlasPreview, &QAction::triggered, this, &GwmLayoutDesigner::atlasPreviewTriggered);
+	//connect(mActionAtlasNext, &QAction::triggered, this, &GwmLayoutDesigner::atlasNext);
+	//connect(mActionAtlasPrev, &QAction::triggered, this, &GwmLayoutDesigner::atlasPrevious);
+	//connect(mActionAtlasFirst, &QAction::triggered, this, &GwmLayoutDesigner::atlasFirst);
+	//connect(mActionAtlasLast, &QAction::triggered, this, &GwmLayoutDesigner::atlasLast);
+	//connect(mActionPrintAtlas, &QAction::triggered, this, &GwmLayoutDesigner::printAtlas);
+	//connect(mActionExportAtlasAsImage, &QAction::triggered, this, &GwmLayoutDesigner::exportAtlasToRaster);
+	//connect(mActionExportAtlasAsSVG, &QAction::triggered, this, &GwmLayoutDesigner::exportAtlasToSvg);
+	//connect(mActionExportAtlasAsPDF, &QAction::triggered, this, &GwmLayoutDesigner::exportAtlasToPdf);
+
+	//connect(mActionExportReportAsImage, &QAction::triggered, this, &GwmLayoutDesigner::exportReportToRaster);
+	//connect(mActionExportReportAsSVG, &QAction::triggered, this, &GwmLayoutDesigner::exportReportToSvg);
+	//connect(mActionExportReportAsPDF, &QAction::triggered, this, &GwmLayoutDesigner::exportReportToPdf);
+	//connect(mActionPrintReport, &QAction::triggered, this, &GwmLayoutDesigner::printReport);
+
+	//connect(mActionPageSetup, &QAction::triggered, this, &GwmLayoutDesigner::pageSetup);
+
+	//connect(mActionOptions, &QAction::triggered, this, [=]
+	//{
+	//	GwmApp::Instance()->showOptionsDialog(this, QStringLiteral("mOptionsPageComposer"));
+	//});
+
+	/*connect(mActionSaveAsTemplate, &QAction::triggered, this, &GwmLayoutDesigner::saveAsTemplate);
+	connect(mActionLoadFromTemplate, &QAction::triggered, this, &GwmLayoutDesigner::addItemsFromTemplate);
+	connect(mActionDuplicateLayout, &QAction::triggered, this, &GwmLayoutDesigner::duplicate);
+	connect(mActionRenameLayout, &QAction::triggered, this, &GwmLayoutDesigner::renameLayout);
+
+	connect(mActionZoomIn, &QAction::triggered, mView, &QgsLayoutView::zoomIn);
+	connect(mActionZoomOut, &QAction::triggered, mView, &QgsLayoutView::zoomOut);
+	connect(mActionZoomAll, &QAction::triggered, mView, &QgsLayoutView::zoomFull);
+	connect(mActionZoomActual, &QAction::triggered, mView, &QgsLayoutView::zoomActual);
+	connect(mActionZoomToWidth, &QAction::triggered, mView, &QgsLayoutView::zoomWidth);
+
+	connect(mActionSelectAll, &QAction::triggered, mView, &QgsLayoutView::selectAll);
+	connect(mActionDeselectAll, &QAction::triggered, mView, &QgsLayoutView::deselectAll);
+	connect(mActionInvertSelection, &QAction::triggered, mView, &QgsLayoutView::invertSelection);
+	connect(mActionSelectNextAbove, &QAction::triggered, mView, &QgsLayoutView::selectNextItemAbove);
+	connect(mActionSelectNextBelow, &QAction::triggered, mView, &QgsLayoutView::selectNextItemBelow);
+
+	connect(mActionRaiseItems, &QAction::triggered, this, &GwmLayoutDesigner::raiseSelectedItems);
+	connect(mActionLowerItems, &QAction::triggered, this, &GwmLayoutDesigner::lowerSelectedItems);
+	connect(mActionMoveItemsToTop, &QAction::triggered, this, &GwmLayoutDesigner::moveSelectedItemsToTop);
+	connect(mActionMoveItemsToBottom, &QAction::triggered, this, &GwmLayoutDesigner::moveSelectedItemsToBottom);*/
+	connect(mActionAlignLeft, &QAction::triggered, this, [=]
+	{
+		mView->alignSelectedItems(QgsLayoutAligner::AlignLeft);
+	});
+	connect(mActionAlignHCenter, &QAction::triggered, this, [=]
+	{
+		mView->alignSelectedItems(QgsLayoutAligner::AlignHCenter);
+	});
+	connect(mActionAlignRight, &QAction::triggered, this, [=]
+	{
+		mView->alignSelectedItems(QgsLayoutAligner::AlignRight);
+	});
+	connect(mActionAlignTop, &QAction::triggered, this, [=]
+	{
+		mView->alignSelectedItems(QgsLayoutAligner::AlignTop);
+	});
+	connect(mActionAlignVCenter, &QAction::triggered, this, [=]
+	{
+		mView->alignSelectedItems(QgsLayoutAligner::AlignVCenter);
+	});
+	connect(mActionAlignBottom, &QAction::triggered, this, [=]
+	{
+		mView->alignSelectedItems(QgsLayoutAligner::AlignBottom);
+	});
+	connect(mActionDistributeLeft, &QAction::triggered, this, [=]
+	{
+		mView->distributeSelectedItems(QgsLayoutAligner::DistributeLeft);
+	});
+	connect(mActionDistributeHCenter, &QAction::triggered, this, [=]
+	{
+		mView->distributeSelectedItems(QgsLayoutAligner::DistributeHCenter);
+	});
+	connect(mActionDistributeHSpace, &QAction::triggered, this, [=]
+	{
+		mView->distributeSelectedItems(QgsLayoutAligner::DistributeHSpace);
+	});
+	connect(mActionDistributeRight, &QAction::triggered, this, [=]
+	{
+		mView->distributeSelectedItems(QgsLayoutAligner::DistributeRight);
+	});
+	connect(mActionDistributeTop, &QAction::triggered, this, [=]
+	{
+		mView->distributeSelectedItems(QgsLayoutAligner::DistributeTop);
+	});
+	connect(mActionDistributeVCenter, &QAction::triggered, this, [=]
+	{
+		mView->distributeSelectedItems(QgsLayoutAligner::DistributeVCenter);
+	});
+	connect(mActionDistributeVSpace, &QAction::triggered, this, [=]
+	{
+		mView->distributeSelectedItems(QgsLayoutAligner::DistributeVSpace);
+	});
+	connect(mActionDistributeBottom, &QAction::triggered, this, [=]
+	{
+		mView->distributeSelectedItems(QgsLayoutAligner::DistributeBottom);
+	});
+	connect(mActionResizeNarrowest, &QAction::triggered, this, [=]
+	{
+		mView->resizeSelectedItems(QgsLayoutAligner::ResizeNarrowest);
+	});
+	connect(mActionResizeWidest, &QAction::triggered, this, [=]
+	{
+		mView->resizeSelectedItems(QgsLayoutAligner::ResizeWidest);
+	});
+	connect(mActionResizeShortest, &QAction::triggered, this, [=]
+	{
+		mView->resizeSelectedItems(QgsLayoutAligner::ResizeShortest);
+	});
+	connect(mActionResizeTallest, &QAction::triggered, this, [=]
+	{
+		mView->resizeSelectedItems(QgsLayoutAligner::ResizeTallest);
+	});
+	connect(mActionResizeToSquare, &QAction::triggered, this, [=]
+	{
+		mView->resizeSelectedItems(QgsLayoutAligner::ResizeToSquare);
+	});
+
+	/*connect(mActionAddPages, &QAction::triggered, this, &GwmLayoutDesigner::addPages);
+
+	connect(mActionUnlockAll, &QAction::triggered, this, &GwmLayoutDesigner::unlockAllItems);
+	connect(mActionLockItems, &QAction::triggered, this, &GwmLayoutDesigner::lockSelectedItems);
+
+	connect(mActionHidePanels, &QAction::toggled, this, &GwmLayoutDesigner::setPanelVisibility);*/
+
+	connect(mActionDeleteSelection, &QAction::triggered, this, [=]
+	{
+		if (mView->tool() == mNodesTool)
+			mNodesTool->deleteSelectedNode();
+		else
+			mView->deleteSelectedItems();
+	});
+	connect(mActionGroupItems, &QAction::triggered, this, [=]
+	{
+		mView->groupSelectedItems();
+	});
+	connect(mActionUngroupItems, &QAction::triggered, this, [=]
+	{
+		mView->ungroupSelectedItems();
+	});
+}
+
+void GwmLayoutDesigner::setupPreviewActions()
+{
+	mActionPreviewModeOff->setChecked(true);
+	connect(mActionPreviewModeOff, &QAction::triggered, this, [=]
+	{
+		mView->setPreviewModeEnabled(false);
+	});
+	connect(mActionPreviewModeGrayscale, &QAction::triggered, this, [=]
+	{
+		mView->setPreviewMode(QgsPreviewEffect::PreviewGrayscale);
+		mView->setPreviewModeEnabled(true);
+	});
+	connect(mActionPreviewModeMono, &QAction::triggered, this, [=]
+	{
+		mView->setPreviewMode(QgsPreviewEffect::PreviewMono);
+		mView->setPreviewModeEnabled(true);
+	});
+	connect(mActionPreviewProtanope, &QAction::triggered, this, [=]
+	{
+		mView->setPreviewMode(QgsPreviewEffect::PreviewProtanope);
+		mView->setPreviewModeEnabled(true);
+	});
+	connect(mActionPreviewDeuteranope, &QAction::triggered, this, [=]
+	{
+		mView->setPreviewMode(QgsPreviewEffect::PreviewDeuteranope);
+		mView->setPreviewModeEnabled(true);
+	});
+	QActionGroup *previewGroup = new QActionGroup(this);
+	previewGroup->setExclusive(true);
+	mActionPreviewModeOff->setActionGroup(previewGroup);
+	mActionPreviewModeGrayscale->setActionGroup(previewGroup);
+	mActionPreviewModeMono->setActionGroup(previewGroup);
+	mActionPreviewProtanope->setActionGroup(previewGroup);
+	mActionPreviewDeuteranope->setActionGroup(previewGroup);
+}
+
+void GwmLayoutDesigner::setupStatusBar()
+{
+	// Add a progress bar to the status bar for indicating rendering in progress
+	mStatusProgressBar = new QProgressBar(mStatusBar);
+	mStatusProgressBar->setObjectName(QStringLiteral("mProgressBar"));
+	mStatusProgressBar->setMaximumWidth(100);
+	mStatusProgressBar->setMaximumHeight(18);
+	mStatusProgressBar->hide();
+	mStatusBar->addPermanentWidget(mStatusProgressBar, 1);
+
+	//create status bar labels
+	mStatusCursorXLabel = new QLabel(mStatusBar);
+	mStatusCursorXLabel->setMinimumWidth(100);
+	mStatusCursorYLabel = new QLabel(mStatusBar);
+	mStatusCursorYLabel->setMinimumWidth(100);
+	mStatusCursorPageLabel = new QLabel(mStatusBar);
+	mStatusCursorPageLabel->setMinimumWidth(100);
+
+	mStatusBar->addPermanentWidget(mStatusCursorXLabel);
+	mStatusBar->addPermanentWidget(mStatusCursorXLabel);
+	mStatusBar->addPermanentWidget(mStatusCursorYLabel);
+	mStatusBar->addPermanentWidget(mStatusCursorPageLabel);
+
+	mStatusZoomCombo = new QComboBox();
+	mStatusZoomCombo->setEditable(true);
+	mStatusZoomCombo->setInsertPolicy(QComboBox::NoInsert);
+	mStatusZoomCombo->setCompleter(nullptr);
+	mStatusZoomCombo->setMinimumWidth(100);
+	//zoom combo box accepts decimals in the range 1-9999, with an optional decimal point and "%" sign
+	QRegularExpression zoomRx(QStringLiteral("\\s*\\d{1,4}(\\.\\d?)?\\s*%?"));
+	QValidator *zoomValidator = new QRegularExpressionValidator(zoomRx, mStatusZoomCombo);
+	mStatusZoomCombo->lineEdit()->setValidator(zoomValidator);
+
+	for (double level : { 0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0 })
+	{
+		mStatusZoomCombo->insertItem(0, tr("%1%").arg(level * 100.0, 0, 'f', 1), level);
+	}
+	mStatusZoomCombo->insertItem(0, tr("Fit Layout"), FIT_LAYOUT);
+	mStatusZoomCombo->insertItem(0, tr("Fit Layout Width"), FIT_LAYOUT_WIDTH);
+	connect(mStatusZoomCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &GwmLayoutDesigner::statusZoomCombo_currentIndexChanged);
+	connect(mStatusZoomCombo->lineEdit(), &QLineEdit::returnPressed, this, &GwmLayoutDesigner::statusZoomCombo_zoomEntered);
+
+	mStatusZoomSlider = new QSlider();
+	mStatusZoomSlider->setFixedWidth(mStatusZoomCombo->width());
+	mStatusZoomSlider->setOrientation(Qt::Horizontal);
+	mStatusZoomSlider->setMinimum(20);
+	mStatusZoomSlider->setMaximum(800);
+	connect(mStatusZoomSlider, &QSlider::valueChanged, this, &GwmLayoutDesigner::sliderZoomChanged);
+
+	mStatusZoomCombo->setToolTip(tr("Zoom level"));
+	mStatusZoomSlider->setToolTip(tr("Zoom level"));
+
+	mStatusBar->addPermanentWidget(mStatusZoomCombo);
+	mStatusBar->addPermanentWidget(mStatusZoomSlider);
+
+	mView->setTool(mSelectTool);
+	mView->setFocus();
+	connect(mView, &QgsLayoutView::zoomLevelChanged, this, &GwmLayoutDesigner::updateStatusZoom);
+	connect(mView, &QgsLayoutView::cursorPosChanged, this, &GwmLayoutDesigner::updateStatusCursorPos);
+	//also listen out for position updates from the horizontal/vertical rulers
+	connect(mHorizontalRuler, &QgsLayoutRuler::cursorPosChanged, this, &GwmLayoutDesigner::updateStatusCursorPos);
+	connect(mVerticalRuler, &QgsLayoutRuler::cursorPosChanged, this, &GwmLayoutDesigner::updateStatusCursorPos);
 }
 
 void GwmLayoutDesigner::itemTypeAdded(int id)
@@ -765,6 +1102,112 @@ void GwmLayoutDesigner::atlasPageComboEditingFinished()
 	}
 }
 
+void GwmLayoutDesigner::refreshLayout()
+{
+	if (!currentLayout())
+	{
+		return;
+	}
+
+	//refresh atlas feature first, to force an update of feature
+	//in case feature attributes or geometry has changed
+	if (QgsLayoutAtlas *printAtlas = atlas())
+	{
+		if (printAtlas->enabled() && mActionAtlasPreview->isChecked())
+		{
+			//block signals from atlas, since the later call to mComposition->refreshItems() will
+			//also trigger items to refresh atlas dependent properties
+			whileBlocking(printAtlas)->refreshCurrentFeature();
+		}
+	}
+
+	currentLayout()->refresh();
+}
+
+void GwmLayoutDesigner::statusZoomCombo_currentIndexChanged(int index)
+{
+	QVariant data = mStatusZoomCombo->itemData(index);
+	if (data.toInt() == FIT_LAYOUT)
+	{
+		mView->zoomFull();
+	}
+	else if (data.toInt() == FIT_LAYOUT_WIDTH)
+	{
+		mView->zoomWidth();
+	}
+	else
+	{
+		double selectedZoom = data.toDouble();
+		if (mView)
+		{
+			mView->setZoomLevel(selectedZoom);
+			//update zoom combobox text for correct format (one decimal place, trailing % sign)
+			whileBlocking(mStatusZoomCombo)->lineEdit()->setText(tr("%1%").arg(selectedZoom * 100.0, 0, 'f', 1));
+		}
+	}
+}
+
+void GwmLayoutDesigner::statusZoomCombo_zoomEntered()
+{
+	if (!mView)
+	{
+		return;
+	}
+
+	//need to remove spaces and "%" characters from input text
+	QString zoom = mStatusZoomCombo->currentText().remove(QChar('%')).trimmed();
+	mView->setZoomLevel(zoom.toDouble() / 100);
+}
+
+void GwmLayoutDesigner::sliderZoomChanged(int value)
+{
+	mView->setZoomLevel(value / 100.0);
+}
+
+void GwmLayoutDesigner::updateStatusZoom()
+{
+	if (!currentLayout())
+		return;
+
+	double zoomLevel = 0;
+	if (currentLayout()->units() == QgsUnitTypes::LayoutPixels)
+	{
+		zoomLevel = mView->transform().m11() * 100;
+	}
+	else
+	{
+		double dpi = QgsApplication::desktop()->logicalDpiX();
+		//monitor dpi is not always correct - so make sure the value is sane
+		if ((dpi < 60) || (dpi > 1200))
+			dpi = 72;
+
+		//pixel width for 1mm on screen
+		double scale100 = dpi / 25.4;
+		scale100 = currentLayout()->convertFromLayoutUnits(scale100, QgsUnitTypes::LayoutMillimeters).length();
+		//current zoomLevel
+		zoomLevel = mView->transform().m11() * 100 / scale100;
+	}
+	whileBlocking(mStatusZoomCombo)->lineEdit()->setText(tr("%1%").arg(zoomLevel, 0, 'f', 1));
+	whileBlocking(mStatusZoomSlider)->setValue(static_cast<int>(zoomLevel));
+}
+
+void GwmLayoutDesigner::updateStatusCursorPos(QPointF position)
+{
+	if (!mView->currentLayout())
+	{
+		return;
+	}
+
+	//convert cursor position to position on current page
+	QPointF pagePosition = mLayout->pageCollection()->positionOnPage(position);
+	int currentPage = mLayout->pageCollection()->pageNumberForPoint(position);
+
+	QString unit = QgsUnitTypes::toAbbreviatedString(mLayout->units());
+	mStatusCursorXLabel->setText(tr("x: %1 %2").arg(pagePosition.x()).arg(unit));
+	mStatusCursorYLabel->setText(tr("y: %1 %2").arg(pagePosition.y()).arg(unit));
+	mStatusCursorPageLabel->setText(tr("page: %1").arg(currentPage + 1));
+}
+
 void GwmLayoutDesigner::setMasterLayout(QgsMasterLayoutInterface * layout)
 {
 	mMasterLayout = layout;
@@ -900,6 +1343,14 @@ void GwmLayoutDesigner::updateActionNames(QgsMasterLayoutInterface::Type type)
 			mActionNewLayout->setIcon(QgsApplication::getThemeIcon(QStringLiteral("mActionNewReport.svg")));
 			break;
 	}
+}
+
+QgsLayoutAtlas * GwmLayoutDesigner::atlas()
+{
+	QgsPrintLayout *layout = qobject_cast<QgsPrintLayout *>(mLayout);
+	if (!layout)
+		return nullptr;
+	return layout->atlas();
 }
 
 void GwmLayoutDesigner::setCurrentLayout(QgsLayout * layout)

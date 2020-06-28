@@ -28,6 +28,12 @@ class GwmApp : public QMainWindow
 {
     Q_OBJECT
 
+public:		// 静态
+	static GwmApp* Instance();
+
+private:
+	static GwmApp* mInstance;
+
 
 public:
     GwmApp(QWidget *parent = nullptr);
@@ -142,6 +148,8 @@ public slots:
 
     void onGWPCABtnClicked();
 
+	void populateLayoutsMenu(QMenu *menu);
+
 	
 private:
     void setupMenus();
@@ -167,15 +175,6 @@ private:
     GwmSymbolWindow* mSymbolWindow;
 
 //    MainWidget* mainWidget;
-
-public:		// 静态
-	static GwmApp* Instance()
-	{
-		return mInstance;
-	}
-
-private:
-	static GwmApp* mInstance;
 
 };
 

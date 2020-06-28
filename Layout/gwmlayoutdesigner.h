@@ -5,13 +5,16 @@
 #include <QMainWindow>
 #include "ui_gwmlayoutdesigner.h"
 
+#include <QUndoView>
+#include <QSlider>
+#include <QLabel>
+#include <QProgressBar>
+
 #include "qgis.h"
 #include <qgsmasterlayoutinterface.h>
 #include <qgslayoutdesignerinterface.h>
-
 class QgsLayout;
 class QgsLayoutItem;
-class QUndoView;
 class QgsLayoutView;
 class QgsLayoutRuler;
 class QgsLayoutViewToolAddItem;
@@ -28,7 +31,7 @@ class QgsLayoutDesignerInterface;
 class QgsLayoutPropertiesWidget;
 class QgsLayoutGuideWidget;
 class QgsMessageBar;
-
+class QgsLayoutAtlas;
 class GwmLayoutDesignerInterface;
 
 
@@ -53,6 +56,8 @@ public:
 	void setMasterLayout(QgsMasterLayoutInterface *layout);
 
 	void updateActionNames(QgsMasterLayoutInterface::Type type);
+
+	QgsLayoutAtlas *atlas();
 
 public:		// QgsLayoutDesignerInterface interface
 	QgsLayout *layout();
@@ -93,6 +98,9 @@ private:
 	void createAtlasWidget();
 	void createReportWidget();
 	void createLayoutPropertiesWidget();
+	void setupToolbars();
+	void setupPreviewActions();
+	void setupStatusBar();
 
 	void itemTypeAdded(int id);
 	void activateNewItemCreationTool(int id, bool nodeBasedItem);
@@ -108,11 +116,76 @@ private slots:
 	void atlasPreviewTriggered(bool checked);
 	void atlasPageComboEditingFinished();
 
+	void refreshLayout();
+	//void saveProject();
+	//void newLayout();
+	//void showManager();
+	//void deleteLayout();
+
+	//void print();
+	//void exportToRaster();
+	//void exportToPdf();
+	//void exportToSvg();
+
+	//void showGrid();
+	//void snapToGrid();
+
+	//void showGuides();
+	//void snapToGuides();
+	//void snapToItems();
+
+	//void showBoxes();
+	//void showPages();
+
+	//void pasteInPlace();
+	//void atlasPreviewTriggered();
+	//void atlasNext();
+	//void atlasPrevious();
+	//void atlasFirst();
+	//void atlasLast();
+	//void printAtlas();
+	//void exportAtlasToRaster();
+	//void exportAtlasToSvg();
+	//void exportAtlasToPdf();
+
+	//void exportReportToRaster();
+	//void exportReportToSvg();
+	//void exportReportToPdf();
+	//void printReport();
+
+	//void pageSetup();
+
+	//void saveAsTemplate();
+	//void addItemsFromTemplate();
+	//void duplicate();
+	//void renameLayout();
+
+	//void raiseSelectedItems();
+	//void lowerSelectedItems();
+	//void moveSelectedItemsToTop();
+	//void moveSelectedItemsToBottom();
+
+	//void addPages();
+
+	//void unlockAllItems();
+	//void lockSelectedItems();
+
+	//void setPanelVisibility();
+
+	void statusZoomCombo_currentIndexChanged(int index);
+	void statusZoomCombo_zoomEntered();
+	void sliderZoomChanged(int value);
+	void updateStatusZoom();
+	void updateStatusCursorPos(QPointF position);
+
+
 private:
 	QString mTitle;
 	QString mSectionTitle;
 	GwmLayoutDesignerInterface* mInterface;
 	QgsLayoutGuideWidget *mGuideWidget = nullptr;
+
+	//QgsLayoutAppMenuProvider *mMenuProvider = nullptr;
 
 	QgsMessageBar *mMessageBar = nullptr;
 
@@ -165,6 +238,17 @@ private:
 
 	QgsLayoutPropertiesWidget *mLayoutPropertiesWidget = nullptr;
 	QComboBox *mAtlasPageComboBox = nullptr;
+
+
+
+	//! Combobox in status bar which shows/adjusts current zoom level
+	QComboBox *mStatusZoomCombo = nullptr;
+	QSlider *mStatusZoomSlider = nullptr;
+	//! Labels in status bar which shows current mouse position
+	QLabel *mStatusCursorXLabel = nullptr;
+	QLabel *mStatusCursorYLabel = nullptr;
+	QLabel *mStatusCursorPageLabel = nullptr;
+	QProgressBar *mStatusProgressBar = nullptr;
 };
 
 

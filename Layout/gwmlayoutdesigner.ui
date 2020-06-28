@@ -48,7 +48,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="mStatusBar"/>
   <widget class="QToolBar" name="mLayoutToolbar">
    <property name="windowTitle">
     <string>Layout Toolbar</string>
