@@ -238,6 +238,10 @@ void GwmApp::setupToolbar()
 	connect(ui->actionNew_Layout, &QAction::triggered, this, [&]()
 	{
 		QString title;
+		if (!uniqueLayoutTitle(this, title, true, QgsMasterLayoutInterface::PrintLayout))
+		{
+			return;
+		}
 		createPrintLayout(title);
 	});
 }
@@ -309,6 +313,83 @@ GwmLayoutDesigner * GwmApp::openLayoutDesignerDialog(QgsMasterLayoutInterface * 
 	//connect(desinger, &GwmLayoutDesigner::abou)
 	designer->open();
 	return designer;
+}
+
+bool GwmApp::uniqueLayoutTitle(QWidget * parent, QString & title, bool acceptEmpty, QgsMasterLayoutInterface::Type type, const QString & currentTitle)
+{
+	if (!parent)
+	{
+		parent = this;
+	}
+	bool ok = false;
+	bool titleValid = false;
+	QString newTitle = QString(currentTitle);
+
+	QString typeString;
+	switch (type)
+	{
+		case QgsMasterLayoutInterface::PrintLayout:
+			typeString = tr("print layout");
+			break;
+		case QgsMasterLayoutInterface::Report:
+			typeString = tr("report");
+			break;
+	}
+
+	QString chooseMsg = tr("Enter a unique %1 title").arg(typeString);
+	if (acceptEmpty)
+	{
+		chooseMsg += '\n' + tr("(a title will be automatically generated if left empty)");
+	}
+	QString titleMsg = chooseMsg;
+
+	QStringList layoutNames;
+	const QList< QgsMasterLayoutInterface * > layouts = QgsProject::instance()->layoutManager()->layouts();
+	layoutNames.reserve(layouts.size() + 1);
+	layoutNames << newTitle;
+	for (QgsMasterLayoutInterface *l : layouts)
+	{
+		layoutNames << l->name();
+	}
+	while (!titleValid)
+	{
+		newTitle = QInputDialog::getText(parent,
+			tr("Create %1 Title").arg(typeString),
+			titleMsg,
+			QLineEdit::Normal,
+			newTitle,
+			&ok);
+		if (!ok)
+		{
+			return false;
+		}
+
+		if (newTitle.isEmpty())
+		{
+			if (!acceptEmpty)
+			{
+				titleMsg = chooseMsg + "\n\n" + tr("Title can not be empty!");
+			}
+			else
+			{
+				titleValid = true;
+				newTitle = QgsProject::instance()->layoutManager()->generateUniqueTitle(type);
+			}
+		}
+		else if (layoutNames.indexOf(newTitle, 1) >= 0)
+		{
+			layoutNames[0] = QString(); // clear non-unique name
+			titleMsg = chooseMsg + "\n\n" + tr("Title already exists!");
+		}
+		else
+		{
+			titleValid = true;
+		}
+	}
+
+	title = newTitle;
+
+	return true;
 }
 
 void GwmApp::addLayerToModel(QgsVectorLayer *layer)

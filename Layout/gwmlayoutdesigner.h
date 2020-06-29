@@ -382,6 +382,7 @@ inline GwmLayoutDesignerInterface * GwmLayoutDesigner::iface()
 inline void GwmLayoutDesigner::setTitle(const QString & title)
 {
 	mTitle = title;
+	updateWindowTitle();
 }
 
 inline QgsLayout* GwmLayoutDesigner::currentLayout()

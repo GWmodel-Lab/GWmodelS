@@ -76,17 +76,9 @@ private:
 private:
 	GwmLayoutDesigner* createPrintLayout(const QString& t);
 	GwmLayoutDesigner* openLayoutDesignerDialog(QgsMasterLayoutInterface* layout);
-
-	void registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler)
-	{
-		if (!mCustomLayoutDropHandlers.contains(handler))
-			mCustomLayoutDropHandlers << handler;
-	}
-
-	void unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler)
-	{
-		mCustomLayoutDropHandlers.removeOne(handler);
-	}
+	bool uniqueLayoutTitle(QWidget *parent, QString &title, bool acceptEmpty, QgsMasterLayoutInterface::Type type, const QString &currentTitle = QString());
+	void registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
+	void unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
 
 private:
 
@@ -192,6 +184,17 @@ inline QgsMapCanvas *GwmApp::mapCanvas() const
 inline GwmLayerItemModel *GwmApp::mapModel() const
 {
     return mMapModel;
+}
+
+inline void GwmApp::registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler * handler)
+{
+	if (!mCustomLayoutDropHandlers.contains(handler))
+		mCustomLayoutDropHandlers << handler;
+}
+
+inline void GwmApp::unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler * handler)
+{
+	mCustomLayoutDropHandlers.removeOne(handler);
 }
 
 #endif // MAINWINDOW_H
