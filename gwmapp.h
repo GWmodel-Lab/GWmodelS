@@ -73,9 +73,10 @@ private:
 	}
 
 
-private:
+public:
 	GwmLayoutDesigner* createPrintLayout(const QString& t);
 	GwmLayoutDesigner* openLayoutDesignerDialog(QgsMasterLayoutInterface* layout);
+	void showLayoutManager();
 	bool uniqueLayoutTitle(QWidget *parent, QString &title, bool acceptEmpty, QgsMasterLayoutInterface::Type type, const QString &currentTitle = QString());
 	void registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
 	void unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);

@@ -76,6 +76,7 @@
 #include "gwmgwpcaoptionsdialog.h"
 
 #include "Layout/gwmlayoutdesigner.h"
+#include "Layout/qgslayoutmanagerdialog.h"
 
 static bool cmpByText_(QAction *a, QAction *b)
 {
@@ -244,6 +245,7 @@ void GwmApp::setupToolbar()
 		}
 		createPrintLayout(title);
 	});
+	connect(ui->actionLayout_Manager, &QAction::triggered, this, &GwmApp::showLayoutManager);
 }
 
 void GwmApp::setupFeaturePanel()
@@ -313,6 +315,14 @@ GwmLayoutDesigner * GwmApp::openLayoutDesignerDialog(QgsMasterLayoutInterface * 
 	//connect(desinger, &GwmLayoutDesigner::abou)
 	designer->open();
 	return designer;
+}
+
+void GwmApp::showLayoutManager()
+{
+	QgsLayoutManagerDialog* manager = new QgsLayoutManagerDialog(this, Qt::Window);
+	manager->setAttribute(Qt::WA_DeleteOnClose);
+	manager->show();
+	manager->activate();
 }
 
 bool GwmApp::uniqueLayoutTitle(QWidget * parent, QString & title, bool acceptEmpty, QgsMasterLayoutInterface::Type type, const QString & currentTitle)

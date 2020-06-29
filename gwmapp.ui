@@ -259,6 +259,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionNew_Layout"/>
+   <addaction name="actionLayout_Manager"/>
   </widget>
   <action name="action_Open_Project">
    <property name="text">
@@ -446,6 +447,15 @@
    </property>
    <property name="text">
     <string>New Layout</string>
+   </property>
+  </action>
+  <action name="actionLayout_Manager">
+   <property name="icon">
+    <iconset resource="images/images.qrc">
+     <normaloff>:/images/themes/default/mActionLayoutManager.svg</normaloff>:/images/themes/default/mActionLayoutManager.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Layout Manager</string>
    </property>
   </action>
  </widget>
