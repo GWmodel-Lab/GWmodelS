@@ -9,10 +9,14 @@
 #include <QSlider>
 #include <QLabel>
 #include <QProgressBar>
+#include <QPrinter>
 
-#include "qgis.h"
+#include <qgis.h>
 #include <qgsmasterlayoutinterface.h>
 #include <qgslayoutdesignerinterface.h>
+#include <qgslayoutitempage.h>
+#include <qgslayoutexporter.h>
+
 class QgsLayout;
 class QgsLayoutItem;
 class QgsLayoutView;
@@ -42,6 +46,17 @@ class GwmLayoutDesigner : public QMainWindow, public Ui::GwmLayoutDesigner
 private:
 	static bool sInitializedRegistry;
 
+	struct PanelStatus
+	{
+		PanelStatus(bool visible = true, bool active = false)
+			: isVisible(visible)
+			, isActive(active)
+		{
+		}
+		bool isVisible;
+		bool isActive;
+	};
+
 public:
 	GwmLayoutDesigner(QWidget *parent = nullptr);
 	~GwmLayoutDesigner();
@@ -58,6 +73,8 @@ public:
 	void updateActionNames(QgsMasterLayoutInterface::Type type);
 
 	QgsLayoutAtlas *atlas();
+
+	QPrinter* printer();
 
 public:		// QgsLayoutDesignerInterface interface
 	QgsLayout *layout();
@@ -108,6 +125,24 @@ private:
 	void loadPredefinedScalesFromProject();
 	QVector<double> predefinedScales() const;
 
+	void setPrinterPageOrientation(QgsLayoutItemPage::Orientation orientation);
+
+	bool checkBeforeExport();
+	bool containsWmsLayers() const;
+	bool requiresRasterization() const;
+	void showWmsPrintingWarning();
+	void showRasterizationWarning();
+	bool showFileSizeWarning();
+	void showForceVectorWarning();
+	void showSvgExportWarning();
+	QString defaultExportPath();
+	void setLastExportPath(const QString &path) const;
+	bool getRasterExportSettings(QgsLayoutExporter::ImageExportSettings &settings, QSize &imageSize);
+	bool getPdfExportSettings(QgsLayoutExporter::PdfExportSettings &settings);
+	bool getSvgExportSettings(QgsLayoutExporter::SvgExportSettings &settings);
+	bool containsAdvancedEffects() const;
+
+
 private slots:
 	void updateWindowTitle();
 	void pageOrientationChanged();
@@ -118,59 +153,57 @@ private slots:
 
 	void refreshLayout();
 	//void saveProject();
-	//void newLayout();
-	//void showManager();
-	//void deleteLayout();
+	void newLayout();
+	void showManager();
+	void renameLayout();
+	void deleteLayout();
+	void duplicate();
 
-	//void print();
-	//void exportToRaster();
-	//void exportToPdf();
-	//void exportToSvg();
+	void showGrid(bool visible);
+	void showBoxes(bool visible);
+	void showPages(bool visible);
+	void showGuides(bool visible);
 
-	//void showGrid();
-	//void snapToGrid();
+	void snapToGrid(bool enabled);
+	void snapToGuides(bool enabled);
+	void snapToItems(bool enabled);
 
-	//void showGuides();
-	//void snapToGuides();
-	//void snapToItems();
+	void pasteInPlace();
+	void atlasNext();
+	void atlasPrevious();
+	void atlasFirst();
+	void atlasLast();
 
-	//void showBoxes();
-	//void showPages();
+	void print();
+	void exportToRaster();
+	void exportToPdf();
+	void exportToSvg();
 
-	//void pasteInPlace();
-	//void atlasPreviewTriggered();
-	//void atlasNext();
-	//void atlasPrevious();
-	//void atlasFirst();
-	//void atlasLast();
-	//void printAtlas();
-	//void exportAtlasToRaster();
-	//void exportAtlasToSvg();
-	//void exportAtlasToPdf();
+	void printReport();
+	void exportReportToRaster();
+	void exportReportToSvg();
+	void exportReportToPdf();
 
-	//void exportReportToRaster();
-	//void exportReportToSvg();
-	//void exportReportToPdf();
-	//void printReport();
+	void printAtlas();
+	void exportAtlasToRaster();
+	void exportAtlasToSvg();
+	void exportAtlasToPdf();
 
-	//void pageSetup();
+	void pageSetup();
 
-	//void saveAsTemplate();
-	//void addItemsFromTemplate();
-	//void duplicate();
-	//void renameLayout();
+	void saveAsTemplate();
 
-	//void raiseSelectedItems();
-	//void lowerSelectedItems();
-	//void moveSelectedItemsToTop();
-	//void moveSelectedItemsToBottom();
+	void raiseSelectedItems();
+	void lowerSelectedItems();
+	void moveSelectedItemsToTop();
+	void moveSelectedItemsToBottom();
+	void unlockAllItems();
+	void lockSelectedItems();
+	void addItemsFromTemplate();
 
-	//void addPages();
+	void addPages();
 
-	//void unlockAllItems();
-	//void lockSelectedItems();
-
-	//void setPanelVisibility();
+	void setPanelVisibility(bool hidden);
 
 	void statusZoomCombo_currentIndexChanged(int index);
 	void statusZoomCombo_zoomEntered();
@@ -182,8 +215,10 @@ private slots:
 private:
 	QString mTitle;
 	QString mSectionTitle;
-	GwmLayoutDesignerInterface* mInterface;
+	GwmLayoutDesignerInterface* mInterface = nullptr;
 	QgsLayoutGuideWidget *mGuideWidget = nullptr;
+
+	std::unique_ptr<QPrinter> mPrinter = nullptr;
 
 	//QgsLayoutAppMenuProvider *mMenuProvider = nullptr;
 
@@ -239,7 +274,7 @@ private:
 	QgsLayoutPropertiesWidget *mLayoutPropertiesWidget = nullptr;
 	QComboBox *mAtlasPageComboBox = nullptr;
 
-
+	QMap< QString, PanelStatus > mPanelStatus;
 
 	//! Combobox in status bar which shows/adjusts current zoom level
 	QComboBox *mStatusZoomCombo = nullptr;

@@ -75,7 +75,9 @@ private:
 
 public:
 	GwmLayoutDesigner* createPrintLayout(const QString& t);
+	GwmLayoutDesigner* createNewReport(QString title);
 	GwmLayoutDesigner* openLayoutDesignerDialog(QgsMasterLayoutInterface* layout);
+	GwmLayoutDesigner* duplicateLayout(QgsMasterLayoutInterface *layout, const QString &t = QString());
 	void showLayoutManager();
 	bool uniqueLayoutTitle(QWidget *parent, QString &title, bool acceptEmpty, QgsMasterLayoutInterface::Type type, const QString &currentTitle = QString());
 	void registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);

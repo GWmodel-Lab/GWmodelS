@@ -13,6 +13,7 @@
 #include <qgsproject.h>
 #include <qgsvectorlayer.h>
 #include <qgsrenderer.h>
+#include <qgsreport.h>
 
 #include <qgsapplication.h>
 #include <qgsattributetableview.h>
@@ -308,6 +309,20 @@ GwmLayoutDesigner* GwmApp::createPrintLayout(const QString& t)
 
 }
 
+GwmLayoutDesigner * GwmApp::createNewReport(QString title)
+{
+	if (title.isEmpty())
+	{
+		title = QgsProject::instance()->layoutManager()->generateUniqueTitle(QgsMasterLayoutInterface::Report);
+	}
+	//create new report
+	std::unique_ptr< QgsReport > report = qgis::make_unique< QgsReport >(QgsProject::instance());
+	report->setName(title);
+	QgsMasterLayoutInterface *layout = report.get();
+	QgsProject::instance()->layoutManager()->addLayout(report.release());
+	return openLayoutDesignerDialog(layout);
+}
+
 GwmLayoutDesigner * GwmApp::openLayoutDesignerDialog(QgsMasterLayoutInterface * layout)
 {
 	GwmLayoutDesigner* designer = new GwmLayoutDesigner();
@@ -315,6 +330,21 @@ GwmLayoutDesigner * GwmApp::openLayoutDesignerDialog(QgsMasterLayoutInterface * 
 	//connect(desinger, &GwmLayoutDesigner::abou)
 	designer->open();
 	return designer;
+}
+
+GwmLayoutDesigner * GwmApp::duplicateLayout(QgsMasterLayoutInterface * layout, const QString & t)
+{
+	QString title = t;
+	if (title.isEmpty())
+	{
+		// TODO: inject a bit of randomness in auto-titles?
+		title = tr("%1 copy").arg(layout->name());
+	}
+
+	QgsMasterLayoutInterface *newLayout = QgsProject::instance()->layoutManager()->duplicateLayout(layout, title);
+	GwmLayoutDesigner *dlg = openLayoutDesignerDialog(newLayout);
+	dlg->activate();
+	return dlg;
 }
 
 void GwmApp::showLayoutManager()
