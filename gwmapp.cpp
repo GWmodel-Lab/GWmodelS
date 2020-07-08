@@ -78,6 +78,7 @@
 
 #include "Layout/gwmlayoutdesigner.h"
 #include "Layout/qgslayoutmanagerdialog.h"
+#include "Layout/gwmlayoutbatchdialog.h"
 
 static bool cmpByText_(QAction *a, QAction *b)
 {
@@ -247,6 +248,12 @@ void GwmApp::setupToolbar()
 		createPrintLayout(title);
 	});
 	connect(ui->actionLayout_Manager, &QAction::triggered, this, &GwmApp::showLayoutManager);
+	connect(ui->actionLayout_Batch, &QAction::triggered, this, [&]()
+	{
+		GwmLayoutBatchDialog* dlg = new GwmLayoutBatchDialog(this);
+		dlg->setAttribute(Qt::WA_DeleteOnClose);
+		dlg->exec();
+	});
 }
 
 void GwmApp::setupFeaturePanel()
