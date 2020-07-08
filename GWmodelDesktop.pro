@@ -1,4 +1,4 @@
-QT       += core gui xml svg
+QT       += core gui xml printsupport svg
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -35,6 +35,11 @@ SOURCES += \
     GWmodel/gwmgeneralizedlinearmodel.cpp \
     GWmodel/gwmlinearmodel.cpp \
     GWmodel/gwmpoissonmodel.cpp \
+    Layout/gwmlayoutbatchdialog.cpp \
+    Layout/gwmlayoutbatchfieldlistmodel.cpp \
+    Layout/gwmlayoutbatchlayerlistmodel.cpp \
+    Layout/gwmlayoutdesigner.cpp \
+    Layout/qgslayoutmanagerdialog.cpp \
     Model/gwmlayerattributeitem.cpp \
     Model/gwmlayerattributeitemmodel.cpp \
     Model/gwmlayerbasicgwritem.cpp \
@@ -96,6 +101,7 @@ SOURCES += \
     TaskThread/gwmspatialalgorithm.cpp \
     TaskThread/gwmspatialmonoscalealgorithm.cpp \
     TaskThread/gwmspatialmultiscalealgorithm.cpp \
+    Validity/qgsabstractvaliditycheck.cpp \
     attributetable/qgsaddattrdialog.cpp \
     attributetable/qgsfeaturefilterwidget.cpp \
 #    attributetable/qgsfeaturelistmodel.cpp \
@@ -151,6 +157,11 @@ HEADERS += \
     GWmodel/gwmgeneralizedlinearmodel.h \
     GWmodel/gwmlinearmodel.h \
     GWmodel/gwmpoissonmodel.h \
+    Layout/gwmlayoutbatchdialog.h \
+    Layout/gwmlayoutbatchfieldlistmodel.h \
+    Layout/gwmlayoutbatchlayerlistmodel.h \
+    Layout/gwmlayoutdesigner.h \
+    Layout/qgslayoutmanagerdialog.h \
     Model/gwmlayerattributeitem.h \
     Model/gwmlayerattributeitemmodel.h \
     Model/gwmlayerbasicgwritem.h \
@@ -225,6 +236,7 @@ HEADERS += \
     TaskThread/imultivariableanalysis.h \
     TaskThread/iparallelable.h \
     TaskThread/iregressionanalysis.h \
+    Validity/qgsabstractvaliditycheck.h \
     attributetable/gwmfeaturefilterwidget_p.h \
     attributetable/qgsaddattrdialog.h \
     attributetable/qgsfieldcalculator.h \
@@ -267,6 +279,11 @@ HEADERS += \
     qgsattributetableviewextend.h
 
 FORMS += \
+    Layout/gwmlayoutbatchdialog.ui \
+    Layout/gwmlayoutdesigner.ui \
+    Layout/qgslayoutatlaswidgetbase.ui \
+    Layout/qgslayoutmanagerbase.ui \
+    Layout/qgssvgexportoptions.ui \
     PropertyPanelTabs/gwmpropertyggwrtab.ui \
     PropertyPanelTabs/gwmpropertygwpcatab.ui \
     PropertyPanelTabs/gwmpropertygwrtab.ui \

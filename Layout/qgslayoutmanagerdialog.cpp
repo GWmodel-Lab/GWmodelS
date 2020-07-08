@@ -14,7 +14,7 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <qgslayoutmanagerdialog.h>
+#include "Layout/qgslayoutmanagerdialog.h"
 #include <qgsapplication.h>
 #include <qgsbusyindicatordialog.h>
 #include <qgslayout.h>

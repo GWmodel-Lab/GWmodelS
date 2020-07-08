@@ -7,10 +7,11 @@
 #include <qgslayoutmanager.h>
 
 #include "gwmapp.h"
+#include "gwmlayoutbatchlayerlistmodel.h"
+#include "gwmlayoutbatchfieldlistmodel.h"
 
 GwmLayoutBatchDialog::GwmLayoutBatchDialog(QWidget *parent)
 	: QDialog(parent)
-	, mLayerModel(GwmApp::Instance()->mapModel())
 {
 	ui = new Ui::GwmLayoutBatchDialog();
 	ui->setupUi(this);
@@ -20,14 +21,25 @@ GwmLayoutBatchDialog::GwmLayoutBatchDialog(QWidget *parent)
 	mLayoutProxyModel->setSourceModel(mLayoutModel);
 	ui->lsvLayout->setModel(mLayoutProxyModel);
 
+    mLayerModel = new GwmLayoutBatchLayerListModel(GwmApp::Instance()->mapModel(), this);
 	ui->lsvLayer->setModel(mLayerModel);
 	mLayerSelectionModel = new QItemSelectionModel(mLayerModel);
 	ui->lsvLayer->setSelectionModel(mLayerSelectionModel);
-
-
+    connect(mLayerSelectionModel, &QItemSelectionModel::currentChanged, this, &GwmLayoutBatchDialog::onLayerSelectionModelCurrentChanged);
 }
 
 GwmLayoutBatchDialog::~GwmLayoutBatchDialog()
 {
-	delete ui;
+    delete ui;
+}
+
+void GwmLayoutBatchDialog::onLayerSelectionModelCurrentChanged(const QModelIndex &current, const QModelIndex &previous)
+{
+    if (mFieldModel) delete mFieldModel;
+    QgsVectorLayer* layer = dynamic_cast<QgsVectorLayer*>(mLayerModel->layerFromIndex(current));
+    if (layer)
+    {
+        mFieldModel = new GwmLayoutBatchFieldListModel(layer, this);
+        ui->lsvField->setModel(mFieldModel);
+    }
 }

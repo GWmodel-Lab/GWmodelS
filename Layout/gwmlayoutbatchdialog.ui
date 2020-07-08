@@ -38,11 +38,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QTreeView" name="lsvLayer">
-       <property name="headerHidden">
-        <bool>true</bool>
-       </property>
-      </widget>
+      <widget class="QListView" name="lsvLayer"/>
      </item>
     </layout>
    </item>
@@ -140,8 +136,6 @@
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources>
-  <include location="../images/images.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>
