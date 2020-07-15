@@ -251,6 +251,7 @@ void GwmApp::setupToolbar()
 	connect(ui->actionLayout_Batch, &QAction::triggered, this, [&]()
 	{
 		GwmLayoutBatchDialog* dlg = new GwmLayoutBatchDialog(this);
+        dlg->setModal(false);
 		dlg->setAttribute(Qt::WA_DeleteOnClose);
 		dlg->exec();
 	});
@@ -810,7 +811,8 @@ void GwmApp::createSymbolWindow(const QModelIndex &index)
     QgsVectorLayer* layer = mMapModel->layerFromItem(item);
     if (layer)
     {
-        mSymbolWindow = new GwmSymbolWindow(layer);
+        mSymbolWindow = new GwmSymbolWindow(layer, this);
+        mSymbolWindow->setAttribute(Qt::WA_DeleteOnClose);
     }
 }
 

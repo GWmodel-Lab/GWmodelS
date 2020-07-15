@@ -6,65 +6,44 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>544</width>
-    <height>460</height>
+    <width>689</width>
+    <height>690</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>GwmLayoutBatchDialog</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="2">
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Select Layout</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QListView" name="lsvLayout"/>
-     </item>
-    </layout>
+  <layout class="QGridLayout" name="gridLayout" rowstretch="1,1,2,0" columnstretch="0,0,0,0,1">
+   <item row="2" column="2">
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>Select Fields</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_5">
+      <property name="leftMargin">
+       <number>3</number>
+      </property>
+      <property name="topMargin">
+       <number>3</number>
+      </property>
+      <property name="rightMargin">
+       <number>3</number>
+      </property>
+      <property name="bottomMargin">
+       <number>3</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QListView" name="lsvField"/>
+      </item>
+     </layout>
+    </widget>
    </item>
-   <item row="0" column="3">
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Select Layers</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QListView" name="lsvLayer"/>
-     </item>
-    </layout>
-   </item>
-   <item row="0" column="4">
-    <layout class="QVBoxLayout" name="verticalLayout_3">
-     <item>
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Select Fields</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QListView" name="lsvField"/>
-     </item>
-    </layout>
-   </item>
-   <item row="1" column="2" colspan="3">
+   <item row="0" column="4" rowspan="4">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Configure Symbol</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="1" column="0">
-       <widget class="QTableView" name="tbvSymbology"/>
-      </item>
       <item row="0" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout">
         <property name="spacing">
@@ -129,6 +108,57 @@
          </spacer>
         </item>
        </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QTreeView" name="trvSymbology"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Select Layers</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <property name="leftMargin">
+       <number>3</number>
+      </property>
+      <property name="topMargin">
+       <number>3</number>
+      </property>
+      <property name="rightMargin">
+       <number>3</number>
+      </property>
+      <property name="bottomMargin">
+       <number>3</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QListView" name="lsvLayer"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Select Layout</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <property name="leftMargin">
+       <number>3</number>
+      </property>
+      <property name="topMargin">
+       <number>3</number>
+      </property>
+      <property name="rightMargin">
+       <number>3</number>
+      </property>
+      <property name="bottomMargin">
+       <number>3</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QListView" name="lsvLayout"/>
       </item>
      </layout>
     </widget>

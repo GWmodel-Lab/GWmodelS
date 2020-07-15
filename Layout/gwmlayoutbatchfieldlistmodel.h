@@ -32,6 +32,7 @@ public:
 
 public:
     explicit GwmLayoutBatchFieldListModel(QgsVectorLayer* layer, QObject *parent = nullptr);
+    ~GwmLayoutBatchFieldListModel();
 
     // Basic functionality:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -44,8 +45,11 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
+    QgsFieldCheckable* itemFromIndex(const QModelIndex& index) const;
+    int checkedIndex(const QgsFieldCheckable* field);
+
 private:
-    QList<QgsFieldCheckable> mFieldList;
+    QList<QgsFieldCheckable*> mFieldList;
 };
 
 #endif // GWMLAYOUTBATCHFIELDLISTMODEL_H

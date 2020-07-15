@@ -5,7 +5,7 @@ GwmLayoutBatchLayerListModel::GwmLayoutBatchLayerListModel(GwmLayerItemModel *la
 {
     for (auto layer : layerItemModel->toMapLayerList())
     {
-        mMapLayerList.append(layer);
+        mMapLayerList.append(static_cast<QgsVectorLayer*>(layer));
     }
 }
 
@@ -64,9 +64,9 @@ Qt::ItemFlags GwmLayoutBatchLayerListModel::flags(const QModelIndex &index) cons
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable;
 }
 
-QList<QgsMapLayer *> GwmLayoutBatchLayerListModel::checkedLayers()
+QList<QgsVectorLayer *> GwmLayoutBatchLayerListModel::checkedLayers()
 {
-    QList<QgsMapLayer*> layers;
+    QList<QgsVectorLayer*> layers;
     for (auto item : mMapLayerList)
     {
         if (item.selected)
@@ -75,7 +75,23 @@ QList<QgsMapLayer *> GwmLayoutBatchLayerListModel::checkedLayers()
     return layers;
 }
 
-QgsMapLayer *GwmLayoutBatchLayerListModel::layerFromIndex(const QModelIndex &index)
+int GwmLayoutBatchLayerListModel::checkedIndex(const QgsVectorLayer *layer)
+{
+    int c = -1;
+    for (int i = 0; i < rowCount(); i++)
+    {
+        const Item& item = mMapLayerList[i];
+        if (item.selected)
+        {
+            c++;
+            if (item.layer == layer)
+                return c;
+        }
+    }
+    return -1;
+}
+
+QgsVectorLayer *GwmLayoutBatchLayerListModel::layerFromIndex(const QModelIndex &index)
 {
     if (!index.isValid())
         return nullptr;

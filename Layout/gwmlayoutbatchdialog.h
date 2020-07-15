@@ -9,6 +9,8 @@ class QgsLayoutManagerProxyModel;
 class GwmLayoutBatchLayerListModel;
 class QItemSelectionModel;
 class GwmLayoutBatchFieldListModel;
+class GwmLayoutBatchConfigurationModel;
+class GwmLayoutBatchConfigurationDelegate;
 
 
 class GwmLayoutBatchDialog : public QDialog
@@ -21,6 +23,10 @@ public:
 
 private slots:
     void onLayerSelectionModelCurrentChanged(const QModelIndex& current, const QModelIndex& previous);
+    void onLayerModelDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles);
+    void onFieldModelDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles);
+
+    void on_btnEditSymbol_clicked();
 
 private:
 	Ui::GwmLayoutBatchDialog *ui;
@@ -32,4 +38,9 @@ private:
 	QItemSelectionModel* mLayerSelectionModel = nullptr;
 
     GwmLayoutBatchFieldListModel* mFieldModel = nullptr;
+
+    GwmLayoutBatchConfigurationModel* mConfigurationModel = nullptr;
+    QItemSelectionModel* mConfigurationSelectionModel = nullptr;
+    GwmLayoutBatchConfigurationDelegate* mConfiguationDelegate = nullptr;
+
 };

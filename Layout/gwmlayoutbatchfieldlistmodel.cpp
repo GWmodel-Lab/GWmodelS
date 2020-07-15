@@ -11,7 +11,15 @@ GwmLayoutBatchFieldListModel::GwmLayoutBatchFieldListModel(QgsVectorLayer *layer
 {
     for (auto field : layer->fields())
     {
-        mFieldList.append(QgsFieldCheckable(field));
+        mFieldList.append(new QgsFieldCheckable(field));
+    }
+}
+
+GwmLayoutBatchFieldListModel::~GwmLayoutBatchFieldListModel()
+{
+    for (auto field : mFieldList)
+    {
+        delete field;
     }
 }
 
@@ -37,9 +45,9 @@ QVariant GwmLayoutBatchFieldListModel::data(const QModelIndex &index, int role) 
     switch (role)
     {
     case Qt::ItemDataRole::DisplayRole:
-        return mFieldList[row].name();
+        return mFieldList[row]->name();
     case Qt::ItemDataRole::CheckStateRole:
-        return mFieldList[row].checked() ? Qt::Checked : Qt::Unchecked;
+        return mFieldList[row]->checked() ? Qt::Checked : Qt::Unchecked;
     default:
         return QVariant();
     }
@@ -52,7 +60,7 @@ bool GwmLayoutBatchFieldListModel::setData(const QModelIndex &index, const QVari
         switch (role)
         {
         case Qt::ItemDataRole::CheckStateRole:
-            mFieldList[row].setChecked(value.toInt() == Qt::Checked);
+            mFieldList[row]->setChecked(value.toInt() == Qt::Checked);
             break;
         default:
             break;
@@ -70,6 +78,30 @@ Qt::ItemFlags GwmLayoutBatchFieldListModel::flags(const QModelIndex &index) cons
         return Qt::NoItemFlags;
 
     return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable;
+}
+
+QgsFieldCheckable *GwmLayoutBatchFieldListModel::itemFromIndex(const QModelIndex &index) const
+{
+    if (!index.isValid() || index.row() < 0 || index.row() >= mFieldList.size())
+        return nullptr;
+
+    return mFieldList[index.row()];
+}
+
+int GwmLayoutBatchFieldListModel::checkedIndex(const QgsFieldCheckable *field)
+{
+    int c = -1;
+    for (int i = 0; i < rowCount(); i++)
+    {
+        const QgsFieldCheckable* item = mFieldList[i];
+        if (item->checked())
+        {
+            c++;
+            if (item->name() == field->name())
+                return c;
+        }
+    }
+    return -1;
 }
 
 

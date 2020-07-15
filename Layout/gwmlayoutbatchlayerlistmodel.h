@@ -14,10 +14,10 @@ class GwmLayoutBatchLayerListModel : public QAbstractListModel
 public:
     struct Item
     {
-        QgsMapLayer* layer = nullptr;
+        QgsVectorLayer* layer = nullptr;
         bool selected = false;
 
-        Item(QgsMapLayer* pLayer)
+        Item(QgsVectorLayer* pLayer)
         {
             layer = pLayer;
             selected = false;
@@ -35,8 +35,9 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    QList<QgsMapLayer*> checkedLayers();
-    QgsMapLayer* layerFromIndex(const QModelIndex& index);
+    QList<QgsVectorLayer*> checkedLayers();
+    int checkedIndex(const QgsVectorLayer* layer);
+    QgsVectorLayer* layerFromIndex(const QModelIndex& index);
 
 private:
     QList<Item> mMapLayerList;
