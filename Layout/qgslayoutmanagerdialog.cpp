@@ -456,25 +456,25 @@ void QgsLayoutManagerDialog::duplicateClicked()
   }
 
   // provide feedback, since loading of template into duplicate layout will be hidden
-  //QDialog *dlg = new QgsBusyIndicatorDialog( tr( "Duplicating layout…" ) );
-  //dlg->setStyleSheet( QgisApp::instance()->styleSheet() );
-  //dlg->show();
+  QDialog *dlg = new QgsBusyIndicatorDialog( tr( "Duplicating layout..." ) );
+//  dlg->setStyleSheet( QgisApp::instance()->styleSheet() );
+  dlg->show();
 
-  //QgsLayoutDesignerDialog *newDialog = QgisApp::instance()->duplicateLayout( currentLayout, newTitle );
+  GwmLayoutDesigner *newDialog = GwmApp::Instance()->duplicateLayout( currentLayout, newTitle );
 
-  //dlg->close();
-  //delete dlg;
-  //dlg = nullptr;
+  dlg->close();
+  delete dlg;
+  dlg = nullptr;
 
-  //if ( !newDialog )
-  //{
-  //  QMessageBox::warning( this, tr( "Duplicate Layout" ),
-  //                        tr( "Layout duplication failed." ) );
-  //}
-  //else
-  //{
-  //  newDialog->activate();
-  //}
+  if ( !newDialog )
+  {
+    QMessageBox::warning( this, tr( "Duplicate Layout" ),
+                          tr( "Layout duplication failed." ) );
+  }
+  else
+  {
+    newDialog->activate();
+  }
 }
 
 void QgsLayoutManagerDialog::renameClicked()

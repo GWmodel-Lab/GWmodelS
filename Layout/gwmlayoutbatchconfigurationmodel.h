@@ -102,6 +102,11 @@ public:
     bool insertChild(int i, GwmLayoutBatchConfigurationItem* item) override;
     bool removeChild(int i) override;
 
+    QList<GwmLayoutBatchConfigurationItemField*> fieldList()
+    {
+        return mFieldList;
+    }
+
 private:
     QgsVectorLayer* mLayer = nullptr;
     QList<GwmLayoutBatchConfigurationItemField*> mFieldList;
@@ -124,6 +129,11 @@ public:
 
     bool insertChild(int i, GwmLayoutBatchConfigurationItem* item) override;
     bool removeChild(int i) override;
+
+    QList<GwmLayoutBatchConfigurationItemLayer*> layerList()
+    {
+        return mLayerList;
+    }
 
 private:
     QList<GwmLayoutBatchConfigurationItemLayer*> mLayerList;
@@ -164,6 +174,7 @@ public:
     bool insertField(int row, const QgsFieldCheckable& fieldItem, const QModelIndex& parent);
     bool removeField(int row, const QModelIndex& parent);
     bool removeField(const QgsFieldCheckable& fieldItem, const QModelIndex& parent);
+    bool setFieldRenderer(const QModelIndex& index, QgsFeatureRenderer* renderer);
 
 public:
     GwmLayoutBatchConfigurationItem *itemFromIndex(const QModelIndex& index) const;

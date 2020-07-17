@@ -434,6 +434,21 @@ bool GwmLayoutBatchConfigurationModel::removeField(const QgsFieldCheckable &fiel
     return false;
 }
 
+bool GwmLayoutBatchConfigurationModel::setFieldRenderer(const QModelIndex &index, QgsFeatureRenderer *renderer)
+{
+    if (index.isValid())
+    {
+        GwmLayoutBatchConfigurationItem* item = itemFromIndex(index);
+        if (item->type() == GwmLayoutBatchConfigurationItem::Field)
+        {
+            GwmLayoutBatchConfigurationItemField* fieldItem = static_cast<GwmLayoutBatchConfigurationItemField*>(item);
+            fieldItem->setRenderer(renderer);
+            return true;
+        }
+    }
+    return false;
+}
+
 //bool GwmLayoutBatchConfigurationModel::insertRows(int row, int count, const QModelIndex &parent)
 //{
 //    beginInsertRows(parent, row, row + count - 1);

@@ -146,6 +146,7 @@ SOURCES += \
     attributetable/qgsfeatureaction.cpp \
     attributetable/qgsfieldcalculator.cpp \
     gwmscalablegwroptionsdialog.cpp \
+    symbolwindow/gwmsymboleditordialog.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
     gwmtoolbar.cpp \
     main.cpp
@@ -278,6 +279,7 @@ HEADERS += \
     attributetable/qgsfieldcalculator.h \
     gwmscalablegwroptionsdialog.h \
     SpatialWeight/gwmweight.h \
+    symbolwindow/gwmsymboleditordialog.h \
     symbolwindow/gwmsymbolwindow.h \
     gwmtoolbar.h \
     prefix.h

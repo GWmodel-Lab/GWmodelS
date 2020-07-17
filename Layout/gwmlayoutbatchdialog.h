@@ -2,6 +2,8 @@
 
 #include <QDialog>
 #include <QAbstractItemModel>
+#include <qgslayoutexporter.h>
+
 namespace Ui { class GwmLayoutBatchDialog; };
 
 class QgsLayoutManagerModel;
@@ -27,6 +29,12 @@ private slots:
     void onFieldModelDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles);
 
     void on_btnEditSymbol_clicked();
+    void on_btnBox_accepted();
+    void on_btnExportRaster_clicked();
+    void on_btnSelectDirectory_clicked();
+
+    bool getRasterExportSettings(QgsLayout *mLayout, QgsLayoutExporter::ImageExportSettings &settings, QSize &imageSize, QVector<double> predefinedScales);
+    QVector<double> predefinedScales(QgsMasterLayoutInterface *mMasterLayout) const;
 
 private:
 	Ui::GwmLayoutBatchDialog *ui;

@@ -1702,7 +1702,7 @@ void GwmLayoutDesigner::duplicate()
 	}
 
 	// provide feedback, since loading of template into duplicate layout will be hidden
-	QDialog *dlg = new QgsBusyIndicatorDialog(tr("Duplicating layout¡­"));
+	QDialog *dlg = new QgsBusyIndicatorDialog(tr("Duplicating layout..."));
 	dlg->setStyleSheet(GwmApp::Instance()->styleSheet());
 	dlg->show();
 
