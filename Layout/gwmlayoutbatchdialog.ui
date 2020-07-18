@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>GwmLayoutBatchDialog</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout" rowstretch="1,0,0,0,0" columnstretch="0,0">
+  <layout class="QGridLayout" name="gridLayout" rowstretch="0,1,1,2,0" columnstretch="0,1">
    <item row="3" column="0">
     <widget class="QGroupBox" name="groupBox_4">
      <property name="title">
@@ -75,6 +75,9 @@
         </property>
         <item>
          <widget class="QToolButton" name="btnEditSymbol">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Edit</string>
           </property>
@@ -95,13 +98,16 @@
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="btnUnifyRow">
+         <widget class="QToolButton" name="btnUnifyLayer">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Unify Row</string>
           </property>
           <property name="icon">
            <iconset>
-            <normalon>:/images/themes/default/mActionAlignVCenter.svg</normalon>
+            <normalon>:/images/themes/default/mIconArrangeSymbolsLeft.svg</normalon>
            </iconset>
           </property>
           <property name="iconSize">
@@ -116,13 +122,16 @@
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="btnUnifyCol">
+         <widget class="QToolButton" name="btnUnifyField">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Unify Column</string>
           </property>
           <property name="icon">
            <iconset>
-            <normalon>:/images/themes/default/mActionAlignHCenter.svg</normalon>
+            <normalon>:/images/themes/default/mActionFilterTableFields.svg</normalon>
            </iconset>
           </property>
           <property name="iconSize">
@@ -281,19 +290,6 @@
    <item row="4" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
       <widget class="QLabel" name="label_4">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -308,6 +304,9 @@
      </item>
      <item>
       <widget class="QToolButton" name="btnExportRaster">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Export to Raster</string>
        </property>
@@ -324,6 +323,35 @@
        </property>
        <property name="autoRaise">
         <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QProgressBar" name="pgbExport">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+       <property name="format">
+        <string>%p%</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>
