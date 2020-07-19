@@ -146,6 +146,11 @@ class GwmLayoutBatchConfigurationModel : public QAbstractItemModel
 public:
     explicit GwmLayoutBatchConfigurationModel(QObject *parent = nullptr);
 
+    GwmLayoutBatchConfigurationItemRoot* itemRoot()
+    {
+        return mItemRoot;
+    }
+
     // Header:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 

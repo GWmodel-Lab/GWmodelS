@@ -13,7 +13,7 @@ class QItemSelectionModel;
 class GwmLayoutBatchFieldListModel;
 class GwmLayoutBatchConfigurationModel;
 class GwmLayoutBatchConfigurationDelegate;
-
+class QgsFeatureRenderer;
 
 class GwmLayoutBatchDialog : public QDialog
 {
@@ -42,6 +42,12 @@ private slots:
     void on_btnAddLayerNamePlace_clicked();
 
     void on_txtFileAddFieldNamePlace_clicked();
+
+    void on_btnUnifyLayer_clicked();
+    void unifyLayerRendererSimpleSymbol(QgsVectorLayer* layer, QgsFeatureRenderer *renderer);
+    void unifyLayerRendererGraduatedSymbol(QgsVectorLayer* layer, QgsFeatureRenderer *renderer);
+
+    void on_btnUnifyField_clicked();
 
 private:
     bool checkBeforeExport(QgsLayout* layout);

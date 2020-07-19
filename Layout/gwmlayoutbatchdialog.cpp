@@ -16,6 +16,8 @@
 #include <qgsabstractvaliditycheck.h>
 #include <qgslayoutitemmap.h>
 #include <qgsmessageviewer.h>
+#include <qgssinglesymbolrenderer.h>
+#include <qgssymbolselectordialog.h>
 
 #include "gwmapp.h"
 #include "gwmlayoutbatchlayerlistmodel.h"
@@ -23,6 +25,7 @@
 #include "gwmlayoutbatchconfigurationmodel.h"
 #include "gwmlayoutbatchconfigurationdelegate.h"
 #include "symbolwindow/gwmsymboleditordialog.h"
+#include "Layout/gwmlayoutbatchunifylayerpopupdialog.h"
 
 GwmLayoutBatchDialog::GwmLayoutBatchDialog(QWidget *parent)
 	: QDialog(parent)
@@ -49,9 +52,21 @@ GwmLayoutBatchDialog::GwmLayoutBatchDialog(QWidget *parent)
     ui->trvSymbology->setSelectionModel(mConfigurationSelectionModel);
     mConfiguationDelegate = new GwmLayoutBatchConfigurationDelegate();
     ui->trvSymbology->setItemDelegate(mConfiguationDelegate);
-    connect(mConfigurationSelectionModel, &QItemSelectionModel::selectionChanged, this, [&](const QItemSelection &selected, const QItemSelection &/*deselected*/)
+    connect(mConfigurationSelectionModel, &QItemSelectionModel::currentChanged, this, [&](const QModelIndex &current, const QModelIndex &/*deselected*/)
     {
-        ui->btnEditSymbol->setEnabled(selected.size() > 0);
+        GwmLayoutBatchConfigurationItem* item = mConfigurationModel->itemFromIndex(current);
+        if (item && item->type() == GwmLayoutBatchConfigurationItem::Layer)
+        {
+            ui->btnEditSymbol->setEnabled(false);
+            ui->btnUnifyLayer->setEnabled(true);
+            ui->btnUnifyField->setEnabled(false);
+        }
+        else if (item && item->type() == GwmLayoutBatchConfigurationItem::Field)
+        {
+            ui->btnEditSymbol->setEnabled(true);
+            ui->btnUnifyLayer->setEnabled(false);
+            ui->btnUnifyField->setEnabled(true);
+        }
     });
 
 //    connect(ui->btnEditSymbol, &QToolButton::clicked, this, &GwmLayoutBatchDialog::on_btnEditSymbol_clicked);
@@ -584,4 +599,87 @@ void GwmLayoutBatchDialog::showWmsPrintingWarning()
 		m->setCheckBoxQgsSettingsLabel(QStringLiteral("/UI/displayComposerWMSWarning"));
 		m->exec(); //deleted on close
 	}
+}
+
+void GwmLayoutBatchDialog::on_btnUnifyLayer_clicked()
+{
+    const QModelIndex& currentLayerIndex = mLayerSelectionModel->currentIndex();
+    QgsVectorLayer* currentLayer = mLayerModel->layerFromIndex(currentLayerIndex);
+    if (currentLayer)
+    {
+        GwmSymbolEditorDialog* editor = new GwmSymbolEditorDialog(currentLayer);
+        if (editor->exec())
+        {
+            QgsFeatureRenderer* renderer = editor->selectedRenderer();
+            if (renderer->type() == "singleSymbol")
+            {
+                unifyLayerRendererSimpleSymbol(currentLayer, renderer);
+            }
+            else if (renderer->type() == "graduatedSymbol")
+            {
+                unifyLayerRendererGraduatedSymbol(currentLayer, renderer);
+            }
+        }
+        delete editor;
+    }
+}
+
+void GwmLayoutBatchDialog::unifyLayerRendererSimpleSymbol(QgsVectorLayer *layer, QgsFeatureRenderer* renderer)
+{
+    QModelIndex layerIndex = mConfigurationModel->indexFromLayer(layer);
+    GwmLayoutBatchConfigurationItem* item = mConfigurationModel->itemFromIndex(layerIndex);
+    if (item && item->type() == GwmLayoutBatchConfigurationItem::Layer)
+    {
+        auto layerItem = static_cast<GwmLayoutBatchConfigurationItemLayer*>(item);
+        auto fieldList = layerItem->fieldList();
+        for (auto fieldItem : fieldList)
+        {
+            fieldItem->setRenderer(renderer);
+        }
+    }
+}
+
+void GwmLayoutBatchDialog::unifyLayerRendererGraduatedSymbol(QgsVectorLayer *layer, QgsFeatureRenderer *renderer)
+{
+    QgsGraduatedSymbolRenderer* graduated0 = static_cast<QgsGraduatedSymbolRenderer*>(renderer->clone());
+    QModelIndex layerIndex = mConfigurationModel->indexFromLayer(layer);
+    GwmLayoutBatchConfigurationItem* item = mConfigurationModel->itemFromIndex(layerIndex);
+    if (item && item->type() == GwmLayoutBatchConfigurationItem::Layer)
+    {
+        auto layerItem = static_cast<GwmLayoutBatchConfigurationItemLayer*>(item);
+        auto fieldList = layerItem->fieldList();
+        for (auto fieldItem : fieldList)
+        {
+            QgsGraduatedSymbolRenderer* graduated = graduated0->clone();
+            graduated->setClassAttribute(fieldItem->name());
+            int nclasses = graduated0->ranges().size();
+            graduated->updateClasses(layer, nclasses);
+            graduated->updateColorRamp(graduated0->sourceColorRamp()->clone());
+            fieldItem->setRenderer(graduated);
+            delete graduated;
+        }
+    }
+    delete graduated0;
+}
+
+void GwmLayoutBatchDialog::on_btnUnifyField_clicked()
+{
+    QModelIndex currentIndex = mConfigurationSelectionModel->currentIndex();
+    GwmLayoutBatchConfigurationItem* item = mConfigurationModel->itemFromIndex(currentIndex);
+    if (item && item->type() == GwmLayoutBatchConfigurationItem::Field)
+    {
+        auto fieldItem0 = static_cast<GwmLayoutBatchConfigurationItemField*>(item);
+        QgsFeatureRenderer* renderer = fieldItem0->renderer();
+        auto rootItem = mConfigurationModel->itemRoot();
+        for (auto layerItem : rootItem->layerList())
+        {
+            for (auto fieldItem : layerItem->fieldList())
+            {
+                if (fieldItem != fieldItem0 && fieldItem->name() == fieldItem0->name())
+                {
+                    fieldItem->setRenderer(renderer->clone());
+                }
+            }
+        }
+    }
 }

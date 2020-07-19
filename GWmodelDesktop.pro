@@ -40,6 +40,7 @@ SOURCES += \
     Layout/gwmlayoutbatchdialog.cpp \
     Layout/gwmlayoutbatchfieldlistmodel.cpp \
     Layout/gwmlayoutbatchlayerlistmodel.cpp \
+    Layout/gwmlayoutbatchunifylayerpopupdialog.cpp \
     Layout/gwmlayoutdesigner.cpp \
     Layout/qgslayoutmanagerdialog.cpp \
     Model/gwmlayerattributeitem.cpp \
@@ -165,6 +166,7 @@ HEADERS += \
     Layout/gwmlayoutbatchdialog.h \
     Layout/gwmlayoutbatchfieldlistmodel.h \
     Layout/gwmlayoutbatchlayerlistmodel.h \
+    Layout/gwmlayoutbatchunifylayerpopupdialog.h \
     Layout/gwmlayoutdesigner.h \
     Layout/qgslayoutmanagerdialog.h \
     Model/gwmlayerattributeitem.h \
@@ -287,6 +289,7 @@ HEADERS += \
 
 FORMS += \
     Layout/gwmlayoutbatchdialog.ui \
+    Layout/gwmlayoutbatchunifylayerpopupdialog.ui \
     Layout/gwmlayoutdesigner.ui \
     Layout/qgslayoutatlaswidgetbase.ui \
     Layout/qgslayoutmanagerbase.ui \
