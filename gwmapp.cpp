@@ -811,7 +811,7 @@ void GwmApp::createSymbolWindow(const QModelIndex &index)
     QgsVectorLayer* layer = mMapModel->layerFromItem(item);
     if (layer)
     {
-        mSymbolWindow = new GwmSymbolWindow(layer, this);
+        mSymbolWindow = new GwmSymbolWindow(layer);
         mSymbolWindow->setAttribute(Qt::WA_DeleteOnClose);
     }
 }

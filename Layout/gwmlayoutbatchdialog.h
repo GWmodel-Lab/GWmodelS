@@ -54,7 +54,7 @@ private:
     bool containsWmsLayers(QgsLayout* layout);
     bool showFileSizeWarning(QgsLayout* layout);
     void showWmsPrintingWarning();
-    void exportToRaster(const QString& ext);
+    void exportToRasterBatch(const QString& ext);
     QFileInfo formatOutputFile(QString dir, QString filenameTemplate, QString layerName, QString fieldName, QString ext);
 
     void updateProgressBar(int current, int total, const QString& text);

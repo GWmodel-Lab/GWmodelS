@@ -18,6 +18,9 @@
 #include <qgsmessageviewer.h>
 #include <qgssinglesymbolrenderer.h>
 #include <qgssymbolselectordialog.h>
+#include <qgslayoutmodel.h>
+#include <qgslayoutitemlegend.h>
+#include <qgslayoutitemlabel.h>
 
 #include "gwmapp.h"
 #include "gwmlayoutbatchlayerlistmodel.h"
@@ -222,7 +225,7 @@ void GwmLayoutBatchDialog::on_btnBox_accepted()
 
 void GwmLayoutBatchDialog::on_btnExportRaster_clicked()
 {
-    exportToRaster("png");
+    exportToRasterBatch("png");
 }
 
 bool GwmLayoutBatchDialog::getRasterExportSettings(QgsLayout* layout, QgsLayoutExporter::ImageExportSettings &settings, QSize &imageSize, QVector<double> scales)
@@ -323,7 +326,7 @@ QVector<double> GwmLayoutBatchDialog::predefinedScales(QgsMasterLayoutInterface*
     return projectMapScales;
 }
 
-void GwmLayoutBatchDialog::exportToRaster(const QString &ext)
+void GwmLayoutBatchDialog::exportToRasterBatch(const QString &ext)
 {
     auto selectLayoutIndexList = ui->lsvLayout->selectionModel()->selectedRows();
     if (selectLayoutIndexList.isEmpty())
@@ -372,15 +375,36 @@ void GwmLayoutBatchDialog::exportToRaster(const QString &ext)
                 {
                     progressBarTotal += item->fieldList().size();
                     currentMapList.removeOne(item->layer());
+                    QgsProject::instance()->takeMapLayer(item->layer());
                 }
                 GwmApp::Instance()->mapCanvas()->setLayers(currentMapList);
                 GwmApp::Instance()->mapCanvas()->refresh();
+                // 保存字符串模板
+                QMap<QgsLayoutItem*, QString> layoutItemTemplateMap;
+                QgsLayoutModel* layoutModel = layout->itemsModel();
+                for (int i = 0; i < layoutModel->rowCount(); i++)
+                {
+                    const QModelIndex& index = layoutModel->index(i, 0);
+                    QgsLayoutItem* item = layoutModel->itemFromIndex(index);
+
+                    if (QgsLayoutItemLegend* legend = dynamic_cast<QgsLayoutItemLegend*>(item))
+                    {
+                        QString titleTemplate = legend->title();
+                        layoutItemTemplateMap[item] = titleTemplate;
+                    }
+                    else if (QgsLayoutItemLabel* label = dynamic_cast<QgsLayoutItemLabel*>(item))
+                    {
+                        QString titleTemplate = label->text();
+                        layoutItemTemplateMap[item] = titleTemplate;
+                    }
+                }
                 // 逐个添加图层
                 for (int l = 0; l < layerItemList.size(); l++)
                 {
                     auto layerItem = layerItemList[l];
                     QgsVectorLayer* layer = layerItem->layer();
                     currentMapList.append(layer);
+                    QgsProject::instance()->addMapLayer(layerItem->layer());
                     GwmApp::Instance()->mapCanvas()->setLayers(currentMapList);
                     GwmApp::Instance()->mapCanvas()->refresh();
                     auto fieldItemList = layerItem->fieldList();
@@ -392,6 +416,24 @@ void GwmLayoutBatchDialog::exportToRaster(const QString &ext)
                         QgsFeatureRenderer* renderer = fieldItem->renderer();
                         layer->setRenderer(renderer->clone());
                         GwmApp::Instance()->mapCanvas()->refresh();
+                        layout->refresh();
+                        // 图例和其他文字
+                        for (auto item : layoutItemTemplateMap.keys())
+                        {
+                            if (QgsLayoutItemLegend* legend = dynamic_cast<QgsLayoutItemLegend*>(item))
+                            {
+                                legend->updateLegend();
+                                QString titleTemplate = layoutItemTemplateMap[legend];
+                                QString title = titleTemplate.replace("%layer%", layerItem->name(), Qt::CaseInsensitive).replace("%field%", fieldItem->name(), Qt::CaseInsensitive);
+                                legend->setTitle(title);
+                            }
+                            else if (QgsLayoutItemLabel* label = dynamic_cast<QgsLayoutItemLabel*>(item))
+                            {
+                                QString titleTemplate = layoutItemTemplateMap[label];
+                                QString title = titleTemplate.replace("%layer%", layerItem->name(), Qt::CaseInsensitive).replace("%field%", fieldItem->name(), Qt::CaseInsensitive);
+                                label->setText(title);
+                            }
+                        }
                         // 导出图层
                         QFileInfo outputFile = formatOutputFile(directory, filenameTemplate, layerItem->name(), fieldItem->name(), ext);
                         QgsProxyProgressTask* proxyTask = new QgsProxyProgressTask(tr("Exporting %1").arg(outputFile.absoluteFilePath()));
@@ -447,12 +489,32 @@ void GwmLayoutBatchDialog::exportToRaster(const QString &ext)
                         layer->setRenderer(renderer0);
                     }
                     currentMapList.removeOne(layer);
+                    QgsProject::instance()->takeMapLayer(layerItem->layer());
                     GwmApp::Instance()->mapCanvas()->setLayers(currentMapList0);
                     GwmApp::Instance()->mapCanvas()->refresh();
                 }
                 // 恢复所有图层
+                for (auto item : rootItem->layerList())
+                {
+                    QgsProject::instance()->addMapLayer(item->layer());
+                }
                 GwmApp::Instance()->mapCanvas()->setLayers(currentMapList0);
                 GwmApp::Instance()->mapCanvas()->refresh();
+                // 恢复图例和文字标题
+                for (auto item : layoutItemTemplateMap.keys())
+                {
+                    if (QgsLayoutItemLegend* legend = dynamic_cast<QgsLayoutItemLegend*>(item))
+                    {
+                        legend->updateLegend();
+                        QString titleTemplate = layoutItemTemplateMap[legend];
+                        legend->setTitle(titleTemplate);
+                    }
+                    else if (QgsLayoutItemLabel* label = dynamic_cast<QgsLayoutItemLabel*>(item))
+                    {
+                        QString titleTemplate = layoutItemTemplateMap[label];
+                        label->setText(titleTemplate);
+                    }
+                }
             }
         }
         toggleWidgets(false);
@@ -510,7 +572,7 @@ void GwmLayoutBatchDialog::on_btnSelectDirectory_clicked()
 
 void GwmLayoutBatchDialog::on_btnExportRaster_triggered(QAction *action)
 {
-    exportToRaster(action->text());
+    exportToRasterBatch(action->text());
 }
 
 void GwmLayoutBatchDialog::on_btnAddLayerNamePlace_clicked()
