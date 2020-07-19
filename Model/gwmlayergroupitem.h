@@ -19,6 +19,7 @@ public:
 public:
     virtual QString text() override;
     virtual QVariant data(int col, int role) override;
+    virtual bool setData(int col, int role, QVariant value) override;
     virtual Qt::ItemFlags flags() override;
 
     virtual GwmLayerItem * child(int row) override;

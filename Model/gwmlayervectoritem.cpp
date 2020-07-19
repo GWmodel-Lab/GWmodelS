@@ -115,6 +115,8 @@ QVariant GwmLayerVectorItem::data(int col, int role)
         }
         case Qt::CheckStateRole:
             return mCheckState;
+        case Qt::EditRole:
+            return col == 0 ? text() : QString();
         default:
             break;
         }
@@ -122,9 +124,25 @@ QVariant GwmLayerVectorItem::data(int col, int role)
     return QVariant();
 }
 
+bool GwmLayerVectorItem::setData(int col, int role, QVariant value)
+{
+    GwmLayerItem::setData(col, role, value);
+    if (col == 0)
+    {
+        switch (role) {
+        case Qt::EditRole:
+            if (mLayer) mLayer->setName(value.toString());
+            break;
+        default:
+            return false;
+        }
+    }
+    return true;
+}
+
 Qt::ItemFlags GwmLayerVectorItem::flags()
 {
-    return Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | GwmLayerItem::flags();
+    return Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEditable | GwmLayerItem::flags();
 }
 
 
