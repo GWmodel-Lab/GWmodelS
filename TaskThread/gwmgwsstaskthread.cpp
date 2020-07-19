@@ -63,6 +63,8 @@ void GwmGWSSTaskThread::run()
 }
 
 bool GwmGWSSTaskThread::CalculateSerial(){
+    mat rankX = mX;
+    rankX.each_col([&](vec x) { x = rank(x); });
     int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
     emit tick(0,nRp);
     for(int i = 0; i < nRp; i++){
@@ -81,21 +83,21 @@ bool GwmGWSSTaskThread::CalculateSerial(){
             mIQR.row(i) = quant.row(2) - quant.row(0);
             mQI.row(i) = (2 * quant.row(1) - quant.row(2) - quant.row(0))/mIQR.row(i);
         }
-        for(int j = 0; j < nVar; j++){
-            vec lvar = trans(Wi) * (square(mX.col(j) - mLocalMean(i,j)));
-            mLVar(i,j) = lvar(0);
-            mStandardDev(i,j) = sqrt(mLVar(i,j));
-            vec localSkewness = (trans(Wi) * pow(mX.col(j) - mLocalMean(i,j),3)) / pow(mStandardDev(i,j),3);
-            mLocalSkewness(i,j) = localSkewness(0);
-            mLCV(i,j) = mStandardDev(i,j)/mLocalMean(i,j);
-        }
+        mat centerized = mX.each_row() - mLocalMean.row(i);
+        mLVar.row(i) = Wi.t() * (centerized % centerized);
+        mStandardDev = sqrt(mLVar);
+        mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
+        mLCV = mStandardDev / mLocalMean;
         if(nVar >= 2){
             int tag = 0;
             for(int j = 0; j < nVar-1; j++){
                 for(int k = j+1; k < nVar; k++){
-                    mCovmat(tag,i) = covwt(mX.col(j),mX.col(k),Wi);
-                    mCorrmat(tag,i) = corwt(mX.col(j),mX.col(k),Wi);
-                    mSCorrmat(tag,i) = corwt(rank(mX.col(j)),rank(mX.col(k)),Wi);
+                    double covjk = covwt(mX.col(j), mX.col(k), Wi);
+                    double covjj = covwt(mX.col(j), mX.col(j), Wi);
+                    double covkk = covwt(mX.col(k), mX.col(k), Wi);
+                    mCovmat(tag,i) = covjk;
+                    mCorrmat(tag,i) = covjk / sqrt(covjj * covkk);
+                    mSCorrmat(tag,i) = corwt(rankX.col(j),rankX.col(k),Wi);
                     tag++;
                 }
             }
@@ -106,6 +108,8 @@ bool GwmGWSSTaskThread::CalculateSerial(){
 }
 
 bool GwmGWSSTaskThread::CalculateOmp(){
+    mat rankX = mX;
+    rankX.each_col([&](vec x) { x = rank(x); });
     int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
     emit tick(0,nRp);
     int current = 0;
@@ -114,8 +118,8 @@ bool GwmGWSSTaskThread::CalculateOmp(){
 //        vec d = mSpatialWeight.distance()->distance(i);
         vec w = mSpatialWeight.spatialWeight(i);
         double sumw = sum(w);
-        mat Wi = w / sumw;
-        mLocalMean.row(i) = trans(Wi) * mX;
+        vec Wi = w / sumw;
+        mLocalMean.row(i) = Wi.t() * mX;
         if(mQuantile){
 //            mat cor = cor(mX);
             mat quant = mat(3,nVar);
@@ -126,21 +130,21 @@ bool GwmGWSSTaskThread::CalculateOmp(){
             mIQR.row(i) = quant.row(2) - quant.row(0);
             mQI.row(i) = (2 * quant.row(1) - quant.row(2) - quant.row(0))/mIQR.row(i);
         }
-        for(int j = 0; j < nVar; j++){
-            vec lvar = trans(Wi) * (square(mX.col(j) - mLocalMean(i,j)));
-            mLVar(i,j) = lvar(0);
-            mStandardDev(i,j) = sqrt(mLVar(i,j));
-            vec localSkewness = (trans(Wi) * pow(mX.col(j) - mLocalMean(i,j),3)) / pow(mStandardDev(i,j),3);
-            mLocalSkewness(i,j) = localSkewness(0);
-            mLCV(i,j) = mStandardDev(i,j)/mLocalMean(i,j);
-        }
+        mat centerized = mX.each_row() - mLocalMean.row(i);
+        mLVar.row(i) = Wi.t() * (centerized % centerized);
+        mStandardDev = sqrt(mLVar);
+        mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
+        mLCV = mStandardDev / mLocalMean;
         if(nVar >= 2){
             int tag = 0;
             for(int j = 0; j < nVar-1; j++){
                 for(int k = j+1; k < nVar; k++){
-                    mCovmat(tag,i) = covwt(mX.col(j),mX.col(k),Wi);
-                    mCorrmat(tag,i) = corwt(mX.col(j),mX.col(k),Wi);
-                    mSCorrmat(tag,i) = corwt(rank(mX.col(j)),rank(mX.col(k)),Wi);
+                    double covjk = covwt(mX.col(j), mX.col(k), Wi);
+                    double covjj = covwt(mX.col(j), mX.col(j), Wi);
+                    double covkk = covwt(mX.col(k), mX.col(k), Wi);
+                    mCovmat(tag,i) = covjk;
+                    mCorrmat(tag,i) = covjk / sqrt(covjj * covkk);
+                    mSCorrmat(tag,i) = corwt(rankX.col(j),rankX.col(k),Wi);
                     tag++;
                 }
             }
@@ -175,21 +179,6 @@ vec GwmGWSSTaskThread::findq(const mat &x, const vec &w)
         cond = lw - 1;
     }
     return q;
-}
-
-double GwmGWSSTaskThread::covwt(const mat &x1, const mat &x2, const vec &w){
-    vec wi = w/sum(w);
-    double center1 = sum(x1 % wi);
-    double center2 = sum(x2 % wi);
-    vec n1 = sqrt(wi) % (x1 - center1);
-    vec n2 = sqrt(wi) % (x2 - center2);
-    double res = sum(n1 % n2) / (1 - sum(square(wi)));
-    return res;
-}
-
-double GwmGWSSTaskThread::corwt(const mat &x1, const mat &x2, const vec &w)
-{
-    return covwt(x1,x2,w)/sqrt(covwt(x1,x1,w)*covwt(x2,x2,w));
 }
 
 void GwmGWSSTaskThread::initPoints()
