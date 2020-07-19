@@ -865,7 +865,7 @@ void GwmApp::onGWRBtnClicked()
     if (gwrOptionDialog->exec() == QDialog::Accepted)
     {
         gwrOptionDialog->updateFields();
-        GwmLayerGroupItem* selectedItem = gwrOptionDialog->selectedLayer();
+        GwmLayerGroupItem* selectedItem = gwrOptionDialog->hasRegressionLayer() ? gwrOptionDialog->selectedRegressionLayer() : gwrOptionDialog->selectedLayer();
         const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)

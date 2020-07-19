@@ -23,13 +23,12 @@ public:
     explicit GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmBasicGWRAlgorithm* thread,QWidget *parent = nullptr);
     ~GwmGWROptionsDialog();
 
-private:
-    Ui::GwmGWROptionsDialog *ui;
-    QList<GwmLayerGroupItem*> mMapLayerList;
-    GwmLayerGroupItem* mSelectedLayer = nullptr;
-    GwmBasicGWRAlgorithm* mTaskThread = nullptr;
-    GwmVariableItemModel* mDepVarModel;
-    bool isNumeric(QVariant::Type type);
+    GwmLayerGroupItem *selectedLayer() const;
+    void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
+
+    bool hasRegressionLayer() const;
+
+    GwmLayerGroupItem* selectedRegressionLayer() const;
 
 public slots:
     void layerChanged(const int index);
@@ -67,11 +66,17 @@ public:
     void updateFields();
     void enableAccept();
 
-    GwmLayerGroupItem *selectedLayer() const;
-    void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
 private slots:
     void on_cbxHatmatrix_toggled(bool checked);
     void on_cbkRegressionPoints_toggled(bool checked);
+
+private:
+    Ui::GwmGWROptionsDialog *ui;
+    QList<GwmLayerGroupItem*> mMapLayerList;
+    GwmLayerGroupItem* mSelectedLayer = nullptr;
+    GwmBasicGWRAlgorithm* mTaskThread = nullptr;
+    GwmVariableItemModel* mDepVarModel;
+    bool isNumeric(QVariant::Type type);
 };
 
 #endif // GWMGWROPTIONSDIALOG_H

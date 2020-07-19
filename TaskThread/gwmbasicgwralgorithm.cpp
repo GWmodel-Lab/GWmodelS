@@ -109,7 +109,8 @@ void GwmBasicGWRAlgorithm::run()
         }
 
         CreateResultLayerData resultLayerData = {
-            qMakePair(QString("%1"), mBetas),
+            qMakePair(QString("%1"), mX),
+            qMakePair(QString("Betas_%1"), mBetas),
             qMakePair(QString("y"), mY),
             qMakePair(QString("yhat"), yhat),
             qMakePair(QString("residual"), res),
@@ -147,9 +148,25 @@ void GwmBasicGWRAlgorithm::run()
     else
     {
         mBetas = regression(mX, mY);
-        CreateResultLayerData resultLayerData = {
-            qMakePair(QString("%1"), mBetas)
-        };
+        CreateResultLayerData resultLayerData;
+        if (hasRegressionLayerXY)
+        {
+            vec yhat = Fitted(mRegressionLayerX, mBetas);
+            vec residual = mRegressionLayerY - yhat;
+            resultLayerData = {
+                qMakePair(QString(mDepVar.name), mRegressionLayerY),
+                qMakePair(QString("%1"), mRegressionLayerX),
+                qMakePair(QString("Betas_%1"), mBetas),
+                qMakePair(QString("yhat"), yhat),
+                qMakePair(QString("residual"), residual)
+            };
+        }
+        else
+        {
+            resultLayerData = {
+                qMakePair(QString("Betas_%1"), mBetas)
+            };
+        }
         createResultLayer(resultLayerData);
     }
 
@@ -1207,6 +1224,46 @@ void GwmBasicGWRAlgorithm::initPoints()
         {
             GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
             d->setFocusPoints(&mRegressionPoints);
+        }
+    }
+}
+
+void GwmBasicGWRAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
+{
+    GwmGeographicalWeightedRegressionAlgorithm::initXY(x, y, depVar, indepVars);
+    if (hasRegressionLayer())
+    {
+        // 检查回归点图层是否包含了所有变量
+        QStringList fieldNameList = mRegressionLayer->fields().names();
+        bool flag = fieldNameList.contains(depVar.name);
+        for (auto field : indepVars)
+        {
+            flag = flag && fieldNameList.contains(field.name);
+        }
+        hasRegressionLayerXY = flag;
+        if (flag)
+        {
+            // 设置回归点X和回归点Y
+            int regressionPointsSize = mRegressionLayer->featureCount();
+            mRegressionLayerY = vec(regressionPointsSize, fill::zeros);
+            mRegressionLayerX = mat(regressionPointsSize, indepVars.size() + 1, fill::zeros);
+            QgsFeatureIterator iterator = mRegressionLayer->getFeatures();
+            QgsFeature f;
+            bool ok = false;
+            for (int i = 0; iterator.nextFeature(f); i++)
+            {
+                double vY = f.attribute(depVar.name).toDouble(&ok);
+                if (ok)
+                {
+                    mRegressionLayerY(i) = vY;
+                    mRegressionLayerX(i, 0) = 1.0;
+                    for (int k = 0; k < indepVars.size(); k++)
+                    {
+                        double vX = f.attribute(indepVars[k].name).toDouble(&ok);
+                        if (ok) mRegressionLayerX(i, k + 1) = vX;
+                    }
+                }
+            }
         }
     }
 }
