@@ -131,12 +131,11 @@ void GwmLayoutBatchDialog::onLayerSelectionModelCurrentChanged(const QModelIndex
     if (mFieldModel)
     {
         disconnect(mFieldModel, &QAbstractItemModel::dataChanged, this, &GwmLayoutBatchDialog::onFieldModelDataChanged);
-        delete mFieldModel;
     }
     QgsVectorLayer* layer = dynamic_cast<QgsVectorLayer*>(mLayerModel->layerFromIndex(current));
     if (layer)
     {
-        mFieldModel = new GwmLayoutBatchFieldListModel(layer, this);
+        mFieldModel = mLayerModel->itemFromindex(current)->fieldModel;
         ui->lsvField->setModel(mFieldModel);
         connect(mFieldModel, &QAbstractItemModel::dataChanged, this, &GwmLayoutBatchDialog::onFieldModelDataChanged);
     }
@@ -603,24 +602,28 @@ void GwmLayoutBatchDialog::showWmsPrintingWarning()
 
 void GwmLayoutBatchDialog::on_btnUnifyLayer_clicked()
 {
-    const QModelIndex& currentLayerIndex = mLayerSelectionModel->currentIndex();
-    QgsVectorLayer* currentLayer = mLayerModel->layerFromIndex(currentLayerIndex);
-    if (currentLayer)
+    const QModelIndex& currentLayerIndex = mConfigurationSelectionModel->currentIndex();
+    GwmLayoutBatchConfigurationItem* item = mConfigurationModel->itemFromIndex(currentLayerIndex);
+    if (item && item->type() == GwmLayoutBatchConfigurationItem::Layer)
     {
-        GwmSymbolEditorDialog* editor = new GwmSymbolEditorDialog(currentLayer);
-        if (editor->exec())
+        QgsVectorLayer* currentLayer = static_cast<GwmLayoutBatchConfigurationItemLayer*>(item)->layer();
+        if (currentLayer)
         {
-            QgsFeatureRenderer* renderer = editor->selectedRenderer();
-            if (renderer->type() == "singleSymbol")
+            GwmSymbolEditorDialog* editor = new GwmSymbolEditorDialog(currentLayer);
+            if (editor->exec())
             {
-                unifyLayerRendererSimpleSymbol(currentLayer, renderer);
+                QgsFeatureRenderer* renderer = editor->selectedRenderer();
+                if (renderer->type() == "singleSymbol")
+                {
+                    unifyLayerRendererSimpleSymbol(currentLayer, renderer);
+                }
+                else if (renderer->type() == "graduatedSymbol")
+                {
+                    unifyLayerRendererGraduatedSymbol(currentLayer, renderer);
+                }
             }
-            else if (renderer->type() == "graduatedSymbol")
-            {
-                unifyLayerRendererGraduatedSymbol(currentLayer, renderer);
-            }
+            delete editor;
         }
-        delete editor;
     }
 }
 

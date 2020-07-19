@@ -6,6 +6,7 @@
 #include <qgsmaplayer.h>
 
 #include "Model/gwmlayeritemmodel.h"
+#include "Layout/gwmlayoutbatchfieldlistmodel.h";
 
 class GwmLayoutBatchLayerListModel : public QAbstractListModel
 {
@@ -16,16 +17,15 @@ public:
     {
         QgsVectorLayer* layer = nullptr;
         bool selected = false;
+        GwmLayoutBatchFieldListModel* fieldModel = nullptr;
 
-        Item(QgsVectorLayer* pLayer)
-        {
-            layer = pLayer;
-            selected = false;
-        }
+        explicit Item(QgsVectorLayer* pLayer, QObject* parent = nullptr);
+        ~Item();
     };
 
 public:
     explicit GwmLayoutBatchLayerListModel(GwmLayerItemModel* layerItemModel, QObject *parent = nullptr);
+    ~GwmLayoutBatchLayerListModel();
 
     // Basic functionality:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -38,9 +38,10 @@ public:
     QList<QgsVectorLayer*> checkedLayers();
     int checkedIndex(const QgsVectorLayer* layer);
     QgsVectorLayer* layerFromIndex(const QModelIndex& index);
+    Item* itemFromindex(const QModelIndex& index);
 
 private:
-    QList<Item> mMapLayerList;
+    QList<Item*> mMapLayerList;
 };
 
 
