@@ -666,12 +666,16 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight*
         }
     }
     double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas.t(), shat);
-    QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
-            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-            .arg(bandwidthWeight->bandwidth())
-            .arg(value);
-    emit message(msg);
-    return value;
+    if (isfinite(value))
+    {
+        QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
+                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                .arg(bandwidthWeight->bandwidth())
+                .arg(value);
+        emit message(msg);
+        return value;
+    }
+    else return DBL_MAX;
 }
 
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *bandwidthWeight)
@@ -710,12 +714,16 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *ba
     {
         vec shat = sum(shat_all, 1);
         double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas.t(), shat);
-        QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
-                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-                .arg(bandwidthWeight->bandwidth())
-                .arg(value);
-        emit message(msg);
-        return value;
+        if (isfinite(value))
+        {
+            QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
+                    .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                    .arg(bandwidthWeight->bandwidth())
+                    .arg(value);
+            emit message(msg);
+            return value;
+        }
+        else return DBL_MAX;
     }
     else return DBL_MAX;
 }
@@ -787,17 +795,21 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *
             double res = mY(i) - det(mX.row(i) * beta);
             cv += res * res;
         }
-        catch (std::exception e)
+        catch (...)
         {
             return DBL_MAX;
         }
     }
-    QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
-            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-            .arg(bandwidthWeight->bandwidth())
-            .arg(cv);
-    emit message(msg);
-    return cv;
+    if (isfinite(cv))
+    {
+        QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                .arg(bandwidthWeight->bandwidth())
+                .arg(cv);
+        emit message(msg);
+        return cv;
+    }
+    else return DBL_MAX;
 }
 
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *bandwidthWeight)
@@ -823,9 +835,12 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *ban
                 mat xtwx_inv = inv_sympd(xtwx);
                 vec beta = xtwx_inv * xtwy;
                 double res = mY(i) - det(mX.row(i) * beta);
-                cv_all(thread) += res * res;
+                if (isfinite(res))
+                    cv_all(thread) += res * res;
+                else
+                    flag = false;
             }
-            catch (std::exception e)
+            catch (...)
             {
                 flag = false;
             }
@@ -864,14 +879,22 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVCuda(GwmBandwidthWeight *ba
         longlat = d->geographic();
     }
     bool adaptive = bandwidthWeight->adaptive();
-    double cv = cuda->CV(p, theta, longlat, bandwidthWeight->bandwidth(), bandwidthWeight->kernel(), adaptive, mGroupSize, mGpuId);
-    if (cv < DBL_MAX)
+    double cv = DBL_MAX;
+    try
     {
-        QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
-                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-                .arg(bandwidthWeight->bandwidth())
-                .arg(cv);
-        emit message(msg);
+        cv = cuda->CV(p, theta, longlat, bandwidthWeight->bandwidth(), bandwidthWeight->kernel(), adaptive, mGroupSize, mGpuId);
+        if (cv < DBL_MAX)
+        {
+            QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+                    .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                    .arg(bandwidthWeight->bandwidth())
+                    .arg(cv);
+            emit message(msg);
+        }
+    }
+    catch (...)
+    {
+        cv = DBL_MAX;
     }
     GWCUDA_Del(cuda);
     return cv;

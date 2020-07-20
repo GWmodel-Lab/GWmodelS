@@ -208,7 +208,7 @@ void GwmLayoutBatchDialog::on_btnEditSymbol_clicked()
         GwmLayoutBatchConfigurationItemField* fieldItem = static_cast<GwmLayoutBatchConfigurationItemField*>(item);
         GwmLayoutBatchConfigurationItemLayer* layerItem = static_cast<GwmLayoutBatchConfigurationItemLayer*>(fieldItem->parent());
         GwmSymbolEditorDialog* editor = new GwmSymbolEditorDialog(layerItem->layer(), this);
-        editor->setSelectedRenderer(fieldItem->renderer());
+        editor->setSelectedRenderer(fieldItem->renderer()->clone());
         if (editor->exec() == QDialog::Accepted)
         {
             QgsFeatureRenderer* renderer = editor->selectedRenderer();

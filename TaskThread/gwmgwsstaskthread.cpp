@@ -53,9 +53,9 @@ void GwmGWSSTaskThread::run()
         resultLayerData.push_back(qMakePair(QString("QI"), mQI));
     }
     if(nVar >= 2){
-        resultLayerData.push_back(qMakePair(QString("Cov"), trans(mCovmat)));
-        resultLayerData.push_back(qMakePair(QString("Corr"), trans(mCorrmat)));
-        resultLayerData.push_back(qMakePair(QString("Corr"), trans(mSCorrmat)));
+        resultLayerData.push_back(qMakePair(QString("Cov"), mCovmat));
+        resultLayerData.push_back(qMakePair(QString("Corr"), mCorrmat));
+        resultLayerData.push_back(qMakePair(QString("Spearman_rho"), mSCorrmat));
     }
     mResultList = resultLayerData;
     createResultLayer(resultLayerData);
@@ -71,7 +71,7 @@ bool GwmGWSSTaskThread::CalculateSerial(){
 //        vec d = mSpatialWeight.distance()->distance(i);
         vec w = mSpatialWeight.spatialWeight(i);
         double sumw = sum(w);
-        mat Wi = w / sumw;
+        vec Wi = w / sumw;
         mLocalMean.row(i) = trans(Wi) * mX;
         if(mQuantile){
 //            mat cor = cor(mX);
@@ -93,11 +93,12 @@ bool GwmGWSSTaskThread::CalculateSerial(){
             for(int j = 0; j < nVar-1; j++){
                 for(int k = j+1; k < nVar; k++){
                     double covjk = covwt(mX.col(j), mX.col(k), Wi);
-                    double covjj = covwt(mX.col(j), mX.col(j), Wi);
-                    double covkk = covwt(mX.col(k), mX.col(k), Wi);
-                    mCovmat(tag,i) = covjk;
-                    mCorrmat(tag,i) = covjk / sqrt(covjj * covkk);
-                    mSCorrmat(tag,i) = corwt(rankX.col(j),rankX.col(k),Wi);
+                    double sumW2 = sum(Wi % Wi);
+                    double covjj = mLVar(i, j) / (1.0 - sumW2);
+                    double covkk = mLVar(i, k) / (1.0 - sumW2);
+                    mCovmat(i,tag) = covjk;
+                    mCorrmat(i,tag) = covjk / sqrt(covjj * covkk);
+                    mSCorrmat(i,tag) = corwt(rankX.col(j),rankX.col(k),Wi);
                     tag++;
                 }
             }
@@ -140,11 +141,12 @@ bool GwmGWSSTaskThread::CalculateOmp(){
             for(int j = 0; j < nVar-1; j++){
                 for(int k = j+1; k < nVar; k++){
                     double covjk = covwt(mX.col(j), mX.col(k), Wi);
-                    double covjj = covwt(mX.col(j), mX.col(j), Wi);
-                    double covkk = covwt(mX.col(k), mX.col(k), Wi);
-                    mCovmat(tag,i) = covjk;
-                    mCorrmat(tag,i) = covjk / sqrt(covjj * covkk);
-                    mSCorrmat(tag,i) = corwt(rankX.col(j),rankX.col(k),Wi);
+                    double sumW2 = sum(Wi % Wi);
+                    double covjj = mLVar(i, j) / (1.0 - sumW2);
+                    double covkk = mLVar(i, k) / (1.0 - sumW2);
+                    mCovmat(i,tag) = covjk;
+                    mCorrmat(i,tag) = covjk / sqrt(covjj * covkk);
+                    mSCorrmat(i,tag) = corwt(rankX.col(j),rankX.col(k),Wi);
                     tag++;
                 }
             }
@@ -233,10 +235,10 @@ void GwmGWSSTaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
     }
 
     if(nVar > 1){
-        mCovmat = mat((nVar-1)*nVar/2,nRp,fill::zeros);
-        mCorrmat = mat((nVar-1)*nVar/2,nRp,fill::zeros);
-        mSCorrnms = mat((nVar-1)*nVar/2,nRp,fill::zeros);
-        mSCorrmat = mat((nVar-1)*nVar/2,nRp,fill::zeros);
+        int nCol = (nVar+1)*nVar/2 - nVar;
+        mCovmat   = mat(nRp, nCol, fill::zeros);
+        mCorrmat  = mat(nRp, nCol, fill::zeros);
+        mSCorrmat = mat(nRp, nCol, fill::zeros);
     }
 }
 
@@ -261,8 +263,9 @@ void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
         const mat& value = item.second;
         if (value.n_cols > nVar)
         {
-            for(uword j = 0; j < nVar-1; j++){
-                for (uword k = 0; k < nVar; k++)
+            for(uword j = 0; j < nVar-1; j++)
+            {
+                for (uword k = j+1; k < nVar; k++)
                 {
                     QString variableName = title + "_" + mVariables[j].name + "." + mVariables[k].name;
 //                    QString fieldName = title.arg(variableName);

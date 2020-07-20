@@ -153,7 +153,6 @@ protected:
 
     mat mCovmat;
     mat mCorrmat;
-    mat mSCorrnms;
     mat mSCorrmat;
 
     CreateResultLayerData mResultList;

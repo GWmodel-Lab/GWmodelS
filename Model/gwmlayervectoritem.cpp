@@ -126,10 +126,12 @@ QVariant GwmLayerVectorItem::data(int col, int role)
 
 bool GwmLayerVectorItem::setData(int col, int role, QVariant value)
 {
-    GwmLayerItem::setData(col, role, value);
     if (col == 0)
     {
         switch (role) {
+        case Qt::CheckStateRole:
+            mCheckState = Qt::CheckState(value.toInt());
+            break;
         case Qt::EditRole:
             if (mLayer) mLayer->setName(value.toString());
             break;
