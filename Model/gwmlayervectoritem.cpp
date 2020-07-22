@@ -5,6 +5,7 @@
 #include <qgscategorizedsymbolrenderer.h>
 #include <qgsvectorfilewritertask.h>
 #include <qgsapplication.h>
+#include <qgsproject.h>
 #include "TaskThread/gwmsavelayerthread.h"
 #include "gwmprogressdialog.h"
 
@@ -131,6 +132,14 @@ bool GwmLayerVectorItem::setData(int col, int role, QVariant value)
         switch (role) {
         case Qt::CheckStateRole:
             mCheckState = Qt::CheckState(value.toInt());
+            if (mCheckState == Qt::CheckState::Checked)
+            {
+                QgsProject::instance()->addMapLayer(mLayer);
+            }
+            else
+            {
+                QgsProject::instance()->takeMapLayer(mLayer);
+            }
             break;
         case Qt::EditRole:
             if (mLayer) mLayer->setName(value.toString());

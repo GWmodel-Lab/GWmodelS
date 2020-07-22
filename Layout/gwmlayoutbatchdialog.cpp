@@ -415,7 +415,7 @@ void GwmLayoutBatchDialog::exportToRasterBatch(const QString &ext)
                         QgsFeatureRenderer* renderer0 = layer->renderer()->clone();
                         QgsFeatureRenderer* renderer = fieldItem->renderer();
                         layer->setRenderer(renderer->clone());
-                        GwmApp::Instance()->mapCanvas()->refresh();
+//                        GwmApp::Instance()->mapCanvas()->refresh();
                         layout->refresh();
                         // 图例和其他文字
                         for (auto item : layoutItemTemplateMap.keys())
@@ -425,7 +425,9 @@ void GwmLayoutBatchDialog::exportToRasterBatch(const QString &ext)
                                 QString titleTemplate = layoutItemTemplateMap[legend];
                                 QString title = titleTemplate.replace("%layer%", layerItem->name(), Qt::CaseInsensitive).replace("%field%", fieldItem->name(), Qt::CaseInsensitive);
                                 legend->setTitle(title);
-                                legend->updateLegend();
+//                                legend->updateLegend();
+                                legend->setAutoUpdateModel(true);
+                                legend->setAutoUpdateModel(false);
                                 legend->updateFilterByMap();
                             }
                             else if (QgsLayoutItemLabel* label = dynamic_cast<QgsLayoutItemLabel*>(item))
@@ -436,6 +438,7 @@ void GwmLayoutBatchDialog::exportToRasterBatch(const QString &ext)
                             }
                         }
                         layout->refresh();
+                        layout->update();
                         // 导出图层
                         QFileInfo outputFile = formatOutputFile(directory, filenameTemplate, layerItem->name(), fieldItem->name(), ext);
                         QgsProxyProgressTask* proxyTask = new QgsProxyProgressTask(tr("Exporting %1").arg(outputFile.absoluteFilePath()));

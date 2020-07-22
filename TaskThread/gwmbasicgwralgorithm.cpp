@@ -109,8 +109,8 @@ void GwmBasicGWRAlgorithm::run()
         }
 
         CreateResultLayerData resultLayerData = {
-            qMakePair(QString("%1"), mX),
-            qMakePair(QString("Betas_%1"), mBetas),
+//            qMakePair(QString("%1"), mX),
+            qMakePair(QString("%1"), mBetas),
             qMakePair(QString("y"), mY),
             qMakePair(QString("yhat"), yhat),
             qMakePair(QString("residual"), res),
@@ -155,8 +155,8 @@ void GwmBasicGWRAlgorithm::run()
             vec residual = mRegressionLayerY - yhat;
             resultLayerData = {
                 qMakePair(QString(mDepVar.name), mRegressionLayerY),
-                qMakePair(QString("%1"), mRegressionLayerX),
-                qMakePair(QString("Betas_%1"), mBetas),
+//                qMakePair(QString("%1"), mRegressionLayerX),
+                qMakePair(QString("%1"), mBetas),
                 qMakePair(QString("yhat"), yhat),
                 qMakePair(QString("residual"), residual)
             };
@@ -164,7 +164,7 @@ void GwmBasicGWRAlgorithm::run()
         else
         {
             resultLayerData = {
-                qMakePair(QString("Betas_%1"), mBetas)
+                qMakePair(QString("%1"), mBetas)
             };
         }
         createResultLayer(resultLayerData);
