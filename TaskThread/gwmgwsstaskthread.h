@@ -20,6 +20,32 @@ class GwmGWSSTaskThread : public GwmSpatialMonoscaleAlgorithm, public IMultivari
     Q_OBJECT
 
 public:
+    static double covwt(const mat &x1, const mat &x2, const vec &w){
+    //    vec wi = w/sum(w);
+    //    double center1 = sum(x1 % wi);
+    //    double center2 = sum(x2 % wi);
+    //    vec n1 = sqrt(wi) % (x1 - center1);
+    //    vec n2 = sqrt(wi) % (x2 - center2);
+    //    double res = sum(n1 % n2) / (1 - sum(square(wi)));
+    //    return res;
+        return sum((sqrt(w) % (x1 - sum(x1 % w))) % (sqrt(w) % (x2 - sum(x2 % w)))) / (1 - sum(w % w));
+    }
+
+    static double corwt(const mat &x1, const mat &x2, const vec &w)
+    {
+        return covwt(x1,x2,w)/sqrt(covwt(x1,x1,w)*covwt(x2,x2,w));
+    }
+
+    static vec del(vec x,int rowcount);
+
+    static vec rank(vec x)
+    {
+        vec n = linspace(0,x.n_rows-1,x.n_rows);
+        vec res = n(sort_index(x));
+        return n(sort_index(res));
+    }
+
+public:
     enum GwmCVType{
         mean,
         median
@@ -30,19 +56,8 @@ public:
 
     typedef bool (GwmGWSSTaskThread::*CalFunction)();
 
-public:
-    static vec del(vec x,int rowcount);
-    static vec rank(vec x)
-    {
-        vec n = linspace(0,x.n_rows-1,x.n_rows);
-        vec res = n(sort_index(x));
-        return n(sort_index(res));
-    }
-
 protected:
     static vec findq(const mat& x, const vec& w);
-    static double covwt(const mat& x1, const mat& x2, const vec& w);
-    static double corwt(const mat& x1, const mat& x2, const vec& w);
 
     bool CalculateSerial();
     bool CalculateOmp();
@@ -138,7 +153,6 @@ protected:
 
     mat mCovmat;
     mat mCorrmat;
-    mat mSCorrnms;
     mat mSCorrmat;
 
     CreateResultLayerData mResultList;

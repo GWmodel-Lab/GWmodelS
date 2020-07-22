@@ -10,8 +10,10 @@
 #include <QMouseEvent>
 #include <QDebug>
 
+#include <qgsproject.h>
 #include <qgsvectorlayer.h>
 #include <qgsrenderer.h>
+#include <qgsreport.h>
 
 #include <qgsapplication.h>
 #include <qgsattributetableview.h>
@@ -27,6 +29,9 @@
 #include <qgsprojectionselectionwidget.h>
 #include <qgsproviderregistry.h>
 #include <qgsdatumtransformdialog.h>
+#include <qgslayoutguiutils.h>
+#include <qgsprintlayout.h>
+#include <qgslayoutmanager.h>
 
 #include "gwmopenxyeventlayerdialog.h"
 #include "gwmprogressdialog.h"
@@ -71,15 +76,37 @@
 #include "gwmlcrgwroptionsdialog.h"
 #include "gwmgwpcaoptionsdialog.h"
 
+#include "Layout/gwmlayoutdesigner.h"
+#include "Layout/qgslayoutmanagerdialog.h"
+#include "Layout/gwmlayoutbatchdialog.h"
+
+static bool cmpByText_(QAction *a, QAction *b)
+{
+	return QString::localeAwareCompare(a->text(), b->text()) < 0;
+}
+
+GwmApp * GwmApp::Instance()
+{
+	return mInstance;
+}
 
 GwmApp* GwmApp::mInstance = nullptr;
-
 
 GwmApp::GwmApp(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 	, mMapModel(new GwmLayerItemModel)
 {
+	if (mInstance)
+	{
+		QMessageBox::critical(
+			this,
+			tr("Multiple Instances of GwmApp"),
+			tr("Multiple instances of GWmodel Desktop application object detected.\nPlease contact the developers.\n"));
+		abort();
+	}
+	mInstance = this;
+
     ui->setupUi(this);
     setupMenus();
     setAttribute(Qt::WA_QuitOnClose);
@@ -89,7 +116,9 @@ GwmApp::GwmApp(QWidget *parent)
     setupPropertyPanel();
     QgsGui::editorWidgetRegistry()->initEditors(mMapCanvas);
 
-    mInstance = this;
+	functionProfile(&GwmApp::initLayouts, this, QStringLiteral("Initialize layouts support"));
+
+
 }
 
 GwmApp::~GwmApp()
@@ -208,6 +237,24 @@ void GwmApp::setupToolbar()
     connect(ui->actionGWR, &QAction::triggered,this,&GwmApp::onGWRBtnClicked);
     connect(ui->actionGWSS, &QAction::triggered,this,&GwmApp::onGWSSBtnClicked);
     connect(ui->actionGWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
+
+	connect(ui->actionNew_Layout, &QAction::triggered, this, [&]()
+	{
+		QString title;
+		if (!uniqueLayoutTitle(this, title, true, QgsMasterLayoutInterface::PrintLayout))
+		{
+			return;
+		}
+		createPrintLayout(title);
+	});
+	connect(ui->actionLayout_Manager, &QAction::triggered, this, &GwmApp::showLayoutManager);
+	connect(ui->actionLayout_Batch, &QAction::triggered, this, [&]()
+	{
+		GwmLayoutBatchDialog* dlg = new GwmLayoutBatchDialog(this);
+        dlg->setModal(false);
+		dlg->setAttribute(Qt::WA_DeleteOnClose);
+		dlg->exec();
+	});
 }
 
 void GwmApp::setupFeaturePanel()
@@ -250,6 +297,147 @@ void GwmApp::setupMapPanel()
     connect(mMapModel, &GwmLayerItemModel::layerItemChangedSignal, this, &GwmApp::onMapModelChanged);
     connect(mMapModel, &GwmLayerItemModel::layerItemMovedSignal, this, &GwmApp::onMapModelChanged);
     connect(mMapCanvas, &QgsMapCanvas::selectionChanged, this, &GwmApp::onMapSelectionChanged);
+}
+
+GwmLayoutDesigner* GwmApp::createPrintLayout(const QString& t)
+{
+	QString title = t;
+	if (title.isEmpty())
+	{
+		title = QgsProject::instance()->layoutManager()->generateUniqueTitle(QgsMasterLayoutInterface::PrintLayout);
+	}
+
+	QgsPrintLayout* layout = new QgsPrintLayout(QgsProject::instance());
+	layout->setName(title);
+	layout->initializeDefaults();
+	if (QgsProject::instance()->layoutManager()->addLayout(layout))
+		return openLayoutDesignerDialog(layout);
+	else
+		return nullptr;
+
+}
+
+GwmLayoutDesigner * GwmApp::createNewReport(QString title)
+{
+	if (title.isEmpty())
+	{
+		title = QgsProject::instance()->layoutManager()->generateUniqueTitle(QgsMasterLayoutInterface::Report);
+	}
+	//create new report
+	std::unique_ptr< QgsReport > report = qgis::make_unique< QgsReport >(QgsProject::instance());
+	report->setName(title);
+	QgsMasterLayoutInterface *layout = report.get();
+	QgsProject::instance()->layoutManager()->addLayout(report.release());
+	return openLayoutDesignerDialog(layout);
+}
+
+GwmLayoutDesigner * GwmApp::openLayoutDesignerDialog(QgsMasterLayoutInterface * layout)
+{
+	GwmLayoutDesigner* designer = new GwmLayoutDesigner();
+	designer->setMasterLayout(layout);
+	//connect(desinger, &GwmLayoutDesigner::abou)
+	designer->open();
+	return designer;
+}
+
+GwmLayoutDesigner * GwmApp::duplicateLayout(QgsMasterLayoutInterface * layout, const QString & t)
+{
+	QString title = t;
+	if (title.isEmpty())
+	{
+		// TODO: inject a bit of randomness in auto-titles?
+		title = tr("%1 copy").arg(layout->name());
+	}
+
+	QgsMasterLayoutInterface *newLayout = QgsProject::instance()->layoutManager()->duplicateLayout(layout, title);
+	GwmLayoutDesigner *dlg = openLayoutDesignerDialog(newLayout);
+	dlg->activate();
+	return dlg;
+}
+
+void GwmApp::showLayoutManager()
+{
+	QgsLayoutManagerDialog* manager = new QgsLayoutManagerDialog(this, Qt::Window);
+	manager->setAttribute(Qt::WA_DeleteOnClose);
+	manager->show();
+	manager->activate();
+}
+
+bool GwmApp::uniqueLayoutTitle(QWidget * parent, QString & title, bool acceptEmpty, QgsMasterLayoutInterface::Type type, const QString & currentTitle)
+{
+	if (!parent)
+	{
+		parent = this;
+	}
+	bool ok = false;
+	bool titleValid = false;
+	QString newTitle = QString(currentTitle);
+
+	QString typeString;
+	switch (type)
+	{
+		case QgsMasterLayoutInterface::PrintLayout:
+			typeString = tr("print layout");
+			break;
+		case QgsMasterLayoutInterface::Report:
+			typeString = tr("report");
+			break;
+	}
+
+	QString chooseMsg = tr("Enter a unique %1 title").arg(typeString);
+	if (acceptEmpty)
+	{
+		chooseMsg += '\n' + tr("(a title will be automatically generated if left empty)");
+	}
+	QString titleMsg = chooseMsg;
+
+	QStringList layoutNames;
+	const QList< QgsMasterLayoutInterface * > layouts = QgsProject::instance()->layoutManager()->layouts();
+	layoutNames.reserve(layouts.size() + 1);
+	layoutNames << newTitle;
+	for (QgsMasterLayoutInterface *l : layouts)
+	{
+		layoutNames << l->name();
+	}
+	while (!titleValid)
+	{
+		newTitle = QInputDialog::getText(parent,
+			tr("Create %1 Title").arg(typeString),
+			titleMsg,
+			QLineEdit::Normal,
+			newTitle,
+			&ok);
+		if (!ok)
+		{
+			return false;
+		}
+
+		if (newTitle.isEmpty())
+		{
+			if (!acceptEmpty)
+			{
+				titleMsg = chooseMsg + "\n\n" + tr("Title can not be empty!");
+			}
+			else
+			{
+				titleValid = true;
+				newTitle = QgsProject::instance()->layoutManager()->generateUniqueTitle(type);
+			}
+		}
+		else if (layoutNames.indexOf(newTitle, 1) >= 0)
+		{
+			layoutNames[0] = QString(); // clear non-unique name
+			titleMsg = chooseMsg + "\n\n" + tr("Title already exists!");
+		}
+		else
+		{
+			titleValid = true;
+		}
+	}
+
+	title = newTitle;
+
+	return true;
 }
 
 void GwmApp::addLayerToModel(QgsVectorLayer *layer)
@@ -624,6 +812,7 @@ void GwmApp::createSymbolWindow(const QModelIndex &index)
     if (layer)
     {
         mSymbolWindow = new GwmSymbolWindow(layer);
+        mSymbolWindow->setAttribute(Qt::WA_DeleteOnClose);
     }
 }
 
@@ -676,7 +865,7 @@ void GwmApp::onGWRBtnClicked()
     if (gwrOptionDialog->exec() == QDialog::Accepted)
     {
         gwrOptionDialog->updateFields();
-        GwmLayerGroupItem* selectedItem = gwrOptionDialog->selectedLayer();
+        GwmLayerGroupItem* selectedItem = gwrOptionDialog->hasRegressionLayer() ? gwrOptionDialog->selectedRegressionLayer() : gwrOptionDialog->selectedLayer();
         const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwrTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
@@ -979,4 +1168,37 @@ void GwmApp::onGWPCABtnClicked()
             mMapModel->appentItem(gwrItem, selectedIndex);
         }
     }
+}
+
+void GwmApp::populateLayoutsMenu(QMenu * menu)
+{
+	menu->clear();
+	QList<QAction *> acts;
+	const QList< QgsMasterLayoutInterface * > layouts = QgsProject::instance()->layoutManager()->layouts();
+	acts.reserve(layouts.size());
+	for (QgsMasterLayoutInterface *layout : layouts)
+	{
+		QAction *a = new QAction(layout->name(), menu);
+		connect(a, &QAction::triggered, this, [this, layout]
+		{
+			openLayoutDesignerDialog(layout);
+		});
+		acts << a;
+	}
+	if (acts.size() > 1)
+	{
+		// sort actions by text
+		std::sort(acts.begin(), acts.end(), cmpByText_);
+	}
+	menu->addActions(acts);
+}
+
+void GwmApp::initLayouts()
+{
+	QgsLayoutGuiUtils::registerGuiForKnownItemTypes(mMapCanvas);
+
+	//mLayoutQptDropHandler = new QgsLayoutQptDropHandler(this);
+	//registerCustomLayoutDropHandler(mLayoutQptDropHandler);
+	//mLayoutImageDropHandler = new QgsLayoutImageDropHandler(this);
+	//registerCustomLayoutDropHandler(mLayoutImageDropHandler);
 }

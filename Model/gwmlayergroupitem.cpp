@@ -27,11 +27,13 @@ QVariant GwmLayerGroupItem::data(int col, int role)
     {
         switch (role) {
         case Qt::DisplayRole:
-            return QVariant(text());
+            return col == 0 ? text() : QString();
         case Qt::CheckStateRole:
             return mCheckState;
         case Qt::DecorationRole:
             return mOriginChild->data(col, role);
+        case Qt::EditRole:
+            return col == 0 ? text() : QString();
         default:
             break;
         }
@@ -39,9 +41,27 @@ QVariant GwmLayerGroupItem::data(int col, int role)
     return QVariant();
 }
 
+bool GwmLayerGroupItem::setData(int col, int role, QVariant value)
+{
+    if (col == 0)
+    {
+        switch (role) {
+        case Qt::CheckStateRole:
+            mCheckState = Qt::CheckState(value.toInt());
+            break;
+        case Qt::EditRole:
+            if (mOriginChild) mOriginChild->layer()->setName(value.toString());
+            break;
+        default:
+            return false;
+        }
+    }
+    return true;
+}
+
 Qt::ItemFlags GwmLayerGroupItem::flags()
 {
-    return Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | GwmLayerItem::flags();
+    return Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEditable | GwmLayerItem::flags();
 }
 
 QString GwmLayerGroupItem::text()

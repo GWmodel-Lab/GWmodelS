@@ -7,11 +7,16 @@
 #include <qgsmaplayer.h>
 #include <qgsmaptoolpan.h>
 #include <qgssymbolselectordialog.h>
+#include <qgslayoutcustomdrophandler.h>
+#include <qgsapplication.h>
+#include <qgsruntimeprofiler.h>
+#include <qgsmasterlayoutinterface.h>
 
 #include "gwmtoolbar.h"
 #include "gwmfeaturepanel.h"
 #include "gwmmaptoolidentifyfeature.h"
 #include "gwmpropertypanel.h"
+#include "Layout/gwmlayoutdesigner.h"
 
 #include "symbolwindow/gwmsymbolwindow.h"
 
@@ -23,14 +28,11 @@ class GwmApp : public QMainWindow
 {
     Q_OBJECT
 
-public:
-    static GwmApp* Instance()
-    {
-        return mInstance;
-    }
+public:		// 静态
+	static GwmApp* Instance();
 
 private:
-    static GwmApp* mInstance;
+	static GwmApp* mInstance;
 
 
 public:
@@ -48,9 +50,40 @@ public:
 
 private:
     void setupToolbar();
-    void setupFeaturePanel();
+	void setupFeaturePanel();
     void setupPropertyPanel();
     void setupMapPanel();
+	void initLayouts();
+
+	void startProfile(const QString &name)
+	{
+		QgsApplication::profiler()->start(name);
+	}
+
+	void endProfile()
+	{
+		QgsApplication::profiler()->end();
+	}
+
+	void functionProfile(void (GwmApp::*fnc)(), GwmApp *instance, const QString &name)
+	{
+		startProfile(name);
+		(instance->*fnc)();
+		endProfile();
+	}
+
+
+public:
+	GwmLayoutDesigner* createPrintLayout(const QString& t);
+	GwmLayoutDesigner* createNewReport(QString title);
+	GwmLayoutDesigner* openLayoutDesignerDialog(QgsMasterLayoutInterface* layout);
+	GwmLayoutDesigner* duplicateLayout(QgsMasterLayoutInterface *layout, const QString &t = QString());
+	void showLayoutManager();
+	bool uniqueLayoutTitle(QWidget *parent, QString &title, bool acceptEmpty, QgsMasterLayoutInterface::Type type, const QString &currentTitle = QString());
+	void registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
+	void unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
+
+private:
 
     void addLayerToModel(QgsVectorLayer* layer);
     void createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
@@ -59,11 +92,6 @@ private:
     // 要素区属性表窗口
     void onShowAttributeTable(const QModelIndex &index);
     void onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list);
-
-    /**
-     * @brief 从模型中导出地图所需要显示的图层
-     */
-    void deriveLayersFromModel();
 
     bool askUserForDatumTransfrom(const QgsCoordinateReferenceSystem& sourceCrs, const QgsCoordinateReferenceSystem& destinationCrs, const QgsMapLayer* layer = nullptr);
 
@@ -115,6 +143,9 @@ public slots:
 
     void onGWPCABtnClicked();
 
+	void populateLayoutsMenu(QMenu *menu);
+
+	
 private:
     void setupMenus();
     void toggleToolbarGeneral(bool flag);
@@ -124,6 +155,10 @@ private:
 
     GwmFeaturePanel* mFeaturePanel;
     GwmPropertyPanel* mPropertyPanel;
+
+	QVector<QPointer<QgsLayoutCustomDropHandler>> mCustomLayoutDropHandlers;
+	QgsLayoutCustomDropHandler *mLayoutQptDropHandler = nullptr;
+	QgsLayoutCustomDropHandler *mLayoutImageDropHandler = nullptr;
 
     GwmLayerItemModel* mMapModel;
     QgsMapCanvas* mMapCanvas;
@@ -135,6 +170,7 @@ private:
     GwmSymbolWindow* mSymbolWindow;
 
 //    MainWidget* mainWidget;
+
 };
 
 
@@ -151,6 +187,17 @@ inline QgsMapCanvas *GwmApp::mapCanvas() const
 inline GwmLayerItemModel *GwmApp::mapModel() const
 {
     return mMapModel;
+}
+
+inline void GwmApp::registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler * handler)
+{
+	if (!mCustomLayoutDropHandlers.contains(handler))
+		mCustomLayoutDropHandlers << handler;
+}
+
+inline void GwmApp::unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler * handler)
+{
+	mCustomLayoutDropHandlers.removeOne(handler);
 }
 
 #endif // MAINWINDOW_H

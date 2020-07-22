@@ -71,8 +71,10 @@ void GwmPropertyGWSSTab::updateUI()
         const vec p = { 0.0, 0.25, 0.5, 0.75, 1.0 };
         if (value.n_cols > nVar){
             int r = 0;
-            for(uword j = 0; j < nVar-1; j++){
-                for (uword k = j+1; k < nVar; k++){
+            for(uword j = 0; j < nVar-1; j++)
+            {
+                for (uword k = j+1; k < nVar; k++)
+                {
                     vec q = quantile(value.col(r), p);
                     QString name =  indepVars[j].name + "*" + indepVars[k].name ;
                     QTableWidgetItem* nameItem = new QTableWidgetItem(name);
@@ -89,7 +91,8 @@ void GwmPropertyGWSSTab::updateUI()
                 }
             }
         }
-        else{
+        else
+        {
             for (uword r = 0; r < value.n_cols; r++)
             {
                 vec q = quantile(value.col(r), p);

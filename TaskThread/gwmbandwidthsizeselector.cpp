@@ -87,8 +87,10 @@ GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable 
     w2->setBandwidth(x2);
     double f1 = instance->criterion(w1);
     double f2 = instance->criterion(w2);
-    mBandwidthCriterion[x1] = f1;
-    mBandwidthCriterion[x2] = f2;
+    if (f1 < DBL_MAX)
+        mBandwidthCriterion[x1] = f1;
+    if (f2 < DBL_MAX)
+        mBandwidthCriterion[x2] = f2;
     double d1 = f2 - f1;
     double xopt = f1 < f2 ? x1 : x2;
     double ea = 100;
@@ -103,7 +105,8 @@ GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable 
             f2 = f1;
             w1->setBandwidth(x1);
             f1 = instance->criterion(w1);
-            mBandwidthCriterion[x1] = f1;
+            if (f1 < DBL_MAX)
+                mBandwidthCriterion[x1] = f1;
         }
         else
         {
@@ -113,7 +116,8 @@ GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable 
             f1 = f2;
             w2->setBandwidth(x2);
             f2 = instance->criterion(w2);
-            mBandwidthCriterion[x2] = f2;
+            if (f2 < DBL_MAX)
+                mBandwidthCriterion[x2] = f2;
         }
         iter = iter + 1;
         xopt = (f1 < f2) ? x1 : x2;

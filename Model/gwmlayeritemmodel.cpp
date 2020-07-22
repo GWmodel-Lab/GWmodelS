@@ -2,6 +2,8 @@
 #include "gwmlayergwritem.h"
 #include "gwmlayerggwritem.h"
 
+#include <qgsproject.h>
+
 GwmLayerItemModel::GwmLayerItemModel(QObject *parent)
     : QAbstractItemModel(parent)
 {
@@ -116,6 +118,28 @@ bool GwmLayerItemModel::insertItem(int row, GwmLayerItem *item, const QModelInde
 
     if (success)
     {
+		GwmLayerItem::GwmLayerItemType type = item->itemType();
+		switch (type)
+		{
+			case GwmLayerItem::Base:
+				break;
+			case GwmLayerItem::Group:
+				QgsProject::instance()->addMapLayer(static_cast<GwmLayerGroupItem*>(item)->originChild()->layer());
+				break;
+			case GwmLayerItem::Vector:
+			case GwmLayerItem::Origin:
+			case GwmLayerItem::GWR:
+			case GwmLayerItem::Symbol:
+			case GwmLayerItem::ScalableGWR:
+			case GwmLayerItem::GeneralizedGWR:
+			case GwmLayerItem::MultiscaleGWR:
+			case GwmLayerItem::GWSS:
+			case GwmLayerItem::CollinearityGWR:
+			case GwmLayerItem::GWPCA:
+				QgsProject::instance()->addMapLayer(static_cast<GwmLayerVectorItem*>(item)->layer());
+			default:
+				break;
+		}
         emit layerAddedSignal();
     }
 
@@ -151,12 +175,42 @@ bool GwmLayerItemModel::removeRows(int row, int count, const QModelIndex &parent
     GwmLayerItem* parentItem = itemFromIndex(parent);
     bool success = false;
 
+	QList<QgsMapLayer*> layers;
+
+	for (size_t i = row; i < row + count; i++)
+	{
+		GwmLayerItem* item = parentItem->child(row);
+		GwmLayerItem::GwmLayerItemType type = item->itemType();
+		switch (type)
+		{
+			case GwmLayerItem::Base:
+				break;
+			case GwmLayerItem::Group:
+				layers.append(static_cast<GwmLayerGroupItem*>(item)->originChild()->layer());
+				break;
+			case GwmLayerItem::Vector:
+			case GwmLayerItem::Origin:
+			case GwmLayerItem::GWR:
+			case GwmLayerItem::Symbol:
+			case GwmLayerItem::ScalableGWR:
+			case GwmLayerItem::GeneralizedGWR:
+			case GwmLayerItem::MultiscaleGWR:
+			case GwmLayerItem::GWSS:
+			case GwmLayerItem::CollinearityGWR:
+			case GwmLayerItem::GWPCA:
+				layers.append(static_cast<GwmLayerVectorItem*>(item)->layer());
+			default:
+				break;
+		}
+	}
+
     beginRemoveRows(parent, row, row + count - 1);
     success = parentItem->removeChildren(row, count);
     endRemoveRows();
 
     if (success)
     {
+		QgsProject::instance()->removeMapLayers(layers);
         emit layerRemovedSignal();
     }
 
@@ -170,8 +224,33 @@ GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
              << "row" << row;
 
     QList<GwmLayerItem*> takenItems = takeRows(row, 1, parent);
-    if (takenItems.size() > 0)
-        return takenItems.first();
+	if (takenItems.size() > 0)
+	{
+		GwmLayerItem* item = takenItems.first();
+		GwmLayerItem::GwmLayerItemType type = item->itemType();
+		switch (type)
+		{
+			case GwmLayerItem::Base:
+				break;
+			case GwmLayerItem::Group:
+				QgsProject::instance()->removeMapLayer(static_cast<GwmLayerGroupItem*>(item)->originChild()->layer());
+				break;
+			case GwmLayerItem::Vector:
+			case GwmLayerItem::Origin:
+			case GwmLayerItem::GWR:
+			case GwmLayerItem::Symbol:
+			case GwmLayerItem::ScalableGWR:
+			case GwmLayerItem::GeneralizedGWR:
+			case GwmLayerItem::MultiscaleGWR:
+			case GwmLayerItem::GWSS:
+			case GwmLayerItem::CollinearityGWR:
+			case GwmLayerItem::GWPCA:
+				QgsProject::instance()->removeMapLayer(static_cast<GwmLayerVectorItem*>(item)->layer());
+			default:
+				break;
+		}
+		return takenItems.first();
+	}
     else
         return nullptr;
 
@@ -187,7 +266,33 @@ bool GwmLayerItemModel::appentItem(GwmLayerItem *item, const QModelIndex &parent
     success = parentItem->appendChildren(QList<GwmLayerItem*>() << item);
     endInsertRows();
 
-    emit layerAddedSignal();
+	if (success)
+	{
+		GwmLayerItem::GwmLayerItemType type = item->itemType();
+		switch (type)
+		{
+			case GwmLayerItem::Base:
+				break;
+			case GwmLayerItem::Group:
+				QgsProject::instance()->addMapLayer(static_cast<GwmLayerGroupItem*>(item)->originChild()->layer());
+				break;
+			case GwmLayerItem::Vector:
+			case GwmLayerItem::Origin:
+			case GwmLayerItem::GWR:
+			case GwmLayerItem::Symbol:
+			case GwmLayerItem::ScalableGWR:
+			case GwmLayerItem::GeneralizedGWR:
+			case GwmLayerItem::MultiscaleGWR:
+			case GwmLayerItem::GWSS:
+			case GwmLayerItem::CollinearityGWR:
+			case GwmLayerItem::GWPCA:
+				QgsProject::instance()->addMapLayer(static_cast<GwmLayerVectorItem*>(item)->layer());
+			default:
+				break;
+		}
+		emit layerAddedSignal();
+	}
+
     return success;
 }
 
@@ -207,6 +312,32 @@ QList<GwmLayerItem *> GwmLayerItemModel::takeRows(int row, int count, const QMod
 
     if (takenItems.size() > 0)
     {
+		for (size_t i = 0; i < count; i++)
+		{
+			GwmLayerItem* item = takenItems[i];
+			GwmLayerItem::GwmLayerItemType type = item->itemType();
+			switch (type)
+			{
+				case GwmLayerItem::Base:
+					break;
+				case GwmLayerItem::Group:
+					QgsProject::instance()->removeMapLayer(static_cast<GwmLayerGroupItem*>(item)->originChild()->layer());
+					break;
+				case GwmLayerItem::Vector:
+				case GwmLayerItem::Origin:
+				case GwmLayerItem::GWR:
+				case GwmLayerItem::Symbol:
+				case GwmLayerItem::ScalableGWR:
+				case GwmLayerItem::GeneralizedGWR:
+				case GwmLayerItem::MultiscaleGWR:
+				case GwmLayerItem::GWSS:
+				case GwmLayerItem::CollinearityGWR:
+				case GwmLayerItem::GWPCA:
+					QgsProject::instance()->removeMapLayer(static_cast<GwmLayerVectorItem*>(item)->layer());
+				default:
+					break;
+			}
+		}
         emit layerRemovedSignal();
     }
     return takenItems;
@@ -220,8 +351,12 @@ void GwmLayerItemModel::appendItem(QgsVectorLayer *layer, const QString path, co
     auto groupItem = new GwmLayerGroupItem(mRootItem, layer);
     groupItem->originChild()->setPath(path);
     groupItem->originChild()->setProvider(provider);
-    mRootItem->appendChildren(QList<GwmLayerItem*>() << groupItem);
-    connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+    bool success = mRootItem->appendChildren(QList<GwmLayerItem*>() << groupItem);
+	if (success)
+	{
+		QgsProject::instance()->addMapLayer(layer);
+		connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+	}
     endInsertRows();
 
     emit layerAddedSignal();
@@ -309,7 +444,7 @@ QList<QgsMapLayer *> GwmLayerItemModel::toMapLayerList()
             }
             for (GwmLayerVectorItem* analyse : group->analyseChildren())
             {
-                if (group->checkState() == Qt::CheckState::Checked)
+                if (analyse->checkState() == Qt::CheckState::Checked)
                 {
                     layerList.push_back(analyse->layer());
                 }
@@ -331,8 +466,8 @@ bool GwmLayerItemModel::canMoveUp(const QModelIndex &index)
     case GwmLayerItem::GeneralizedGWR:
     case GwmLayerItem::ScalableGWR:
     case GwmLayerItem::MultiscaleGWR:
-    case GwmLayerItem::GWSS:
     case GwmLayerItem::CollinearityGWR:
+    case GwmLayerItem::GWSS:
     case GwmLayerItem::GWPCA:
         return row > 1 && row < (item->parentItem()->childCount() - 1);
     default:
@@ -423,10 +558,14 @@ void GwmLayerItemModel::moveDown(const QModelIndex &index)
 void GwmLayerItemModel::remove(const QModelIndex &index)
 {
     int row = index.row();
-    GwmLayerItem* item = itemFromIndex(index);
-    GwmLayerItem* parent = item->parentItem();
-    parent->removeChildren(row, 1);
-    emit layerRemovedSignal();
+    //GwmLayerItem* item = itemFromIndex(index);
+    //GwmLayerItem* parent = item->parentItem();
+    //parent->removeChildren(row, 1);
+	bool success = removeRows(row, 1, index.parent());
+	if (success)
+	{
+	    emit layerRemovedSignal();
+	}
 }
 
 void GwmLayerItemModel::onVectorItemSymbolChanged()
