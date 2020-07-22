@@ -110,7 +110,7 @@ bool GwmLayerGroupItem::removeChildren(int position, int count)
 
     for (int r = 0; r < count; r++)
     {
-        delete mAnalyseChildren.takeAt(row);
+        mAnalyseChildren.takeAt(row);
     }
 
     return true;

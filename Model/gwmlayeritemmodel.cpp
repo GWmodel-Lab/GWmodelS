@@ -121,24 +121,33 @@ bool GwmLayerItemModel::insertItem(int row, GwmLayerItem *item, const QModelInde
 		GwmLayerItem::GwmLayerItemType type = item->itemType();
 		switch (type)
 		{
-			case GwmLayerItem::Base:
-				break;
-			case GwmLayerItem::Group:
-				QgsProject::instance()->addMapLayer(static_cast<GwmLayerGroupItem*>(item)->originChild()->layer());
-				break;
-			case GwmLayerItem::Vector:
-			case GwmLayerItem::Origin:
-			case GwmLayerItem::GWR:
-			case GwmLayerItem::Symbol:
-			case GwmLayerItem::ScalableGWR:
-			case GwmLayerItem::GeneralizedGWR:
-			case GwmLayerItem::MultiscaleGWR:
-			case GwmLayerItem::GWSS:
-			case GwmLayerItem::CollinearityGWR:
-			case GwmLayerItem::GWPCA:
-				QgsProject::instance()->addMapLayer(static_cast<GwmLayerVectorItem*>(item)->layer());
-			default:
-				break;
+        case GwmLayerItem::Base:
+            break;
+        case GwmLayerItem::Group:
+        {
+            auto groupItem = static_cast<GwmLayerGroupItem*>(item);
+            QgsProject::instance()->addMapLayer(groupItem->originChild()->layer());
+            connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+            break;
+        }
+        case GwmLayerItem::Vector:
+        case GwmLayerItem::Origin:
+        case GwmLayerItem::GWR:
+        case GwmLayerItem::Symbol:
+        case GwmLayerItem::ScalableGWR:
+        case GwmLayerItem::GeneralizedGWR:
+        case GwmLayerItem::MultiscaleGWR:
+        case GwmLayerItem::GWSS:
+        case GwmLayerItem::CollinearityGWR:
+        case GwmLayerItem::GWPCA:
+        {
+            auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
+            QgsProject::instance()->addMapLayer(vectorItem->layer());
+            connect(vectorItem, &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+            break;
+        }
+        default:
+            break;
 		}
         emit layerAddedSignal();
     }
@@ -183,24 +192,33 @@ bool GwmLayerItemModel::removeRows(int row, int count, const QModelIndex &parent
 		GwmLayerItem::GwmLayerItemType type = item->itemType();
 		switch (type)
 		{
-			case GwmLayerItem::Base:
-				break;
-			case GwmLayerItem::Group:
-				layers.append(static_cast<GwmLayerGroupItem*>(item)->originChild()->layer());
-				break;
-			case GwmLayerItem::Vector:
-			case GwmLayerItem::Origin:
-			case GwmLayerItem::GWR:
-			case GwmLayerItem::Symbol:
-			case GwmLayerItem::ScalableGWR:
-			case GwmLayerItem::GeneralizedGWR:
-			case GwmLayerItem::MultiscaleGWR:
-			case GwmLayerItem::GWSS:
-			case GwmLayerItem::CollinearityGWR:
-			case GwmLayerItem::GWPCA:
-				layers.append(static_cast<GwmLayerVectorItem*>(item)->layer());
-			default:
-				break;
+        case GwmLayerItem::Base:
+            break;
+        case GwmLayerItem::Group:
+        {
+            auto groupItem = static_cast<GwmLayerGroupItem*>(item);
+            layers.append(groupItem->originChild()->layer());
+            disconnect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+            break;
+        }
+        case GwmLayerItem::Vector:
+        case GwmLayerItem::Origin:
+        case GwmLayerItem::GWR:
+        case GwmLayerItem::Symbol:
+        case GwmLayerItem::ScalableGWR:
+        case GwmLayerItem::GeneralizedGWR:
+        case GwmLayerItem::MultiscaleGWR:
+        case GwmLayerItem::GWSS:
+        case GwmLayerItem::CollinearityGWR:
+        case GwmLayerItem::GWPCA:
+        {
+            auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
+            layers.append(vectorItem->layer());
+            disconnect(vectorItem, &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+            break;
+        }
+        default:
+            break;
 		}
 	}
 
@@ -210,7 +228,7 @@ bool GwmLayerItemModel::removeRows(int row, int count, const QModelIndex &parent
 
     if (success)
     {
-		QgsProject::instance()->removeMapLayers(layers);
+        QgsProject::instance()->removeMapLayers(layers);
         emit layerRemovedSignal();
     }
 
@@ -230,24 +248,33 @@ GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
 		GwmLayerItem::GwmLayerItemType type = item->itemType();
 		switch (type)
 		{
-			case GwmLayerItem::Base:
-				break;
-			case GwmLayerItem::Group:
-				QgsProject::instance()->removeMapLayer(static_cast<GwmLayerGroupItem*>(item)->originChild()->layer());
-				break;
-			case GwmLayerItem::Vector:
-			case GwmLayerItem::Origin:
-			case GwmLayerItem::GWR:
-			case GwmLayerItem::Symbol:
-			case GwmLayerItem::ScalableGWR:
-			case GwmLayerItem::GeneralizedGWR:
-			case GwmLayerItem::MultiscaleGWR:
-			case GwmLayerItem::GWSS:
-			case GwmLayerItem::CollinearityGWR:
-			case GwmLayerItem::GWPCA:
-				QgsProject::instance()->removeMapLayer(static_cast<GwmLayerVectorItem*>(item)->layer());
-			default:
-				break;
+        case GwmLayerItem::Base:
+            break;
+        case GwmLayerItem::Group:
+        {
+            auto groupItem = static_cast<GwmLayerGroupItem*>(item);
+            QgsProject::instance()->addMapLayer(groupItem->originChild()->layer());
+            connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+            break;
+        }
+        case GwmLayerItem::Vector:
+        case GwmLayerItem::Origin:
+        case GwmLayerItem::GWR:
+        case GwmLayerItem::Symbol:
+        case GwmLayerItem::ScalableGWR:
+        case GwmLayerItem::GeneralizedGWR:
+        case GwmLayerItem::MultiscaleGWR:
+        case GwmLayerItem::GWSS:
+        case GwmLayerItem::CollinearityGWR:
+        case GwmLayerItem::GWPCA:
+        {
+            auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
+            QgsProject::instance()->addMapLayer(vectorItem->layer());
+            connect(vectorItem, &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+            break;
+        }
+        default:
+            break;
 		}
 		return takenItems.first();
 	}
@@ -271,24 +298,33 @@ bool GwmLayerItemModel::appentItem(GwmLayerItem *item, const QModelIndex &parent
 		GwmLayerItem::GwmLayerItemType type = item->itemType();
 		switch (type)
 		{
-			case GwmLayerItem::Base:
-				break;
-			case GwmLayerItem::Group:
-				QgsProject::instance()->addMapLayer(static_cast<GwmLayerGroupItem*>(item)->originChild()->layer());
-				break;
-			case GwmLayerItem::Vector:
-			case GwmLayerItem::Origin:
-			case GwmLayerItem::GWR:
-			case GwmLayerItem::Symbol:
-			case GwmLayerItem::ScalableGWR:
-			case GwmLayerItem::GeneralizedGWR:
-			case GwmLayerItem::MultiscaleGWR:
-			case GwmLayerItem::GWSS:
-			case GwmLayerItem::CollinearityGWR:
-			case GwmLayerItem::GWPCA:
-				QgsProject::instance()->addMapLayer(static_cast<GwmLayerVectorItem*>(item)->layer());
-			default:
-				break;
+        case GwmLayerItem::Base:
+            break;
+        case GwmLayerItem::Group:
+        {
+            auto groupItem = static_cast<GwmLayerGroupItem*>(item);
+            QgsProject::instance()->addMapLayer(groupItem->originChild()->layer());
+            connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+            break;
+        }
+        case GwmLayerItem::Vector:
+        case GwmLayerItem::Origin:
+        case GwmLayerItem::GWR:
+        case GwmLayerItem::Symbol:
+        case GwmLayerItem::ScalableGWR:
+        case GwmLayerItem::GeneralizedGWR:
+        case GwmLayerItem::MultiscaleGWR:
+        case GwmLayerItem::GWSS:
+        case GwmLayerItem::CollinearityGWR:
+        case GwmLayerItem::GWPCA:
+        {
+            auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
+            QgsProject::instance()->addMapLayer(vectorItem->layer());
+            connect(vectorItem, &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+            break;
+        }
+        default:
+            break;
 		}
 		emit layerAddedSignal();
 	}
