@@ -167,6 +167,24 @@ void GwmGWROptionsDialog::setSelectedLayer(GwmLayerGroupItem *selectedLayer)
     mSelectedLayer = selectedLayer;
 }
 
+bool GwmGWROptionsDialog::hasRegressionLayer() const
+{
+    return ui->ckbRegressionPoints->checkState() == Qt::Checked;
+}
+
+GwmLayerGroupItem *GwmGWROptionsDialog::selectedRegressionLayer() const
+{
+    if (ui->ckbRegressionPoints->isChecked())
+    {
+        int regLayerIndex = ui->cmbRegressionLayerSelect->currentIndex();
+        if (regLayerIndex > -1)
+        {
+            return mMapLayerList[regLayerIndex];
+        }
+    }
+    return nullptr;
+}
+
 void GwmGWROptionsDialog::layerChanged(int index)
 {
     ui->mIndepVarSelector->layerChanged(mMapLayerList[index]->originChild()->layer());

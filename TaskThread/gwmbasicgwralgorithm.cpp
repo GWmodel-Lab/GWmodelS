@@ -109,7 +109,8 @@ void GwmBasicGWRAlgorithm::run()
         }
 
         CreateResultLayerData resultLayerData = {
-            qMakePair(QString("%1"), mBetas),
+            qMakePair(QString("%1"), mX),
+            qMakePair(QString("Betas_%1"), mBetas),
             qMakePair(QString("y"), mY),
             qMakePair(QString("yhat"), yhat),
             qMakePair(QString("residual"), res),
@@ -147,9 +148,25 @@ void GwmBasicGWRAlgorithm::run()
     else
     {
         mBetas = regression(mX, mY);
-        CreateResultLayerData resultLayerData = {
-            qMakePair(QString("%1"), mBetas)
-        };
+        CreateResultLayerData resultLayerData;
+        if (hasRegressionLayerXY)
+        {
+            vec yhat = Fitted(mRegressionLayerX, mBetas);
+            vec residual = mRegressionLayerY - yhat;
+            resultLayerData = {
+                qMakePair(QString(mDepVar.name), mRegressionLayerY),
+                qMakePair(QString("%1"), mRegressionLayerX),
+                qMakePair(QString("Betas_%1"), mBetas),
+                qMakePair(QString("yhat"), yhat),
+                qMakePair(QString("residual"), residual)
+            };
+        }
+        else
+        {
+            resultLayerData = {
+                qMakePair(QString("Betas_%1"), mBetas)
+            };
+        }
         createResultLayer(resultLayerData);
     }
 
@@ -649,12 +666,16 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight*
         }
     }
     double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas.t(), shat);
-    QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
-            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-            .arg(bandwidthWeight->bandwidth())
-            .arg(value);
-    emit message(msg);
-    return value;
+    if (isfinite(value))
+    {
+        QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
+                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                .arg(bandwidthWeight->bandwidth())
+                .arg(value);
+        emit message(msg);
+        return value;
+    }
+    else return DBL_MAX;
 }
 
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *bandwidthWeight)
@@ -693,12 +714,16 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *ba
     {
         vec shat = sum(shat_all, 1);
         double value = GwmGeographicalWeightedRegressionAlgorithm::AICc(mX, mY, betas.t(), shat);
-        QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
-                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-                .arg(bandwidthWeight->bandwidth())
-                .arg(value);
-        emit message(msg);
-        return value;
+        if (isfinite(value))
+        {
+            QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
+                    .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                    .arg(bandwidthWeight->bandwidth())
+                    .arg(value);
+            emit message(msg);
+            return value;
+        }
+        else return DBL_MAX;
     }
     else return DBL_MAX;
 }
@@ -770,17 +795,21 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *
             double res = mY(i) - det(mX.row(i) * beta);
             cv += res * res;
         }
-        catch (std::exception e)
+        catch (...)
         {
             return DBL_MAX;
         }
     }
-    QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
-            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-            .arg(bandwidthWeight->bandwidth())
-            .arg(cv);
-    emit message(msg);
-    return cv;
+    if (isfinite(cv))
+    {
+        QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                .arg(bandwidthWeight->bandwidth())
+                .arg(cv);
+        emit message(msg);
+        return cv;
+    }
+    else return DBL_MAX;
 }
 
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *bandwidthWeight)
@@ -806,9 +835,12 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *ban
                 mat xtwx_inv = inv_sympd(xtwx);
                 vec beta = xtwx_inv * xtwy;
                 double res = mY(i) - det(mX.row(i) * beta);
-                cv_all(thread) += res * res;
+                if (isfinite(res))
+                    cv_all(thread) += res * res;
+                else
+                    flag = false;
             }
-            catch (std::exception e)
+            catch (...)
             {
                 flag = false;
             }
@@ -847,14 +879,22 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVCuda(GwmBandwidthWeight *ba
         longlat = d->geographic();
     }
     bool adaptive = bandwidthWeight->adaptive();
-    double cv = cuda->CV(p, theta, longlat, bandwidthWeight->bandwidth(), bandwidthWeight->kernel(), adaptive, mGroupSize, mGpuId);
-    if (cv < DBL_MAX)
+    double cv = DBL_MAX;
+    try
     {
-        QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
-                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-                .arg(bandwidthWeight->bandwidth())
-                .arg(cv);
-        emit message(msg);
+        cv = cuda->CV(p, theta, longlat, bandwidthWeight->bandwidth(), bandwidthWeight->kernel(), adaptive, mGroupSize, mGpuId);
+        if (cv < DBL_MAX)
+        {
+            QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+                    .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                    .arg(bandwidthWeight->bandwidth())
+                    .arg(cv);
+            emit message(msg);
+        }
+    }
+    catch (...)
+    {
+        cv = DBL_MAX;
     }
     GWCUDA_Del(cuda);
     return cv;
@@ -1207,6 +1247,46 @@ void GwmBasicGWRAlgorithm::initPoints()
         {
             GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
             d->setFocusPoints(&mRegressionPoints);
+        }
+    }
+}
+
+void GwmBasicGWRAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
+{
+    GwmGeographicalWeightedRegressionAlgorithm::initXY(x, y, depVar, indepVars);
+    if (hasRegressionLayer())
+    {
+        // 检查回归点图层是否包含了所有变量
+        QStringList fieldNameList = mRegressionLayer->fields().names();
+        bool flag = fieldNameList.contains(depVar.name);
+        for (auto field : indepVars)
+        {
+            flag = flag && fieldNameList.contains(field.name);
+        }
+        hasRegressionLayerXY = flag;
+        if (flag)
+        {
+            // 设置回归点X和回归点Y
+            int regressionPointsSize = mRegressionLayer->featureCount();
+            mRegressionLayerY = vec(regressionPointsSize, fill::zeros);
+            mRegressionLayerX = mat(regressionPointsSize, indepVars.size() + 1, fill::zeros);
+            QgsFeatureIterator iterator = mRegressionLayer->getFeatures();
+            QgsFeature f;
+            bool ok = false;
+            for (int i = 0; iterator.nextFeature(f); i++)
+            {
+                double vY = f.attribute(depVar.name).toDouble(&ok);
+                if (ok)
+                {
+                    mRegressionLayerY(i) = vY;
+                    mRegressionLayerX(i, 0) = 1.0;
+                    for (int k = 0; k < indepVars.size(); k++)
+                    {
+                        double vX = f.attribute(indepVars[k].name).toDouble(&ok);
+                        if (ok) mRegressionLayerX(i, k + 1) = vX;
+                    }
+                }
+            }
         }
     }
 }

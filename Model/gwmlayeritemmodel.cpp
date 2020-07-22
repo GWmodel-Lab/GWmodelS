@@ -444,7 +444,7 @@ QList<QgsMapLayer *> GwmLayerItemModel::toMapLayerList()
             }
             for (GwmLayerVectorItem* analyse : group->analyseChildren())
             {
-                if (group->checkState() == Qt::CheckState::Checked)
+                if (analyse->checkState() == Qt::CheckState::Checked)
                 {
                     layerList.push_back(analyse->layer());
                 }
@@ -466,8 +466,8 @@ bool GwmLayerItemModel::canMoveUp(const QModelIndex &index)
     case GwmLayerItem::GeneralizedGWR:
     case GwmLayerItem::ScalableGWR:
     case GwmLayerItem::MultiscaleGWR:
-    case GwmLayerItem::GWSS:
     case GwmLayerItem::CollinearityGWR:
+    case GwmLayerItem::GWSS:
     case GwmLayerItem::GWPCA:
         return row > 1 && row < (item->parentItem()->childCount() - 1);
     default:

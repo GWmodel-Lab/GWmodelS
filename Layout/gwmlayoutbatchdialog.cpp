@@ -208,7 +208,7 @@ void GwmLayoutBatchDialog::on_btnEditSymbol_clicked()
         GwmLayoutBatchConfigurationItemField* fieldItem = static_cast<GwmLayoutBatchConfigurationItemField*>(item);
         GwmLayoutBatchConfigurationItemLayer* layerItem = static_cast<GwmLayoutBatchConfigurationItemLayer*>(fieldItem->parent());
         GwmSymbolEditorDialog* editor = new GwmSymbolEditorDialog(layerItem->layer(), this);
-        editor->setSelectedRenderer(fieldItem->renderer());
+        editor->setSelectedRenderer(fieldItem->renderer()->clone());
         if (editor->exec() == QDialog::Accepted)
         {
             QgsFeatureRenderer* renderer = editor->selectedRenderer();
@@ -422,10 +422,11 @@ void GwmLayoutBatchDialog::exportToRasterBatch(const QString &ext)
                         {
                             if (QgsLayoutItemLegend* legend = dynamic_cast<QgsLayoutItemLegend*>(item))
                             {
-                                legend->updateLegend();
                                 QString titleTemplate = layoutItemTemplateMap[legend];
                                 QString title = titleTemplate.replace("%layer%", layerItem->name(), Qt::CaseInsensitive).replace("%field%", fieldItem->name(), Qt::CaseInsensitive);
                                 legend->setTitle(title);
+                                legend->updateLegend();
+                                legend->updateFilterByMap();
                             }
                             else if (QgsLayoutItemLabel* label = dynamic_cast<QgsLayoutItemLabel*>(item))
                             {
@@ -434,6 +435,7 @@ void GwmLayoutBatchDialog::exportToRasterBatch(const QString &ext)
                                 label->setText(title);
                             }
                         }
+                        layout->refresh();
                         // 导出图层
                         QFileInfo outputFile = formatOutputFile(directory, filenameTemplate, layerItem->name(), fieldItem->name(), ext);
                         QgsProxyProgressTask* proxyTask = new QgsProxyProgressTask(tr("Exporting %1").arg(outputFile.absoluteFilePath()));
