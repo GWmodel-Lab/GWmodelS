@@ -143,7 +143,7 @@ private:
 	bool containsAdvancedEffects() const;
 
 
-private slots:
+public slots:
 	void updateWindowTitle();
 	void pageOrientationChanged();
 

@@ -260,6 +260,7 @@
    </attribute>
    <addaction name="actionNew_Layout"/>
    <addaction name="actionLayout_Manager"/>
+   <addaction name="actionLayout_Batch"/>
   </widget>
   <action name="action_Open_Project">
    <property name="text">
@@ -456,6 +457,15 @@
    </property>
    <property name="text">
     <string>Layout Manager</string>
+   </property>
+  </action>
+  <action name="actionLayout_Batch">
+   <property name="icon">
+    <iconset resource="images/images.qrc">
+     <normaloff>:/images/themes/default/mLayoutItemTable.svg</normaloff>:/images/themes/default/mLayoutItemTable.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Layout Batch</string>
    </property>
   </action>
  </widget>

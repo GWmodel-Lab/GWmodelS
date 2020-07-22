@@ -102,6 +102,7 @@ public:  // GwmSpatialAlgorithm interface
 
 public:     // GwmGeographicalWeightedRegressionAlgorithm
     virtual void initPoints();
+    virtual void initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars) override;
 
 
 public:     // IBandwidthSizeSelectable interface
@@ -192,6 +193,10 @@ protected:
 
     vec mShat;
     mat mS;
+
+    bool hasRegressionLayerXY = false;
+    vec mRegressionLayerY;
+    mat mRegressionLayerX;
 
     GwmBandwidthSizeSelector mBandwidthSizeSelector;
     bool mIsAutoselectBandwidth = false;
