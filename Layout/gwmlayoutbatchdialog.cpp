@@ -21,6 +21,7 @@
 #include <qgslayoutmodel.h>
 #include <qgslayoutitemlegend.h>
 #include <qgslayoutitemlabel.h>
+#include <qgsmaplayerlegend.h>
 
 #include "gwmapp.h"
 #include "gwmlayoutbatchlayerlistmodel.h"
@@ -415,7 +416,8 @@ void GwmLayoutBatchDialog::exportToRasterBatch(const QString &ext)
                         QgsFeatureRenderer* renderer0 = layer->renderer()->clone();
                         QgsFeatureRenderer* renderer = fieldItem->renderer();
                         layer->setRenderer(renderer->clone());
-//                        GwmApp::Instance()->mapCanvas()->refresh();
+                        QgsMapLayerLegend* legend = QgsMapLayerLegend::defaultVectorLegend(layer);
+                        layer->setLegend(legend);
                         layout->refresh();
                         // 图例和其他文字
                         for (auto item : layoutItemTemplateMap.keys())
@@ -425,16 +427,16 @@ void GwmLayoutBatchDialog::exportToRasterBatch(const QString &ext)
                                 QString titleTemplate = layoutItemTemplateMap[legend];
                                 QString title = titleTemplate.replace("%layer%", layerItem->name(), Qt::CaseInsensitive).replace("%field%", fieldItem->name(), Qt::CaseInsensitive);
                                 legend->setTitle(title);
-//                                legend->updateLegend();
-                                legend->setAutoUpdateModel(true);
-                                legend->setAutoUpdateModel(false);
                                 legend->updateFilterByMap();
+                                legend->refresh();
+
                             }
                             else if (QgsLayoutItemLabel* label = dynamic_cast<QgsLayoutItemLabel*>(item))
                             {
                                 QString titleTemplate = layoutItemTemplateMap[label];
                                 QString title = titleTemplate.replace("%layer%", layerItem->name(), Qt::CaseInsensitive).replace("%field%", fieldItem->name(), Qt::CaseInsensitive);
                                 label->setText(title);
+                                label->refresh();
                             }
                         }
                         layout->refresh();

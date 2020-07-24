@@ -3,6 +3,7 @@
 #include <SpatialWeight/gwmminkwoskidistance.h>
 #include <gsl/gsl_cdf.h>
 #include <omp.h>
+#include <qgsmemoryproviderutils.h>
 
 
 GwmDiagnostic GwmBasicGWRAlgorithm::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
@@ -588,8 +589,6 @@ void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString 
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
     layerName += name;
-    mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
-    mResultLayer->setCrs(srcLayer->crs());
 
     // 设置字段
     QgsFields fields;
@@ -611,8 +610,8 @@ void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString 
             fields.append(QgsField(title, QVariant::Double, QStringLiteral("double")));
         }
     }
-    mResultLayer->dataProvider()->addAttributes(fields.toList());
-    mResultLayer->updateFields();
+
+    mResultLayer = QgsMemoryProviderUtils::createMemoryLayer(layerName, fields, srcLayer->wkbType(), srcLayer->crs());
 
     // 设置要素几何
     mResultLayer->startEditing();

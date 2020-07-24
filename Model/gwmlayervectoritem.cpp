@@ -6,6 +6,7 @@
 #include <qgsvectorfilewritertask.h>
 #include <qgsapplication.h>
 #include <qgsproject.h>
+#include <qgsmaplayerlegend.h>
 #include "TaskThread/gwmsavelayerthread.h"
 #include "gwmprogressdialog.h"
 
@@ -179,6 +180,10 @@ void GwmLayerVectorItem::createSymbolChildren()
 
 void GwmLayerVectorItem::onLayerRendererChanged()
 {
+#ifndef _DEBUG
+    QgsDefaultVectorLayerLegend* legend = static_cast<QgsDefaultVectorLayerLegend*>(QgsMapLayerLegend::defaultVectorLegend(mLayer));
+    mLayer->setLegend(legend);
+#endif
     this->createSymbolChildren();
     this->mSymbolType = GwmLayerVectorItem::renderTypeToSymbolType(mLayer->renderer()->type());
     emit itemSymbolChangedSignal();
