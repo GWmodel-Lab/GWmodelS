@@ -29,7 +29,7 @@ GwmLayerCollinearityGWRItem::GwmLayerCollinearityGWRItem(GwmLayerItem* parent, Q
 int GwmLayerCollinearityGWRItem::childNumber()
 {
     if (mParentItem)
-        return ((GwmLayerGroupItem*)mParentItem)->analyseChildren().indexOf(this);
+        return ((GwmLayerGroupItem*)mParentItem)->analyseChildren().indexOf(this) + 1;
     return 0;
 }
 

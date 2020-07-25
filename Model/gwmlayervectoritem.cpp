@@ -9,6 +9,7 @@
 #include <qgsmaplayerlegend.h>
 #include "TaskThread/gwmsavelayerthread.h"
 #include "gwmprogressdialog.h"
+#include "Model/gwmlayergroupitem.h"
 
 GwmLayerVectorItem::SymbolType GwmLayerVectorItem::renderTypeToSymbolType(QString type)
 {
@@ -52,7 +53,7 @@ QString GwmLayerVectorItem::text()
 
 GwmLayerItem* GwmLayerVectorItem::child(int row)
 {
-    if (row > 0 && row < childCount())
+    if (row >= 0 && row < childCount())
         return mSymbolChildren.at(row);
     else return nullptr;
 }
@@ -71,7 +72,12 @@ int GwmLayerVectorItem::childCount()
 
 int GwmLayerVectorItem::childNumber()
 {
-    return 0;
+    GwmLayerGroupItem* parentItem = dynamic_cast<GwmLayerGroupItem*>(mParentItem);
+    if (parentItem)
+    {
+        return (parentItem->originChild() == this) ? 0 : (parentItem->analyseChildren().indexOf(this) + 1);
+    }
+    else return -1;
 }
 
 bool GwmLayerVectorItem::insertChildren(int position, int count)
