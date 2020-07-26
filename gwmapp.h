@@ -17,6 +17,7 @@
 #include "gwmmaptoolidentifyfeature.h"
 #include "gwmpropertypanel.h"
 #include "Layout/gwmlayoutdesigner.h"
+#include "gwmproject.h"
 
 #include "symbolwindow/gwmsymbolwindow.h"
 

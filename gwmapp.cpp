@@ -95,7 +95,6 @@ GwmApp* GwmApp::mInstance = nullptr;
 GwmApp::GwmApp(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-	, mMapModel(new GwmLayerItemModel)
 {
 	if (mInstance)
 	{
@@ -106,6 +105,8 @@ GwmApp::GwmApp(QWidget *parent)
 		abort();
 	}
 	mInstance = this;
+
+    mMapModel = GwmProject::instance()->layerItemModel();
 
     ui->setupUi(this);
     setupMenus();
@@ -138,6 +139,12 @@ void GwmApp::setupMenus()
     connect(ui->actionLocal_collinearity_GWR,&QAction::triggered, this, &GwmApp::onLcrGWRBtnClicked);
     connect(ui->actionMultiscale_GWR,&QAction::triggered, this, &GwmApp::onMultiscaleGWRBtnClicked);
     connect(ui->actionBasic_GWR,&QAction::triggered, this, &GwmApp::onGWRBtnClicked);
+    connect(ui->action_Save_Project, &QAction::triggered, this, [&]()
+    {
+        QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project As"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
+        QFileInfo fileInfo(filePath);
+        GwmProject::instance()->save(fileInfo);
+    });
 }
 
 void GwmApp::toggleToolbarGeneral(bool flag)

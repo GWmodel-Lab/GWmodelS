@@ -154,6 +154,20 @@ bool GwmLayerItem::moveChildren(int position, int count, int destination)
     else return false;
 }
 
+bool GwmLayerItem::writeXml(QDomNode &node, QDomDocument &doc)
+{
+    QDomElement parent = node.toElement();
+    for (auto item : mChildren)
+    {
+        QDomElement group = doc.createElement("group");
+        group.setAttribute("name", text());
+        parent.appendChild(group);
+
+        item->writeXml(group, doc);
+    }
+    return true;
+}
+
 Qt::CheckState GwmLayerItem::checkState() const
 {
     return mCheckState;

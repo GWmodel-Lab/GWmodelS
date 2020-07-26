@@ -184,3 +184,25 @@ bool GwmLayerGroupItem::moveChildren(int position, int count, int destination)
         return insertChildren(destination, removedChildren);
     else return false;
 }
+
+bool GwmLayerGroupItem::writeXml(QDomNode &node, QDomDocument &doc)
+{
+    QDomElement group = node.toElement();
+
+    QDomElement origin = doc.createElement("origin");
+    origin.setAttribute("name", text());
+    group.appendChild(origin);
+    mOriginChild->writeXml(origin, doc);
+
+    QDomElement analyseList = doc.createElement("analyseList");
+    for (auto analyseChild : mAnalyseChildren)
+    {
+        QDomElement analyse = doc.createElement("analyse");
+        analyse.setAttribute("name", analyseChild->text());
+        analyseChild->writeXml(analyse, doc);
+        analyseList.appendChild(analyse);
+    }
+    group.appendChild(analyseList);
+
+    return true;
+}

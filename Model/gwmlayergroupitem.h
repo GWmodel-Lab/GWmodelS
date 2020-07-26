@@ -34,6 +34,8 @@ public:
     virtual QList<GwmLayerItem*> takeChildren(int position, int count) override;
     virtual bool moveChildren(int position, int count, int destination) override;
 
+    virtual bool writeXml(QDomNode& node, QDomDocument& doc);
+
     inline void setOriginItem(GwmLayerOriginItem* item) { mOriginChild = item; }
 
     inline GwmLayerOriginItem *originChild() const;

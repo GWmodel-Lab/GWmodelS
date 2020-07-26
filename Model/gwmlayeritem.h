@@ -6,6 +6,7 @@
 #include <QList>
 #include <QVariant>
 #include <qgsvectorlayer.h>
+#include <QDomDocument>
 
 class GwmLayerGroupItem;
 
@@ -54,6 +55,7 @@ public:
     virtual QList<GwmLayerItem*> takeChildren(int position, int count);
     virtual bool moveChildren(int position, int count, int destination);
 
+    virtual bool writeXml(QDomNode& node, QDomDocument& doc);
 
     inline QList<GwmLayerGroupItem *> children() const { return mChildren; }
     inline void setChildren(const QList<GwmLayerGroupItem *> &children) { mChildren = children; }

@@ -11,6 +11,18 @@
 #include "gwmprogressdialog.h"
 #include "Model/gwmlayergroupitem.h"
 
+GwmEnumValueNameMapper<GwmLayerVectorItem::SymbolType> GwmLayerVectorItem::SymbolTypeNameMapper = {
+    std::make_pair(GwmLayerVectorItem::SymbolType::singleSymbol, "singleSymbol"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::categorizedSymbol, "categorizedSymbol"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::graduatedSymbol, "graduatedSymbol"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::RuleRenderer, "RuleRenderer"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::heatmapRenderer, "heatmapRenderer"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::invertedPolygonRenderer, "invertedPolygonRenderer"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::pointCluster, "pointCluster"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::pointDisplacement, "pointDisplacement"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::nullSymbol, "nullSymbol")
+};
+
 GwmLayerVectorItem::SymbolType GwmLayerVectorItem::renderTypeToSymbolType(QString type)
 {
     if ( type == QStringLiteral( "singleSymbol" ) ) return SymbolType::singleSymbol;
@@ -216,6 +228,18 @@ bool GwmLayerVectorItem::moveChildren(int position, int count, int destination)
     if (removedChildren.size() > 0)
         return insertChildren(destination, removedChildren);
     else return false;
+}
+
+bool GwmLayerVectorItem::writeXml(QDomNode &node, QDomDocument &doc)
+{
+    QDomElement vector = node.toElement();
+    vector.setAttribute("provider", mProvider);
+    vector.setAttribute("path", mPath);
+
+//    QDomElement vector_symbol = doc.createElement("symbol");
+//    vector_symbol.setAttribute("type", SymbolTypeNameMapper.name(mSymbolType));
+
+    return true;
 }
 
 QString GwmLayerVectorItem::provider() const
