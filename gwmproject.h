@@ -25,7 +25,7 @@ public:
     void setLayerItemModel(GwmLayerItemModel *layerItemModel);
 
 public:
-    void read(const QFileInfo& projectFile);
+    bool read(const QFileInfo& projectFile);
     void save(const QFileInfo& projectFile);
 
 private:

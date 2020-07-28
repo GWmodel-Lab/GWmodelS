@@ -17,13 +17,69 @@ GwmProject::GwmProject(QObject *parent) : QObject(parent)
     mLayerItemModel = new GwmLayerItemModel(parent);
 }
 
-void GwmProject::read(const QFileInfo &projectFile)
+bool GwmProject::read(const QFileInfo &projectFile)
 {
+    QDomDocument doc;
+    QFile file(projectFile.filePath());
+    if (!file.open(QIODevice::ReadOnly))
+        return false;
+    if (!doc.setContent(&file))
+    {
+        file.close();
+        return false;
+    }
+    file.close();
 
+    QDomElement docElement = doc.documentElement();
+
+    auto project = doc.firstChildElement("gwmproject");
+    if (project.isNull())
+        return false;
+
+    auto crsNode = project.firstChildElement("crs");
+    if (crsNode.isNull())
+        return false;
+
+    QgsCoordinateReferenceSystem crs;
+    crs.readXml(crsNode.firstChild());
+    QgsProject::instance()->setCrs(crs);
+
+    auto groupListNode = project.firstChildElement("groupList");
+    if (!groupListNode.isNull())
+    {
+        auto groupNode = groupListNode.firstChildElement("group");
+        while (!groupNode.isNull()) {
+            GwmLayerGroupItem* groupItem = new GwmLayerGroupItem();
+            if (groupItem->readXml(groupNode))
+            {
+                mLayerItemModel->appentItem(groupItem);
+            }
+            else
+            {
+                delete groupItem;
+            }
+            groupNode = groupNode.nextSiblingElement("group");
+        }
+    }
+    else return false;
 }
 
 void GwmProject::save(const QFileInfo &projectFile)
 {
+    // 保存临时图层
+    for (auto groupItem : mLayerItemModel->rootChildren())
+    {
+        for (auto analyseItem : groupItem->analyseChildren())
+        {
+            QFileInfo analyseFile(projectFile.path(), QString("%1.shp").arg(analyseItem->text()));
+            if (analyseItem->save(analyseFile.filePath(), analyseFile.fileName(), QStringLiteral("shp")))
+            {
+                analyseItem->setDataSource(analyseFile.filePath(), QStringLiteral("ogr"));
+            }
+        }
+    }
+
+    // 保存工程文件
     QDomDocument doc;
     QDomProcessingInstruction xmlInstruction = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"");
     doc.appendChild(xmlInstruction);

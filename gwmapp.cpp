@@ -139,6 +139,15 @@ void GwmApp::setupMenus()
     connect(ui->actionLocal_collinearity_GWR,&QAction::triggered, this, &GwmApp::onLcrGWRBtnClicked);
     connect(ui->actionMultiscale_GWR,&QAction::triggered, this, &GwmApp::onMultiscaleGWRBtnClicked);
     connect(ui->actionBasic_GWR,&QAction::triggered, this, &GwmApp::onGWRBtnClicked);
+    connect(ui->action_Open_Project, &QAction::triggered, this, [&]()
+    {
+        QString filePath = QFileDialog::getOpenFileName(this, tr("Save Project As"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
+        QFileInfo fileInfo(filePath);
+        if (GwmProject::instance()->read(fileInfo))
+        {
+            onMapModelChanged();
+        }
+    });
     connect(ui->action_Save_Project, &QAction::triggered, this, [&]()
     {
         QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project As"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
@@ -557,7 +566,10 @@ void GwmApp::onSaveLayer()
                     QFileInfo fileInfo(filePath);
                     QString fileName = fileInfo.baseName();
                     QString file_suffix = fileInfo.suffix();
-                    layerItem->save(filePath,fileName,file_suffix);
+                    if (layerItem->save(filePath,fileName,file_suffix))
+                    {
+                        layerItem->setDataSource(filePath, "ogr");
+                    }
                 }
             }
             else
@@ -570,7 +582,7 @@ void GwmApp::onSaveLayer()
 
 void GwmApp::onExportLayerAsCsv(const QModelIndex &index)
 {
-//    onExportLayer(tr("CSV (*.csv)"));
+    //    onExportLayer(tr("CSV (*.csv)"));
     GwmLayerItem* item = mMapModel->itemFromIndex(index);
     GwmLayerVectorItem* layerItem;
     switch (item->itemType()) {

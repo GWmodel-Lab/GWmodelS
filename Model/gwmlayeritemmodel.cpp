@@ -295,6 +295,7 @@ bool GwmLayerItemModel::appentItem(GwmLayerItem *item, const QModelIndex &parent
 
 	if (success)
 	{
+        item->setParentItem(parentItem);
 		GwmLayerItem::GwmLayerItemType type = item->itemType();
 		switch (type)
 		{
@@ -305,6 +306,10 @@ bool GwmLayerItemModel::appentItem(GwmLayerItem *item, const QModelIndex &parent
             auto groupItem = static_cast<GwmLayerGroupItem*>(item);
             QgsProject::instance()->addMapLayer(groupItem->originChild()->layer());
             connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+            for (auto item : groupItem->analyseChildren())
+            {
+                connect(item, &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
+            }
             break;
         }
         case GwmLayerItem::Vector:

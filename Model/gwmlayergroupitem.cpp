@@ -1,5 +1,5 @@
 #include "gwmlayergroupitem.h"
-#include "gwmlayergwritem.h"
+#include "gwmlayerbasicgwritem.h"
 
 GwmLayerGroupItem::GwmLayerGroupItem(GwmLayerItem* parent, QgsVectorLayer* vector)
     : GwmLayerItem(parent)
@@ -13,7 +13,10 @@ GwmLayerGroupItem::GwmLayerGroupItem(GwmLayerItem* parent, QgsVectorLayer* vecto
 
 GwmLayerGroupItem::~GwmLayerGroupItem()
 {
-    delete mOriginChild;
+    if (mOriginChild)
+    {
+        delete mOriginChild;
+    }
     for (GwmLayerVectorItem* item : mAnalyseChildren)
     {
         delete item;
@@ -185,6 +188,61 @@ bool GwmLayerGroupItem::moveChildren(int position, int count, int destination)
     else return false;
 }
 
+bool GwmLayerGroupItem::readXml(QDomNode &node)
+{
+    QDomElement group = node.toElement();
+
+    QDomElement origin = node.firstChildElement("origin");
+    if (origin.isNull())
+        return false;
+
+    GwmLayerOriginItem* originItem = new GwmLayerOriginItem(this);
+    if (originItem->readXml(origin))
+    {
+        mOriginChild = originItem;
+    }
+    else
+    {
+        delete mOriginChild;
+        mOriginChild = nullptr;
+        return false;
+    }
+
+    QDomElement analyseList = node.firstChildElement("analyseList");
+    if (analyseList.isNull())
+        return false;
+
+    QDomElement analyseNode = analyseList.firstChildElement("analyse");
+    while (!analyseNode.isNull())
+    {
+        if (analyseNode.hasAttribute("type"))
+        {
+            QString analyseTypeName = analyseNode.attribute("type");
+            GwmLayerItemType type = LayerItemTypeNameMapper.value(analyseTypeName);
+            GwmLayerVectorItem* analyseItem;
+            switch (type) {
+            case GwmLayerItemType::GWR:
+                analyseItem = new GwmLayerBasicGWRItem(this);
+                break;
+            default:
+                analyseItem = new GwmLayerVectorItem(this);
+                break;
+            }
+            if (analyseItem->readXml(analyseNode))
+            {
+                mAnalyseChildren.append(analyseItem);
+            }
+            else
+            {
+                delete analyseItem;
+            }
+        }
+        analyseNode = analyseNode.nextSiblingElement("analyse");
+    }
+
+    return true;
+}
+
 bool GwmLayerGroupItem::writeXml(QDomNode &node, QDomDocument &doc)
 {
     QDomElement group = node.toElement();
@@ -194,15 +252,18 @@ bool GwmLayerGroupItem::writeXml(QDomNode &node, QDomDocument &doc)
     group.appendChild(origin);
     mOriginChild->writeXml(origin, doc);
 
-    QDomElement analyseList = doc.createElement("analyseList");
-    for (auto analyseChild : mAnalyseChildren)
+    if (mAnalyseChildren.size() > 0)
     {
-        QDomElement analyse = doc.createElement("analyse");
-        analyse.setAttribute("name", analyseChild->text());
-        analyseChild->writeXml(analyse, doc);
-        analyseList.appendChild(analyse);
+        QDomElement analyseList = doc.createElement("analyseList");
+        for (auto analyseChild : mAnalyseChildren)
+        {
+            QDomElement analyse = doc.createElement("analyse");
+            analyse.setAttribute("name", analyseChild->text());
+            analyseChild->writeXml(analyse, doc);
+            analyseList.appendChild(analyse);
+        }
+        group.appendChild(analyseList);
     }
-    group.appendChild(analyseList);
 
     return true;
 }
