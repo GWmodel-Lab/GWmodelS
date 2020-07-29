@@ -403,6 +403,11 @@ void GwmLayerItemModel::appendItem(QgsVectorLayer *layer, const QString path, co
     emit layerAddedSignal();
 }
 
+bool GwmLayerItemModel::clear()
+{
+    return removeRows(0, rowCount());
+}
+
 GwmLayerGroupItem *GwmLayerItemModel::item(int i)
 {
     if (i >= 0 && i < mRootItem->childCount())

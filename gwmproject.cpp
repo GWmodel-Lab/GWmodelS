@@ -1,6 +1,9 @@
 #include "gwmproject.h"
 #include <QDomDocument>
 
+#include <QMessageBox>
+#include "gwmapp.h"
+
 GwmProject* GwmProject::sProject = nullptr;
 
 GwmProject *GwmProject::instance()
@@ -15,16 +18,30 @@ GwmProject *GwmProject::instance()
 GwmProject::GwmProject(QObject *parent) : QObject(parent)
 {
     mLayerItemModel = new GwmLayerItemModel(parent);
+    connect(mLayerItemModel, &GwmLayerItemModel::layerAddedSignal, this, &GwmProject::onLayerModelChanged);
+    connect(mLayerItemModel, &GwmLayerItemModel::layerRemovedSignal, this, &GwmProject::onLayerModelChanged);
+    connect(mLayerItemModel, &GwmLayerItemModel::layerItemChangedSignal, this, &GwmProject::onLayerModelChanged);
+    connect(mLayerItemModel, &GwmLayerItemModel::layerItemMovedSignal, this, &GwmProject::onLayerModelChanged);
 }
 
 bool GwmProject::read(const QFileInfo &projectFile)
 {
+    if (!mLayerItemModel->clear())
+    {
+        QMessageBox::warning(GwmApp::Instance(), tr("Close Error!"), tr("Cannot close old project."));
+        return false;
+    }
+
     QDomDocument doc;
     QFile file(projectFile.filePath());
     if (!file.open(QIODevice::ReadOnly))
+    {
+        QMessageBox::warning(GwmApp::Instance(), tr("Open File Error!"), tr("Cannot open project file."));
         return false;
+    }
     if (!doc.setContent(&file))
     {
+        QMessageBox::warning(GwmApp::Instance(), tr("Read File Error!"), tr("Cannot read project file."));
         file.close();
         return false;
     }
@@ -32,36 +49,59 @@ bool GwmProject::read(const QFileInfo &projectFile)
 
     QDomElement docElement = doc.documentElement();
 
-    auto project = doc.firstChildElement("gwmproject");
-    if (project.isNull())
+    auto nodeProject = doc.firstChildElement("gwmproject");
+    if (nodeProject.isNull())
+    {
+        QMessageBox::warning(GwmApp::Instance(), tr("Read File Error!"), tr("Cannot find any project definition."));
         return false;
+    }
+    setName(nodeProject.attribute("name"));
 
-    auto crsNode = project.firstChildElement("crs");
-    if (crsNode.isNull())
+    auto nodeCrs = nodeProject.firstChildElement("crs");
+    if (nodeCrs.isNull())
+    {
+        QMessageBox::warning(GwmApp::Instance(), tr("Read File Error!"), tr("No crs defined."));
         return false;
+    }
 
     QgsCoordinateReferenceSystem crs;
-    crs.readXml(crsNode.firstChild());
-    QgsProject::instance()->setCrs(crs);
-
-    auto groupListNode = project.firstChildElement("groupList");
-    if (!groupListNode.isNull())
+    crs.readXml(nodeCrs.firstChild());
+    if (crs.isValid())
     {
-        auto groupNode = groupListNode.firstChildElement("group");
-        while (!groupNode.isNull()) {
+        QgsProject::instance()->setCrs(crs);
+    }
+    else
+    {
+        QMessageBox::information(GwmApp::Instance(), tr("Crs is Invalid!"), tr("Use WGS84 as default."));
+        QgsProject::instance()->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(4326));
+    }
+
+    auto nodeGroupList = nodeProject.firstChildElement("groupList");
+    if (!nodeGroupList.isNull())
+    {
+        auto nodeGroup = nodeGroupList.firstChildElement("group");
+        while (!nodeGroup.isNull()) {
             GwmLayerGroupItem* groupItem = new GwmLayerGroupItem();
-            if (groupItem->readXml(groupNode))
+            if (groupItem->readXml(nodeGroup))
             {
                 mLayerItemModel->appentItem(groupItem);
             }
             else
             {
+                setDirty(false);
                 delete groupItem;
             }
-            groupNode = groupNode.nextSiblingElement("group");
+            nodeGroup = nodeGroup.nextSiblingElement("group");
         }
+        setDirty(false);
     }
-    else return false;
+    else
+    {
+        setDirty(false);
+        QMessageBox::information(GwmApp::Instance(), tr("Read File Warning"), tr("No layer item in this project file."));
+    }
+
+    return true;
 }
 
 void GwmProject::save(const QFileInfo &projectFile)
@@ -85,6 +125,7 @@ void GwmProject::save(const QFileInfo &projectFile)
     doc.appendChild(xmlInstruction);
 
     QDomElement project = doc.createElement("gwmproject");
+    project.setAttribute("name", mName);
     doc.appendChild(project);
 
     QDomElement project_crs = doc.createElement("crs");
@@ -110,24 +151,24 @@ void GwmProject::save(const QFileInfo &projectFile)
         doc.save(stream, 2);
     }
     file.close();
+
+    setDirty(false);
 }
 
-GwmLayerItemModel *GwmProject::layerItemModel() const
+void GwmProject::onLayerModelChanged()
 {
-    return mLayerItemModel;
+    setDirty(true);
 }
 
-void GwmProject::setLayerItemModel(GwmLayerItemModel *layerItemModel)
+void GwmProject::setName(const QString &name)
 {
-    mLayerItemModel = layerItemModel;
+    QString oldName = name;
+    mName = name;
+    emit nameChanged(name, oldName);
 }
 
-QFileInfo GwmProject::projectFile() const
+void GwmProject::setDirty(bool dirty)
 {
-    return mProjectFile;
-}
-
-void GwmProject::setProjectFile(const QFileInfo &projectFile)
-{
-    mProjectFile = projectFile;
+    mDirty = dirty;
+    emit dirtyChanged(mDirty);
 }
