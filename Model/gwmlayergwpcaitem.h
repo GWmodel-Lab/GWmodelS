@@ -17,33 +17,36 @@ class GwmLayerGWPCAItem : public GwmLayerVectorItem
 public:
     explicit GwmLayerGWPCAItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWPCATaskThread* taskThread = nullptr);
 
-protected:
+    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::GWPCA; }
+
+    virtual bool readXml(QDomNode &node) override;
+    virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;
 
 public:
-
     GwmBandwidthWeight weight() const;
-    GwmBandwidthWeight mWeight;
 
-    double mk=2;
-    mat mdResult1;
-    mat mLocalPV;
-    //存其他参数
-    cube mLoadings;
-    cube mScores;
-    mat mVariance;
     // GwmLayerItem interface
 public:
     bool isBandwidthOptimized;
-
-    GwmLayerItemType itemType() {return GwmLayerItemType::GWPCA;};
 
     bool GwmLayerGWPCAItem::bandwidthOptimized() const
     {
         return isBandwidthOptimized;
     }
 
-    QList<QPair<double, double> > mBandwidthSelScores;
     QList<QPair<double, double> > bandwidthSelScores() const;
+
+public:
+    int mK = 0;
+    mat mDResult1;
+    mat mLocalPV;
+    //存其他参数
+    cube mLoadings;
+    cube mScores;
+    mat mVariance;
+    GwmBandwidthWeight mWeight;
+    QList<QPair<double, double> > mBandwidthSelScores;
+
 };
 
 #endif // GWMLAYERBASICGWRITEM_H

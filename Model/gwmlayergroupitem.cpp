@@ -1,5 +1,11 @@
 #include "gwmlayergroupitem.h"
 #include "gwmlayerbasicgwritem.h"
+#include "gwmlayergwssitem.h"
+#include "gwmlayerscalablegwritem.h"
+#include "gwmlayermultiscalegwritem.h"
+#include "gwmlayercollinearitygwritem.h"
+#include "gwmlayerggwritem.h"
+#include "gwmlayergwpcaitem.h"
 
 GwmLayerGroupItem::GwmLayerGroupItem(GwmLayerItem* parent, QgsVectorLayer* vector)
     : GwmLayerItem(parent)
@@ -223,6 +229,24 @@ bool GwmLayerGroupItem::readXml(QDomNode &node)
             switch (type) {
             case GwmLayerItemType::GWR:
                 analyseItem = new GwmLayerBasicGWRItem(this);
+                break;
+            case GwmLayerItemType::ScalableGWR:
+                analyseItem = new GwmLayerScalableGWRItem(this);
+                break;
+            case GwmLayerItemType::MultiscaleGWR:
+                analyseItem = new GwmLayerMultiscaleGWRItem(this);
+                break;
+            case GwmLayerItemType::GeneralizedGWR:
+                analyseItem = new GwmLayerGGWRItem(this);
+                break;
+            case GwmLayerItemType::CollinearityGWR:
+                analyseItem = new GwmLayerCollinearityGWRItem(this);
+                break;
+            case GwmLayerItemType::GWSS:
+                analyseItem = new GwmLayerGWSSItem(this);
+                break;
+            case GwmLayerItemType::GWPCA:
+                analyseItem = new GwmLayerGWPCAItem(this);
                 break;
             default:
                 analyseItem = new GwmLayerVectorItem(this);

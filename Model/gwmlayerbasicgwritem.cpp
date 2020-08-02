@@ -77,6 +77,7 @@ bool GwmLayerBasicGWRItem::readXml(QDomNode &node)
                 indepVarNode = indepVarNode.nextSiblingElement("indepVar");
             }
         }
+        else return false;
 
         QDomElement weightNode = analyse.firstChildElement("weight");
         if (weightNode.hasAttribute("bandwidth") && weightNode.hasAttribute("kernel")

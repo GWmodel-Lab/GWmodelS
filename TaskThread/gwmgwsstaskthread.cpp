@@ -48,7 +48,7 @@ void GwmGWSSTaskThread::run()
     resultLayerData.push_back(qMakePair(QString("LSke"), mLocalSkewness));
     resultLayerData.push_back(qMakePair(QString("LCV"), mLCV));
     if(mQuantile){
-        resultLayerData.push_back(qMakePair(QString("LM"), mLocalMedian));
+        resultLayerData.push_back(qMakePair(QString("Median"), mLocalMedian));
         resultLayerData.push_back(qMakePair(QString("IQR"), mIQR));
         resultLayerData.push_back(qMakePair(QString("QI"), mQI));
     }

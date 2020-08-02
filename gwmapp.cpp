@@ -452,11 +452,8 @@ void GwmApp::onSaveProject()
 {
     QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
     QFileInfo fileInfo(filePath);
-    if (fileInfo.isFile())
-    {
-        GwmProject::instance()->setName(fileInfo.completeBaseName());
-        GwmProject::instance()->save(fileInfo);
-    }
+    GwmProject::instance()->setName(fileInfo.completeBaseName());
+    GwmProject::instance()->save(fileInfo);
 }
 
 void GwmApp::onOpenProject()

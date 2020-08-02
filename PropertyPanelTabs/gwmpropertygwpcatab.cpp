@@ -62,17 +62,17 @@ void GwmPropertyGWPCATab::updateUI()
         ui->lblDistanceMetric->setText(tr("Edclidean distance metric is used."));
     }
     //ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
-    ui->lblPCCount->setText(QString("%1").arg(mLayerItem->mk));
+    ui->lblPCCount->setText(QString("%1").arg(mLayerItem->mK));
 
     // 计算四分位数
     //QList<GwmVariable> indepVars = mLayerItem->indepVars();
-    ui->tbwProp->setRowCount(mLayerItem->mk+1);
+    ui->tbwProp->setRowCount(mLayerItem->mK+1);
     ui->tbwProp->setColumnCount(6);
     ui->tbwProp->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     QStringList headers = QStringList() << tr("Name") << tr("Min") << tr("1st Qu") << tr("Median") << tr("3rd Qu") << tr("Max");
     ui->tbwProp->setHorizontalHeaderLabels(headers);
     //const mat& betas = mLayerItem->betas();
-    const mat& betas2 = mLayerItem->mdResult1;
+    const mat& betas2 = mLayerItem->mDResult1;
     const mat& betas = mLayerItem->mLocalPV;
     const vec p = { 0.0, 0.25, 0.5, 0.75, 1.0 };
     for (uword r = 0; r < betas.n_cols; r++)
@@ -104,7 +104,7 @@ void GwmPropertyGWPCATab::updateUI()
         ui->tbwProp->setItem(betas.n_cols, c + 1, quantileItem);
     }
 
-    ui->tbwLocalvariance->setRowCount(mLayerItem->mk);
+    ui->tbwLocalvariance->setRowCount(mLayerItem->mK);
     ui->tbwLocalvariance->setColumnCount(6);
     ui->tbwLocalvariance->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     QStringList headers2 = QStringList() << tr("Name") << tr("Min") << tr("1st Qu") << tr("Median") << tr("3rd Qu") << tr("Max");

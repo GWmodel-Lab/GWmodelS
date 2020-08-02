@@ -13,6 +13,9 @@ public:
 
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::GWSS; }
 
+    virtual bool readXml(QDomNode &node) override;
+    virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;
+
     int dataPointsSize() const;
 
     mat localmean() const{return mLocalMean;}

@@ -72,6 +72,7 @@ public:
 
     static QMap<QString, double> TolUnitDict;
     static void initTolUnitDict();
+    static GwmEnumValueNameMapper<Family> FamilyValueNameMapper;
 
     typedef double (GwmGeneralizedGWRAlgorithm::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
     typedef mat (GwmGeneralizedGWRAlgorithm::*GGWRRegressionFunction)(const mat& x, const vec& y);
