@@ -29,6 +29,7 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     ui->mLayerComboBox->setCurrentIndex(-1);
     ui->cmbRegressionLayerSelect->setCurrentIndex(-1);
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::layerChanged);
+    connect(ui->cmbRegressionLayerSelect, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWROptionsDialog::updatePredict);
     connect(ui->ckbRegressionPoints, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::on_cbkRegressionPoints_toggled);
 
     ui->mDepVarComboBox->setCurrentIndex(-1);
@@ -210,6 +211,43 @@ void GwmGWROptionsDialog::layerChanged(int index)
             ui->mDepVarComboBox->addItem(field.name());
         }
     }
+}
+
+void GwmGWROptionsDialog::updatePredict()
+{
+    bool flag = false;
+    if (ui->ckbRegressionPoints->isChecked() && ui->mLayerComboBox->currentIndex() > -1 && ui->cmbRegressionLayerSelect->currentIndex() > -1)
+    {
+        int iDataLayer = ui->mLayerComboBox->currentIndex();
+        int iRegLayer = ui->cmbRegressionLayerSelect->currentIndex();
+        if (iDataLayer == iRegLayer) flag = true;
+        else
+        {
+            QgsVectorLayer* dataLayer = mMapLayerList[iDataLayer]->originChild()->layer();
+            QgsFields dataFields = dataLayer->fields();
+            QgsVectorLayer* regLayer = mMapLayerList[iRegLayer]->originChild()->layer();
+            QgsFields regFields = regLayer->fields();
+            bool all = true;
+            for (auto df : dataFields)
+            {
+                bool have = false;
+                for (auto rf : regFields)
+                {
+                    if (df.name() == rf.name() && df.type() == rf.type())
+                        have = true;
+                }
+                all = all && have;
+            }
+            if (all) flag = true;
+//            GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
+//            if (selectedIndepVarModel && selectedIndepVarModel->rowCount() > 0)
+//            {
+//                auto dataFields = selectedIndepVarModel->attributeItemList();
+
+//            }
+        }
+    }
+    ui->ckbPredict->setEnabled(flag);
 }
 
 void GwmGWROptionsDialog::onDepVarChanged(const int index)
@@ -481,6 +519,7 @@ void GwmGWROptionsDialog::updateFields()
         {
             mTaskThread->setRegressionLayer(nullptr);
         }
+        mTaskThread->setHasPredict(ui->ckbPredict->isChecked());
     }
     else
     {

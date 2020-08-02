@@ -32,6 +32,7 @@ public:
 
 public slots:
     void layerChanged(const int index);
+    void updatePredict();
     void onDepVarChanged(const int index);
     void onFixedRadioToggled(bool checked);
     void onVariableRadioToggled(bool checked);

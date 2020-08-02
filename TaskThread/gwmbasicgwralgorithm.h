@@ -87,6 +87,9 @@ public:
 
     IndepVarsCriterionList indepVarSelectorCriterions() const;
 
+    bool hasPredict() const;
+    void setHasPredict(bool hasPredict);
+
 
 protected:  // QThread interface
     void run() override;
@@ -187,6 +190,7 @@ protected:
 
     bool mHasHatMatrix = true;
     bool mHasFTest = false;
+    bool mHasPredict = false;
 
     vec mQDiag;
     mat mBetasSE;
@@ -316,6 +320,16 @@ inline void GwmBasicGWRAlgorithm::setGPUId(const int gpuId)
 inline BandwidthCriterionList GwmBasicGWRAlgorithm::bandwidthSelectorCriterions() const
 {
     return mBandwidthSizeSelector.bandwidthCriterion();
+}
+
+inline bool GwmBasicGWRAlgorithm::hasPredict() const
+{
+    return mHasPredict;
+}
+
+inline void GwmBasicGWRAlgorithm::setHasPredict(bool hasPredict)
+{
+    mHasPredict = hasPredict;
 }
 
 #endif // GWMBASICGWRALGORITHM_H
