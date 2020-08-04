@@ -7,6 +7,10 @@
 #include "gwmlayerggwritem.h"
 #include "gwmlayergwpcaitem.h"
 
+#include <qmessagebox.h>
+
+#include "gwmapp.h"
+
 GwmLayerGroupItem::GwmLayerGroupItem(GwmLayerItem* parent, QgsVectorLayer* vector)
     : GwmLayerItem(parent)
     , mOriginChild(nullptr)
@@ -283,8 +287,12 @@ bool GwmLayerGroupItem::writeXml(QDomNode &node, QDomDocument &doc)
         {
             QDomElement analyse = doc.createElement("analyse");
             analyse.setAttribute("name", analyseChild->text());
-            analyseChild->writeXml(analyse, doc);
-            analyseList.appendChild(analyse);
+            if (analyseChild->writeXml(analyse, doc))
+                analyseList.appendChild(analyse);
+            else
+            {
+                QMessageBox::warning(GwmApp::Instance(), tr("Save Analyse Layer Error!"), tr(""));
+            }
         }
         group.appendChild(analyseList);
     }

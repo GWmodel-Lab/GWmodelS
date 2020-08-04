@@ -1,6 +1,8 @@
 #include "gwmlayermultiscalegwritem.h"
 #include "gwmlayergroupitem.h"
 
+#include <QDebug>
+
 GwmLayerMultiscaleGWRItem::GwmLayerMultiscaleGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmMultiscaleGWRAlgorithm* taskThread)
     : GwmLayerVectorItem(parent, vector)
 {
@@ -114,10 +116,10 @@ bool GwmLayerMultiscaleGWRItem::readXml(QDomNode &node)
         }
 
         QDomElement nodeBandwidthList = analyse.firstChildElement("bandwidthList");
-        if (!nodeBandwidthList.isNull())
+        if (mIndepVars.size() > 0 && !nodeBandwidthList.isNull())
         {
             int bandwidthCount = 0;
-            QDomElement nodeBandwidth = indepVarList.firstChildElement("bandwidth");
+            QDomElement nodeBandwidth = nodeBandwidthList.firstChildElement("bandwidth");
             while (!nodeBandwidth.isNull())
             {
                 if (nodeBandwidth.hasAttribute("bandwidth") && nodeBandwidth.hasAttribute("kernel")
@@ -144,12 +146,14 @@ bool GwmLayerMultiscaleGWRItem::readXml(QDomNode &node)
                     mPreditorCentered.append(preditorCentered);
                     mBandwidthSelectThreshold.append(selectThreshold);
                 }
+                nodeBandwidth = nodeBandwidth.nextSiblingElement("bandwidth");
             }
             if (bandwidthCount != (mIndepVars.size() + 1))
             {
                 return false;
             }
         }
+        else return false;
 
         return true;
     }
@@ -184,12 +188,14 @@ bool GwmLayerMultiscaleGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
         nodeAnalyse.appendChild(nodeIndepVarList);
 
         QDomElement nodeBandwidthList = doc.createElement("bandwidthList");
-        if ((mIndepVars.size() + 1) == mBandwidthWeights.size()
-                == mDistaneTypes.size()
-                == mBandwidthInitilize.size()
-                == mBandwidthSelectionApproach.size()
-                == mPreditorCentered.size()
-                == mBandwidthSelectThreshold.size())
+        qDebug() << "mIndepVars" << mIndepVars.size();
+        qDebug() << "mBandwidthWeights" << mBandwidthWeights.size();
+        qDebug() << "mDistaneTypes" << mDistaneTypes.size();
+        qDebug() << "mBandwidthInitilize" << mBandwidthInitilize.size();
+        qDebug() << "mBandwidthSelectionApproach" << mBandwidthSelectionApproach.size();
+        qDebug() << "mPreditorCentered" << mPreditorCentered.size();
+        qDebug() << "mBandwidthSelectThreshold" << mBandwidthSelectThreshold.size();
+        if ((mIndepVars.size() + 1) == mBandwidthWeights.size())
         {
             for (int i = 0; i < mBandwidthWeights.size(); i++)
             {
@@ -202,8 +208,10 @@ bool GwmLayerMultiscaleGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
                 nodeBandwidth.setAttribute("selectionApproach", mBandwidthSelectionApproach[i]);
                 nodeBandwidth.setAttribute("preditorCentered", mPreditorCentered[i]);
                 nodeBandwidth.setAttribute("selectThreshold", mBandwidthSelectThreshold[i]);
-                nodeAnalyse.appendChild(nodeBandwidth);
+                nodeBandwidthList.appendChild(nodeBandwidth);
             }
+
+            nodeAnalyse.appendChild(nodeBandwidthList);
         }
         else return false;
 

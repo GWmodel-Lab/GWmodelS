@@ -240,12 +240,21 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandw
     }
     //yhat赋值
     //vec mYHat = fitted(mX,betas);
-    vec mYHat = sum(mBetas % mX,1);
+    vec yhat = sum(betas % mX,1);
     //计算residual
-    vec mResidual = mY - mYHat;
+    vec residual = mY - yhat;
     //计算cv
-    double cv = sum(mResidual % mResidual);
-    return cv;
+    double cv = sum(residual % residual);
+    if (isfinite(cv))
+    {
+        QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+                .arg(weight->adaptive() ? "Adaptive" : "Fixed")
+                .arg(weight->bandwidth())
+                .arg(cv);
+        emit message(msg);
+        return cv;
+    }
+    else return DBL_MAX;
 }
 
 double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weight)
@@ -297,12 +306,21 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidt
     }
     //yhat赋值
     //vec mYHat = fitted(mX,betas);
-    vec mYHat = sum(mBetas % mX,1);
+    vec yhat = sum(betas % mX,1);
     //计算residual
-    vec mResidual = mY - mYHat;
+    vec residual = mY - yhat;
     //计算cv
-    double cv = sum(mResidual % mResidual);
-    return cv;
+    double cv = sum(residual % residual);
+    if (isfinite(cv))
+    {
+        QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+                .arg(weight->adaptive() ? "Adaptive" : "Fixed")
+                .arg(weight->bandwidth())
+                .arg(cv);
+        emit message(msg);
+        return cv;
+    }
+    else return DBL_MAX;
 }
 
 mat GwmLocalCollinearityGWRAlgorithm::regressionSerial(const mat &x, const vec &y)

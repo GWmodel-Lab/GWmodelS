@@ -8,6 +8,7 @@ class GwmLayerGWSSItem : public GwmLayerVectorItem
 {
 public:
     GwmLayerGWSSItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWSSTaskThread* taskThread = nullptr);
+    ~GwmLayerGWSSItem();
 
     virtual int childNumber() override;
 

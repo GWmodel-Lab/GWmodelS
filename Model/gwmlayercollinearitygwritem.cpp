@@ -144,6 +144,7 @@ bool GwmLayerCollinearityGWRItem::readXml(QDomNode &node)
                         double criterion = bandwidthNode.attribute("criterion").toDouble();
                         mBandwidthSelScores.append(qMakePair(size, criterion));
                     }
+                    bandwidthNode = bandwidthNode.nextSiblingElement("bandwidth");
                 }
             }
             else
