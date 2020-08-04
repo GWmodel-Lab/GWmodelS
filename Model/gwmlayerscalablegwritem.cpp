@@ -3,17 +3,20 @@
 GwmLayerScalableGWRItem::GwmLayerScalableGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmScalableGWRAlgorithm* taskThread)
     : GwmLayerVectorItem(parent, vector)
 {
-    mDataPointsSize = taskThread->dataLayer()->featureCount();
-    mDepVar = taskThread->dependentVariable();
-    mIndepVars = taskThread->independentVariables();
-    mWeight = GwmBandwidthWeight(*static_cast<GwmBandwidthWeight*>(taskThread->spatialWeight().weight()));
-    mDistanceType = taskThread->spatialWeight().distance()->type();
-    mDiagnostic = taskThread->diagnostic();
-    mBetas = mat(taskThread->betas());
-    mPolynomial = taskThread->getPolynomial();
-    mCV = taskThread->getCV();
-    mScale = taskThread->getScale();
-    mPenalty = taskThread->getPenalty();
+    if (taskThread)
+    {
+        mDataPointsSize = taskThread->dataLayer()->featureCount();
+        mDepVar = taskThread->dependentVariable();
+        mIndepVars = taskThread->independentVariables();
+        mWeight = GwmBandwidthWeight(*static_cast<GwmBandwidthWeight*>(taskThread->spatialWeight().weight()));
+        mDistanceType = taskThread->spatialWeight().distance()->type();
+        mDiagnostic = taskThread->diagnostic();
+        mBetas = mat(taskThread->betas());
+        mPolynomial = taskThread->getPolynomial();
+        mCV = taskThread->getCV();
+        mScale = taskThread->getScale();
+        mPenalty = taskThread->getPenalty();
+    }
 }
 
 bool GwmLayerScalableGWRItem::readXml(QDomNode &node)

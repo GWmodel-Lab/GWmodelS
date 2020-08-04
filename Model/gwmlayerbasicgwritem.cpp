@@ -133,20 +133,27 @@ bool GwmLayerBasicGWRItem::readXml(QDomNode &node)
                 {
                     double aic = modelNode.attribute("criterion").toDouble();
 
+                    bool allVariableCorrect = true;
                     QList<GwmVariable> modelVariables;
                     QDomElement variableNode = modelNode.firstChildElement("variable");
                     while (!variableNode.isNull())
                     {
-                        GwmVariable variable;
-                        variable.name = variableNode.attribute("name");
-                        variable.index = variableNode.attribute("index").toInt();
-                        variable.isNumeric = variableNode.attribute("isNumeric").toInt();
-                        variable.type = QVariant::Type(variableNode.attribute("type").toInt());
-                        modelVariables.append(variable);
+                        if (variableNode.hasAttribute("name") && variableNode.hasAttribute("index")
+                                && variableNode.hasAttribute("isNumeric")
+                                && variableNode.hasAttribute("type"))
+                        {
+                            GwmVariable variable;
+                            variable.name = variableNode.attribute("name");
+                            variable.index = variableNode.attribute("index").toInt();
+                            variable.isNumeric = variableNode.attribute("isNumeric").toInt();
+                            variable.type = QVariant::Type(variableNode.attribute("type").toInt());
+                            modelVariables.append(variable);
+                        }
+                        else allVariableCorrect = false;
                         variableNode = variableNode.nextSiblingElement("variable");
                     }
-
-                    mModelSelModels.append(qMakePair(modelVariables, aic));
+                    if (allVariableCorrect)
+                        mModelSelModels.append(qMakePair(modelVariables, aic));
 
                     modelNode = modelNode.nextSiblingElement("model");
                 }
@@ -171,6 +178,7 @@ bool GwmLayerBasicGWRItem::readXml(QDomNode &node)
                         double criterion = bandwidthNode.attribute("criterion").toDouble();
                         mBandwidthSelScores.append(qMakePair(size, criterion));
                     }
+                    bandwidthNode = bandwidthNode.nextSiblingElement("bandwidth");
                 }
             }
             else
@@ -225,6 +233,7 @@ bool GwmLayerBasicGWRItem::readXml(QDomNode &node)
                             double df2 = nodeF3Test.attribute("df2").toDouble();
                             mFTestResults.f3.append(GwmFTestResult(statistic, df1, df2, pValue));
                         }
+                        nodeF3Test = nodeF3Test.nextSiblingElement("F3Test");
                     }
                 }
 

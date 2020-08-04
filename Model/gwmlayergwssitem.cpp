@@ -37,10 +37,14 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
     }
 }
 
-int GwmLayerGWSSItem::childNumber()
+GwmLayerGWSSItem::~GwmLayerGWSSItem()
 {
     if (mBandwidth)
         delete mBandwidth;
+}
+
+int GwmLayerGWSSItem::childNumber()
+{
     if (mParentItem)
         return ((GwmLayerGroupItem*)mParentItem)->analyseChildren().indexOf(this) + 1;
     return 0;

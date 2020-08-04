@@ -150,7 +150,7 @@ void GwmBasicGWRAlgorithm::run()
     {
         mBetas = regression(mX, mY);
         CreateResultLayerData resultLayerData;
-        if (hasRegressionLayerXY)
+        if (hasRegressionLayerXY && mHasPredict)
         {
             vec yhat = Fitted(mRegressionLayerX, mBetas);
             vec residual = mRegressionLayerY - yhat;
