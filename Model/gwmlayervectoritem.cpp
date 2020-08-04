@@ -307,6 +307,11 @@ bool GwmLayerVectorItem::save(QString filePath, QString fileName, QString fileTy
 //    qDebug() << filePath;
 //    qDebug() << fileName;
 //    qDebug() << fileType;
+    if (fileName == mPath)
+    {
+        return mLayer->commitChanges();
+    }
+
     QgsVectorFileWriter::ActionOnExistingFile mActionOnExistingFile;
     mActionOnExistingFile = QgsVectorFileWriter::CreateOrOverwriteFile;
     options.actionOnExistingFile = mActionOnExistingFile;

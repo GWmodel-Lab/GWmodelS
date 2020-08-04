@@ -106,6 +106,9 @@ bool GwmProject::read(const QFileInfo &projectFile)
 
 void GwmProject::save(const QFileInfo &projectFile)
 {
+    if (!mDirty)
+        return;
+
     // 保存临时图层
     for (auto groupItem : mLayerItemModel->rootChildren())
     {
@@ -140,8 +143,8 @@ void GwmProject::save(const QFileInfo &projectFile)
     {
         QDomElement group = doc.createElement("group");
         group.setAttribute("name", item->text());
-        project_groupList.appendChild(group);
-        item->writeXml(group, doc);
+        if (item->writeXml(group, doc))
+            project_groupList.appendChild(group);
     }
 
     QFile file(projectFile.filePath());
