@@ -5,8 +5,28 @@
 #include <qgscategorizedsymbolrenderer.h>
 #include <qgsvectorfilewritertask.h>
 #include <qgsapplication.h>
+#include <qgsproject.h>
+#include <qgsmaplayerlegend.h>
 #include "TaskThread/gwmsavelayerthread.h"
 #include "gwmprogressdialog.h"
+#include "Model/gwmlayergroupitem.h"
+
+GwmEnumValueNameMapper<GwmLayerVectorItem::SymbolType> GwmLayerVectorItem::SymbolTypeNameMapper = {
+    std::make_pair(GwmLayerVectorItem::SymbolType::singleSymbol, "singleSymbol"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::categorizedSymbol, "categorizedSymbol"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::graduatedSymbol, "graduatedSymbol"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::RuleRenderer, "RuleRenderer"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::heatmapRenderer, "heatmapRenderer"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::invertedPolygonRenderer, "invertedPolygonRenderer"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::pointCluster, "pointCluster"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::pointDisplacement, "pointDisplacement"),
+    std::make_pair(GwmLayerVectorItem::SymbolType::nullSymbol, "nullSymbol")
+};
+
+GwmEnumValueNameMapper<QVariant::Type> GwmLayerVectorItem::FieldTypeNameMapper = {
+    std::make_pair(QVariant::Type::Int, "Int"),
+    std::make_pair(QVariant::Type::Double, "Double")
+};
 
 GwmLayerVectorItem::SymbolType GwmLayerVectorItem::renderTypeToSymbolType(QString type)
 {
@@ -50,7 +70,7 @@ QString GwmLayerVectorItem::text()
 
 GwmLayerItem* GwmLayerVectorItem::child(int row)
 {
-    if (row > 0 && row < childCount())
+    if (row >= 0 && row < childCount())
         return mSymbolChildren.at(row);
     else return nullptr;
 }
@@ -69,7 +89,12 @@ int GwmLayerVectorItem::childCount()
 
 int GwmLayerVectorItem::childNumber()
 {
-    return 0;
+    GwmLayerGroupItem* parentItem = dynamic_cast<GwmLayerGroupItem*>(mParentItem);
+    if (parentItem)
+    {
+        return (parentItem->originChild() == this) ? 0 : (parentItem->analyseChildren().indexOf(this) + 1);
+    }
+    else return -1;
 }
 
 bool GwmLayerVectorItem::insertChildren(int position, int count)
@@ -131,6 +156,14 @@ bool GwmLayerVectorItem::setData(int col, int role, QVariant value)
         switch (role) {
         case Qt::CheckStateRole:
             mCheckState = Qt::CheckState(value.toInt());
+            if (mCheckState == Qt::CheckState::Checked)
+            {
+                QgsProject::instance()->addMapLayer(mLayer);
+            }
+            else
+            {
+                QgsProject::instance()->takeMapLayer(mLayer);
+            }
             break;
         case Qt::EditRole:
             if (mLayer) mLayer->setName(value.toString());
@@ -170,6 +203,10 @@ void GwmLayerVectorItem::createSymbolChildren()
 
 void GwmLayerVectorItem::onLayerRendererChanged()
 {
+#ifndef _DEBUG
+    QgsDefaultVectorLayerLegend* legend = static_cast<QgsDefaultVectorLayerLegend*>(QgsMapLayerLegend::defaultVectorLegend(mLayer));
+    mLayer->setLegend(legend);
+#endif
     this->createSymbolChildren();
     this->mSymbolType = GwmLayerVectorItem::renderTypeToSymbolType(mLayer->renderer()->type());
     emit itemSymbolChangedSignal();
@@ -198,6 +235,53 @@ bool GwmLayerVectorItem::moveChildren(int position, int count, int destination)
     else return false;
 }
 
+bool GwmLayerVectorItem::readXml(QDomNode &node)
+{
+    QDomElement vector = node.toElement();
+    if (vector.hasAttribute("provider") && vector.hasAttribute("path"))
+    {
+        mProvider = vector.attribute("provider");
+        mPath = vector.attribute("path");
+        QString layerName;
+        if (vector.hasAttribute("name"))
+            layerName = vector.attribute("name");
+        else
+        {
+            QFileInfo fileInfo(vector.attribute("path"));
+            layerName = fileInfo.baseName();
+        }
+        mLayer = new QgsVectorLayer(vector.attribute("path"), layerName, vector.attribute("provider"));
+        if (mLayer->isValid())
+        {
+            connect(mLayer, &QgsVectorLayer::rendererChanged, this, &GwmLayerVectorItem::onLayerRendererChanged);
+            // 符号
+            mSymbolType = GwmLayerVectorItem::renderTypeToSymbolType(mLayer->renderer()->type());
+            createSymbolChildren();
+        }
+        else
+        {
+            delete mLayer;
+            return false;
+        }
+
+        return true;
+    }
+    else return false;
+}
+
+bool GwmLayerVectorItem::writeXml(QDomNode &node, QDomDocument &doc)
+{
+    QDomElement vector = node.toElement();
+    vector.setAttribute("provider", mProvider);
+    vector.setAttribute("path", mPath);
+    vector.setAttribute("type", LayerItemTypeNameMapper.name(itemType()));
+
+//    QDomElement vector_symbol = doc.createElement("symbol");
+//    vector_symbol.setAttribute("type", SymbolTypeNameMapper.name(mSymbolType));
+
+    return true;
+}
+
 QString GwmLayerVectorItem::provider() const
 {
     return mProvider;
@@ -218,15 +302,20 @@ void GwmLayerVectorItem::setPath(const QString &path)
     mPath = path;
 }
 
-void GwmLayerVectorItem::save(QString filePath, QString fileName, QString fileType, QgsVectorFileWriter::SaveVectorOptions& options)
+bool GwmLayerVectorItem::save(QString filePath, QString fileName, QString fileType, QgsVectorFileWriter::SaveVectorOptions& options)
 {
-    qDebug() << filePath;
-    qDebug() << fileName;
-    qDebug() << fileType;
+//    qDebug() << filePath;
+//    qDebug() << fileName;
+//    qDebug() << fileType;
+    if (fileName == mPath)
+    {
+        return mLayer->commitChanges();
+    }
+
     QgsVectorFileWriter::ActionOnExistingFile mActionOnExistingFile;
     mActionOnExistingFile = QgsVectorFileWriter::CreateOrOverwriteFile;
     options.actionOnExistingFile = mActionOnExistingFile;
-//    options.layerName = fileType;
+    //    options.layerName = fileType;
     if (fileType == "shp"){
         options.driverName = "ESRI Shapefile";
     }
@@ -235,11 +324,11 @@ void GwmLayerVectorItem::save(QString filePath, QString fileName, QString fileTy
         const QList< QgsVectorFileWriter::DriverDetails > drivers = QgsVectorFileWriter::ogrDriverList();
         for ( const QgsVectorFileWriter::DriverDetails &driver : drivers )
         {
-//          mFormatComboBox->addItem( driver.longName, driver.driverName );
-          if(driver.longName == "Comma Separated Value [CSV]"){
-              qDebug() << driver.driverName;
-              options.driverName = driver.driverName;
-          }
+            //          mFormatComboBox->addItem( driver.longName, driver.driverName );
+            if(driver.longName == "Comma Separated Value [CSV]"){
+                qDebug() << driver.driverName;
+                options.driverName = driver.driverName;
+            }
         }
     }
     else{
@@ -247,11 +336,23 @@ void GwmLayerVectorItem::save(QString filePath, QString fileName, QString fileTy
     }
     GwmSaveLayerThread* thread = new GwmSaveLayerThread(mLayer,filePath,options);
     GwmProgressDialog* progressDialog = new GwmProgressDialog(thread);
-    progressDialog->exec();
-//    QgsVectorFileWriterTask *writerTask = new QgsVectorFileWriterTask( mLayer, filePath, options );
-//    // when writer is successful:
+    if (progressDialog->exec() == QDialog::Accepted)
+    {
+        return true;
+    }
+    else return false;
+    //    QgsVectorFileWriterTask *writerTask = new QgsVectorFileWriterTask( mLayer, filePath, options );
+    //    // when writer is successful:
 
-//    QgsApplication::taskManager()->addTask( writerTask );
+    //    QgsApplication::taskManager()->addTask( writerTask );
+}
+
+void GwmLayerVectorItem::setDataSource(const QString &path, const QString &provider)
+{
+    mProvider = provider;
+    mPath = path;
+    mLayer->setDataSource(path, mLayer->name(), provider, QgsDataProvider::ProviderOptions());
+    mLayer->reload();
 }
 
 

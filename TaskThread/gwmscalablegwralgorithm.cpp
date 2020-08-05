@@ -78,10 +78,17 @@ void GwmScalableGWRAlgorithm::run()
     initXY(mX, mY, mDepVar, mIndepVars);
     findNeighbours();
 
-    // 解算模型
+    // 修正带宽
     GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
-    emit tick(0, 0);
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nBw = bandwidth->bandwidth();
+    if (nBw >= nDp)
+    {
+        nBw = nDp - 1;
+        bandwidth->setBandwidth(nBw);
+    }
+
+    // 解算模型
+    emit tick(0, 0);
     double band0 = 0.0;
     switch (bandwidth->kernel())
     {
@@ -135,7 +142,7 @@ void GwmScalableGWRAlgorithm::run()
 void GwmScalableGWRAlgorithm::findNeighbours()
 {
     GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
-    uword nDp = mDataPoints.n_rows, nBw = bandwidth->bandwidth();
+    uword nDp = mDataPoints.n_rows, nBw = bandwidth->bandwidth() >= nDp ? (nDp - 1) : bandwidth->bandwidth();
     umat neighboursIndex(nBw, nDp, fill::zeros);
     mat neighboursDists(nBw, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)

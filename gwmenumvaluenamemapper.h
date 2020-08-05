@@ -43,6 +43,7 @@ GwmEnumValueNameMapper<EnumT>::GwmEnumValueNameMapper(initializer_list<pair<Enum
     for (auto i = values.begin(); i != values.end(); i++)
     {
         mValueToNameMap[i->first] = i->second;
+        mNameToValueMap[i->second] = i->first;
     }
 }
 

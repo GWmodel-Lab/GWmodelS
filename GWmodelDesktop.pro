@@ -137,6 +137,7 @@ SOURCES += \
     gwmopenxyeventlayerdialog.cpp \
     gwmplot.cpp \
     gwmprogressdialog.cpp \
+    gwmproject.cpp \
     gwmpropertypanel.cpp \
     TaskThread/gwmtaskthread.cpp \
     gwmrobustgwroptionsdialog.cpp \
@@ -270,6 +271,7 @@ HEADERS += \
     gwmopenxyeventlayerdialog.h \
     gwmplot.h \
     gwmprogressdialog.h \
+    gwmproject.h \
     gwmpropertypanel.h \
     TaskThread/gwmtaskthread.h \
     gwmrobustgwroptionsdialog.h \

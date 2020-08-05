@@ -1,5 +1,15 @@
 #include "gwmlayergroupitem.h"
-#include "gwmlayergwritem.h"
+#include "gwmlayerbasicgwritem.h"
+#include "gwmlayergwssitem.h"
+#include "gwmlayerscalablegwritem.h"
+#include "gwmlayermultiscalegwritem.h"
+#include "gwmlayercollinearitygwritem.h"
+#include "gwmlayerggwritem.h"
+#include "gwmlayergwpcaitem.h"
+
+#include <qmessagebox.h>
+
+#include "gwmapp.h"
 
 GwmLayerGroupItem::GwmLayerGroupItem(GwmLayerItem* parent, QgsVectorLayer* vector)
     : GwmLayerItem(parent)
@@ -13,7 +23,10 @@ GwmLayerGroupItem::GwmLayerGroupItem(GwmLayerItem* parent, QgsVectorLayer* vecto
 
 GwmLayerGroupItem::~GwmLayerGroupItem()
 {
-    delete mOriginChild;
+    if (mOriginChild)
+    {
+        delete mOriginChild;
+    }
     for (GwmLayerVectorItem* item : mAnalyseChildren)
     {
         delete item;
@@ -110,7 +123,7 @@ bool GwmLayerGroupItem::removeChildren(int position, int count)
 
     for (int r = 0; r < count; r++)
     {
-        delete mAnalyseChildren.takeAt(row);
+        mAnalyseChildren.takeAt(row);
     }
 
     return true;
@@ -183,4 +196,106 @@ bool GwmLayerGroupItem::moveChildren(int position, int count, int destination)
     if (removedChildren.size() > 0)
         return insertChildren(destination, removedChildren);
     else return false;
+}
+
+bool GwmLayerGroupItem::readXml(QDomNode &node)
+{
+    QDomElement group = node.toElement();
+
+    QDomElement origin = node.firstChildElement("origin");
+    if (origin.isNull())
+        return false;
+
+    GwmLayerOriginItem* originItem = new GwmLayerOriginItem(this);
+    if (originItem->readXml(origin))
+    {
+        mOriginChild = originItem;
+    }
+    else
+    {
+        delete mOriginChild;
+        mOriginChild = nullptr;
+        return false;
+    }
+
+    QDomElement analyseList = node.firstChildElement("analyseList");
+    if (analyseList.isNull())
+        return false;
+
+    QDomElement analyseNode = analyseList.firstChildElement("analyse");
+    while (!analyseNode.isNull())
+    {
+        if (analyseNode.hasAttribute("type"))
+        {
+            QString analyseTypeName = analyseNode.attribute("type");
+            GwmLayerItemType type = LayerItemTypeNameMapper.value(analyseTypeName);
+            GwmLayerVectorItem* analyseItem;
+            switch (type) {
+            case GwmLayerItemType::GWR:
+                analyseItem = new GwmLayerBasicGWRItem(this);
+                break;
+            case GwmLayerItemType::ScalableGWR:
+                analyseItem = new GwmLayerScalableGWRItem(this);
+                break;
+            case GwmLayerItemType::MultiscaleGWR:
+                analyseItem = new GwmLayerMultiscaleGWRItem(this);
+                break;
+            case GwmLayerItemType::GeneralizedGWR:
+                analyseItem = new GwmLayerGGWRItem(this);
+                break;
+            case GwmLayerItemType::CollinearityGWR:
+                analyseItem = new GwmLayerCollinearityGWRItem(this);
+                break;
+            case GwmLayerItemType::GWSS:
+                analyseItem = new GwmLayerGWSSItem(this);
+                break;
+            case GwmLayerItemType::GWPCA:
+                analyseItem = new GwmLayerGWPCAItem(this);
+                break;
+            default:
+                analyseItem = new GwmLayerVectorItem(this);
+                break;
+            }
+            if (analyseItem->readXml(analyseNode))
+            {
+                mAnalyseChildren.append(analyseItem);
+            }
+            else
+            {
+                delete analyseItem;
+            }
+        }
+        analyseNode = analyseNode.nextSiblingElement("analyse");
+    }
+
+    return true;
+}
+
+bool GwmLayerGroupItem::writeXml(QDomNode &node, QDomDocument &doc)
+{
+    QDomElement group = node.toElement();
+
+    QDomElement origin = doc.createElement("origin");
+    origin.setAttribute("name", text());
+    group.appendChild(origin);
+    mOriginChild->writeXml(origin, doc);
+
+    if (mAnalyseChildren.size() > 0)
+    {
+        QDomElement analyseList = doc.createElement("analyseList");
+        for (auto analyseChild : mAnalyseChildren)
+        {
+            QDomElement analyse = doc.createElement("analyse");
+            analyse.setAttribute("name", analyseChild->text());
+            if (analyseChild->writeXml(analyse, doc))
+                analyseList.appendChild(analyse);
+            else
+            {
+                QMessageBox::warning(GwmApp::Instance(), tr("Save Analyse Layer Error!"), tr(""));
+            }
+        }
+        group.appendChild(analyseList);
+    }
+
+    return true;
 }

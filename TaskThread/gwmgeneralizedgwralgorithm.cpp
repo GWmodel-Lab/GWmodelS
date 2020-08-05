@@ -10,6 +10,11 @@
 
 using namespace std;
 
+GwmEnumValueNameMapper<GwmGeneralizedGWRAlgorithm::Family> GwmGeneralizedGWRAlgorithm::FamilyValueNameMapper = {
+    std::make_pair(GwmGeneralizedGWRAlgorithm::Family::Poisson, "Poisson"),
+    std::make_pair(GwmGeneralizedGWRAlgorithm::Family::Binomial, "Binomial")
+};
+
 QMap<QString, double> GwmGeneralizedGWRAlgorithm::TolUnitDict = {
     make_pair(QString("e -3"), 0.001),
     make_pair(QString("e -5"), 0.00001),

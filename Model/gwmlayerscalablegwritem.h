@@ -14,6 +14,9 @@ public:
 
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::ScalableGWR; }
 
+    virtual bool readXml(QDomNode &node) override;
+    virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;
+
     double cv() const;
 
     double scale() const;

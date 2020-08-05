@@ -17,6 +17,7 @@
 #include "gwmmaptoolidentifyfeature.h"
 #include "gwmpropertypanel.h"
 #include "Layout/gwmlayoutdesigner.h"
+#include "gwmproject.h"
 
 #include "symbolwindow/gwmsymbolwindow.h"
 
@@ -82,18 +83,21 @@ public:
 	bool uniqueLayoutTitle(QWidget *parent, QString &title, bool acceptEmpty, QgsMasterLayoutInterface::Type type, const QString &currentTitle = QString());
 	void registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
 	void unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
+    void onSaveProject();
+    void onOpenProject();
 
 private:
-
     void addLayerToModel(QgsVectorLayer* layer);
     void createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
-
     void createSymbolWindow(const QModelIndex &index);
-    // 要素区属性表窗口
+    /**
+     * @brief 显示要素区属性表
+     * @param index 图层项索引
+     */
     void onShowAttributeTable(const QModelIndex &index);
     void onAttributeTableSelected(QgsVectorLayer* layer, QList<QgsFeatureId> list);
-
     bool askUserForDatumTransfrom(const QgsCoordinateReferenceSystem& sourceCrs, const QgsCoordinateReferenceSystem& destinationCrs, const QgsMapLayer* layer = nullptr);
+    void updateWindowTitle();
 
 
 public slots:
@@ -111,9 +115,7 @@ public slots:
      * @param item 改变的项
      */
     void onMapModelChanged();
-
     void onShowLayerProperty(const QModelIndex& index);
-
     void onFeaturePanelRowOrderChanged(int from, int dest);
 
     /**
@@ -127,22 +129,16 @@ public slots:
     void onExportLayer(QString filetype);
     void onZoomToSelection();
     void onZoomToLayerBtn();
-
     void onFeaturePanelCurrentChanged(const QModelIndex &current, const QModelIndex &previous);
-
     void onShowCoordinateTransDlg(const QModelIndex &index);
     void onGWRBtnClicked();
     void onGWSSBtnClicked();
     void onGWRNewBtnClicked();
     void onScalableGWRBtnClicked();
     void onMultiscaleGWRBtnClicked();
-
     void onRobustGWRBtnClicked();
-
     void onLcrGWRBtnClicked();
-
     void onGWPCABtnClicked();
-
 	void populateLayoutsMenu(QMenu *menu);
 
 	
@@ -197,7 +193,9 @@ inline void GwmApp::registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler *
 
 inline void GwmApp::unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler * handler)
 {
-	mCustomLayoutDropHandlers.removeOne(handler);
+    mCustomLayoutDropHandlers.removeOne(handler);
 }
+
+
 
 #endif // MAINWINDOW_H

@@ -1,6 +1,21 @@
 #include "gwmlayeritem.h"
 #include "gwmlayergroupitem.h"
 
+GwmEnumValueNameMapper<GwmLayerItem::GwmLayerItemType> GwmLayerItem::LayerItemTypeNameMapper = {
+    std::make_pair(GwmLayerItem::GwmLayerItemType::Base, "Base"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::Group, "Group"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::Vector, "Vector"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::Origin, "Origin"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::GWR, "GWR"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::Symbol, "Symbol"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::ScalableGWR, "ScalableGWR"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::GeneralizedGWR, "GeneralizedGWR"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::MultiscaleGWR, "MultiscaleGWR"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::CollinearityGWR, "CollinearityGWR"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::GWSS, "GWSS"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::GWPCA, "GWPCA")
+};
+
 GwmLayerItem::GwmLayerItem(GwmLayerItem* parent)
     : mParentItem(parent)
     , mChildren()
@@ -152,6 +167,25 @@ bool GwmLayerItem::moveChildren(int position, int count, int destination)
     if (removedChildren.size() > 0)
         return insertChildren(destination, removedChildren);
     else return false;
+}
+
+bool GwmLayerItem::readXml(QDomNode &node)
+{
+    return false;
+}
+
+bool GwmLayerItem::writeXml(QDomNode &node, QDomDocument &doc)
+{
+    QDomElement parent = node.toElement();
+    for (auto item : mChildren)
+    {
+        QDomElement group = doc.createElement("group");
+        group.setAttribute("name", text());
+        parent.appendChild(group);
+
+        item->writeXml(group, doc);
+    }
+    return true;
 }
 
 Qt::CheckState GwmLayerItem::checkState() const

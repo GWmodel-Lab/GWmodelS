@@ -61,8 +61,10 @@ void GwmPropertyGWSSTab::updateUI()
         const mat& value = item.second;
         QGroupBox* groupBox = new QGroupBox(this);
         groupBox->setTitle(  "Summary information for " + title);
+        groupBox->setSizePolicy(QSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Fixed));
         QVBoxLayout* layout = new QVBoxLayout();
         QTableWidget* tablewidget = new QTableWidget(this);
+        tablewidget->setSizePolicy(QSizePolicy(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Fixed));
         tablewidget->setRowCount(nVar);
         tablewidget->setColumnCount(6);
         tablewidget->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);

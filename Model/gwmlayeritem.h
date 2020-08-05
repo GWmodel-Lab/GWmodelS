@@ -6,6 +6,9 @@
 #include <QList>
 #include <QVariant>
 #include <qgsvectorlayer.h>
+#include <QDomDocument>
+
+#include "gwmenumvaluenamemapper.h"
 
 class GwmLayerGroupItem;
 
@@ -30,6 +33,8 @@ public:
         GWPCA
     };
 
+    static GwmEnumValueNameMapper<GwmLayerItemType> LayerItemTypeNameMapper;
+
 public:
     explicit GwmLayerItem(GwmLayerItem* parentItem = nullptr);
     ~GwmLayerItem();
@@ -41,7 +46,7 @@ public:
     virtual bool setData(int col, int role, QVariant value);
 
     virtual GwmLayerItem* parentItem() const;
-    inline void setParentItem(GwmLayerItem *parentItem);
+    virtual void setParentItem(GwmLayerItem *parentItem);
 
     virtual GwmLayerItem* child(int row);
     virtual int childCount();
@@ -54,6 +59,8 @@ public:
     virtual QList<GwmLayerItem*> takeChildren(int position, int count);
     virtual bool moveChildren(int position, int count, int destination);
 
+    virtual bool readXml(QDomNode& node);
+    virtual bool writeXml(QDomNode& node, QDomDocument& doc);
 
     inline QList<GwmLayerGroupItem *> children() const { return mChildren; }
     inline void setChildren(const QList<GwmLayerGroupItem *> &children) { mChildren = children; }

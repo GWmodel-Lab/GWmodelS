@@ -48,6 +48,8 @@ public:
     bool appentItem(GwmLayerItem* item, const QModelIndex& parent = QModelIndex());
     void appendItem(QgsVectorLayer* layer, const QString path, const QString provider);
 
+    bool clear();
+
     GwmLayerGroupItem* item(int i);
     GwmLayerItem* itemFromIndex(const QModelIndex& index) const;
     QModelIndex indexFromItem(GwmLayerItem* item) const;

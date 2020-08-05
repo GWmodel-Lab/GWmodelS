@@ -95,7 +95,6 @@ GwmApp* GwmApp::mInstance = nullptr;
 GwmApp::GwmApp(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-	, mMapModel(new GwmLayerItemModel)
 {
 	if (mInstance)
 	{
@@ -107,7 +106,14 @@ GwmApp::GwmApp(QWidget *parent)
 	}
 	mInstance = this;
 
+    mMapModel = GwmProject::instance()->layerItemModel();
+
     ui->setupUi(this);
+
+    connect(GwmProject::instance(), &GwmProject::nameChanged, this, &GwmApp::updateWindowTitle);
+    connect(GwmProject::instance(), &GwmProject::dirtyChanged, this, &GwmApp::updateWindowTitle);
+    updateWindowTitle();
+
     setupMenus();
     setAttribute(Qt::WA_QuitOnClose);
     setupMapPanel();
@@ -138,6 +144,8 @@ void GwmApp::setupMenus()
     connect(ui->actionLocal_collinearity_GWR,&QAction::triggered, this, &GwmApp::onLcrGWRBtnClicked);
     connect(ui->actionMultiscale_GWR,&QAction::triggered, this, &GwmApp::onMultiscaleGWRBtnClicked);
     connect(ui->actionBasic_GWR,&QAction::triggered, this, &GwmApp::onGWRBtnClicked);
+    connect(ui->action_Open_Project, &QAction::triggered, this, &GwmApp::onOpenProject);
+    connect(ui->action_Save_Project, &QAction::triggered, this, &GwmApp::onSaveProject);
 }
 
 void GwmApp::toggleToolbarGeneral(bool flag)
@@ -437,7 +445,38 @@ bool GwmApp::uniqueLayoutTitle(QWidget * parent, QString & title, bool acceptEmp
 
 	title = newTitle;
 
-	return true;
+    return true;
+}
+
+void GwmApp::onSaveProject()
+{
+    QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
+    QFileInfo fileInfo(filePath);
+    GwmProject::instance()->setName(fileInfo.completeBaseName());
+    GwmProject::instance()->save(fileInfo);
+}
+
+void GwmApp::onOpenProject()
+{
+    if (GwmProject::instance()->dirty())
+    {
+        QString title = tr("This project has been changed");
+        QString body = tr("Do you want to save it before open a new project?");
+//        QMessageBox::StandardButtons buttons = QMessageBox::StandardButton::Yes
+//                | QMessageBox::StandardButton::No
+//                | QMessageBox::StandardButton::Cancel;
+        int confirm = QMessageBox::question(GwmApp::Instance(), title, body);
+        if (confirm == QMessageBox::StandardButton::Yes)
+        {
+            onSaveProject();
+        }
+    }
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open Project"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
+    QFileInfo fileInfo(filePath);
+    if (fileInfo.exists() && fileInfo.isFile() && GwmProject::instance()->read(fileInfo))
+    {
+        onMapModelChanged();
+    }
 }
 
 void GwmApp::addLayerToModel(QgsVectorLayer *layer)
@@ -550,7 +589,10 @@ void GwmApp::onSaveLayer()
                     QFileInfo fileInfo(filePath);
                     QString fileName = fileInfo.baseName();
                     QString file_suffix = fileInfo.suffix();
-                    layerItem->save(filePath,fileName,file_suffix);
+                    if (layerItem->save(filePath,fileName,file_suffix))
+                    {
+                        layerItem->setDataSource(filePath, "ogr");
+                    }
                 }
             }
             else
@@ -563,7 +605,7 @@ void GwmApp::onSaveLayer()
 
 void GwmApp::onExportLayerAsCsv(const QModelIndex &index)
 {
-//    onExportLayer(tr("CSV (*.csv)"));
+    //    onExportLayer(tr("CSV (*.csv)"));
     GwmLayerItem* item = mMapModel->itemFromIndex(index);
     GwmLayerVectorItem* layerItem;
     switch (item->itemType()) {
@@ -1201,4 +1243,12 @@ void GwmApp::initLayouts()
 	//registerCustomLayoutDropHandler(mLayoutQptDropHandler);
 	//mLayoutImageDropHandler = new QgsLayoutImageDropHandler(this);
 	//registerCustomLayoutDropHandler(mLayoutImageDropHandler);
+}
+
+void GwmApp::updateWindowTitle()
+{
+    QString projectName = GwmProject::instance()->name();
+    bool projectDirty = GwmProject::instance()->dirty();
+    QString title = QString("%1%2 - GWmodel Desktop").arg(projectName).arg((projectDirty ? " *" : ""));
+    setWindowTitle(title);
 }

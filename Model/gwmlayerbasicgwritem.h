@@ -21,6 +21,9 @@ public:
 
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::GWR; }
 
+    virtual bool readXml(QDomNode &node) override;
+    virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;
+
     int dataPointsSize() const;
 
     GwmDiagnostic diagnostic() const;

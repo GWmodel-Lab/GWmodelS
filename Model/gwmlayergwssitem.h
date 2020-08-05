@@ -8,10 +8,14 @@ class GwmLayerGWSSItem : public GwmLayerVectorItem
 {
 public:
     GwmLayerGWSSItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWSSTaskThread* taskThread = nullptr);
+    ~GwmLayerGWSSItem();
 
     virtual int childNumber() override;
 
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::GWSS; }
+
+    virtual bool readXml(QDomNode &node) override;
+    virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;
 
     int dataPointsSize() const;
 

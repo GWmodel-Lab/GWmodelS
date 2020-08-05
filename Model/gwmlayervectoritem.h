@@ -7,9 +7,10 @@
 #include <QList>
 #include <QVariant>
 #include <qgsvectorlayer.h>
-#include "gwmlayeritem.h"
-
 #include <qgsvectorfilewriter.h>
+
+#include "gwmlayeritem.h"
+#include "gwmenumvaluenamemapper.h"
 
 class GwmLayerSymbolItem;
 
@@ -31,6 +32,10 @@ public:
     };
 
     static SymbolType renderTypeToSymbolType(QString itemType);
+
+    static GwmEnumValueNameMapper<SymbolType> SymbolTypeNameMapper;
+
+    static GwmEnumValueNameMapper<QVariant::Type> FieldTypeNameMapper;
 
 public:
     explicit GwmLayerVectorItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr);
@@ -57,6 +62,9 @@ public:
     virtual QList<GwmLayerItem*> takeChildren(int position, int count) override;
     virtual bool moveChildren(int position, int count, int destination) override;
 
+    virtual bool readXml(QDomNode &node) override;
+    virtual bool writeXml(QDomNode& node, QDomDocument& doc) override;
+
     inline QgsVectorLayer *layer() const;
     inline void setLayer(QgsVectorLayer* layer);
 
@@ -75,17 +83,19 @@ public:
     QString path() const;
     void setPath(const QString &path);
 
-    void save(QString filePath, QString fileName, QString fileType,QgsVectorFileWriter::SaveVectorOptions& options = *(new QgsVectorFileWriter::SaveVectorOptions()));
+    bool save(QString filePath, QString fileName, QString fileType,QgsVectorFileWriter::SaveVectorOptions& options = *(new QgsVectorFileWriter::SaveVectorOptions()));
+
+    void setDataSource(const QString &path, const QString& provider);
 
 protected:
     QgsVectorLayer* mLayer;
     SymbolType mSymbolType;
     QList<GwmLayerSymbolItem*> mSymbolChildren;
 
-private:
     QString mProvider;
     QString mPath;
 
+private:
     void createSymbolChildren();
 
 private slots:

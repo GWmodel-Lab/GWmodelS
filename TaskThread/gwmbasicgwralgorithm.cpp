@@ -3,6 +3,7 @@
 #include <SpatialWeight/gwmminkwoskidistance.h>
 #include <gsl/gsl_cdf.h>
 #include <omp.h>
+#include <qgsmemoryproviderutils.h>
 
 
 GwmDiagnostic GwmBasicGWRAlgorithm::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
@@ -109,8 +110,8 @@ void GwmBasicGWRAlgorithm::run()
         }
 
         CreateResultLayerData resultLayerData = {
-            qMakePair(QString("%1"), mX),
-            qMakePair(QString("Betas_%1"), mBetas),
+//            qMakePair(QString("%1"), mX),
+            qMakePair(QString("%1"), mBetas),
             qMakePair(QString("y"), mY),
             qMakePair(QString("yhat"), yhat),
             qMakePair(QString("residual"), res),
@@ -149,14 +150,14 @@ void GwmBasicGWRAlgorithm::run()
     {
         mBetas = regression(mX, mY);
         CreateResultLayerData resultLayerData;
-        if (hasRegressionLayerXY)
+        if (hasRegressionLayerXY && mHasPredict)
         {
             vec yhat = Fitted(mRegressionLayerX, mBetas);
             vec residual = mRegressionLayerY - yhat;
             resultLayerData = {
                 qMakePair(QString(mDepVar.name), mRegressionLayerY),
-                qMakePair(QString("%1"), mRegressionLayerX),
-                qMakePair(QString("Betas_%1"), mBetas),
+//                qMakePair(QString("%1"), mRegressionLayerX),
+                qMakePair(QString("%1"), mBetas),
                 qMakePair(QString("yhat"), yhat),
                 qMakePair(QString("residual"), residual)
             };
@@ -164,7 +165,7 @@ void GwmBasicGWRAlgorithm::run()
         else
         {
             resultLayerData = {
-                qMakePair(QString("Betas_%1"), mBetas)
+                qMakePair(QString("%1"), mBetas)
             };
         }
         createResultLayer(resultLayerData);
@@ -588,8 +589,6 @@ void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString 
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
     layerName += name;
-    mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
-    mResultLayer->setCrs(srcLayer->crs());
 
     // 设置字段
     QgsFields fields;
@@ -611,8 +610,8 @@ void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString 
             fields.append(QgsField(title, QVariant::Double, QStringLiteral("double")));
         }
     }
-    mResultLayer->dataProvider()->addAttributes(fields.toList());
-    mResultLayer->updateFields();
+
+    mResultLayer = QgsMemoryProviderUtils::createMemoryLayer(layerName, fields, srcLayer->wkbType(), srcLayer->crs());
 
     // 设置要素几何
     mResultLayer->startEditing();

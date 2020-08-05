@@ -20,6 +20,9 @@ public:
 
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::MultiscaleGWR; }
 
+    virtual bool readXml(QDomNode &node) override;
+    virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;
+
     int dataPointsSize() const;
 
     QList<bool> preditorCentered() const;

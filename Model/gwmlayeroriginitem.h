@@ -13,6 +13,8 @@ public:
     inline virtual QString text() override;
 
     inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::Origin; }
+
+    virtual int childNumber() override { return 0; }
 };
 
 inline QString GwmLayerOriginItem::text()
