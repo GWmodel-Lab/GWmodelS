@@ -14,6 +14,8 @@ double GwmScalableGWRAlgorithm::Loocv(const vec &target, const mat &x, const vec
     for (int p = 1; p < poly1; p++) {
         R0(p) = pow(b, p + 1);
     }
+    R0 = R0 / sum(R0);
+
     vec Rx(k*k*poly1, fill::zeros), Ry(k*poly1, fill::zeros);
     for (int p = 0; p < poly1; p++) {
         for (int k2 = 0; k2 < k; k2++) {
@@ -40,16 +42,81 @@ double GwmScalableGWRAlgorithm::Loocv(const vec &target, const mat &x, const vec
                 sumMy(k2) += My(yindex, i);
             }
         }
-        sumMx = sumMx + a * (x.t() * x);
-        sumMy = sumMy + a * (x.t() * y);
+        sumMx += + a * (x.t() * x);
+        sumMy += + a * (x.t() * y);
         if (det(sumMx) < 1e-10) {
-            return 1e6;
+            return DBL_MAX;
         } else {
             mat beta = solve(sumMx, sumMy);
             yhat.row(i) = x.row(i) * beta;
         }
     }
     return sum((y - yhat) % (y - yhat));
+}
+
+double GwmScalableGWRAlgorithm::AICvalue(const vec &target, const mat &x, const vec &y, int bw, int poly, const mat &Mx0, const mat &My0)
+{
+    int n = x.n_rows, k = x.n_cols, poly1 = poly + 1;
+    double b = target(0) * target(0), a = target(1) * target(1);
+    vec R0 = vec(poly1) * b;
+    for (int p = 1; p < poly1; p++) {
+        R0(p) = pow(b, p + 1);
+    }
+    R0 = R0 / sum(R0);
+
+    vec Rx(k*k*poly1, fill::zeros), Ry(k*poly1, fill::zeros);
+    for (int p = 0; p < poly1; p++) {
+        for (int k2 = 0; k2 < k; k2++) {
+            for (int k1 = 0; k1 < k; k1++) {
+                int xindex = k1*poly1*k + p*k + k2;
+                Rx(xindex) = R0(p);
+            }
+            int yindex = p*k + k2;
+            Ry(yindex) = R0(p);
+        }
+    }
+    mat Mx = Rx * mat(1, n, fill::ones) % Mx0, My = Ry * mat(1, n, fill::ones) % My0;
+//    mat Mx2 = 2 * a * Mx + ((Rx % Rx) * mat(1, n, fill::ones) % Mx0);
+
+    vec yhat(n, 1, fill::zeros);
+    double trS = 0.0/*, trStS = 0.0*/;
+    for (int i = 0; i < n; i++) {
+        mat sumMx(k, k, fill::zeros)/*, sumMx2(k, k, fill::zeros)*/;
+        vec sumMy(k, fill::zeros);
+        for (int k2 = 0; k2 < k; k2++) {
+            for (int p = 0; p < poly1; p++) {
+                for (int k1 = 0; k1 < k; k1++) {
+                    int xindex = k1*poly1*k + p*k + k2;
+                    sumMx(k1, k2) += Mx(xindex, i);
+//                    sumMx2(k1, k2) += Mx2(xindex, i);
+                }
+                int yindex = p*k + k2;
+                sumMy(k2) += My(yindex, i);
+            }
+        }
+        sumMx += a * (x.t() * x);
+//        sumMx2 += a * a * (x.t() * x);
+        sumMy += a * (x.t() * y);
+        if (det(sumMx) < 1e-10) {
+            return DBL_MAX;
+        } else {
+            mat sumMxR = inv(sumMx.t() * sumMx);
+            vec trS00 = sumMxR * trans(x.row(i));
+            mat trS0 = x.row(i) * trS00;
+            trS += trS0[0];
+
+//            vec trStS00 = sumMx2 * trS00;
+//            double trStS0 = sum(sum(trS00 * trStS00));
+//            trStS += trStS0;
+
+            vec beta = sumMxR * (sumMx.t() * sumMy);
+            yhat.row(i) = x.row(i) * beta;
+        }
+    }
+    double sse = sum((y - yhat) % (y - yhat));
+    double sig = sqrt(sse / n);
+    double AICc = 2 * n * log(sig) + n *log(2*M_PI) +n*(n+trS)/(n-2-trS);
+    return isfinite(AICc) ? AICc : DBL_MAX;
 }
 
 GwmDiagnostic GwmScalableGWRAlgorithm::CalcDiagnostic(const vec &y, const mat &x, const mat &betas, const vec &shat)

@@ -18,6 +18,7 @@ public:
         const mat* My0;
     };
     static double Loocv(const vec& target, const mat& x, const vec& y, int bw, int poly, const mat& Mx0, const mat& My0);
+    static double AICvalue(const vec& target, const mat& x, const vec& y, int bw, int poly, const mat& Mx0, const mat& My0);
 
     typedef QPair<QString, const mat> CreateResultLayerDataItem;
 
