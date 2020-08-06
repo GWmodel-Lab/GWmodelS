@@ -69,6 +69,7 @@ private:
     umat mNeighbours;
     mat mNeighbourDists;
     mat mMx0;
+    mat mMxx0;
     mat mMy0;
     vec mShat;
     mat mBetasSE;
