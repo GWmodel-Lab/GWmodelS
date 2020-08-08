@@ -17,6 +17,8 @@ GwmLayerScalableGWRItem::GwmLayerScalableGWRItem(GwmLayerItem* parent, QgsVector
         mScale = taskThread->scale();
         mPenalty = taskThread->penalty();
         mParameterOptimizeCriterionType = taskThread->parameterOptimizeCriterion();
+        mHasRegressionLayer = taskThread->regressionLayer() != nullptr;
+        mHasPredict = taskThread->hasPredict();
     }
 }
 
@@ -33,6 +35,8 @@ bool GwmLayerScalableGWRItem::readXml(QDomNode &node)
         mScale = analyse.attribute("scale").toDouble();
         mPenalty = analyse.attribute("penalty").toDouble();
         mParameterOptimizeCriterionType = GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType(analyse.attribute("parameterOptimizeCriterion").toInt());
+        mHasRegressionLayer = analyse.attribute("hasRegressionLayer").toInt();
+        mHasPredict = analyse.attribute("hasPredict").toInt();
 
         QDomElement nodeDepVar = analyse.firstChildElement("depVar");
         if (nodeDepVar.isNull())
@@ -126,6 +130,8 @@ bool GwmLayerScalableGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
         nodeAnalyse.setAttribute("scale", mScale);
         nodeAnalyse.setAttribute("penalty", mPenalty);
         nodeAnalyse.setAttribute("parameterOptimizeCriterion", mParameterOptimizeCriterionType);
+        nodeAnalyse.setAttribute("hasRegressionLayer", mHasRegressionLayer);
+        nodeAnalyse.setAttribute("hasPredict", mHasPredict);
 
         QDomElement nodeDepVar = doc.createElement("depVar");
         nodeDepVar.setAttribute("index", mDepVar.index);
@@ -225,4 +231,14 @@ GwmDistance::DistanceType GwmLayerScalableGWRItem::distanceType() const
 GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType GwmLayerScalableGWRItem::parameterOptimizeCriterionType() const
 {
     return mParameterOptimizeCriterionType;
+}
+
+bool GwmLayerScalableGWRItem::hasRegressionLayer() const
+{
+    return mHasRegressionLayer;
+}
+
+bool GwmLayerScalableGWRItem::hasPredict() const
+{
+    return mHasPredict;
 }

@@ -143,6 +143,7 @@ void GwmScalableGWRAlgorithm::run()
 {
     mDpSpatialWeight = mSpatialWeight;
 
+    emit message(tr("Initilizing points, matrix and neighours..."));
     initPoints();
     initXY(mX, mY, mDepVar, mIndepVars);
     findDataPointNeighbours();
@@ -205,9 +206,23 @@ void GwmScalableGWRAlgorithm::run()
         else
         {
             mBetas = regressionSerial(mX, mY);
-            createResultLayer({
-                qMakePair(QString("%1"), mBetas),
-            });
+            if (hasRegressionLayerXY && mHasPredict)
+            {
+                vec yhat = Fitted(mRegressionLayerX, mBetas);
+                vec residual = mRegressionLayerY - yhat;
+                createResultLayer({
+                    qMakePair(QString(mDepVar.name), mRegressionLayerY),
+                    qMakePair(QString("%1"), mBetas),
+                    qMakePair(QString("yhat"), yhat),
+                    qMakePair(QString("residual"), residual)
+                });
+            }
+            else
+            {
+                createResultLayer({
+                    qMakePair(QString("%1"), mBetas),
+                });
+            }
         }
     }
     else
@@ -253,11 +268,12 @@ void GwmScalableGWRAlgorithm::findDataPointNeighbours()
 mat GwmScalableGWRAlgorithm::findNeighbours(const GwmSpatialWeight &spatialWeight, umat &nnIndex)
 {
     GwmBandwidthWeight* bandwidth = spatialWeight.weight<GwmBandwidthWeight>();
-    uword nDp = spatialWeight.distance()->total();
+    uword nDp = mDpSpatialWeight.distance()->total();
+    uword nRp = spatialWeight.distance()->total();
     uword nBw = bandwidth->bandwidth() < nDp ? bandwidth->bandwidth() : nDp;
-    umat index(nBw, nDp, fill::zeros);
-    mat dists(nBw, nDp, fill::zeros);
-    for (uword i = 0; i < nDp; i++)
+    umat index(nBw, nRp, fill::zeros);
+    mat dists(nBw, nRp, fill::zeros);
+    for (uword i = 0; i < nRp; i++)
     {
         vec d = spatialWeight.distance()->distance(i);
         uvec i_sorted = sort_index(d);
@@ -396,9 +412,9 @@ mat GwmScalableGWRAlgorithm::regressionSerial(const arma::mat &x, const arma::ve
         return mat(nRp, nVar, fill::zeros);
     }
 
-    mMx0 = mat((mPolynomial + 1)*nVar*nVar, nDp, fill::zeros);
-    mMxx0 = mat((mPolynomial + 1)*nVar*nVar, nDp, fill::zeros);
-    mMy0 = mat((mPolynomial + 1)*nVar, nDp, fill::zeros);
+    mMx0 = mat((mPolynomial + 1)*nVar*nVar, nRp, fill::zeros);
+    mMxx0 = mat((mPolynomial + 1)*nVar*nVar, nRp, fill::zeros);
+    mMy0 = mat((mPolynomial + 1)*nVar, nRp, fill::zeros);
     mat spanXnei(1, mPolynomial + 1, fill::ones);
     mat spanXtG(1, nVar, fill::ones);
     for (arma::uword i = 0; i < nRp; i++)
@@ -408,13 +424,8 @@ mat GwmScalableGWRAlgorithm::regressionSerial(const arma::mat &x, const arma::ve
             G.row(p + 1) = pow(G0.row(i), pow(2.0, mPolynomial/2.0)/pow(2.0, p + 1));
         }
         G = trans(G);
-        mat xnei(nBw, nVar, fill::zeros);
-        vec ynei(nBw, fill::zeros);
-        for (arma::uword j = 0; j < nBw; j++) {
-            int inei = int(mDpNNIndex(i, j));
-            xnei.row(j) = x.row(inei);
-            ynei.row(j) = y(inei);
-        }
+        mat xnei = x.rows(rpNNIndex.row(i));
+        vec ynei = y.rows(rpNNIndex.row(i));
         for (arma::uword k1 = 0; k1 < nVar; k1++) {
             mat XtG = xnei.col(k1) * spanXnei % G;
             mat XtG2 = xnei.col(k1) * spanXnei % G % G;
@@ -435,7 +446,7 @@ mat GwmScalableGWRAlgorithm::regressionSerial(const arma::mat &x, const arma::ve
 
     int poly1 = mPolynomial + 1;
     double b = mScale, a = mPenalty;
-    vec R0 = vec(poly1) * b;
+    vec R0 = vec(poly1, fill::ones) * b;
     for (int p = 1; p < poly1; p++) {
         R0(p) = pow(b, p + 1);
     }
@@ -610,9 +621,49 @@ void GwmScalableGWRAlgorithm::initPoints()
     }
 }
 
+void GwmScalableGWRAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
+{
+    GwmGeographicalWeightedRegressionAlgorithm::initXY(x, y, depVar, indepVars);
+    if (hasRegressionLayer())
+    {
+        // 检查回归点图层是否包含了所有变量
+        QStringList fieldNameList = mRegressionLayer->fields().names();
+        bool flag = fieldNameList.contains(depVar.name);
+        for (auto field : indepVars)
+        {
+            flag = flag && fieldNameList.contains(field.name);
+        }
+        hasRegressionLayerXY = flag;
+        if (flag)
+        {
+            // 设置回归点X和回归点Y
+            int regressionPointsSize = mRegressionLayer->featureCount();
+            mRegressionLayerY = vec(regressionPointsSize, fill::zeros);
+            mRegressionLayerX = mat(regressionPointsSize, indepVars.size() + 1, fill::zeros);
+            QgsFeatureIterator iterator = mRegressionLayer->getFeatures();
+            QgsFeature f;
+            bool ok = false;
+            for (int i = 0; iterator.nextFeature(f); i++)
+            {
+                double vY = f.attribute(depVar.name).toDouble(&ok);
+                if (ok)
+                {
+                    mRegressionLayerY(i) = vY;
+                    mRegressionLayerX(i, 0) = 1.0;
+                    for (int k = 0; k < indepVars.size(); k++)
+                    {
+                        double vX = f.attribute(indepVars[k].name).toDouble(&ok);
+                        if (ok) mRegressionLayerX(i, k + 1) = vX;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void GwmScalableGWRAlgorithm::createResultLayer(initializer_list<CreateResultLayerDataItem> data)
 {
-    QgsVectorLayer* srcLayer = mDataLayer;
+    QgsVectorLayer* srcLayer = hasRegressionLayer() ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
     layerName += QStringLiteral("_GWR");
@@ -665,6 +716,16 @@ void GwmScalableGWRAlgorithm::createResultLayer(initializer_list<CreateResultLay
         mResultLayer->addFeature(feature);
     }
     mResultLayer->commitChanges();
+}
+
+bool GwmScalableGWRAlgorithm::hasPredict() const
+{
+    return mHasPredict;
+}
+
+void GwmScalableGWRAlgorithm::setHasPredict(bool hasPredict)
+{
+    mHasPredict = hasPredict;
 }
 
 bool GwmScalableGWRAlgorithm::isValid()

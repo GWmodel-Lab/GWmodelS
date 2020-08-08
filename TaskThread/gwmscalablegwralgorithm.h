@@ -44,6 +44,9 @@ public:
     double scale() const;
     double penalty() const;
 
+    bool hasPredict() const;
+    void setHasPredict(bool hasPredict);
+
     ParameterOptimizeCriterionType parameterOptimizeCriterion() const;
     void setParameterOptimizeCriterion(const ParameterOptimizeCriterionType &parameterOptimizeCriterion);
 
@@ -64,6 +67,7 @@ public:     // IRegressionAnalysis interface
 
 protected:
     void initPoints() override;
+    void initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars) override;
 
 private:
     void findDataPointNeighbours();
@@ -76,6 +80,7 @@ private:
 
     void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
 
+    bool mHasPredict = false;
 
 private:
     int mPolynomial = 4;
@@ -83,6 +88,10 @@ private:
     double mCV = 0.0;
     double mScale = 1.0;
     double mPenalty = 0.01;
+
+    bool hasRegressionLayerXY = false;
+    vec mRegressionLayerY;
+    mat mRegressionLayerX;
 
     bool mHasHatMatrix = true;
 

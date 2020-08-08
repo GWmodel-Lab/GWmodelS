@@ -60,7 +60,7 @@ void GwmPropertyScalableGWRTab::updateUI()
     ui->lblDistanceMetric->setText(tr("%1 distance metric is used.").arg(GwmDistance::TypeNameMapper[mLayerItem->distanceType()]));
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
 
-    if (true)
+    if (!mLayerItem->hasRegressionLayer())
     {
         GwmDiagnostic diagnostic = mLayerItem->diagnostic();
         ui->lblENP->setText(QString("%1").arg(diagnostic.ENP, 0, 'f', 6));
@@ -70,6 +70,10 @@ void GwmPropertyScalableGWRTab::updateUI()
         ui->lblRSS->setText(QString("%1").arg(diagnostic.RSS, 0, 'f', 6));
         ui->lblRSquare->setText(QString("%1").arg(diagnostic.RSquare, 0, 'f', 6));
         ui->lblRSquareAdjusted->setText(QString("%1").arg(diagnostic.RSquareAdjust, 0, 'f', 6));
+    }
+    else
+    {
+        ui->grpDiagnostic->hide();
     }
 
     // 计算四分位数
@@ -100,5 +104,7 @@ void GwmPropertyScalableGWRTab::updateUI()
     // LOOCV 结果
     ui->lblBtilde->setText(QString().sprintf("%.6lf", mLayerItem->scale()));
     ui->lblAlpha->setText(QString().sprintf("%.6lf", mLayerItem->penalty()));
+    if (mLayerItem->parameterOptimizeCriterionType() == GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType::AIC)
+        ui->lblCriterionType->setText("AIC");
     ui->lblCV->setText(QString().sprintf("%.6lf", mLayerItem->cv()));
 }

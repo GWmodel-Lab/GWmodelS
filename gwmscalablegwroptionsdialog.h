@@ -21,6 +21,9 @@ public:
     explicit GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmScalableGWRAlgorithm* thread,QWidget *parent = nullptr);
     ~GwmScalableGWROptionsDialog();
 
+    bool hasRegressionLayer() const;
+    GwmLayerGroupItem *selectedRegressionLayer() const;
+
 private:
     Ui::GwmScalableGWROptionsDialog *ui;
     QList<GwmLayerGroupItem*> mMapLayerList;
@@ -58,6 +61,8 @@ public:
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
+    void updatePredict();
+    void on_cbkRegressionPoints_toggled(bool checked);
 };
 
 #endif // GWMSCALABLEGWROPTIONSDIALOG_H
