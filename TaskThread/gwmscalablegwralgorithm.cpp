@@ -10,7 +10,7 @@ double GwmScalableGWRAlgorithm::Loocv(const vec &target, const mat &x, const vec
 {
     int n = x.n_rows, k = x.n_cols, poly1 = poly + 1;
     double b = target(0) * target(0), a = target(1) * target(1);
-    vec R0 = vec(poly1) * b;
+    vec R0 = vec(poly1, fill::ones) * b;
     for (int p = 1; p < poly1; p++) {
         R0(p) = pow(b, p + 1);
     }
@@ -44,11 +44,11 @@ double GwmScalableGWRAlgorithm::Loocv(const vec &target, const mat &x, const vec
         }
         sumMx += + a * (x.t() * x);
         sumMy += + a * (x.t() * y);
-        if (det(sumMx) < 1e-10) {
-            return DBL_MAX;
-        } else {
+        try {
             mat beta = solve(sumMx, sumMy);
             yhat.row(i) = x.row(i) * beta;
+        } catch (...) {
+            return DBL_MAX;
         }
     }
     return sum((y - yhat) % (y - yhat));
@@ -58,7 +58,7 @@ double GwmScalableGWRAlgorithm::AICvalue(const vec &target, const mat &x, const 
 {
     int n = x.n_rows, k = x.n_cols, poly1 = poly + 1;
     double b = target(0) * target(0), a = target(1) * target(1);
-    vec R0 = vec(poly1) * b;
+    vec R0 = vec(poly1, fill::ones) * b;
     for (int p = 1; p < poly1; p++) {
         R0(p) = pow(b, p + 1);
     }
@@ -141,13 +141,15 @@ GwmScalableGWRAlgorithm::GwmScalableGWRAlgorithm() : GwmGeographicalWeightedRegr
 
 void GwmScalableGWRAlgorithm::run()
 {
+    mDpSpatialWeight = mSpatialWeight;
+
     initPoints();
     initXY(mX, mY, mDepVar, mIndepVars);
-    findNeighbours();
+    findDataPointNeighbours();
 
     // 修正带宽
     GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
-    arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nBw = bandwidth->bandwidth();
+    arma::uword nDp = mX.n_rows, nBw = bandwidth->bandwidth();
     if (nBw >= nDp)
     {
         nBw = nDp - 1;
@@ -160,12 +162,12 @@ void GwmScalableGWRAlgorithm::run()
     switch (bandwidth->kernel())
     {
     case GwmBandwidthWeight::KernelFunctionType::Gaussian:
-        band0 = median(mNeighbourDists.col(qMin<uword>(50, nBw) - 1)) / sqrt(3);
-        mG0 = exp(-pow(mNeighbourDists / band0, 2));
+        band0 = median(mDpNNDists.col(qMin<uword>(50, nBw) - 1)) / sqrt(3);
+        mG0 = exp(-pow(mDpNNDists / band0, 2));
         break;
     case GwmBandwidthWeight::KernelFunctionType::Exponential:
-        band0 = median(mNeighbourDists.col(qMin<uword>(50, nBw) - 1)) / 3;
-        mG0 = exp(-pow(mNeighbourDists / band0, 2));
+        band0 = median(mDpNNDists.col(qMin<uword>(50, nBw) - 1)) / 3;
+        mG0 = exp(-pow(mDpNNDists / band0, 2));
         break;
     default:
         return;
@@ -181,22 +183,32 @@ void GwmScalableGWRAlgorithm::run()
         emit message(tr("Scalable GWR calibrating..."));
         mScale = b_tilde * b_tilde;
         mPenalty = alpha * alpha;
-        mBetas = regression(mX, mY);
-        mDiagnostic = CalcDiagnostic(mY, mX, mBetas, mShat);
-        double trS = mShat(0), trStS = mShat(1);
-        double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
-        vec yhat = sum(mX % mBetas, 1);
-        vec residual = mY - yhat;
-        mBetasSE = sqrt(sigmaHat * mBetasSE);
-        mat betasTV = mBetas / mBetasSE;
-        createResultLayer({
-            qMakePair(QString("%1"), mBetas),
-            qMakePair(QString("y"), mY),
-            qMakePair(QString("yhat"), yhat),
-            qMakePair(QString("residual"), residual),
-            qMakePair(QString("%1_SE"), mBetasSE),
-            qMakePair(QString("%1_TV"), betasTV)
-        });
+        if (!hasRegressionLayer())
+        {
+            mBetas = regressionHatmatrixSerial(mX, mY);
+            mDiagnostic = CalcDiagnostic(mY, mX, mBetas, mShat);
+            double trS = mShat(0), trStS = mShat(1);
+            double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+            vec yhat = sum(mX % mBetas, 1);
+            vec residual = mY - yhat;
+            mBetasSE = sqrt(sigmaHat * mBetasSE);
+            mat betasTV = mBetas / mBetasSE;
+            createResultLayer({
+                qMakePair(QString("%1"), mBetas),
+                qMakePair(QString("y"), mY),
+                qMakePair(QString("yhat"), yhat),
+                qMakePair(QString("residual"), residual),
+                qMakePair(QString("%1_SE"), mBetasSE),
+                qMakePair(QString("%1_TV"), betasTV)
+            });
+        }
+        else
+        {
+            mBetas = regressionSerial(mX, mY);
+            createResultLayer({
+                qMakePair(QString("%1"), mBetas),
+            });
+        }
     }
     else
     {
@@ -206,22 +218,55 @@ void GwmScalableGWRAlgorithm::run()
     emit success();
 }
 
-void GwmScalableGWRAlgorithm::findNeighbours()
+void GwmScalableGWRAlgorithm::findDataPointNeighbours()
 {
-    GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
-    uword nDp = mDataPoints.n_rows, nBw = bandwidth->bandwidth() >= nDp ? (nDp - 1) : bandwidth->bandwidth();
-    umat neighboursIndex(nBw, nDp, fill::zeros);
-    mat neighboursDists(nBw, nDp, fill::zeros);
+    GwmBandwidthWeight* bandwidth = mDpSpatialWeight.weight<GwmBandwidthWeight>();
+    uword nDp = mDataPoints.n_rows, nBw = bandwidth->bandwidth() < nDp ? bandwidth->bandwidth() : nDp;
+    if (mParameterOptimizeCriterion == ParameterOptimizeCriterionType::CV)
+    {
+        nBw -= 1;
+    }
+    umat nnIndex(nBw, nDp, fill::zeros);
+    mat nnDists(nBw, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeight.distance()->distance(i);
-        uvec indices = sort_index(d);
+        vec d = mDpSpatialWeight.distance()->distance(i);
+        uvec i_sorted = sort_index(d);
         vec d_sorted = sort(d);
-        neighboursIndex.col(i) = indices(span(0, nBw - 1));
-        neighboursDists.col(i) = d_sorted(span(0, nBw - 1));
+        nnIndex.col(i) = i_sorted(span(0, nBw - 1));
+        nnDists.col(i) = d_sorted(span(0, nBw - 1));
     }
-    mNeighbourDists = trans(neighboursDists);
-    mNeighbours = trans(neighboursIndex);
+    if (mParameterOptimizeCriterion == ParameterOptimizeCriterionType::CV)
+    {
+        mDpNNDists = trans(nnDists);
+        mDpNNIndex = trans(nnIndex);
+    }
+    else
+    {
+        mDpNNDists = join_rows(vec(nDp, fill::zeros), trans(nnDists));
+        mDpNNIndex = join_rows(linspace<uvec>(0, nDp - 1, nDp), trans(nnIndex));
+    }
+
+    mDpNNDists.submat(0, 0, 2, 2).print(std::cout, "nn");
+}
+
+mat GwmScalableGWRAlgorithm::findNeighbours(const GwmSpatialWeight &spatialWeight, umat &nnIndex)
+{
+    GwmBandwidthWeight* bandwidth = spatialWeight.weight<GwmBandwidthWeight>();
+    uword nDp = spatialWeight.distance()->total();
+    uword nBw = bandwidth->bandwidth() < nDp ? bandwidth->bandwidth() : nDp;
+    umat index(nBw, nDp, fill::zeros);
+    mat dists(nBw, nDp, fill::zeros);
+    for (uword i = 0; i < nDp; i++)
+    {
+        vec d = spatialWeight.distance()->distance(i);
+        uvec i_sorted = sort_index(d);
+        vec d_sorted = sort(d);
+        index.col(i) = i_sorted(span(0, nBw - 1));
+        dists.col(i) = d_sorted(span(0, nBw - 1));
+    }
+    nnIndex = index.t();
+    return dists.t();
 }
 
 double scagwr_loocv_multimin_function(const gsl_vector* vars, void* params)
@@ -280,28 +325,24 @@ double GwmScalableGWRAlgorithm::optimize(const mat &Mx0, const mat &My0, double&
 
 void GwmScalableGWRAlgorithm::prepare()
 {
-    GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
-    int bw = bandwidth->bandwidth();
+//    GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
+    int knn = mDpNNIndex.n_cols;
     const mat &x = mX, &y = mY, &G0 = mG0;
     int n = x.n_rows;
     int k = x.n_cols;
     mMx0 = mat((mPolynomial + 1)*k*k, n, fill::zeros);
+    mMxx0 = mat((mPolynomial + 1)*k*k, n, fill::zeros);
     mMy0 = mat((mPolynomial + 1)*k, n, fill::zeros);
     mat spanXnei(1, mPolynomial + 1, fill::ones);
     mat spanXtG(1, k, fill::ones);
     for (int i = 0; i < n; i++) {
-        mat G(mPolynomial + 1, bw + 1, fill::ones);
+        mat G(mPolynomial + 1, knn, fill::ones);
         for (int p = 0; p < mPolynomial; p++) {
             G.row(p + 1) = pow(G0.row(i), pow(2.0, mPolynomial/2.0)/pow(2.0, p + 1));
         }
         G = trans(G);
-        mat xnei(bw, k, fill::zeros);
-        vec ynei(bw, fill::zeros);
-        for (int j = 0; j < bw; j++) {
-            int inei = int(mNeighbours(i, j));
-            xnei.row(j) = x.row(inei);
-            ynei.row(j) = y(inei);
-        }
+        mat xnei = x.rows(mDpNNIndex.row(i));
+        vec ynei = y.rows(mDpNNIndex.row(i));
         for (int k1 = 0; k1 < k; k1++) {
             mat XtG = xnei.col(k1) * spanXnei % G;
             mat XtG2 = xnei.col(k1) * spanXnei % G % G;
@@ -321,43 +362,150 @@ void GwmScalableGWRAlgorithm::prepare()
     }
 }
 
-arma::mat GwmScalableGWRAlgorithm::regression(const arma::mat &x, const arma::vec &y)
+mat GwmScalableGWRAlgorithm::regressionSerial(const arma::mat &x, const arma::vec &y)
+{
+    GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
+    arma::uword nDp = mDataPoints.n_rows, nRp = mRegressionPoints.n_rows, nVar = mX.n_cols, nBw = bandwidth->bandwidth();
+    double band0 = 0.0;
+    mat G0;
+    umat rpNNIndex;
+    mat rpNNDists = findNeighbours(mSpatialWeight, rpNNIndex);
+    switch (bandwidth->kernel())
+    {
+    case GwmBandwidthWeight::KernelFunctionType::Gaussian:
+        band0 = median(rpNNDists.col(qMin<uword>(50, nBw) - 1)) / sqrt(3);
+        G0 = exp(-pow(rpNNDists / band0, 2));
+        break;
+    case GwmBandwidthWeight::KernelFunctionType::Exponential:
+        band0 = median(rpNNDists.col(qMin<uword>(50, nBw) - 1)) / 3;
+        G0 = exp(-pow(rpNNDists / band0, 2));
+        break;
+    default:
+        return mat(nRp, nVar, fill::zeros);
+    }
+
+    mMx0 = mat((mPolynomial + 1)*nVar*nVar, nDp, fill::zeros);
+    mMxx0 = mat((mPolynomial + 1)*nVar*nVar, nDp, fill::zeros);
+    mMy0 = mat((mPolynomial + 1)*nVar, nDp, fill::zeros);
+    mat spanXnei(1, mPolynomial + 1, fill::ones);
+    mat spanXtG(1, nVar, fill::ones);
+    for (arma::uword i = 0; i < nRp; i++)
+    {
+        mat G(mPolynomial + 1, nBw, fill::ones);
+        for (int p = 0; p < mPolynomial; p++) {
+            G.row(p + 1) = pow(G0.row(i), pow(2.0, mPolynomial/2.0)/pow(2.0, p + 1));
+        }
+        G = trans(G);
+        mat xnei(nBw, nVar, fill::zeros);
+        vec ynei(nBw, fill::zeros);
+        for (arma::uword j = 0; j < nBw; j++) {
+            int inei = int(mDpNNIndex(i, j));
+            xnei.row(j) = x.row(inei);
+            ynei.row(j) = y(inei);
+        }
+        for (arma::uword k1 = 0; k1 < nVar; k1++) {
+            mat XtG = xnei.col(k1) * spanXnei % G;
+            mat XtG2 = xnei.col(k1) * spanXnei % G % G;
+            for (int p = 0; p < (mPolynomial + 1); p++) {
+                mat XtGX = XtG.col(p) * spanXtG % xnei;
+                mat XtG2X = XtG2.col(p) * spanXtG % xnei;
+                for (arma::uword k2 = 0; k2 < nVar; k2++) {
+                    int xindex = (k1 * (mPolynomial + 1) + p) * nVar + k2;
+                    mMx0(xindex, i) = sum(XtGX.col(k2));
+                    mMxx0(xindex, i) = sum(XtG2X.col(k2));
+                }
+                int yindex = p * nVar + k1;
+                vec XtGY = XtG.col(p) % ynei;
+                mMy0(yindex, i) = sum(XtGY);
+            }
+        }
+    }
+
+    int poly1 = mPolynomial + 1;
+    double b = mScale, a = mPenalty;
+    vec R0 = vec(poly1) * b;
+    for (int p = 1; p < poly1; p++) {
+        R0(p) = pow(b, p + 1);
+    }
+    R0 = R0 / sum(R0);
+    vec Rx(nVar*nVar*poly1, fill::zeros), Ry(nVar*poly1, fill::zeros);
+    for (int p = 0; p < poly1; p++) {
+        for (uword k2 = 0; k2 < nVar; k2++) {
+            for (uword k1 = 0; k1 < nVar; k1++) {
+                uword xindex = k1*poly1*nVar + p*nVar + k2;
+                Rx(xindex) = R0(p);
+            }
+            uword yindex = p*nVar + k2;
+            Ry(yindex) = R0(p);
+        }
+    }
+    mat Mx = Rx * mat(1, nRp, fill::ones) % mMx0, My = Ry * mat(1, nRp, fill::ones) % mMy0;
+    mat Mx2 = 2 * a * Mx + ((Rx % Rx) * mat(1, nRp, fill::ones) % mMx0);
+
+    mat betas(nVar, nRp, fill::zeros);
+    for (uword i = 0; i < nRp; i++) {
+        mat sumMx(nVar, nVar, fill::zeros), sumMx2(nVar, nVar, fill::zeros);
+        vec sumMy(nVar, fill::zeros);
+        for (uword k2 = 0; k2 < nVar; k2++) {
+            for (int p = 0; p < poly1; p++) {
+                for (uword k1 = 0; k1 < nVar; k1++) {
+                    int xindex = k1*poly1*nVar + p*nVar + k2;
+                    sumMx(k1, k2) += Mx(xindex, i);
+                    sumMx2(k1, k2) += Mx2(xindex, i);
+                }
+                int yindex = p*nVar + k2;
+                sumMy(k2) += My(yindex, i);
+            }
+        }
+        sumMx += a * (x.t() * x);
+        sumMx2 += a * a * (x.t() * x);
+        sumMy += a * (x.t() * y);
+        mat sumMxR = inv(sumMx.t() * sumMx);
+        betas.col(i) = sumMxR * (sumMx.t() * sumMy);
+    }
+
+    return betas.t();
+}
+
+arma::mat GwmScalableGWRAlgorithm::regressionHatmatrixSerial(const arma::mat &x, const arma::vec &y)
 {
     GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
     int bw = bandwidth->bandwidth();
     int n = x.n_rows, k = x.n_cols, poly1 = mPolynomial + 1;
     double b = mScale, a = mPenalty;
     mat XtX = x.t() * x, XtY = x.t() * y;
-
     mat betas(k, n, fill::zeros);
 
-//    mat g0s(mG0.n_cols + 1, mG0.n_rows, fill::ones);
-//    mat g0t = trans(mG0);
-//    for (int i = 0; i < bw; i++) {
-//        g0s.row(i + 1) = g0t.row(i);
-//    }
-//    g0s = trans(g0s);
-//    mat g0 = join_cols(vec(mG0.n_rows, fill::zeros), mG0);
+    double band0 = 0.0;
+    umat dpNNIndex;
+    mat dpNNDists = findNeighbours(mDpSpatialWeight, dpNNIndex);
+    switch (bandwidth->kernel())
+    {
+    case GwmBandwidthWeight::KernelFunctionType::Gaussian:
+        band0 = median(dpNNDists.col(qMin<uword>(50, bw) - 1)) / sqrt(3);
+        mG0 = exp(-pow(dpNNDists / band0, 2));
+        break;
+    case GwmBandwidthWeight::KernelFunctionType::Exponential:
+        band0 = median(dpNNDists.col(qMin<uword>(50, bw) - 1)) / 3;
+        mG0 = exp(-pow(dpNNDists / band0, 2));
+        break;
+    default:
+        return betas.t();
+    }
+
     mMx0 = mat((mPolynomial + 1)*k*k, n, fill::zeros);
     mMxx0 = mat((mPolynomial + 1)*k*k, n, fill::zeros);
     mMy0 = mat((mPolynomial + 1)*k, n, fill::zeros);
     mat spanXnei(1, mPolynomial + 1, fill::ones);
     mat spanXtG(1, k, fill::ones);
     for (int i = 0; i < n; i++) {
-        mat G(mPolynomial + 1, bw + 1, fill::ones);
+        mat G(mPolynomial + 1, bw, fill::ones);
         for (int p = 0; p < mPolynomial; p++) {
             G.row(p + 1) = pow(mG0.row(i), pow(2.0, mPolynomial/2.0)/pow(2.0, p + 1));
         }
         G = trans(G);
-//        mat xnei(bw, k, fill::zeros);
-//        vec ynei(bw, fill::zeros);
-//        for (int j = 0; j < bw; j++) {
-//            int inei = int(mNeighbours(i, j));
-//            xnei.row(j) = x.row(inei);
-//            ynei.row(j) = y(inei);
-//        }
-        mat xnei = x.rows(mNeighbours.row(i));
-        vec ynei = y.rows(mNeighbours.row(i));
+        mat xnei = x.rows(dpNNIndex.row(i));
+        vec ynei = y.rows(dpNNIndex.row(i));
         for (int k1 = 0; k1 < k; k1++) {
             mat XtG = xnei.col(k1) * spanXnei % G;
             mat XtG2 = xnei.col(k1) * spanXnei % G % G;
@@ -376,7 +524,7 @@ arma::mat GwmScalableGWRAlgorithm::regression(const arma::mat &x, const arma::ve
         }
     }
 
-    vec R0 = vec(poly1) * b;
+    vec R0 = vec(poly1, fill::ones) * b;
     for (int p = 1; p < poly1; p++) {
         R0(p) = pow(b, p + 1);
     }
@@ -393,7 +541,7 @@ arma::mat GwmScalableGWRAlgorithm::regression(const arma::mat &x, const arma::ve
         }
     }
     mat Mx = Rx * mat(1, n, fill::ones) % mMx0, My = Ry * mat(1, n, fill::ones) % mMy0;
-    mat Mx2 = 2 * a * Mx + ((Rx % Rx) * mat(1, n, fill::ones) % mMx0);
+    mat Mx2 = 2 * a * Mx + ((Rx % Rx) * mat(1, n, fill::ones) % mMxx0);
 
     mat bse(k, n, fill::zeros);
     double trS = 0.0, trStS = 0.0;
@@ -414,25 +562,40 @@ arma::mat GwmScalableGWRAlgorithm::regression(const arma::mat &x, const arma::ve
         sumMx += a * (x.t() * x);
         sumMx2 += a * a * (x.t() * x);
         sumMy += a * (x.t() * y);
-        mat sumMxR = inv(sumMx.t() * sumMx);
-        vec trS00 = sumMxR * trans(x.row(i));
-        mat trS0 = x.row(i) * trS00;
-        trS += trS0[0];
+        try {
+            mat sumMxR = inv(trans(sumMx) * sumMx);
+            vec trS00 = sumMxR * trans(x.row(i));
+            mat trS0 = x.row(i) * trS00;
+            trS += trS0[0];
 
-        vec trStS00 = sumMx2 * trS00;
-        double trStS0 = sum(sum(trS00 * trStS00));
-        trStS += trStS0;
+            vec trStS00 = sumMx2 * trS00;
+            double trStS0 = sum(trS00 % trStS00);
+            trStS += trStS0;
 
-        vec beta = sumMxR * (sumMx.t() * sumMy);
-        betas.col(i) = beta;
+            vec beta = sumMxR * (sumMx.t() * sumMy);
+            betas.col(i) = beta;
 
-        mat bse00 = sumMxR * sumMx2 * sumMxR;
-        vec bse0 = sqrt(diagvec(bse00));
-        bse.col(i) = bse0.t();
+            mat bse00 = sumMxR * sumMx2 * sumMxR;
+            vec bse0 = sqrt(diagvec(bse00));
+            bse.col(i) = bse0;
+        } catch (std::runtime_error e) {
+            emit error(e.what());
+        }
     }
     mBetasSE = bse.t();
     mShat = { trS, trStS };
     return betas.t();
+}
+
+void GwmScalableGWRAlgorithm::initPoints()
+{
+    GwmGeographicalWeightedRegressionAlgorithm::initPoints();
+    if (mDpSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mDpSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    {
+        GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mDpSpatialWeight.distance());
+        d->setDataPoints(&mDataPoints);
+        d->setFocusPoints(&mDataPoints);
+    }
 }
 
 void GwmScalableGWRAlgorithm::createResultLayer(initializer_list<CreateResultLayerDataItem> data)

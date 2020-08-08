@@ -63,6 +63,7 @@ inline mat *GwmCRSDistance::focusPoints() const
 inline void GwmCRSDistance::setFocusPoints(mat *focusPoints)
 {
     mFocusPoints = focusPoints;
+    mTotal = focusPoints->n_rows;
 }
 
 inline mat *GwmCRSDistance::dataPoints() const

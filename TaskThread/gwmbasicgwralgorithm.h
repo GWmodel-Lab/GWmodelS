@@ -63,9 +63,6 @@ public:
     double indepVarSelectionThreshold() const;
     void setIndepVarSelectionThreshold(double indepVarSelectionThreshold);
 
-    QgsVectorLayer* regressionLayer() const;
-    void setRegressionLayer(QgsVectorLayer* layer);
-
     bool hasHatMatrix() const;
     void setHasHatMatrix(bool value);
 
@@ -255,16 +252,6 @@ inline double GwmBasicGWRAlgorithm::indepVarSelectionThreshold() const
 inline void GwmBasicGWRAlgorithm::setIndepVarSelectionThreshold(double indepVarSelectionThreshold)
 {
     mIndepVarSelectionThreshold = indepVarSelectionThreshold;
-}
-
-inline QgsVectorLayer *GwmBasicGWRAlgorithm::regressionLayer() const
-{
-    return mRegressionLayer;
-}
-
-inline void GwmBasicGWRAlgorithm::setRegressionLayer(QgsVectorLayer *layer)
-{
-    mRegressionLayer = layer;
 }
 
 inline GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType GwmBasicGWRAlgorithm::bandwidthSelectionCriterionType() const

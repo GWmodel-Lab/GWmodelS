@@ -41,7 +41,7 @@ void GwmBasicGWRAlgorithm::run()
     initPoints();
 
     // 优选模型
-    if (mIsAutoselectIndepVars)
+    if (!hasRegressionLayer() && mIsAutoselectIndepVars)
     {
         emit message(QString(tr("Automatically selecting independent variables ...")));
         mIndepVarSelectModelsTotalNum = (mIndepVars.size() + 1) * (mIndepVars.size()) / 2;
@@ -64,7 +64,7 @@ void GwmBasicGWRAlgorithm::run()
     initXY(mX, mY, mDepVar, mIndepVars);
 
     // 优选带宽
-    if (mIsAutoselectBandwidth)
+    if (!hasRegressionLayer() && mIsAutoselectBandwidth)
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
         emit tick(0, 0);

@@ -8,6 +8,12 @@ class GwmScalableGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorith
     Q_OBJECT
 
 public:
+    enum ParameterOptimizeCriterionType
+    {
+        AIC,
+        CV
+    };
+
     struct LoocvParams
     {
         const mat* x;
@@ -48,12 +54,22 @@ public:     // GwmSpatialAlgorithm interface
 
 
 public:     // IRegressionAnalysis interface
-    arma::mat regression(const arma::mat &x, const arma::vec &y) override;
+    arma::mat regression(const arma::mat &x, const arma::vec &y) override
+    {
+        return regressionHatmatrixSerial(x, y);
+    }
+
+protected:
+    void initPoints() override;
 
 private:
-    void findNeighbours();
+    void findDataPointNeighbours();
+    mat findNeighbours(const GwmSpatialWeight& spatialWeight, umat &nnIndex);
     double optimize(const mat& Mx0, const mat& My0, double& b_tilde, double& alpha);
     void prepare();
+
+    mat regressionSerial(const arma::mat& x, const arma::vec& y);
+    mat regressionHatmatrixSerial(const arma::mat &x, const arma::vec &y);
 
     void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
 
@@ -65,9 +81,17 @@ private:
     double mScale = 1.0;
     double mPenalty = 0.01;
 
+    bool mHasHatMatrix = true;
+
+    GwmSpatialWeight mDpSpatialWeight;
+
+    ParameterOptimizeCriterionType mParameterOptimizeCriterion = ParameterOptimizeCriterionType::CV;
+
     mat mG0;
-    umat mNeighbours;
-    mat mNeighbourDists;
+    umat mDpNNIndex;
+    mat mDpNNDists;
+//    umat mRpNNIndex;
+//    mat mRpNNDists;
     mat mMx0;
     mat mMxx0;
     mat mMy0;
