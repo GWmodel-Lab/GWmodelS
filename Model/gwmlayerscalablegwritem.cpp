@@ -12,10 +12,13 @@ GwmLayerScalableGWRItem::GwmLayerScalableGWRItem(GwmLayerItem* parent, QgsVector
         mDistanceType = taskThread->spatialWeight().distance()->type();
         mDiagnostic = taskThread->diagnostic();
         mBetas = mat(taskThread->betas());
-        mPolynomial = taskThread->getPolynomial();
-        mCV = taskThread->getCV();
-        mScale = taskThread->getScale();
-        mPenalty = taskThread->getPenalty();
+        mPolynomial = taskThread->polynomial();
+        mCV = taskThread->cv();
+        mScale = taskThread->scale();
+        mPenalty = taskThread->penalty();
+        mParameterOptimizeCriterionType = taskThread->parameterOptimizeCriterion();
+        mHasRegressionLayer = taskThread->regressionLayer() != nullptr;
+        mHasPredict = taskThread->hasPredict();
     }
 }
 
@@ -31,6 +34,9 @@ bool GwmLayerScalableGWRItem::readXml(QDomNode &node)
         mCV = analyse.attribute("cv").toDouble();
         mScale = analyse.attribute("scale").toDouble();
         mPenalty = analyse.attribute("penalty").toDouble();
+        mParameterOptimizeCriterionType = GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType(analyse.attribute("parameterOptimizeCriterion").toInt());
+        mHasRegressionLayer = analyse.attribute("hasRegressionLayer").toInt();
+        mHasPredict = analyse.attribute("hasPredict").toInt();
 
         QDomElement nodeDepVar = analyse.firstChildElement("depVar");
         if (nodeDepVar.isNull())
@@ -123,6 +129,9 @@ bool GwmLayerScalableGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
         nodeAnalyse.setAttribute("cv", mCV);
         nodeAnalyse.setAttribute("scale", mScale);
         nodeAnalyse.setAttribute("penalty", mPenalty);
+        nodeAnalyse.setAttribute("parameterOptimizeCriterion", mParameterOptimizeCriterionType);
+        nodeAnalyse.setAttribute("hasRegressionLayer", mHasRegressionLayer);
+        nodeAnalyse.setAttribute("hasPredict", mHasPredict);
 
         QDomElement nodeDepVar = doc.createElement("depVar");
         nodeDepVar.setAttribute("index", mDepVar.index);
@@ -217,4 +226,19 @@ arma::mat GwmLayerScalableGWRItem::betas() const
 GwmDistance::DistanceType GwmLayerScalableGWRItem::distanceType() const
 {
     return mDistanceType;
+}
+
+GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType GwmLayerScalableGWRItem::parameterOptimizeCriterionType() const
+{
+    return mParameterOptimizeCriterionType;
+}
+
+bool GwmLayerScalableGWRItem::hasRegressionLayer() const
+{
+    return mHasRegressionLayer;
+}
+
+bool GwmLayerScalableGWRItem::hasPredict() const
+{
+    return mHasPredict;
 }

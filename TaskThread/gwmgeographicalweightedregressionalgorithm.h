@@ -37,6 +37,9 @@ public:     // 构造和属性
     mat betas() const;
     void setBetas(const mat &betas);
 
+    QgsVectorLayer *regressionLayer() const;
+    void setRegressionLayer(QgsVectorLayer *layer);
+
 
 public:     // GwmTaskThread interface
     QString name() const override { return tr("GWR"); };
@@ -47,34 +50,33 @@ public:  // GwmSpatialAlgorithm interface
 
 
 public:     // IRegressionAnalysis interface
-    inline GwmVariable dependentVariable() const override
+    GwmVariable dependentVariable() const override
     {
         return mDepVar;
     }
 
-    inline void setDependentVariable(const GwmVariable &variable) override
+    void setDependentVariable(const GwmVariable &variable) override
     {
         mDepVar = variable;
     }
 
-    inline QList<GwmVariable> independentVariables() const override
+    QList<GwmVariable> independentVariables() const override
     {
         return mIndepVars;
     }
 
-    inline void setIndependentVariables(const QList<GwmVariable> &variables) override
+    void setIndependentVariables(const QList<GwmVariable> &variables) override
     {
         mIndepVars = variables;
     }
 
-    inline GwmDiagnostic diagnostic() const override
+    GwmDiagnostic diagnostic() const override
     {
         return mDiagnostic;
     }
 
 public:
-
-    inline bool hasRegressionLayer()
+    bool hasRegressionLayer()
     {
         return mRegressionLayer != nullptr;
     }
@@ -97,6 +99,16 @@ protected:
 
     GwmDiagnostic mDiagnostic;
 };
+
+inline QgsVectorLayer *GwmGeographicalWeightedRegressionAlgorithm::regressionLayer() const
+{
+    return mRegressionLayer;
+}
+
+inline void GwmGeographicalWeightedRegressionAlgorithm::setRegressionLayer(QgsVectorLayer *layer)
+{
+    mRegressionLayer = layer;
+}
 
 inline mat GwmGeographicalWeightedRegressionAlgorithm::betas() const
 {

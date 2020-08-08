@@ -8,6 +8,12 @@ class GwmScalableGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorith
     Q_OBJECT
 
 public:
+    enum ParameterOptimizeCriterionType
+    {
+        AIC,
+        CV
+    };
+
     struct LoocvParams
     {
         const mat* x;
@@ -18,6 +24,7 @@ public:
         const mat* My0;
     };
     static double Loocv(const vec& target, const mat& x, const vec& y, int bw, int poly, const mat& Mx0, const mat& My0);
+    static double AICvalue(const vec& target, const mat& x, const vec& y, int bw, int poly, const mat& Mx0, const mat& My0);
 
     typedef QPair<QString, const mat> CreateResultLayerDataItem;
 
@@ -30,12 +37,18 @@ public:
 
     void run() override;
 
-    int getPolynomial() const;
+    int polynomial() const;
     void setPolynomial(int polynomial);
 
-    double getCV() const;
-    double getScale() const;
-    double getPenalty() const;
+    double cv() const;
+    double scale() const;
+    double penalty() const;
+
+    bool hasPredict() const;
+    void setHasPredict(bool hasPredict);
+
+    ParameterOptimizeCriterionType parameterOptimizeCriterion() const;
+    void setParameterOptimizeCriterion(const ParameterOptimizeCriterionType &parameterOptimizeCriterion);
 
 
 public:     // GwmTaskThread interface
@@ -47,15 +60,27 @@ public:     // GwmSpatialAlgorithm interface
 
 
 public:     // IRegressionAnalysis interface
-    arma::mat regression(const arma::mat &x, const arma::vec &y) override;
+    arma::mat regression(const arma::mat &x, const arma::vec &y) override
+    {
+        return regressionHatmatrixSerial(x, y);
+    }
+
+protected:
+    void initPoints() override;
+    void initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars) override;
 
 private:
-    void findNeighbours();
+    void findDataPointNeighbours();
+    mat findNeighbours(const GwmSpatialWeight& spatialWeight, umat &nnIndex);
     double optimize(const mat& Mx0, const mat& My0, double& b_tilde, double& alpha);
     void prepare();
 
+    mat regressionSerial(const arma::mat& x, const arma::vec& y);
+    mat regressionHatmatrixSerial(const arma::mat &x, const arma::vec &y);
+
     void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
 
+    bool mHasPredict = false;
 
 private:
     int mPolynomial = 4;
@@ -64,10 +89,23 @@ private:
     double mScale = 1.0;
     double mPenalty = 0.01;
 
+    bool hasRegressionLayerXY = false;
+    vec mRegressionLayerY;
+    mat mRegressionLayerX;
+
+    bool mHasHatMatrix = true;
+
+    GwmSpatialWeight mDpSpatialWeight;
+
+    ParameterOptimizeCriterionType mParameterOptimizeCriterion = ParameterOptimizeCriterionType::CV;
+
     mat mG0;
-    umat mNeighbours;
-    mat mNeighbourDists;
+    umat mDpNNIndex;
+    mat mDpNNDists;
+//    umat mRpNNIndex;
+//    mat mRpNNDists;
     mat mMx0;
+    mat mMxx0;
     mat mMy0;
     vec mShat;
     mat mBetasSE;
@@ -78,24 +116,34 @@ inline void GwmScalableGWRAlgorithm::setPolynomial(int polynomial)
     mPolynomial = polynomial;
 }
 
-inline double GwmScalableGWRAlgorithm::getPenalty() const
+inline double GwmScalableGWRAlgorithm::penalty() const
 {
     return mPenalty;
 }
 
-inline double GwmScalableGWRAlgorithm::getScale() const
+inline double GwmScalableGWRAlgorithm::scale() const
 {
     return mScale;
 }
 
-inline double GwmScalableGWRAlgorithm::getCV() const
+inline double GwmScalableGWRAlgorithm::cv() const
 {
     return mCV;
 }
 
-inline int GwmScalableGWRAlgorithm::getPolynomial() const
+inline int GwmScalableGWRAlgorithm::polynomial() const
 {
     return mPolynomial;
+}
+
+inline GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType GwmScalableGWRAlgorithm::parameterOptimizeCriterion() const
+{
+    return mParameterOptimizeCriterion;
+}
+
+inline void GwmScalableGWRAlgorithm::setParameterOptimizeCriterion(const ParameterOptimizeCriterionType &parameterOptimizeCriterion)
+{
+    mParameterOptimizeCriterion = parameterOptimizeCriterion;
 }
 
 #endif // GWMSCALABLEGWRTASKTHREAD_H

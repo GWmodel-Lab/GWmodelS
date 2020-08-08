@@ -23,9 +23,14 @@ GwmScalableGWROptionsDialog::GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem
 
     for (GwmLayerGroupItem* item : mMapLayerList){
         ui->mLayerComboBox->addItem(item->originChild()->layer()->name());
+        ui->cmbRegressionLayerSelect->addItem(item->originChild()->layer()->name());
     }
     ui->mLayerComboBox->setCurrentIndex(-1);
+    ui->cmbRegressionLayerSelect->setCurrentIndex(-1);
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmScalableGWROptionsDialog::layerChanged);
+    connect(ui->cmbRegressionLayerSelect, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmScalableGWROptionsDialog::updatePredict);
+    connect(ui->ckbRegressionPoints, &QAbstractButton::toggled, this, &GwmScalableGWROptionsDialog::on_cbkRegressionPoints_toggled);
+
 
     ui->mDepVarComboBox->setCurrentIndex(-1);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmScalableGWROptionsDialog::onDepVarChanged);
@@ -51,6 +56,8 @@ GwmScalableGWROptionsDialog::GwmScalableGWROptionsDialog(QList<GwmLayerGroupItem
     ui->mDistTypeCRSRadio->setChecked(true);
 
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmScalableGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->ckbRegressionPoints, &QAbstractButton::toggle, this, &GwmScalableGWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->cmbRegressionLayerSelect, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmScalableGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmScalableGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmScalableGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmScalableGWROptionsDialog::updateFieldsAndEnable);
@@ -101,6 +108,24 @@ GwmLayerGroupItem *GwmScalableGWROptionsDialog::selectedLayer() const
 void GwmScalableGWROptionsDialog::setSelectedLayer(GwmLayerGroupItem *selectedLayer)
 {
     mSelectedLayer = selectedLayer;
+}
+
+bool GwmScalableGWROptionsDialog::hasRegressionLayer() const
+{
+    return ui->ckbRegressionPoints->checkState() == Qt::Checked;
+}
+
+GwmLayerGroupItem *GwmScalableGWROptionsDialog::selectedRegressionLayer() const
+{
+    if (ui->ckbRegressionPoints->isChecked())
+    {
+        int regLayerIndex = ui->cmbRegressionLayerSelect->currentIndex();
+        if (regLayerIndex > -1)
+        {
+            return mMapLayerList[regLayerIndex];
+        }
+    }
+    return nullptr;
 }
 
 void GwmScalableGWROptionsDialog::layerChanged(int index)
@@ -290,6 +315,24 @@ void GwmScalableGWROptionsDialog::updateFields()
         mTaskThread->setDataLayer(dataLayer);
     }
     else return;
+    // 回归点设置
+    if (ui->ckbRegressionPoints->isChecked())
+    {
+        int regLayerIndex = ui->cmbRegressionLayerSelect->currentIndex();
+        if (regLayerIndex > -1)
+        {
+            mTaskThread->setRegressionLayer(mMapLayerList[regLayerIndex]->originChild()->layer());
+        }
+        else
+        {
+            mTaskThread->setRegressionLayer(nullptr);
+        }
+        mTaskThread->setHasPredict(ui->ckbPredict->isChecked());
+    }
+    else
+    {
+        mTaskThread->setRegressionLayer(nullptr);
+    }
     // 因变量设置
     if (ui->mDepVarComboBox->currentIndex() > -1)
     {
@@ -332,6 +375,10 @@ void GwmScalableGWROptionsDialog::updateFields()
     mTaskThread->setSpatialWeight(spatialWeight);
     // 参数设置
     mTaskThread->setPolynomial(ui->mPolynomialSpin->value());
+    if (ui->cmbOptimizeCriterion->currentText() == "CV")
+        mTaskThread->setParameterOptimizeCriterion(GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType::CV);
+    else
+        mTaskThread->setParameterOptimizeCriterion(GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType::AIC);
 }
 
 void GwmScalableGWROptionsDialog::enableAccept()
@@ -347,4 +394,46 @@ void GwmScalableGWROptionsDialog::enableAccept()
         ui->mCheckMessage->setText(message);
         ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Cancel);
     }
+}
+
+void GwmScalableGWROptionsDialog::updatePredict()
+{
+    bool flag = false;
+    if (ui->ckbRegressionPoints->isChecked() && ui->mLayerComboBox->currentIndex() > -1 && ui->cmbRegressionLayerSelect->currentIndex() > -1)
+    {
+        int iDataLayer = ui->mLayerComboBox->currentIndex();
+        int iRegLayer = ui->cmbRegressionLayerSelect->currentIndex();
+        if (iDataLayer == iRegLayer) flag = true;
+        else
+        {
+            QgsVectorLayer* dataLayer = mMapLayerList[iDataLayer]->originChild()->layer();
+            QgsFields dataFields = dataLayer->fields();
+            QgsVectorLayer* regLayer = mMapLayerList[iRegLayer]->originChild()->layer();
+            QgsFields regFields = regLayer->fields();
+            bool all = true;
+            for (auto df : dataFields)
+            {
+                bool have = false;
+                for (auto rf : regFields)
+                {
+                    if (df.name() == rf.name() && df.type() == rf.type())
+                        have = true;
+                }
+                all = all && have;
+            }
+            if (all) flag = true;
+//            GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
+//            if (selectedIndepVarModel && selectedIndepVarModel->rowCount() > 0)
+//            {
+//                auto dataFields = selectedIndepVarModel->attributeItemList();
+
+//            }
+        }
+    }
+    ui->ckbPredict->setEnabled(flag);
+}
+
+void GwmScalableGWROptionsDialog::on_cbkRegressionPoints_toggled(bool checked)
+{
+    ui->cmbRegressionLayerSelect->setEnabled(checked);
 }

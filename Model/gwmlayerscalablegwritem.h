@@ -39,6 +39,12 @@ public:
 
     GwmDistance::DistanceType distanceType() const;
 
+    GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType parameterOptimizeCriterionType() const;
+
+    bool hasRegressionLayer() const;
+
+    bool hasPredict() const;
+
 private:
     int mDataPointsSize;
     GwmVariable mDepVar;
@@ -47,6 +53,9 @@ private:
     GwmDistance::DistanceType mDistanceType;
     GwmDiagnostic mDiagnostic;
     arma::mat mBetas;
+    GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType mParameterOptimizeCriterionType;
+    bool mHasRegressionLayer = false;
+    bool mHasPredict = false;
 
     int mPolynomial;
     double mCV;

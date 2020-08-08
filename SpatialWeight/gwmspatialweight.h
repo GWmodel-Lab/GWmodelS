@@ -50,6 +50,7 @@ public:
         mDistance = spatialWeight.mDistance->clone();
         return *this;
     }
+
     GwmSpatialWeight& operator=(const GwmSpatialWeight&& spatialWeight)
     {
         if (this == &spatialWeight) return *this;
