@@ -39,6 +39,8 @@ public:
 
     GwmDistance::DistanceType distanceType() const;
 
+    GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType parameterOptimizeCriterionType() const;
+
 private:
     int mDataPointsSize;
     GwmVariable mDepVar;
@@ -47,6 +49,7 @@ private:
     GwmDistance::DistanceType mDistanceType;
     GwmDiagnostic mDiagnostic;
     arma::mat mBetas;
+    GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType mParameterOptimizeCriterionType;
 
     int mPolynomial;
     double mCV;

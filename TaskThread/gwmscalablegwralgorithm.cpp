@@ -281,6 +281,18 @@ double scagwr_loocv_multimin_function(const gsl_vector* vars, void* params)
     return GwmScalableGWRAlgorithm::Loocv(target, *x, *y, bw, polynomial, *Mx0, *My0);
 }
 
+double scagwr_aic_multimin_function(const gsl_vector* vars, void* params)
+{
+    double b_tilde = gsl_vector_get(vars, 0), alpha = gsl_vector_get(vars, 1);
+    vec target = { b_tilde, alpha };
+    const GwmScalableGWRAlgorithm::LoocvParams *p = (GwmScalableGWRAlgorithm::LoocvParams*) params;
+    const mat *x = p->x, *y = p->y;
+    int bw = p->bw;
+    double polynomial = p->polynomial;
+    const mat *Mx0 = p->Mx0, *My0 = p->My0;
+    return GwmScalableGWRAlgorithm::AICvalue(target, *x, *y, bw, polynomial, *Mx0, *My0);
+}
+
 double GwmScalableGWRAlgorithm::optimize(const mat &Mx0, const mat &My0, double& b_tilde, double& alpha)
 {
     GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
@@ -292,7 +304,7 @@ double GwmScalableGWRAlgorithm::optimize(const mat &Mx0, const mat &My0, double&
     gsl_vector_set(step, 0, 0.01);
     gsl_vector_set(step, 1, 0.01);
     LoocvParams params = { &mX, &mY, (int)bandwidth->bandwidth(), mPolynomial, &Mx0, &My0 };
-    gsl_multimin_function function = { &scagwr_loocv_multimin_function, 2, &params };
+    gsl_multimin_function function = { mParameterOptimizeCriterion == CV ? &scagwr_loocv_multimin_function : &scagwr_aic_multimin_function, 2, &params };
     double cv = DBL_MAX;
     int status = gsl_multimin_fminimizer_set(minizer, &function, target, step);
     if (status == GSL_SUCCESS)

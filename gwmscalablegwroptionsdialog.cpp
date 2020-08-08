@@ -332,6 +332,10 @@ void GwmScalableGWROptionsDialog::updateFields()
     mTaskThread->setSpatialWeight(spatialWeight);
     // 参数设置
     mTaskThread->setPolynomial(ui->mPolynomialSpin->value());
+    if (ui->cmbOptimizeCriterion->currentText() == "CV")
+        mTaskThread->setParameterOptimizeCriterion(GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType::CV);
+    else
+        mTaskThread->setParameterOptimizeCriterion(GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType::AIC);
 }
 
 void GwmScalableGWROptionsDialog::enableAccept()

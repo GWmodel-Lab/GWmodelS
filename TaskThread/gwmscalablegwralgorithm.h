@@ -37,12 +37,15 @@ public:
 
     void run() override;
 
-    int getPolynomial() const;
+    int polynomial() const;
     void setPolynomial(int polynomial);
 
-    double getCV() const;
-    double getScale() const;
-    double getPenalty() const;
+    double cv() const;
+    double scale() const;
+    double penalty() const;
+
+    ParameterOptimizeCriterionType parameterOptimizeCriterion() const;
+    void setParameterOptimizeCriterion(const ParameterOptimizeCriterionType &parameterOptimizeCriterion);
 
 
 public:     // GwmTaskThread interface
@@ -104,24 +107,34 @@ inline void GwmScalableGWRAlgorithm::setPolynomial(int polynomial)
     mPolynomial = polynomial;
 }
 
-inline double GwmScalableGWRAlgorithm::getPenalty() const
+inline double GwmScalableGWRAlgorithm::penalty() const
 {
     return mPenalty;
 }
 
-inline double GwmScalableGWRAlgorithm::getScale() const
+inline double GwmScalableGWRAlgorithm::scale() const
 {
     return mScale;
 }
 
-inline double GwmScalableGWRAlgorithm::getCV() const
+inline double GwmScalableGWRAlgorithm::cv() const
 {
     return mCV;
 }
 
-inline int GwmScalableGWRAlgorithm::getPolynomial() const
+inline int GwmScalableGWRAlgorithm::polynomial() const
 {
     return mPolynomial;
+}
+
+inline GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType GwmScalableGWRAlgorithm::parameterOptimizeCriterion() const
+{
+    return mParameterOptimizeCriterion;
+}
+
+inline void GwmScalableGWRAlgorithm::setParameterOptimizeCriterion(const ParameterOptimizeCriterionType &parameterOptimizeCriterion)
+{
+    mParameterOptimizeCriterion = parameterOptimizeCriterion;
 }
 
 #endif // GWMSCALABLEGWRTASKTHREAD_H
