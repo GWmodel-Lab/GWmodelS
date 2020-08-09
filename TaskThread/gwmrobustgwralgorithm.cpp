@@ -53,7 +53,7 @@ void GwmRobustGWRAlgorithm::run()
         vec localR2 = vec(nDp, fill::zeros);
         for (uword i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeight.spatialWeight(i);
+            vec w = mSpatialWeight.weightVector(i);
             double tss = sum(dybar2 % w);
             double rss = sum(dyhat2 % w);
             localR2(i) = (tss - rss) / tss;
@@ -303,7 +303,7 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y,
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec w = mSpatialWeight.spatialWeight(i) % mWeightMask;
+        vec w = mSpatialWeight.weightVector(i) % mWeightMask;
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -345,7 +345,7 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, ma
     for (int i = 0; i < nDp; i++)
     {
         int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.spatialWeight(i)  % mWeightMask;
+        vec w = mSpatialWeight.weightVector(i)  % mWeightMask;
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;

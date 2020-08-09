@@ -22,9 +22,15 @@ public:
 
 public:
     virtual vec distance(int focus) override;
+    int length() const override;
+
+    int rowSize() const;
+    void setRowSize(int rowSize);
 
 private:
     QString mDMatFile;
+
+    int mRowSize = 0;
 };
 
 inline QString GwmDMatDistance::dMatFile() const
@@ -35,6 +41,21 @@ inline QString GwmDMatDistance::dMatFile() const
 inline void GwmDMatDistance::setDMatFile(const QString &dMatFile)
 {
     mDMatFile = dMatFile;
+}
+
+inline int GwmDMatDistance::length() const
+{
+    return rowSize();
+}
+
+inline int GwmDMatDistance::rowSize() const
+{
+    return mRowSize;
+}
+
+inline void GwmDMatDistance::setRowSize(int rowSize)
+{
+    mRowSize = rowSize;
 }
 
 #endif // GWMDMATDISTANCE_H

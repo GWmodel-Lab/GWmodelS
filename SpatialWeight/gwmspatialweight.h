@@ -41,29 +41,12 @@ public:
     GwmDMatDistance* distance<GwmDMatDistance>() const { return static_cast<GwmDMatDistance*>(mDistance); }
 
 public:
-    GwmSpatialWeight& operator=(const GwmSpatialWeight& spatialWeight)
-    {
-        if (this == &spatialWeight) return *this;
-        if (mWeight) delete mWeight;
-        if (mDistance) delete mDistance;
-        mWeight = spatialWeight.mWeight->clone();
-        mDistance = spatialWeight.mDistance->clone();
-        return *this;
-    }
-
-    GwmSpatialWeight& operator=(const GwmSpatialWeight&& spatialWeight)
-    {
-        if (this == &spatialWeight) return *this;
-        if (mWeight) delete mWeight;
-        if (mDistance) delete mDistance;
-        mWeight = spatialWeight.mWeight->clone();
-        mDistance = spatialWeight.mDistance->clone();
-        return *this;
-    }
+    GwmSpatialWeight& operator=(const GwmSpatialWeight& spatialWeight);
+    GwmSpatialWeight& operator=(const GwmSpatialWeight&& spatialWeight);
 
 public:
-    vec spatialWeight(int i);
-    bool isValid();
+    virtual vec weightVector(int i);
+    virtual bool isValid();
 
 private:
     GwmWeight* mWeight = nullptr;
@@ -116,7 +99,7 @@ inline void GwmSpatialWeight::setDistance(GwmDistance&& distance)
     mDistance = distance.clone();
 }
 
-inline vec GwmSpatialWeight::spatialWeight(int i)
+inline vec GwmSpatialWeight::weightVector(int i)
 {
     return mWeight->weight(mDistance->distance(i));
 }

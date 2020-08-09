@@ -373,7 +373,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings
     for(int i=0;i<nDp;i++)
     {
         //vec distvi = mSpatialWeight.distance()->distance(i);
-        vec wt = mSpatialWeight.spatialWeight(i);
+        vec wt = mSpatialWeight.weightVector(i);
         //取wt大于0的部分
         //临时变量?很麻烦
         uvec positive = find(wt > 0);
@@ -429,7 +429,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
     for(int i=0;i<nDp;i++)
     {
         //vec distvi = mSpatialWeight.distance()->distance(i);
-        vec wt = mSpatialWeight.spatialWeight(i);
+        vec wt = mSpatialWeight.weightVector(i);
         //取wt大于0的部分
         //临时变量?很麻烦
         uvec positive = find(wt > 0);
@@ -487,7 +487,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat 
     for(int i=0;i<nDp;i++)
     {
         //vec distvi = mSpatialWeight.distance()->distance(i);
-        vec wt = mSpatialWeight.spatialWeight(i);
+        vec wt = mSpatialWeight.weightVector(i);
         //取wt大于0的部分
         //临时变量?很麻烦
         uvec positive = find(wt > 0);
@@ -533,7 +533,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &st
     for(int i=0;i<nDp;i++)
     {
         //vec distvi = mSpatialWeight.distance()->distance(i);
-        vec wt = mSpatialWeight.spatialWeight(i);
+        vec wt = mSpatialWeight.weightVector(i);
         //取wt大于0的部分
         //临时变量?很麻烦
         uvec positive = find(wt > 0);

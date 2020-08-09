@@ -426,7 +426,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
         mat betasSE(nVar, nDp, fill::zeros);
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mInitSpatialWeight.spatialWeight(i);
+            vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -449,7 +449,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
     {
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mInitSpatialWeight.spatialWeight(i);
+            vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -475,7 +475,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mInitSpatialWeight.spatialWeight(i);
+            vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -499,7 +499,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mInitSpatialWeight.spatialWeight(i);
+            vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -525,7 +525,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, c
         S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeights[var].spatialWeight(i);
+            vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -545,7 +545,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, c
     {
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeights[var].spatialWeight(i);
+            vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -572,7 +572,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarOmp(const vec &x, const vec &y, cons
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeights[var].spatialWeight(i);
+            vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;
@@ -593,7 +593,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarOmp(const vec &x, const vec &y, cons
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeights[var].spatialWeight(i);
+            vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
             mat xtwy = xtw * y;

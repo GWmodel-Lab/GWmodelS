@@ -74,6 +74,7 @@ SOURCES += \
     SpatialWeight/gwmdistance.cpp \
     SpatialWeight/gwmdmatdistance.cpp \
     SpatialWeight/gwmminkwoskidistance.cpp \
+    SpatialWeight/gwmspatialtemporalweight.cpp \
     SpatialWeight/gwmspatialweight.cpp \
     SpatialWeight/gwmweight.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
@@ -202,6 +203,7 @@ HEADERS += \
     SpatialWeight/gwmdistance.h \
     SpatialWeight/gwmdmatdistance.h \
     SpatialWeight/gwmminkwoskidistance.h \
+    SpatialWeight/gwmspatialtemporalweight.h \
     SpatialWeight/gwmspatialweight.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
     TaskThread/gwmbandwidthsizeselector.h \

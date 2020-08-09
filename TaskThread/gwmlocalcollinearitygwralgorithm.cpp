@@ -331,7 +331,7 @@ mat GwmLocalCollinearityGWRAlgorithm::regressionSerial(const mat &x, const vec &
     vec hatrow(mDataPoints.n_rows,fill::zeros);
     for(int i=0;i<mDataPoints.n_rows;i++)
     {
-        vec wi = mSpatialWeight.spatialWeight(i);
+        vec wi = mSpatialWeight.weightVector(i);
         //计算xw
         //取mX不含第一列的部分
         mat mXnot1 = x.cols(1, x.n_cols - 1);
@@ -385,7 +385,7 @@ mat GwmLocalCollinearityGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
     for(int i=0;i<mDataPoints.n_rows;i++)
     {
         int thread = omp_get_thread_num();
-        vec wi = mSpatialWeight.spatialWeight(i);
+        vec wi = mSpatialWeight.weightVector(i);
         //计算xw
         //取mX不含第一列的部分
         mat mXnot1 = x.cols(1, x.n_cols - 1);
