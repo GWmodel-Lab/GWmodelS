@@ -86,6 +86,7 @@ SOURCES += \
 #    TaskThread/gwmggwrbandwidthselectionthread.cpp \
 #    TaskThread/gwmggwrtaskthread.cpp \
 #    TaskThread/gwmgwpcataskthread.cpp \
+    TaskThread/gwmgtwralgorithm.cpp \
     TaskThread/gwmgwpcataskthread.cpp \
     TaskThread/gwmggwrbandwidthsizeselector.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
@@ -105,6 +106,7 @@ SOURCES += \
     TaskThread/gwmspatialalgorithm.cpp \
     TaskThread/gwmspatialmonoscalealgorithm.cpp \
     TaskThread/gwmspatialmultiscalealgorithm.cpp \
+    TaskThread/gwmspatialtemporalmonoscale.cpp \
     Validity/qgsabstractvaliditycheck.cpp \
     attributetable/qgsaddattrdialog.cpp \
     attributetable/qgsfeaturefilterwidget.cpp \
@@ -213,6 +215,7 @@ HEADERS += \
 #    TaskThread/gwmggwrbandwidthselectionthread.h \
 #    TaskThread/gwmggwrtaskthread.h \
 #    TaskThread/gwmgwpcataskthread.h \
+    TaskThread/gwmgtwralgorithm.h \
     TaskThread/gwmgwpcataskthread.h \
     TaskThread/gwmggwrbandwidthsizeselector.h \
     TaskThread/gwmgwrmodelselectionthread.h \
@@ -243,6 +246,7 @@ HEADERS += \
     TaskThread/gwmspatialalgorithm.h \
     TaskThread/gwmspatialmonoscalealgorithm.h \
     TaskThread/gwmspatialmultiscalealgorithm.h \
+    TaskThread/gwmspatialtemporalmonoscale.h \
     TaskThread/imonovariableanalysis.h \
     TaskThread/imultivariableanalysis.h \
     TaskThread/iparallelable.h \

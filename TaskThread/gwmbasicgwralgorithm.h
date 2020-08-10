@@ -195,7 +195,7 @@ protected:
     vec mShat;
     mat mS;
 
-    bool hasRegressionLayerXY = false;
+    bool mHasRegressionLayerXY = false;
     vec mRegressionLayerY;
     mat mRegressionLayerX;
 

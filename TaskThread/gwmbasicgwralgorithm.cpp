@@ -150,7 +150,7 @@ void GwmBasicGWRAlgorithm::run()
     {
         mBetas = regression(mX, mY);
         CreateResultLayerData resultLayerData;
-        if (hasRegressionLayerXY && mHasPredict)
+        if (mHasRegressionLayerXY && mHasPredict)
         {
             vec yhat = Fitted(mRegressionLayerX, mBetas);
             vec residual = mRegressionLayerY - yhat;
@@ -1262,7 +1262,7 @@ void GwmBasicGWRAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar, con
         {
             flag = flag && fieldNameList.contains(field.name);
         }
-        hasRegressionLayerXY = flag;
+        mHasRegressionLayerXY = flag;
         if (flag)
         {
             // 设置回归点X和回归点Y
