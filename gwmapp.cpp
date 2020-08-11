@@ -82,6 +82,7 @@
 
 #include "TaskThread/gwmgtwralgorithm.h"
 #include "gwmgtwroptionsdialog.h"
+#include "Model/gwmlayergtwritem.h"
 
 static bool cmpByText_(QAction *a, QAction *b)
 {
@@ -521,6 +522,7 @@ void GwmApp::onFeaturePanelCurrentChanged(const QModelIndex &current,const QMode
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+        case GwmLayerItem::GwmLayerItemType::GTWR:
         case GwmLayerItem::GwmLayerItemType::GWPCA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
@@ -580,6 +582,7 @@ void GwmApp::onSaveLayer()
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+        case GwmLayerItem::GwmLayerItemType::GTWR:
         case GwmLayerItem::GwmLayerItemType::GWPCA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
@@ -624,6 +627,7 @@ void GwmApp::onExportLayerAsCsv(const QModelIndex &index)
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
     case GwmLayerItem::GwmLayerItemType::GWSS:
     case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+    case GwmLayerItem::GwmLayerItemType::GTWR:
     case GwmLayerItem::GwmLayerItemType::GWPCA:
         layerItem = ((GwmLayerVectorItem*)item);
         break;
@@ -674,6 +678,7 @@ void GwmApp::onExportLayer(QString filetype)
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
+        case GwmLayerItem::GwmLayerItemType::GTWR:
         case GwmLayerItem::GwmLayerItemType::GWPCA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
@@ -1210,8 +1215,8 @@ void GwmApp::onGTWRBtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gtwrTaskThread->resultLayer();
-//            GwmLayerGGWRItem* ggwrItem = new GwmLayerGGWRItem(selectedItem, resultLayer, ggwrTaskThread);
-//            mMapModel->appentItem(ggwrItem, selectedIndex);
+            GwmLayerGTWRItem* gtwrItem = new GwmLayerGTWRItem(selectedItem, resultLayer, gtwrTaskThread);
+            mMapModel->appentItem(gtwrItem, selectedIndex);
         }
     }
 }

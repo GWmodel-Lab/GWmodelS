@@ -49,6 +49,7 @@ SOURCES += \
     Model/gwmlayercollinearitygwritem.cpp \
     Model/gwmlayerggwritem.cpp \
     Model/gwmlayergroupitem.cpp \
+    Model/gwmlayergtwritem.cpp \
     Model/gwmlayergwpcaitem.cpp \
     Model/gwmlayergwritem.cpp \
     Model/gwmlayergwssitem.cpp \
@@ -64,6 +65,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertyggwrtab.cpp \
     Model/gwmparameterspecifiedoptionsmodel.cpp \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.cpp \
+    PropertyPanelTabs/gwmpropertygtwrtab.cpp \
     PropertyPanelTabs/gwmpropertygwpcatab.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
     PropertyPanelTabs/gwmpropertygwsstab.cpp \
@@ -180,6 +182,7 @@ HEADERS += \
     Model/gwmlayercollinearitygwritem.h \
     Model/gwmlayerggwritem.h \
     Model/gwmlayergroupitem.h \
+    Model/gwmlayergtwritem.h \
     Model/gwmlayergwpcaitem.h \
     Model/gwmlayergwritem.h \
     Model/gwmlayergwssitem.h \
@@ -195,6 +198,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertyggwrtab.h \
     Model/gwmparameterspecifiedoptionsmodel.h \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.h \
+    PropertyPanelTabs/gwmpropertygtwrtab.h \
     PropertyPanelTabs/gwmpropertygwpcatab.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
     PropertyPanelTabs/gwmpropertygwsstab.h \
@@ -306,6 +310,7 @@ FORMS += \
     Layout/qgssvgexportoptions.ui \
     PropertyPanelTabs/gwmpropertycollinearitygwrtab.ui \
     PropertyPanelTabs/gwmpropertyggwrtab.ui \
+    PropertyPanelTabs/gwmpropertygtwrtab.ui \
     PropertyPanelTabs/gwmpropertygwpcatab.ui \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
     PropertyPanelTabs/gwmpropertygwsstab.ui \

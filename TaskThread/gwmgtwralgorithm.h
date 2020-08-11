@@ -61,6 +61,10 @@ public:
     BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 
+    mat betas() const;
+
+    BandwidthCriterionList bandwidthSelectorCriterions() const;
+
     // QThread interface
 protected:
     void run() override;
@@ -224,10 +228,19 @@ inline void GwmGTWRAlgorithm::setHasHatMatrix(bool hasHatMatrix)
     mHasHatMatrix = hasHatMatrix;
 }
 
-
 inline double GwmGTWRAlgorithm::criterion(GwmBandwidthWeight *weight)
 {
     return bandwidthSizeCriterionCVSerial(weight);
+}
+
+inline mat GwmGTWRAlgorithm::betas() const
+{
+    return mBetas;
+}
+
+inline BandwidthCriterionList GwmGTWRAlgorithm::bandwidthSelectorCriterions() const
+{
+    return mBandwidthSizeSelector.bandwidthCriterion();
 }
 
 
