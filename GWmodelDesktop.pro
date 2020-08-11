@@ -130,6 +130,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
     gwmggwroptionsdialog.cpp \
+    gwmgtwroptionsdialog.cpp \
     gwmgwpcaoptionsdialog.cpp \
     gwmgwroptionsdialog.cpp \
     gwmgwssoptionsdialog.cpp \
@@ -267,6 +268,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
     gwmggwroptionsdialog.h \
+    gwmgtwroptionsdialog.h \
     gwmgwpcaoptionsdialog.h \
     gwmgwroptionsdialog.h \
     gwmgwssoptionsdialog.h \
@@ -316,6 +318,7 @@ FORMS += \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
     gwmggwroptionsdialog.ui \
+    gwmgtwroptionsdialog.ui \
     gwmgwpcaoptionsdialog.ui \
     gwmgwroptionsdialog.ui \
     gwmgwssoptionsdialog.ui \

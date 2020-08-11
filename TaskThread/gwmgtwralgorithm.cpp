@@ -131,6 +131,7 @@ void GwmGTWRAlgorithm::initPoints()
 {
     int nDp = mDataLayer->featureCount();
     mDataPoints = mat(nDp, 2, fill::zeros);
+    mDataTimeStamp = vec(nDp, fill::zeros);
     QgsFeatureIterator iterator = mDataLayer->getFeatures();
     QgsFeature f;
     for (int i = 0; i < nDp && iterator.nextFeature(f); i++)
@@ -146,6 +147,7 @@ void GwmGTWRAlgorithm::initPoints()
     {
         int nRp = mRegressionLayer->featureCount();
         mRegressionPoints = mat(nRp, 2, fill::zeros);
+        mRegTimeStamp = vec(nRp, fill::zeros);
         QgsFeatureIterator iterator = mRegressionLayer->getFeatures();
         QgsFeature f;
         for (int i = 0; i < nRp && iterator.nextFeature(f); i++)
@@ -352,30 +354,4 @@ void GwmGTWRAlgorithm::createResultLayer(GwmGTWRAlgorithm::CreateResultLayerData
         mResultLayer->addFeature(feature);
     }
     mResultLayer->commitChanges();
-}
-
-GwmVariable GwmGTWRAlgorithm::timeVar() const
-{
-    return mTimeVar;
-}
-
-void GwmGTWRAlgorithm::setTimeVar(const GwmVariable &timeVar)
-{
-    mTimeVar = timeVar;
-}
-
-bool GwmGTWRAlgorithm::hasHatMatrix() const
-{
-    return mHasHatMatrix;
-}
-
-void GwmGTWRAlgorithm::setHasHatMatrix(bool hasHatMatrix)
-{
-    mHasHatMatrix = hasHatMatrix;
-}
-
-
-double GwmGTWRAlgorithm::criterion(GwmBandwidthWeight *weight)
-{
-    return bandwidthSizeCriterionCVSerial(weight);
 }

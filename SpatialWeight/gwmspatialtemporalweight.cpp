@@ -61,3 +61,13 @@ bool GwmSpatialTemporalWeight::isValid()
 {
     return GwmSpatialWeight::isValid() && (distance()->length() == mDataTimeStamp.n_rows);
 }
+
+double GwmSpatialTemporalWeight::lambda() const
+{
+    return mLambda;
+}
+
+void GwmSpatialTemporalWeight::setLambda(double lambda)
+{
+    mLambda = lambda;
+}

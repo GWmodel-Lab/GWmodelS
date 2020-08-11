@@ -26,6 +26,9 @@ public:
     vec focusTimeStamp() const;
     void setFocusTimeStamp(const vec &focusTimeStamp);
 
+    double lambda() const;
+    void setLambda(double lambda);
+
 private:
     double mLambda = 0.0;
 

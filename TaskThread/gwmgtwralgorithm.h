@@ -12,6 +12,13 @@ class GwmGTWRAlgorithm : public GwmSpatialTemporalMonoscaleAlgorithm, public IRe
     Q_OBJECT
 
 public:
+    enum BandwidthSelectionCriterionType
+    {
+        AIC,
+        CV
+    };
+
+public:
     static GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
 
     static vec Fitted(const mat& x, const mat& betas)
@@ -41,6 +48,18 @@ public:
 
     GwmVariable timeVar() const;
     void setTimeVar(const GwmVariable &timeVar);
+
+    QgsVectorLayer *regressionLayer() const;
+    void setRegressionLayer(QgsVectorLayer *regressionLayer);
+
+    bool isAutoselectBandwidth() const;
+    void setIsAutoselectBandwidth(bool isAutoselectBandwidth);
+
+    bool hasPredict() const;
+    void setHasPredict(bool hasPredict);
+
+    BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
+    void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 
     // QThread interface
 protected:
@@ -98,6 +117,7 @@ protected:
 
     GwmBandwidthSizeSelector mBandwidthSizeSelector;
     bool mIsAutoselectBandwidth = false;
+    BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = CV;
 
     mat mX;
     vec mY;
@@ -142,6 +162,72 @@ inline GwmDiagnostic GwmGTWRAlgorithm::diagnostic() const
 inline bool GwmGTWRAlgorithm::hasRegressionLayer()
 {
     return mRegressionLayer != nullptr;
+}
+
+inline GwmGTWRAlgorithm::BandwidthSelectionCriterionType GwmGTWRAlgorithm::bandwidthSelectionCriterionType() const
+{
+    return mBandwidthSelectionCriterionType;
+}
+
+inline void GwmGTWRAlgorithm::setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
+{
+    mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
+}
+
+inline bool GwmGTWRAlgorithm::hasPredict() const
+{
+    return mHasPredict;
+}
+
+inline void GwmGTWRAlgorithm::setHasPredict(bool hasPredict)
+{
+    mHasPredict = hasPredict;
+}
+
+inline bool GwmGTWRAlgorithm::isAutoselectBandwidth() const
+{
+    return mIsAutoselectBandwidth;
+}
+
+inline void GwmGTWRAlgorithm::setIsAutoselectBandwidth(bool isAutoselectBandwidth)
+{
+    mIsAutoselectBandwidth = isAutoselectBandwidth;
+}
+
+inline QgsVectorLayer *GwmGTWRAlgorithm::regressionLayer() const
+{
+    return mRegressionLayer;
+}
+
+inline void GwmGTWRAlgorithm::setRegressionLayer(QgsVectorLayer *regressionLayer)
+{
+    mRegressionLayer = regressionLayer;
+}
+
+inline GwmVariable GwmGTWRAlgorithm::timeVar() const
+{
+    return mTimeVar;
+}
+
+inline void GwmGTWRAlgorithm::setTimeVar(const GwmVariable &timeVar)
+{
+    mTimeVar = timeVar;
+}
+
+inline bool GwmGTWRAlgorithm::hasHatMatrix() const
+{
+    return mHasHatMatrix;
+}
+
+inline void GwmGTWRAlgorithm::setHasHatMatrix(bool hasHatMatrix)
+{
+    mHasHatMatrix = hasHatMatrix;
+}
+
+
+inline double GwmGTWRAlgorithm::criterion(GwmBandwidthWeight *weight)
+{
+    return bandwidthSizeCriterionCVSerial(weight);
 }
 
 

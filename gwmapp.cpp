@@ -80,6 +80,9 @@
 #include "Layout/qgslayoutmanagerdialog.h"
 #include "Layout/gwmlayoutbatchdialog.h"
 
+#include "TaskThread/gwmgtwralgorithm.h"
+#include "gwmgtwroptionsdialog.h"
+
 static bool cmpByText_(QAction *a, QAction *b)
 {
 	return QString::localeAwareCompare(a->text(), b->text()) < 0;
@@ -144,6 +147,7 @@ void GwmApp::setupMenus()
     connect(ui->actionLocal_collinearity_GWR,&QAction::triggered, this, &GwmApp::onLcrGWRBtnClicked);
     connect(ui->actionMultiscale_GWR,&QAction::triggered, this, &GwmApp::onMultiscaleGWRBtnClicked);
     connect(ui->actionBasic_GWR,&QAction::triggered, this, &GwmApp::onGWRBtnClicked);
+    connect(ui->actionGTWR,&QAction::triggered, this, &GwmApp::onGTWRBtnClicked);
     connect(ui->action_Open_Project, &QAction::triggered, this, &GwmApp::onOpenProject);
     connect(ui->action_Save_Project, &QAction::triggered, this, &GwmApp::onSaveProject);
 }
@@ -1176,6 +1180,38 @@ void GwmApp::onGGWRBtnClicked(){
             QgsVectorLayer* resultLayer = ggwrTaskThread->resultLayer();
             GwmLayerGGWRItem* ggwrItem = new GwmLayerGGWRItem(selectedItem, resultLayer, ggwrTaskThread);
             mMapModel->appentItem(ggwrItem, selectedIndex);
+        }
+    }
+}
+
+void GwmApp::onGTWRBtnClicked()
+{
+    GwmGTWRAlgorithm* gtwrTaskThread = new GwmGTWRAlgorithm();
+    GwmGTWROptionsDialog* ggwrOptionDialog = new GwmGTWROptionsDialog(this->mMapModel->rootChildren(), gtwrTaskThread);
+    QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mMapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            ggwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            ggwrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (ggwrOptionDialog->exec() == QDialog::Accepted)
+    {
+        ggwrOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = ggwrOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gtwrTaskThread); //
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gtwrTaskThread->resultLayer();
+//            GwmLayerGGWRItem* ggwrItem = new GwmLayerGGWRItem(selectedItem, resultLayer, ggwrTaskThread);
+//            mMapModel->appentItem(ggwrItem, selectedIndex);
         }
     }
 }
