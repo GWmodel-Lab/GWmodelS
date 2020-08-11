@@ -9,8 +9,6 @@
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
-#include <GWmodelCUDA/ICUDAInspector.h>
-
 
 GwmGTWROptionsDialog::GwmGTWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGTWRAlgorithm *thread, QWidget *parent) :
     QDialog(parent),
@@ -61,37 +59,11 @@ GwmGTWROptionsDialog::GwmGTWROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     QButtonGroup* calcParallelTypeBtnGroup = new QButtonGroup(this);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
-    calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGTWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGTWROptionsDialog::onMultithreadingRadioToggled);
-    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGTWROptionsDialog::onGPURadioToggled);
-
-    // 获取显卡信息
-    ICUDAInspector* inspector = CUDAInspector_Create();
-    int gpuCount = inspector->GetDeviceCount();
-    if (gpuCount > 0)
-    {
-        for (int i = 0; i < gpuCount; ++i)
-        {
-            char name[255] = { "" };
-            int nameLength = inspector->GetDeviceName(i);
-            for (int n = 0; n < nameLength; ++n)
-            {
-                name[n] = inspector->GetNameChar(n);
-            }
-            name[nameLength] = '\0';
-            QString gpuItem(name);
-            ui->mGPUSelection->addItem(gpuItem);
-        }
-        CUDAInspector_Delete(inspector);
-    }
-    else
-    {
-        ui->mCalcParallelGPURadio->setEnabled(false);
-    }
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);
@@ -125,7 +97,6 @@ GwmGTWROptionsDialog::GwmGTWROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGTWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGTWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTWROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGTWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTWROptionsDialog::updateFieldsAndEnable);
     connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmGTWROptionsDialog::updateFieldsAndEnable);
 
@@ -280,9 +251,6 @@ GwmGWRTaskThread::ParallelMethod GwmGTWROptionsDialog::approachType()
     }
     else if(ui->mCalcParallelMultithreadRadio->isChecked()){
         return GwmGWRTaskThread::ParallelMethod::Multithread;
-    }
-    else if(ui->mCalcParallelGPURadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::GPU;
     }
     else return GwmGWRTaskThread::ParallelMethod::None;
 }
@@ -439,10 +407,6 @@ GwmGWRTaskThread::ParallelMethod GwmGTWROptionsDialog::parallelMethod()
     {
         return GwmGWRTaskThread::ParallelMethod::Multithread;
     }
-    else if (ui->mCalcParallelGPURadio->isChecked())
-    {
-        return GwmGWRTaskThread::ParallelMethod::GPU;
-    }
     else
     {
         return GwmGWRTaskThread::ParallelMethod::None;
@@ -451,14 +415,7 @@ GwmGWRTaskThread::ParallelMethod GwmGTWROptionsDialog::parallelMethod()
 
 QVariant GwmGTWROptionsDialog::parallelParameters()
 {
-    if (ui->mCalcParallelGPURadio->isChecked())
-    {
-        QMap<QString, QVariant> parameters;
-        parameters["groupSize"] = ui->mSampleGroupSize->value();
-        parameters["gpuID"] = ui->mGPUSelection->currentIndex();
-        return parameters;
-    }
-    else if (ui->mCalcParallelMultithreadRadio->isChecked())
+    if (ui->mCalcParallelMultithreadRadio->isChecked())
     {
         return ui->mThreadNum->value();
     }
@@ -582,25 +539,19 @@ void GwmGTWROptionsDialog::updateFields()
     spatialWeight.setLambda((1.0 * ui->sldTimeLambda->value()) / 100.0);
     mTaskThread->setSTWeight(spatialWeight);
     // 并行设置
-//    if (ui->mCalcParallelNoneRadio->isChecked())
-//    {
-//        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
-//    }
-//    else if (ui->mCalcParallelMultithreadRadio->isChecked())
-//    {
-//        mTaskThread->setParallelType(IParallelalbe::OpenMP);
-//        mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
-//    }
-//    else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
-//    {
-//        mTaskThread->setParallelType(IParallelalbe::CUDA);
-//        mTaskThread->setGroupSize(ui->mSampleGroupSize->value());
-//        mTaskThread->setGPUId(ui->mGPUSelection->currentIndex());
-//    }
-//    else
-//    {
-//        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
-//    }
+    if (ui->mCalcParallelNoneRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
+    else if (ui->mCalcParallelMultithreadRadio->isChecked())
+    {
+        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
+    }
+    else
+    {
+        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+    }
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
 //    mTaskThread->setHasFTest(ui->cbxFTest->isChecked());
