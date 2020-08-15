@@ -30,8 +30,10 @@ public:
     int total() const;
     void setTotal(int total);
 
+
 public:
     virtual vec distance(int focus) = 0;
+    virtual int length() const = 0;
 
     double maxDistance();
     double minDistance();

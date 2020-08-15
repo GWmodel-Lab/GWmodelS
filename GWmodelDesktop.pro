@@ -49,6 +49,7 @@ SOURCES += \
     Model/gwmlayercollinearitygwritem.cpp \
     Model/gwmlayerggwritem.cpp \
     Model/gwmlayergroupitem.cpp \
+    Model/gwmlayergtwritem.cpp \
     Model/gwmlayergwpcaitem.cpp \
     Model/gwmlayergwritem.cpp \
     Model/gwmlayergwssitem.cpp \
@@ -64,6 +65,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertyggwrtab.cpp \
     Model/gwmparameterspecifiedoptionsmodel.cpp \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.cpp \
+    PropertyPanelTabs/gwmpropertygtwrtab.cpp \
     PropertyPanelTabs/gwmpropertygwpcatab.cpp \
     PropertyPanelTabs/gwmpropertygwrtab.cpp \
     PropertyPanelTabs/gwmpropertygwsstab.cpp \
@@ -74,6 +76,7 @@ SOURCES += \
     SpatialWeight/gwmdistance.cpp \
     SpatialWeight/gwmdmatdistance.cpp \
     SpatialWeight/gwmminkwoskidistance.cpp \
+    SpatialWeight/gwmspatialtemporalweight.cpp \
     SpatialWeight/gwmspatialweight.cpp \
     SpatialWeight/gwmweight.cpp \
     TaskThread/gwmbandwidthselecttaskthread.cpp \
@@ -85,6 +88,7 @@ SOURCES += \
 #    TaskThread/gwmggwrbandwidthselectionthread.cpp \
 #    TaskThread/gwmggwrtaskthread.cpp \
 #    TaskThread/gwmgwpcataskthread.cpp \
+    TaskThread/gwmgtwralgorithm.cpp \
     TaskThread/gwmgwpcataskthread.cpp \
     TaskThread/gwmggwrbandwidthsizeselector.cpp \
     TaskThread/gwmgwrmodelselectionthread.cpp \
@@ -104,6 +108,7 @@ SOURCES += \
     TaskThread/gwmspatialalgorithm.cpp \
     TaskThread/gwmspatialmonoscalealgorithm.cpp \
     TaskThread/gwmspatialmultiscalealgorithm.cpp \
+    TaskThread/gwmspatialtemporalmonoscale.cpp \
     Validity/qgsabstractvaliditycheck.cpp \
     attributetable/qgsaddattrdialog.cpp \
     attributetable/qgsfeaturefilterwidget.cpp \
@@ -127,6 +132,7 @@ SOURCES += \
     PropertyPanelTabs/gwmpropertydefaulttab.cpp \
     PropertyPanelTabs/gwmpropertystatisticstab.cpp \
     gwmggwroptionsdialog.cpp \
+    gwmgtwroptionsdialog.cpp \
     gwmgwpcaoptionsdialog.cpp \
     gwmgwroptionsdialog.cpp \
     gwmgwssoptionsdialog.cpp \
@@ -176,6 +182,7 @@ HEADERS += \
     Model/gwmlayercollinearitygwritem.h \
     Model/gwmlayerggwritem.h \
     Model/gwmlayergroupitem.h \
+    Model/gwmlayergtwritem.h \
     Model/gwmlayergwpcaitem.h \
     Model/gwmlayergwritem.h \
     Model/gwmlayergwssitem.h \
@@ -191,6 +198,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertyggwrtab.h \
     Model/gwmparameterspecifiedoptionsmodel.h \
     Model/gwmpropertymultiscaleparameterspecifieditemmodel.h \
+    PropertyPanelTabs/gwmpropertygtwrtab.h \
     PropertyPanelTabs/gwmpropertygwpcatab.h \
     PropertyPanelTabs/gwmpropertygwrtab.h \
     PropertyPanelTabs/gwmpropertygwsstab.h \
@@ -202,6 +210,7 @@ HEADERS += \
     SpatialWeight/gwmdistance.h \
     SpatialWeight/gwmdmatdistance.h \
     SpatialWeight/gwmminkwoskidistance.h \
+    SpatialWeight/gwmspatialtemporalweight.h \
     SpatialWeight/gwmspatialweight.h \
     TaskThread/gwmbandwidthselecttaskthread.h \
     TaskThread/gwmbandwidthsizeselector.h \
@@ -211,6 +220,7 @@ HEADERS += \
 #    TaskThread/gwmggwrbandwidthselectionthread.h \
 #    TaskThread/gwmggwrtaskthread.h \
 #    TaskThread/gwmgwpcataskthread.h \
+    TaskThread/gwmgtwralgorithm.h \
     TaskThread/gwmgwpcataskthread.h \
     TaskThread/gwmggwrbandwidthsizeselector.h \
     TaskThread/gwmgwrmodelselectionthread.h \
@@ -241,6 +251,7 @@ HEADERS += \
     TaskThread/gwmspatialalgorithm.h \
     TaskThread/gwmspatialmonoscalealgorithm.h \
     TaskThread/gwmspatialmultiscalealgorithm.h \
+    TaskThread/gwmspatialtemporalmonoscale.h \
     TaskThread/imonovariableanalysis.h \
     TaskThread/imultivariableanalysis.h \
     TaskThread/iparallelable.h \
@@ -261,6 +272,7 @@ HEADERS += \
     PropertyPanelTabs/gwmpropertydefaulttab.h \
     PropertyPanelTabs/gwmpropertystatisticstab.h \
     gwmggwroptionsdialog.h \
+    gwmgtwroptionsdialog.h \
     gwmgwpcaoptionsdialog.h \
     gwmgwroptionsdialog.h \
     gwmgwssoptionsdialog.h \
@@ -298,6 +310,7 @@ FORMS += \
     Layout/qgssvgexportoptions.ui \
     PropertyPanelTabs/gwmpropertycollinearitygwrtab.ui \
     PropertyPanelTabs/gwmpropertyggwrtab.ui \
+    PropertyPanelTabs/gwmpropertygtwrtab.ui \
     PropertyPanelTabs/gwmpropertygwpcatab.ui \
     PropertyPanelTabs/gwmpropertygwrtab.ui \
     PropertyPanelTabs/gwmpropertygwsstab.ui \
@@ -310,6 +323,7 @@ FORMS += \
     PropertyPanelTabs/gwmpropertydefaulttab.ui \
     PropertyPanelTabs/gwmpropertystatisticstab.ui \
     gwmggwroptionsdialog.ui \
+    gwmgtwroptionsdialog.ui \
     gwmgwpcaoptionsdialog.ui \
     gwmgwroptionsdialog.ui \
     gwmgwssoptionsdialog.ui \

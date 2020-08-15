@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -59,6 +59,7 @@
     <addaction name="actionLocal_collinearity_GWR"/>
     <addaction name="action_GGWR"/>
     <addaction name="actionMultiscale_GWR"/>
+    <addaction name="actionGTWR"/>
     <addaction name="separator"/>
     <addaction name="action_CsvToDat"/>
    </widget>
@@ -466,6 +467,11 @@
    </property>
    <property name="text">
     <string>Layout Batch</string>
+   </property>
+  </action>
+  <action name="actionGTWR">
+   <property name="text">
+    <string>GTWR</string>
    </property>
   </action>
  </widget>

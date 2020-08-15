@@ -32,6 +32,7 @@ public:
 
 public:
     virtual vec distance(int focus) override;
+    int length() const override;
 
 protected:
     bool mGeographic = false;
@@ -74,6 +75,11 @@ inline mat *GwmCRSDistance::dataPoints() const
 inline void GwmCRSDistance::setDataPoints(mat *dataPoints)
 {
     mDataPoints = dataPoints;
+}
+
+inline int GwmCRSDistance::length() const
+{
+    return mDataPoints->n_rows;
 }
 
 #endif // GWMCRSDISTANCE_H

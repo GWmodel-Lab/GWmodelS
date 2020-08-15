@@ -30,7 +30,8 @@ public:
         MultiscaleGWR,
         GWSS,
         CollinearityGWR,
-        GWPCA
+        GWPCA,
+        GTWR
     };
 
     static GwmEnumValueNameMapper<GwmLayerItemType> LayerItemTypeNameMapper;

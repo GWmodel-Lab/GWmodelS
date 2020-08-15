@@ -3,6 +3,7 @@
 #include "PropertyPanelTabs/gwmpropertygwrtab.h"
 #include "PropertyPanelTabs/gwmpropertyscalablegwrtab.h"
 #include "PropertyPanelTabs/gwmpropertyggwrtab.h"
+#include "PropertyPanelTabs/gwmpropertygtwrtab.h"
 #include "PropertyPanelTabs/gwmpropertymultiscalegwrtab.h"
 #include "PropertyPanelTabs/gwmpropertygwsstab.h"
 #include "PropertyPanelTabs/gwmpropertycollinearitygwrtab.h"
@@ -98,6 +99,10 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
             case GwmLayerItem::GeneralizedGWR:
                 tabWidget = new GwmPropertyGGWRTab(this, static_cast<GwmLayerGGWRItem*>(item));
                 (static_cast<GwmPropertyGGWRTab*>(tabWidget))->updateUI();
+                break;
+            case GwmLayerItem::GTWR:
+                tabWidget = new GwmPropertyGTWRTab(this, static_cast<GwmLayerGTWRItem*>(item));
+                (static_cast<GwmPropertyGTWRTab*>(tabWidget))->updateUI();
                 break;
             case GwmLayerItem::GWSS:
                 tabWidget = new GwmPropertyGWSSTab(this, static_cast<GwmLayerGWSSItem*>(item));

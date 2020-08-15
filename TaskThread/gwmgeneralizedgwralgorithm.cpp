@@ -90,7 +90,7 @@ void GwmGeneralizedGWRAlgorithm::run()
     }
     if(mRegressionLayer){
         for(int i = 0; i < nRp; i++){
-            vec weight = mSpatialWeight.spatialWeight(i);
+            vec weight = mSpatialWeight.weightVector(i);
             mWtMat2.col(i) = weight;
         }
         if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
@@ -100,13 +100,13 @@ void GwmGeneralizedGWRAlgorithm::run()
             d->setFocusPoints(&mDataPoints);
         }
         for(int i = 0; i < nDp; i++){
-            vec weight = mSpatialWeight.spatialWeight(i);
+            vec weight = mSpatialWeight.weightVector(i);
             mWtMat1.col(i) = weight;
         }
     }
     else{
         for(int i = 0; i < nRp; i++){
-            vec weight = mSpatialWeight.spatialWeight(i);
+            vec weight = mSpatialWeight.weightVector(i);
             mWtMat2.col(i) = weight;
         }
         mWtMat1 = mWtMat2;

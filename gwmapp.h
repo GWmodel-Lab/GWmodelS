@@ -85,7 +85,6 @@ public:
 	void unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
     void onSaveProject();
     void onOpenProject();
-
 private:
     void addLayerToModel(QgsVectorLayer* layer);
     void createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
@@ -138,6 +137,7 @@ public slots:
     void onMultiscaleGWRBtnClicked();
     void onRobustGWRBtnClicked();
     void onLcrGWRBtnClicked();
+    void onGTWRBtnClicked();
     void onGWPCABtnClicked();
 	void populateLayoutsMenu(QMenu *menu);
 

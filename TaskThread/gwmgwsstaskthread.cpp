@@ -69,7 +69,7 @@ bool GwmGWSSTaskThread::CalculateSerial(){
     emit tick(0,nRp);
     for(int i = 0; i < nRp; i++){
 //        vec d = mSpatialWeight.distance()->distance(i);
-        vec w = mSpatialWeight.spatialWeight(i);
+        vec w = mSpatialWeight.weightVector(i);
         double sumw = sum(w);
         vec Wi = w / sumw;
         mLocalMean.row(i) = trans(Wi) * mX;
@@ -117,7 +117,7 @@ bool GwmGWSSTaskThread::CalculateOmp(){
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i = 0; i < nRp; i++){
 //        vec d = mSpatialWeight.distance()->distance(i);
-        vec w = mSpatialWeight.spatialWeight(i);
+        vec w = mSpatialWeight.weightVector(i);
         double sumw = sum(w);
         vec Wi = w / sumw;
         mLocalMean.row(i) = Wi.t() * mX;
