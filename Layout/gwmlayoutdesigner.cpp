@@ -1286,7 +1286,7 @@ bool GwmLayoutDesigner::getPdfExportSettings(QgsLayoutExporter::PdfExportSetting
 	dialog.setGeometriesSimplified(simplify);
 	dialog.setExportGeoPdf(geoPdf);
 	dialog.setUseOgcBestPracticeFormat(useOgcBestPracticeFormat);
-	dialog.setExportGeoPdfFeatures(exportGeoPdfFeatures);
+//	dialog.setExportGeoPdfFeatures(exportGeoPdfFeatures);
 	dialog.setExportThemes(exportThemes);
 
 	if (dialog.exec() != QDialog::Accepted)
@@ -1300,7 +1300,7 @@ bool GwmLayoutDesigner::getPdfExportSettings(QgsLayoutExporter::PdfExportSetting
 	QgsRenderContext::TextRenderFormat textRenderFormat = dialog.textRenderFormat();
 	geoPdf = dialog.exportGeoPdf();
 	useOgcBestPracticeFormat = dialog.useOgcBestPracticeFormat();
-	exportGeoPdfFeatures = dialog.exportGeoPdfFeatures();
+//	exportGeoPdfFeatures = dialog.exportGeoPdfFeatures();
 	exportThemes = dialog.exportThemes();
 
 	if (mLayout)
@@ -1463,7 +1463,29 @@ bool GwmLayoutDesigner::containsAdvancedEffects() const
 		if (currentItem->containsAdvancedEffects())
 			return true;
 	}
-	return false;
+    return false;
+}
+
+void GwmLayoutDesigner::setAtlasFeature(const QgsFeature &feature)
+{
+    QgsLayoutAtlas *layoutAtlas = atlas();
+    if ( !layoutAtlas || !layoutAtlas->enabled() )
+    {
+        return;
+    }
+
+    if ( !mActionAtlasPreview->isChecked() )
+    {
+        //update gui controls
+        whileBlocking( mActionAtlasPreview )->setChecked( true );
+        atlasPreviewTriggered( true );
+    }
+
+    //set current preview feature id
+    layoutAtlas->seekTo( feature );
+
+    //bring layout window to foreground
+    activate();
 }
 
 void GwmLayoutDesigner::updateWindowTitle()

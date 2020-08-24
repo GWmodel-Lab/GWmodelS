@@ -98,6 +98,7 @@ public:		// QgsLayoutDesignerInterface interface
 	QToolBar *atlasToolbar();
 	void showRulers(bool visible);
 	void showItemOptions(QgsLayoutItem *item, bool bringPanelToFront = true);
+    void setAtlasFeature( const QgsFeature &feature );
 
 public:
 	void activate();
@@ -140,7 +141,7 @@ private:
 	bool getRasterExportSettings(QgsLayoutExporter::ImageExportSettings &settings, QSize &imageSize);
 	bool getPdfExportSettings(QgsLayoutExporter::PdfExportSettings &settings);
 	bool getSvgExportSettings(QgsLayoutExporter::SvgExportSettings &settings);
-	bool containsAdvancedEffects() const;
+    bool containsAdvancedEffects() const;
 
 
 public slots:
@@ -404,9 +405,13 @@ public:
 	{
 		mDesigner->showRulers(visible);
 	}
+    virtual void setAtlasFeature(const QgsFeature &feature) override
+    {
+        mDesigner->setAtlasFeature(feature);
+    }
 
 private:
-	GwmLayoutDesigner* mDesigner;
+    GwmLayoutDesigner* mDesigner;
 };
 
 inline GwmLayoutDesignerInterface * GwmLayoutDesigner::iface()

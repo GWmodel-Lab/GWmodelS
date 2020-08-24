@@ -344,6 +344,7 @@ FORMS += \
     qgsdelattrdialogbase.ui \
     qgsdualviewbase.ui \
     qgseditconditionalformatrulewidget.ui \
+    qgsexpressionpreviewbase.ui \
     qgsfieldcalculatorbase.ui \
     qgsfieldconditionalformatwidget.ui \
     qgsorganizetablecolumnsdialog.ui \
