@@ -1,7 +1,7 @@
 #ifndef GWMLAYERSCALABLEGWRITEM_H
 #define GWMLAYERSCALABLEGWRITEM_H
 
-#include "Model/gwmlayergwritem.h"
+#include "Model/gwmlayerbasicgwritem.h"
 #include "TaskThread/gwmscalablegwralgorithm.h"
 
 #include <SpatialWeight/gwmbandwidthweight.h>

@@ -3,11 +3,38 @@
 
 #include <QObject>
 
+#include <armadillo>
+#include <gsl/gsl_cdf.h>
+#include <omp.h>
+
 #include "TaskThread/gwmspatialmonoscalealgorithm.h"
 #include "TaskThread/iregressionanalysis.h"
-#include "TaskThread/gwmgwrtaskthread.h"
 
 using namespace arma;
+
+struct GwmFTestResult
+{
+    double s;
+    double df1;
+    double df2;
+    double p;
+
+    GwmFTestResult()
+    {
+        s = 0.0;
+        df1 = 0.0;
+        df2 = 0.0;
+        p = 0.0;
+    }
+
+    GwmFTestResult(double s, double n, double d, double p)
+    {
+        this->s = s;
+        this->df1 = n;
+        this->df2 = d;
+        this->p = p;
+    }
+};
 
 class GwmGeographicalWeightedRegressionAlgorithm : public GwmSpatialMonoscaleAlgorithm, public IRegressionAnalysis
 {

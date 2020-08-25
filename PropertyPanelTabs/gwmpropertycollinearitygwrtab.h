@@ -16,10 +16,6 @@ class GwmPropertyCollinearityGWRTab : public QWidget
     Q_OBJECT
 
 public:
-    static QMap<GwmGWRTaskThread::KernelFunction, QString> kernelFunctionNameDict;
-    static QMap<GwmGWRTaskThread::BandwidthType, QString> bandwidthTypeNameDict;
-
-public:
     explicit GwmPropertyCollinearityGWRTab(QWidget *parent = nullptr, GwmLayerCollinearityGWRItem* item = nullptr);
     ~GwmPropertyCollinearityGWRTab();
 

@@ -3,19 +3,6 @@
 
 #include <QStandardItemModel>
 
-QMap<GwmGWRTaskThread::KernelFunction, QString> GwmPropertyGGWRTab::kernelFunctionNameDict = {
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Gaussian, QStringLiteral("Gaussian")),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Exponential, QStringLiteral("Exponential")),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Bisquare, QStringLiteral("Bisquare")),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Tricube, QStringLiteral("Tricube")),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Boxcar, QStringLiteral("Boxcar"))
-};
-
-QMap<GwmGWRTaskThread::BandwidthType, QString> GwmPropertyGGWRTab::bandwidthTypeNameDict = {
-    std::make_pair(GwmGWRTaskThread::BandwidthType::Adaptive, QStringLiteral("Adaptive bandwidth:")),
-    std::make_pair(GwmGWRTaskThread::BandwidthType::Fixed, QStringLiteral("Fixed bandwidth:"))
-};
-
 QMap<GwmGeneralizedGWRAlgorithm::Family, QString> GwmPropertyGGWRTab::familyTypeNameDict = {
     std::make_pair(GwmGeneralizedGWRAlgorithm::Family::Poisson, QStringLiteral("Poisson")),
     std::make_pair(GwmGeneralizedGWRAlgorithm::Family::Binomial, QStringLiteral("Binomial"))

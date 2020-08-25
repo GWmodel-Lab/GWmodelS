@@ -51,7 +51,6 @@
 #include "PropertyPanelTabs/gwmpropertymultiscalegwrtab.h"
 
 #include "gwmattributetabledialog.h"
-#include "Model/gwmlayergwritem.h"
 #include "Model/gwmlayerggwritem.h"
 
 #include "TaskThread/gwmbasicgwralgorithm.h"

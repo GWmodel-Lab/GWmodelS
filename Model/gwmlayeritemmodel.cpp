@@ -1,5 +1,4 @@
 #include "gwmlayeritemmodel.h"
-#include "gwmlayergwritem.h"
 #include "gwmlayerggwritem.h"
 
 #include <qgsproject.h>

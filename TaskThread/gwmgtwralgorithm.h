@@ -83,7 +83,7 @@ public:
     QList<GwmVariable> independentVariables() const override;
     void setIndependentVariables(const QList<GwmVariable> &variables) override;
     GwmDiagnostic diagnostic() const override;
-    arma::mat regression(const arma::mat &x, const arma::vec &y) override;
+    mat regression(const mat &x, const vec &y) override;
 
     // IBandwidthSizeSelectable interface
 public:

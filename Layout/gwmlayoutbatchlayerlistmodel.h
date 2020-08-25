@@ -6,7 +6,7 @@
 #include <qgsmaplayer.h>
 
 #include "Model/gwmlayeritemmodel.h"
-#include "Layout/gwmlayoutbatchfieldlistmodel.h";
+#include "Layout/gwmlayoutbatchfieldlistmodel.h"
 
 class GwmLayoutBatchLayerListModel : public QAbstractListModel
 {

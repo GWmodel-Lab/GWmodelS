@@ -14,9 +14,7 @@ class GwmPropertyGGWRTab : public QWidget
     Q_OBJECT
 
 public:
-    static QMap<GwmGWRTaskThread::KernelFunction, QString> kernelFunctionNameDict;
-    static QMap<GwmGWRTaskThread::BandwidthType, QString> bandwidthTypeNameDict;
-    static QMap<GwmGeneralizedGWRAlgorithm::Family, QString> GwmPropertyGGWRTab::familyTypeNameDict;
+    static QMap<GwmGeneralizedGWRAlgorithm::Family, QString> familyTypeNameDict;
 
 public:
     explicit GwmPropertyGGWRTab(QWidget *parent = nullptr, GwmLayerGGWRItem* item = nullptr);

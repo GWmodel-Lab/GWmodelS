@@ -7,7 +7,6 @@ CONFIG += qwt
 CONFIG += resources_big
 CONFIG += debug_and_release
 
-QMAKE_CXXFLAGS += /openmp
 QMAKE_CXXFLAGS_RELEASE += /Zi
 QMAKE_CXXFLAGS_RELEASE += /Od
 QMAKE_LFLAGS_RELEASE += /DEBUG
@@ -51,7 +50,6 @@ SOURCES += \
     Model/gwmlayergroupitem.cpp \
     Model/gwmlayergtwritem.cpp \
     Model/gwmlayergwpcaitem.cpp \
-    Model/gwmlayergwritem.cpp \
     Model/gwmlayergwssitem.cpp \
     Model/gwmlayeritem.cpp \
     Model/gwmlayeritemmodel.cpp \
@@ -79,7 +77,6 @@ SOURCES += \
     SpatialWeight/gwmspatialtemporalweight.cpp \
     SpatialWeight/gwmspatialweight.cpp \
     SpatialWeight/gwmweight.cpp \
-    TaskThread/gwmbandwidthselecttaskthread.cpp \
     TaskThread/gwmbandwidthsizeselector.cpp \
     TaskThread/gwmbasicgwralgorithm.cpp \
     TaskThread/gwmcsvtodatthread.cpp \
@@ -91,8 +88,6 @@ SOURCES += \
     TaskThread/gwmgtwralgorithm.cpp \
     TaskThread/gwmgwpcataskthread.cpp \
     TaskThread/gwmggwrbandwidthsizeselector.cpp \
-    TaskThread/gwmgwrmodelselectionthread.cpp \
-    TaskThread/gwmgwrtaskthread.cpp \
     TaskThread/gwmgwsstaskthread.cpp \
     TaskThread/gwmindependentvariableselector.cpp \
     TaskThread/gwmlocalcollinearitygwralgorithm.cpp \
@@ -184,7 +179,6 @@ HEADERS += \
     Model/gwmlayergroupitem.h \
     Model/gwmlayergtwritem.h \
     Model/gwmlayergwpcaitem.h \
-    Model/gwmlayergwritem.h \
     Model/gwmlayergwssitem.h \
     Model/gwmlayeritem.h \
     Model/gwmlayeritemmodel.h \
@@ -212,7 +206,6 @@ HEADERS += \
     SpatialWeight/gwmminkwoskidistance.h \
     SpatialWeight/gwmspatialtemporalweight.h \
     SpatialWeight/gwmspatialweight.h \
-    TaskThread/gwmbandwidthselecttaskthread.h \
     TaskThread/gwmbandwidthsizeselector.h \
     TaskThread/gwmbasicgwralgorithm.h \
     TaskThread/gwmgeneralizedgwralgorithm.h \
@@ -223,8 +216,6 @@ HEADERS += \
     TaskThread/gwmgtwralgorithm.h \
     TaskThread/gwmgwpcataskthread.h \
     TaskThread/gwmggwrbandwidthsizeselector.h \
-    TaskThread/gwmgwrmodelselectionthread.h \
-    TaskThread/gwmgwrtaskthread.h \
     TaskThread/gwmgwsstaskthread.h \
     TaskThread/gwmindependentvariableselector.h \
     TaskThread/gwmlocalcollinearitygwralgorithm.h \
@@ -363,52 +354,74 @@ FORMS += \
     symbolwindow/qgssymbolselectordialogbase.ui \
     symbolwindow/qgsunitselectionwidget.ui \
     symbolwindow/widget_set_dd_value.ui
-##Qwt
-DEFINES += QT_DLL QWT_DLL
-CONFIG(debug, debug|release) {
-    LIBS += -L"$(QT_HOME)/lib" -lqwtd
-} else {
-    LIBS += -L"$(QT_HOME)/lib" -lqwt
+
+win32 {
+    QMAKE_CXXFLAGS += /openmp
+
+    ##Qwt
+    DEFINES += QT_DLL QWT_DLL
+    CONFIG(debug, debug|release) {
+        LIBS += -L"$(QT_HOME)/lib" -lqwtd
+    } else {
+        LIBS += -L"$(QT_HOME)/lib" -lqwt
+    }
+    INCLUDEPATH += "$(QT_HOME)/include/qwt"
+    ##Qwt END
+
+    ## QGIS
+    INCLUDEPATH += "$(OSGEO_HOME)/include"
+    CONFIG(debug, debug|release) {
+        INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-debug/include"
+        LIBS += -L"$(OSGEO_HOME)/apps/qgis-debug/lib" -lqgis_core -lqgis_gui
+    } else {
+        INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-rel-dev/include"
+        LIBS += -L"$(OSGEO_HOME)/apps/qgis-rel-dev/lib" -lqgis_core -lqgis_gui
+    }
+    LIBS += -L"$(OSGEO_HOME)/lib" -lgdal_i
+    GDAL_DATA = ".\share\gdal"
+    ## QGIS END
+
+    ## Armadillo
+    DEFINES += ARMA_USE_LAPACK
+    DEFINES += ARMA_USE_BLAS
+    DEFINES += ARMA_DONT_USE_WRAPPER
+    INCLUDEPATH += "$(QT_HOME)/include/armadillo"
+    CONFIG(debug, debug|release) {
+        LIBS += -L"$(QT_HOME)/lib" -larmadillod -lopenblas
+    } else {
+        LIBS += -L"$(QT_HOME)/lib" -larmadillo -lopenblas
+    }
+    ## Armadillo END
+
+    ## GSL
+    INCLUDEPATH += "$(QT_HOME)/include/gsl"
+    LIBS += -L"$(QT_HOME)/lib" -lgsl -lgslcblas
+    ## GSL END
+
+    ## GWmodelCUDA
+    INCLUDEPATH += "$(QT_HOME)/include/GWmodelCUDA"
+    LIBS += -L"$(QT_HOME)/lib" -lGWmodelCUDA64 -lCUDAInspector
+    DEFINES += ENALBE_CUDA
+    ## GWmodelCUDA END
 }
-INCLUDEPATH += "$(QT_HOME)/include/qwt"
-##Qwt END
 
-## QGIS
-INCLUDEPATH += "$(OSGEO_HOME)/include"
-CONFIG(debug, debug|release) {
-    INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-debug/include"
-    LIBS += -L"$(OSGEO_HOME)/apps/qgis-debug/lib" -lqgis_core -lqgis_gui
-} else {
-    INCLUDEPATH += "$(OSGEO_HOME)/apps/qgis-rel-dev/include"
-    LIBS += -L"$(OSGEO_HOME)/apps/qgis-rel-dev/lib" -lqgis_core -lqgis_gui
+unix {
+    QMAKE_CXXFLAGS += -fopenmp -std=c++11
+    QMAKE_LFLAGS += -fopenmp
+
+    DEFINES += DBL_MAX=__DBL_MAX__
+
+    INCLUDEPATH += /usr/local/include/qgis \
+        /usr/include/gdal \
+        /usr/include/qwt \
+        /usr/include/x86_64-linux-gnu/qt5
+    LIBS += -lqgis_core -lqgis_gui
+
+    INCLUDEPATH += /usr/include/armadillo_bits
+    LIBS += /usr/lib/x86_64-linux-gnu -larmadillo
+
+    INCLUDEPATH += $(HOME)/sdk/GWmodelCUDA/include
 }
-LIBS += -L"$(OSGEO_HOME)/lib" -lgdal_i
-GDAL_DATA = ".\share\gdal"
-## QGIS END
-
-## Armadillo
-DEFINES += ARMA_USE_LAPACK
-DEFINES += ARMA_USE_BLAS
-DEFINES += ARMA_DONT_USE_WRAPPER
-INCLUDEPATH += "$(QT_HOME)/include/armadillo"
-CONFIG(debug, debug|release) {
-    LIBS += -L"$(QT_HOME)/lib" -larmadillod -lopenblas
-} else {
-    LIBS += -L"$(QT_HOME)/lib" -larmadillo -lopenblas
-}
-## Armadillo END
-
-## GSL
-INCLUDEPATH += "$(QT_HOME)/include/gsl"
-LIBS += -L"$(QT_HOME)/lib" -lgsl -lgslcblas
-## GSL END
-
-## GWmodelCUDA
-INCLUDEPATH += "$(QT_HOME)/include/GWmodelCUDA"
-LIBS += -L"$(QT_HOME)/lib" -lGWmodelCUDA64 -lCUDAInspector
-
-
-## GWmodelCUDA END
 
 TRANSLATIONS += \
     GWmodelDesktop_zh_CN.ts

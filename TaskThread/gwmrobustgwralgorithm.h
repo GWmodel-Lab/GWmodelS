@@ -1,8 +1,6 @@
 #ifndef GWMROBUSTGWRTASKTHREAD_H
 #define GWMROBUSTGWRTASKTHREAD_H
 
-#include "gwmgwrtaskthread.h"
-
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "TaskThread/gwmbasicgwralgorithm.h"
 

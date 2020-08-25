@@ -1,6 +1,7 @@
 #ifndef GWMLCRGWRTASKTHREAD_H
 #define GWMLCRGWRTASKTHREAD_H
 
+#include <armadillo>
 
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "TaskThread/gwmbandwidthsizeselector.h"
@@ -46,17 +47,17 @@ public:
     }
     bool isAutoselectBandwidth() const;
 
-    void GwmLocalCollinearityGWRAlgorithm::setIsAutoselectBandwidth(bool value)
+    void setIsAutoselectBandwidth(bool value)
     {
         mIsAutoselectBandwidth = value;
     }
 
-    bool GwmLocalCollinearityGWRAlgorithm::autoselectBandwidth() const
+    bool autoselectBandwidth() const
     {
         return mIsAutoselectBandwidth;
     }
 
-    BandwidthCriterionList GwmLocalCollinearityGWRAlgorithm::bandwidthSelectorCriterions() const
+    BandwidthCriterionList bandwidthSelectorCriterions() const
     {
         return selector.bandwidthCriterion();
     }
@@ -73,7 +74,7 @@ public:
 protected:
     void run() override;
 
-    arma::mat regression(const arma::mat &x, const arma::vec &y);
+    mat regression(const mat &x, const mat &y);
     //返回cv的函数
     double LcrCV(double bw,int kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
     //ridge.lm函数

@@ -1,7 +1,7 @@
 #ifndef GWMLAYERGGWRITEM_H
 #define GWMLAYERGGWRITEM_H
 
-#include "gwmlayergwritem.h"
+#include "gwmlayerbasicgwritem.h"
 #include "TaskThread/gwmgeneralizedgwralgorithm.h"
 #include "gwmlayerbasicgwritem.h"
 

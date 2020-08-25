@@ -42,7 +42,7 @@ public:
         mOmpThreadNum = threadNum;
     };
 
-    BandwidthCriterionList GwmGWPCATaskThread::bandwidthSelectorCriterions() const
+    BandwidthCriterionList bandwidthSelectorCriterions() const
     {
         return mSelector.bandwidthCriterion();
     }

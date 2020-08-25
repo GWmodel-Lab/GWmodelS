@@ -22,21 +22,26 @@ public:
     void setWeight(GwmWeight *weight);
     void setWeight(GwmWeight& weight);
     void setWeight(GwmWeight&& weight);
+
     template<typename T>
-    T* weight() const { return mWeight; }
-    template<>
-    GwmBandwidthWeight* weight<GwmBandwidthWeight>() const { return static_cast<GwmBandwidthWeight*>(mWeight); }
+    T* weight() const { return nullptr; }
+
+    template<> GwmBandwidthWeight* weight<GwmBandwidthWeight>() const { return static_cast<GwmBandwidthWeight*>(mWeight); }
 
     GwmDistance *distance() const;
     void setDistance(GwmDistance *distance);
     void setDistance(GwmDistance& distance);
     void setDistance(GwmDistance&& distance);
+
     template<typename T>
-    T* distance() const { return mDistance; }
+    T* distance() const { return nullptr; }
+
     template<>
     GwmCRSDistance* distance<GwmCRSDistance>() const { return static_cast<GwmCRSDistance*>(mDistance); }
+
     template<>
     GwmMinkwoskiDistance* distance<GwmMinkwoskiDistance>() const { return static_cast<GwmMinkwoskiDistance*>(mDistance); }
+
     template<>
     GwmDMatDistance* distance<GwmDMatDistance>() const { return static_cast<GwmDMatDistance*>(mDistance); }
 

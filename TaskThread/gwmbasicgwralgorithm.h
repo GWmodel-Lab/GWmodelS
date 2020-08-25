@@ -118,7 +118,7 @@ public:     // IIndependentVariableSelectable interface
     }
 
 protected:  // IRegressionAnalysis interface
-    mat regression(const mat& x, const vec& y) override;
+    virtual mat regression(const mat& x, const vec& y) override;
 
 public:     // IParallelalbe interface
     int parallelAbility() const override;
