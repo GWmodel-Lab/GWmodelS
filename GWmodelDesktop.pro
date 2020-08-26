@@ -105,7 +105,6 @@ SOURCES += \
     TaskThread/gwmspatialmultiscalealgorithm.cpp \
     TaskThread/gwmspatialtemporalmonoscale.cpp \
     Validity/qgsabstractvaliditycheck.cpp \
-    attributetable/qgsaddattrdialog.cpp \
     attributetable/qgsfeaturefilterwidget.cpp \
 #    attributetable/qgsfeaturelistmodel.cpp \
 #    attributetable/qgsfeaturelistview.cpp \
@@ -115,7 +114,6 @@ SOURCES += \
 #    attributetable/qgsgenericfeatureselectionmanager.cpp \
 #    attributetable/qgsorganizetablecolumnsdialog.cpp \
 #    attributetable/qgsvectorlayerselectionmanager.cpp \
-    attributetable/qgsfieldcalculator.cpp \
     attributetable/qgsguivectorlayertools.cpp \
     gwmapp.cpp \
     gwmattributetabledialog.cpp \
@@ -143,11 +141,9 @@ SOURCES += \
     TaskThread/gwmtaskthread.cpp \
     gwmrobustgwroptionsdialog.cpp \
     gwmsaveascsvdialog.cpp \
-    attributetable/qgsaddattrdialog.cpp \
 #    attributetable/qgsclipboard.cpp \
     attributetable/qgsdelattrdialog.cpp \
     attributetable/qgsfeatureaction.cpp \
-    attributetable/qgsfieldcalculator.cpp \
     gwmscalablegwroptionsdialog.cpp \
     symbolwindow/gwmsymboleditordialog.cpp \
     symbolwindow/gwmsymbolwindow.cpp \
@@ -249,8 +245,6 @@ HEADERS += \
     TaskThread/iregressionanalysis.h \
     Validity/qgsabstractvaliditycheck.h \
     attributetable/gwmfeaturefilterwidget_p.h \
-    attributetable/qgsaddattrdialog.h \
-    attributetable/qgsfieldcalculator.h \
     attributetable/qgsguivectorlayertools.h \
     gwmapp.h \
     gwmattributetabledialog.h \
@@ -279,11 +273,9 @@ HEADERS += \
     TaskThread/gwmtaskthread.h \
     gwmrobustgwroptionsdialog.h \
     gwmsaveascsvdialog.h \
-    attributetable/qgsaddattrdialog.h \
 #    attributetable/qgsclipboard.h \
     attributetable/qgsdelattrdialog.h \
     attributetable/qgsfeatureaction.h \
-    attributetable/qgsfieldcalculator.h \
     gwmscalablegwroptionsdialog.h \
     SpatialWeight/gwmweight.h \
     symbolwindow/gwmsymboleditordialog.h \
@@ -414,16 +406,19 @@ unix {
     INCLUDEPATH += /usr/local/include/qgis \
         /usr/include/gdal \
         /usr/include/qwt \
-        /usr/include/x86_64-linux-gnu/qt5
-    LIBS += -lqgis_core -lqgis_gui
+        /usr/include/x86_64-linux-gnu/qt5 \
+        /usr/lib/gcc/x86_64-linux-gnu/9/include
+    LIBS += -lqgis_core -lqgis_gui -l"qwt-qt5" -lgsl -lblas -llapack -lopenblas
 
     DEFINES += ARMA_USE_LAPACK
     DEFINES += ARMA_USE_BLAS
     DEFINES += ARMA_DONT_USE_WRAPPER
+    DEFINES += ARMA_DONT_USE_OPENMP
     INCLUDEPATH += /usr/include/armadillo_bits
     LIBS += -larmadillo
 
-    INCLUDEPATH += $(HOME)/sdk/GWmodelCUDA/include
+    INCLUDEPATH += $(HOME)/GWmodelCUDA/include
+    LIBS += -L"$(HOME)/GWmodelCUDA/lib" -lCUDAInspector -lGWmodelCUDA
 }
 
 TRANSLATIONS += \

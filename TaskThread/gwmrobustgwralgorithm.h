@@ -8,7 +8,7 @@ class GwmRobustGWRAlgorithm: public GwmBasicGWRAlgorithm
 {
     Q_OBJECT
 
-    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+    typedef QList<QPair<QString, mat> > CreateResultLayerData;
 
     typedef mat (GwmRobustGWRAlgorithm::*RegressionHatmatrix)(const mat&, const vec&, mat&, vec&, vec&, mat&);
 

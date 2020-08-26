@@ -1,6 +1,6 @@
 #include "gwmattributetabledialog.h"
 
-#include "attributetable/qgsfieldcalculator.h"
+#include <qgsfieldcalculator.h>
 
 #include <QMessageBox>
 #include <QGridLayout>
@@ -18,7 +18,7 @@
 #include "qgsvectordataprovider.h"
 #include "qgsexpression.h"
 #include "qgsexpressionbuilderwidget.h"
-#include "attributetable/qgsaddattrdialog.h"
+#include "qgsaddattrdialog.h"
 #include "attributetable/qgsdelattrdialog.h"
 #include "qgsdockwidget.h"
 #include "qgsfeatureiterator.h"

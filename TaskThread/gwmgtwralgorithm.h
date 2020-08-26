@@ -38,7 +38,7 @@ public:
         return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     }
 
-    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+    typedef QList<QPair<QString, mat> > CreateResultLayerData;
     typedef double (GwmGTWRAlgorithm::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
     typedef mat (GwmGTWRAlgorithm::*RegressionFunctionType)(const mat&, const vec&);
     typedef mat (GwmGTWRAlgorithm::*RegressionHatmatrixFunctionType)(const mat&, const vec&, mat&, vec&, vec&);

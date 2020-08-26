@@ -78,7 +78,7 @@ public:
     typedef mat (GwmGeneralizedGWRAlgorithm::*GGWRRegressionFunction)(const mat& x, const vec& y);
     typedef mat (GwmGeneralizedGWRAlgorithm::*CalWtFunction)(const mat& x, const vec& y,mat w);
 
-    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+    typedef QList<QPair<QString, mat> > CreateResultLayerData;
 
 
 public:
