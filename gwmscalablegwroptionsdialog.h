@@ -51,10 +51,9 @@ public:
     double bandwidthSize();
     QString bandWidthUnit();
     GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
-    GwmGWRTaskThread::DistanceSourceType distanceSourceType();
     QVariant distanceSourceParameters();
 
-    void setTaskThread(GwmGWRTaskThread* taskThread);
+    void setTaskThread(GwmScalableGWRAlgorithm* taskThread);
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();

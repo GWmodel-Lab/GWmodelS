@@ -5,7 +5,6 @@
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
 #include <TaskThread/gwmbasicgwralgorithm.h>
-#include "TaskThread/gwmgwrtaskthread.h"
 #include "Model/gwmlayerattributeitemmodel.h"
 #include "Model/gwmlayergroupitem.h"
 
@@ -52,17 +51,14 @@ public:
     QString crsRotateTheta();
     QString crsRotateP();
     bool bandwidthType();
-    GwmGWRTaskThread::ParallelMethod approachType();
     double bandwidthSize();
     GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
     GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
-    GwmGWRTaskThread::DistanceSourceType distanceSourceType();
     QVariant distanceSourceParameters();
-    GwmGWRTaskThread::ParallelMethod parallelMethod();
     QVariant parallelParameters();
 
-    void setTaskThread(GwmGWRTaskThread* taskThread);
+    void setTaskThread(GwmBasicGWRAlgorithm* taskThread);
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();

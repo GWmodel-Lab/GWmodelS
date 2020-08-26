@@ -1,5 +1,5 @@
 #include "gwmrobustgwroptionsdialog.h"
-#include "ui_GwmRobustGWROptionsDialog.h"
+#include "ui_gwmrobustgwroptionsdialog.h"
 #include <omp.h>
 #include <QComboBox>
 #include <QButtonGroup>
@@ -335,18 +335,6 @@ GwmBandwidthWeight::KernelFunctionType GwmRobustGWROptionsDialog::bandwidthKerne
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
     return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
-}
-
-GwmGWRTaskThread::DistanceSourceType GwmRobustGWROptionsDialog::distanceSourceType()
-{
-    if (ui->mDistTypeCRSRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
-    else if (ui->mDistTypeDmatRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::DMatFile;
-    else if (ui->mDistTypeMinkowskiRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::Minkowski;
-    else
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
 }
 
 QVariant GwmRobustGWROptionsDialog::distanceSourceParameters()

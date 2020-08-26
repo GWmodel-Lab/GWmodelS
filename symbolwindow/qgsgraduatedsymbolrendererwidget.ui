@@ -426,7 +426,7 @@ Negative rounds to powers of 10</string>
             <string>Add class</string>
            </property>
            <property name="icon">
-            <iconset resource="../../images/images.qrc">
+            <iconset resource="../images/images.qrc">
              <normaloff>:/images/themes/default/symbologyAdd.svg</normaloff>:/images/themes/default/symbologyAdd.svg</iconset>
            </property>
           </widget>
@@ -437,7 +437,7 @@ Negative rounds to powers of 10</string>
             <string>Delete</string>
            </property>
            <property name="icon">
-            <iconset resource="../../images/images.qrc">
+            <iconset resource="../images/images.qrc">
              <normaloff>:/images/themes/default/symbologyRemove.svg</normaloff>:/images/themes/default/symbologyRemove.svg</iconset>
            </property>
           </widget>
@@ -571,8 +571,7 @@ Negative rounds to powers of 10</string>
   <tabstop>cbxLinkBoundaries</tabstop>
  </tabstops>
  <resources>
-  <include location="../../images/images.qrc"/>
-  <include location="../../images/images.qrc"/>
+  <include location="../images/images.qrc"/>
  </resources>
  <connections/>
 </ui>

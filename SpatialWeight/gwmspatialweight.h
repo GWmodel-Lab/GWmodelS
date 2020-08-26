@@ -26,8 +26,6 @@ public:
     template<typename T>
     T* weight() const { return nullptr; }
 
-    template<> GwmBandwidthWeight* weight<GwmBandwidthWeight>() const { return static_cast<GwmBandwidthWeight*>(mWeight); }
-
     GwmDistance *distance() const;
     void setDistance(GwmDistance *distance);
     void setDistance(GwmDistance& distance);
@@ -35,15 +33,6 @@ public:
 
     template<typename T>
     T* distance() const { return nullptr; }
-
-    template<>
-    GwmCRSDistance* distance<GwmCRSDistance>() const { return static_cast<GwmCRSDistance*>(mDistance); }
-
-    template<>
-    GwmMinkwoskiDistance* distance<GwmMinkwoskiDistance>() const { return static_cast<GwmMinkwoskiDistance*>(mDistance); }
-
-    template<>
-    GwmDMatDistance* distance<GwmDMatDistance>() const { return static_cast<GwmDMatDistance*>(mDistance); }
 
 public:
     GwmSpatialWeight& operator=(const GwmSpatialWeight& spatialWeight);
@@ -61,6 +50,12 @@ private:
 inline GwmWeight *GwmSpatialWeight::weight() const
 {
     return mWeight;
+}
+
+template<>
+inline GwmBandwidthWeight* GwmSpatialWeight::weight<GwmBandwidthWeight>() const
+{
+    return static_cast<GwmBandwidthWeight*>(mWeight);
 }
 
 inline void GwmSpatialWeight::setWeight(GwmWeight *weight)
@@ -84,6 +79,24 @@ inline void GwmSpatialWeight::setWeight(GwmWeight&& weight)
 inline GwmDistance *GwmSpatialWeight::distance() const
 {
     return mDistance;
+}
+
+template<>
+inline GwmCRSDistance* GwmSpatialWeight::distance<GwmCRSDistance>() const
+{
+    return static_cast<GwmCRSDistance*>(mDistance);
+}
+
+template<>
+inline GwmMinkwoskiDistance* GwmSpatialWeight::distance<GwmMinkwoskiDistance>() const
+{
+    return static_cast<GwmMinkwoskiDistance*>(mDistance);
+}
+
+template<>
+inline GwmDMatDistance* GwmSpatialWeight::distance<GwmDMatDistance>() const
+{
+    return static_cast<GwmDMatDistance*>(mDistance);
 }
 
 inline void GwmSpatialWeight::setDistance(GwmDistance *distance)

@@ -7,7 +7,8 @@
 #include <qstandarditemmodel.h>
 #include "Model/gwmvariableitemmodel.h"
 #include "TaskThread/gwmgwsstaskthread.h"
-#include "TaskThread/gwmgwrtaskthread.h"
+#include "TaskThread/iparallelable.h"
+#include "SpatialWeight/gwmdistance.h"
 
 namespace Ui {
 class GwmGWSSOptionsDialog;
@@ -48,14 +49,13 @@ public:
     QString crsRotateTheta();
     QString crsRotateP();
     bool bandwidthType();
-    GwmGWRTaskThread::ParallelMethod approachType();
+    IParallelalbe::ParallelType approachType();
     double bandwidthSize();
 //    GwmGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
 //    QString bandWidthUnit();
     GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
-    GwmGWRTaskThread::DistanceSourceType distanceSourceType();
+    GwmDistance::DistanceType distanceSourceType();
     QVariant distanceSourceParameters();
-    GwmGWRTaskThread::ParallelMethod parallelMethod();
     QVariant parallelParameters();
 
     void setTaskThread(GwmGWSSTaskThread* taskThread);

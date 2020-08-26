@@ -340,8 +340,8 @@ FORMS += \
     qgsfieldconditionalformatwidget.ui \
     qgsorganizetablecolumnsdialog.ui \
     qgsvaliditycheckresultsbase.ui \
-    symbolwindow/qgscategorizedsymbolrendererwidget.ui \
     symbolwindow/qgsgraduatedsymbolrendererwidget.ui \
+    symbolwindow/qgscategorizedsymbolrendererwidget.ui \
     symbolwindow/qgsheatmaprendererwidgetbase.ui \
     symbolwindow/qgshistogramwidgetbase.ui \
     symbolwindow/qgsinvertedpolygonrendererwidgetbase.ui \
@@ -417,8 +417,11 @@ unix {
         /usr/include/x86_64-linux-gnu/qt5
     LIBS += -lqgis_core -lqgis_gui
 
+    DEFINES += ARMA_USE_LAPACK
+    DEFINES += ARMA_USE_BLAS
+    DEFINES += ARMA_DONT_USE_WRAPPER
     INCLUDEPATH += /usr/include/armadillo_bits
-    LIBS += /usr/lib/x86_64-linux-gnu -larmadillo
+    LIBS += -larmadillo
 
     INCLUDEPATH += $(HOME)/sdk/GWmodelCUDA/include
 }

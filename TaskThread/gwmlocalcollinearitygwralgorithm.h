@@ -9,6 +9,8 @@
 
 #include "TaskThread/iparallelable.h"
 
+using namespace arma;
+
 class GwmLocalCollinearityGWRAlgorithm:public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable,public IOpenmpParallelable
 {
 public:
@@ -74,7 +76,7 @@ public:
 protected:
     void run() override;
 
-    mat regression(const mat &x, const mat &y);
+    mat regression(const mat &x, const vec &y) override;
     //返回cv的函数
     double LcrCV(double bw,int kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
     //ridge.lm函数

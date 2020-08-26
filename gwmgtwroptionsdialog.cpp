@@ -244,17 +244,6 @@ bool GwmGTWROptionsDialog::bandwidthType()
     else return true;
 }
 
-GwmGWRTaskThread::ParallelMethod GwmGTWROptionsDialog::approachType()
-{
-    if(ui->mCalcParallelNoneRadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::None;
-    }
-    else if(ui->mCalcParallelMultithreadRadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::Multithread;
-    }
-    else return GwmGWRTaskThread::ParallelMethod::None;
-}
-
 void GwmGTWROptionsDialog::onNoneRadioToggled(bool checked)
 {
     if(checked){
@@ -372,18 +361,6 @@ GwmBandwidthWeight::KernelFunctionType GwmGTWROptionsDialog::bandwidthKernelFunc
     return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
-GwmGWRTaskThread::DistanceSourceType GwmGTWROptionsDialog::distanceSourceType()
-{
-    if (ui->mDistTypeCRSRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
-    else if (ui->mDistTypeDmatRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::DMatFile;
-    else if (ui->mDistTypeMinkowskiRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::Minkowski;
-    else
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
-}
-
 QVariant GwmGTWROptionsDialog::distanceSourceParameters()
 {
     if (ui->mDistTypeDmatRadio->isChecked())
@@ -401,18 +378,6 @@ QVariant GwmGTWROptionsDialog::distanceSourceParameters()
     else return QVariant();
 }
 
-GwmGWRTaskThread::ParallelMethod GwmGTWROptionsDialog::parallelMethod()
-{
-    if (ui->mCalcParallelMultithreadRadio->isChecked())
-    {
-        return GwmGWRTaskThread::ParallelMethod::Multithread;
-    }
-    else
-    {
-        return GwmGWRTaskThread::ParallelMethod::None;
-    }
-}
-
 QVariant GwmGTWROptionsDialog::parallelParameters()
 {
     if (ui->mCalcParallelMultithreadRadio->isChecked())
@@ -425,9 +390,9 @@ QVariant GwmGTWROptionsDialog::parallelParameters()
     }
 }
 
-void GwmGTWROptionsDialog::setTaskThread(GwmGWRTaskThread *taskThread)
+void GwmGTWROptionsDialog::setTaskThread(GwmGTWRAlgorithm *taskThread)
 {
-
+    mTaskThread = taskThread;
 }
 
 void GwmGTWROptionsDialog::updateFieldsAndEnable()

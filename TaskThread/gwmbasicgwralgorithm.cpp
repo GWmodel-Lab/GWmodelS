@@ -5,6 +5,9 @@
 #include <omp.h>
 #include <qgsmemoryproviderutils.h>
 
+#include <armadillo>
+using namespace arma;
+
 
 GwmDiagnostic GwmBasicGWRAlgorithm::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
