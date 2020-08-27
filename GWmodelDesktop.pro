@@ -7,10 +7,6 @@ CONFIG += qwt
 CONFIG += resources_big
 CONFIG += debug_and_release
 
-QMAKE_CXXFLAGS_RELEASE += /Zi
-QMAKE_CXXFLAGS_RELEASE += /Od
-QMAKE_LFLAGS_RELEASE += /DEBUG
-
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -349,6 +345,10 @@ FORMS += \
 
 win32 {
     QMAKE_CXXFLAGS += /openmp
+
+    QMAKE_CXXFLAGS_RELEASE += /Zi
+    QMAKE_CXXFLAGS_RELEASE += /Od
+    QMAKE_LFLAGS_RELEASE += /DEBUG
 
     ##Qwt
     DEFINES += QT_DLL QWT_DLL
