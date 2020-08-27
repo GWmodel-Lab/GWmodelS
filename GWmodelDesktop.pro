@@ -370,7 +370,6 @@ win32 {
         LIBS += -L"$(OSGEO_HOME)/apps/qgis-rel-dev/lib" -lqgis_core -lqgis_gui
     }
     LIBS += -L"$(OSGEO_HOME)/lib" -lgdal_i
-    GDAL_DATA = ".\share\gdal"
     ## QGIS END
 
     ## Armadillo
@@ -420,6 +419,8 @@ unix {
     INCLUDEPATH += $(HOME)/GWmodelCUDA/include
     LIBS += -L"$(HOME)/GWmodelCUDA/lib" -lCUDAInspector -lGWmodelCUDA
 }
+
+GDAL_DATA = "./share/gdal"
 
 TRANSLATIONS += \
     GWmodelDesktop_zh_CN.ts
