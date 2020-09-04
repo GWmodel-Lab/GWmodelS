@@ -47,7 +47,9 @@ protected:
 
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
     mat regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+#ifdef ENABLE_CUDA
     mat regressionHatmatrixCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+#endif
 
 protected:
     void run() override;
@@ -80,7 +82,12 @@ inline void GwmRobustGWRAlgorithm::setFiltered(bool value)
 
 inline int GwmRobustGWRAlgorithm::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
+    return IParallelalbe::SerialOnly
+            | IParallelalbe::OpenMP
+        #ifdef ENABLE_CUDA
+            | IParallelalbe::CUDA
+        #endif
+            ;
 }
 
 #endif // GWMROBUSTGWRTASKTHREAD_H
