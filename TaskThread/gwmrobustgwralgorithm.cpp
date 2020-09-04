@@ -218,9 +218,11 @@ void GwmRobustGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &t
         case IParallelalbe::ParallelType::OpenMP:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixOmp;
             break;
+#ifdef ENABLE_CUDA
         case IParallelalbe::ParallelType::CUDA:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixCuda;
             break;
+#endif
         default:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
             break;
@@ -375,6 +377,7 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, ma
     return betas.t();
 }
 
+#ifdef ENABLE_CUDA
 mat GwmRobustGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
     int nDp = mDataPoints.n_rows, nVar = x.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
@@ -434,3 +437,4 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, m
     GWCUDA_Del(cuda);
     return betas.t();
 }
+#endif

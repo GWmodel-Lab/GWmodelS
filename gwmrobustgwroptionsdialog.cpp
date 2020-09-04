@@ -9,7 +9,9 @@
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
+#ifdef ENABLE_CUDA
 #include <GWmodelCUDA/ICUDAInspector.h>
+#endif
 
 GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmRobustGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
@@ -62,6 +64,7 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onGPURadioToggled);
 
+#ifdef ENABLE_CUDA
     // 获取显卡信息
     ICUDAInspector* inspector = CUDAInspector_Create();
     int gpuCount = inspector->GetDeviceCount();
@@ -85,6 +88,9 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     {
         ui->mCalcParallelGPURadio->setEnabled(false);
     }
+#else
+    ui->mCalcParallelGPURadio->setEnabled(false);
+#endif
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mCalcParallelNoneRadio->setChecked(true);

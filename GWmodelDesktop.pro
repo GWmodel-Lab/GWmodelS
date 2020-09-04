@@ -390,9 +390,10 @@ win32 {
     ## GSL END
 
     ## GWmodelCUDA
-    INCLUDEPATH += "$(QT_HOME)/include/GWmodelCUDA"
-    LIBS += -L"$(QT_HOME)/lib" -lGWmodelCUDA64 -lCUDAInspector
-    DEFINES += ENALBE_CUDA
+    if(contains(DEFINES, ENABLE_CUDA)) {
+        INCLUDEPATH += "$(QT_HOME)/include/GWmodelCUDA"
+        LIBS += -L"$(QT_HOME)/lib" -lGWmodelCUDA64 -lCUDAInspector
+    }
     ## GWmodelCUDA END
 }
 
@@ -416,8 +417,11 @@ unix {
     INCLUDEPATH += /usr/include/armadillo_bits
     LIBS += -larmadillo
 
-    INCLUDEPATH += $(HOME)/GWmodelCUDA/include
-    LIBS += -L"$(HOME)/GWmodelCUDA/lib" -lCUDAInspector -lGWmodelCUDA
+
+    if(contains(DEFINES, ENABLE_CUDA)) {
+        INCLUDEPATH += $(HOME)/GWmodelCUDA/include
+        LIBS += -L"$(HOME)/GWmodelCUDA/lib" -lCUDAInspector -lGWmodelCUDA
+    }
 }
 
 GDAL_DATA = "./share/gdal"
