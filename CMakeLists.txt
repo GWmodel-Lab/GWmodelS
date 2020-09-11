@@ -51,17 +51,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS"${CMAKE_EXE_LINKER_FLAGS}${OpenMP_EXE_LINKER_FLAGS}")
 include_directories(${OpenMP_C_INCLUDE_DIRS} ${OpenMP_CXX_INCLUDE_DIRS})
 
-find_package(BLAS)
-if(NOT BLAS_FOUND)
-    message(FATAL_ERROR "BLAS Not Found!")
-endif(NOT BLAS_FOUND)
-
 find_package(Armadillo REQUIRED)
 if(NOT ARMADILLO_FOUND)
     message(FATAL_ERROR "Armadillo Not Found!")
 endif(NOT ARMADILLO_FOUND )
 add_definitions(-DARMA_USE_LAPACK -DARMA_USE_BLAS -DARMA_DONT_USE_WRAPPER)
 include_directories(${ARMADILLO_INCLUDE_DIRS})
+
+find_package(BLAS)
+if(NOT BLAS_FOUND)
+    message(FATAL_ERROR "BLAS Not Found!")
+endif(NOT BLAS_FOUND)
 
 find_package(GSL REQUIRED)
 if(NOT GSL_FOUND)
