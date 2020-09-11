@@ -400,6 +400,6 @@ target_link_libraries(GWmodelDesktop
 if(ENABLE_CUDA)
 target_link_libraries(GWmodelDesktop 
     PRIVATE 
-    ${GWmodelCUDA_LIBRARIES}
+    ${GWMODELCUDA_LIBRARIES}
 )
 endif(ENABLE_CUDA)
