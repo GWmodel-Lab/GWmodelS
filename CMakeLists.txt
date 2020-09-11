@@ -57,9 +57,9 @@ if(NOT BLAS_FOUND)
 endif(NOT BLAS_FOUND)
 
 find_package(Armadillo REQUIRED)
-if(NOT Armadillo_FOUND)
-message(FATAL_ERROR "Armadillo Not Found!")
-endif(NOT Armadillo_FOUND)
+if(NOT ARMADILLO_FOUND)
+    message(FATAL_ERROR "Armadillo Not Found!")
+endif(NOT ARMADILLO_FOUND )
 add_definitions(-DARMA_USE_LAPACK -DARMA_USE_BLAS -DARMA_DONT_USE_WRAPPER)
 include_directories(${ARMADILLO_INCLUDE_DIRS})
 
@@ -70,15 +70,17 @@ endif(NOT GSL_FOUND)
 include_directories(${GSL_INCLUDE_DIRS})
 
 
-set (ENABLE_CUDA FALSE CACHE BOOL "Determines whether CUDA support should be built")
+if(NOT APPLE)
+    set (ENABLE_CUDA FALSE CACHE BOOL "Determines whether CUDA support should be built")
+    if(ENABLE_CUDA)
+        find_package(GWmodelCUDA REQUIRED)
+        if(NOT GWMODELCUDA_FOUND)
+            message(FATAL_ERROR "GWmodelCUDA Not Found!")
+        endif(NOT GWMODELCUDA_FOUND)
+        add_definitions(-D ENABLE_CUDA)
+    endif(ENABLE_CUDA)    
+endif(NOT APPLE)
 
-if(ENABLE_CUDA)
-    add_definitions(-D ENABLE_CUDA)
-    find_package(GWmodelCUDA REQUIRED)
-    if(NOT GWmodelCUDA_FOUND)
-        message(GWmodelCUDA_FOUND "GSL Not Found!")
-    endif(NOT GWmodelCUDA_FOUND)
-endif(ENABLE_CUDA)
 
 add_definitions(-D M_PI=3.14159265358979323846 -D M_PI_2=1.57079632679489661923)
 

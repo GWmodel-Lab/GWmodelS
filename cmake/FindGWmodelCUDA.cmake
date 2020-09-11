@@ -1,0 +1,39 @@
+## Once run this will define:
+##
+## GWMODELCUDA_FOUND            = system has QGIS lib
+##
+## GWMODELCUDA_LIBRARIES          = full path to the GWmodelCUDA and CUDAInspector library
+## GWMODELCUDA_INCLUDE_DIR      = full path to the GWmodelCUDA include directories
+
+find_path(GWMODELCUDA_INCLUDE_DIR 
+    NAMES IGWmodelCUDA.h ICUDAInspector.h 
+    PATHS "$ENV{LIB_DIR}/include"
+    "$ENV{LIB_DIR}/include/GWmodelCUDA"
+    "$ENV{INCLUDE}"
+    "$ENV{INCLUDE}/GWmodelCUDA"
+)
+
+find_library(GWMODELCUDA_LIBRARY NAMES GWmodelCUDA64
+    PATHS "$ENV{LIB_DIR}/lib"
+    "$ENV{LIB}/lib"
+)
+
+find_library(CUDAINSPECTOR_LIBRARY NAMES CUDAInspector
+    PATHS "$ENV{LIB_DIR}/lib"
+    "$ENV{LIB}/lib"
+)
+
+if(GWMODELCUDA_LIBRARY AND CUDAINSPECTOR_LIBRARY)
+    set(GWMODELCUDA_LIBRARIES ${GWMODELCUDA_LIBRARY} ${CUDAINSPECTOR_LIBRARY})
+endif(GWMODELCUDA_LIBRARY AND CUDAINSPECTOR_LIBRARY)
+
+if(GWMODELCUDA_INCLUDE_DIR AND GWMODELCUDA_LIBRARIES)
+    set(GWMODELCUDA_FOUND TRUE)
+endif(GWMODELCUDA_INCLUDE_DIR AND GWMODELCUDA_LIBRARIES)
+
+if(GWMODELCUDA_FOUND)
+    message(STATUS "Fount GWmodelCUDA: ${GWMODELCUDA_LIBRARIES}")
+else(GWMODELCUDA_FOUND)
+    message(FATAL_ERROR "Could not find GWmodelCUDA")
+endif(GWMODELCUDA_FOUND)
+
