@@ -384,7 +384,13 @@ set(FORMS
 
 qt5_wrap_ui(FORMS_H ${FORMS})
 
-add_executable(GWmodelDesktop ${SOURCES} ${HEADERS} ${FORMS_H})
+if(WIN32)
+    set(QT_USEQTMAIN TRUE)
+    add_executable(GWmodelDesktop WIN32 ${SOURCES} ${HEADERS} ${FORMS_H})
+else(WIN32)
+    add_executable(GWmodelDesktop ${SOURCES} ${HEADERS} ${FORMS_H})
+endif(WIN32)
+
 
 target_link_libraries(GWmodelDesktop 
     PRIVATE 
