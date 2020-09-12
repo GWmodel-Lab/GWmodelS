@@ -89,6 +89,9 @@ endif(NOT APPLE)
 
 
 add_definitions(-D M_PI=3.14159265358979323846 -D M_PI_2=1.57079632679489661923)
+if(NOT WIN32)
+    add_definitions(-D DBL_MAX=__DBL_MAX__)
+endif(NOT WIN32)
 
 set(SOURCES 
     DelimitedText/qgsdelimitedtextfeatureiterator.cpp
