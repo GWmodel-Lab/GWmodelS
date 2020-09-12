@@ -84,6 +84,7 @@ if(NOT APPLE)
             message(FATAL_ERROR "GWmodelCUDA Not Found!")
         endif(NOT GWMODELCUDA_FOUND)
         add_definitions(-D ENABLE_CUDA)
+        include_directories(${GWMODELCUDA_INCLUDE_DIR})
     endif(ENABLE_CUDA)    
 endif(NOT APPLE)
 
