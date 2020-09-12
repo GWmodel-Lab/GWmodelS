@@ -30,6 +30,12 @@ if(NOT SQLITE3_FOUND)
 endif(NOT SQLITE3_FOUND)
 include_directories(${SQLITE3_INCLUDE_DIR})
 
+find_package(QScintilla REQUIRED)
+if(NOT QSCINTILLA_FOUND)
+    message(FATAL_ERROR "QScintilla Not Found!")
+endif(NOT QSCINTILLA_FOUND)
+include_directories(${QSCINTILLA_INCLUDE_DIR})
+
 find_package(QGIS REQUIRED)
 if(NOT QGIS_FOUND)
     message(FATAL_ERROR "QGIS Not Found!")
@@ -378,23 +384,24 @@ add_executable(GWmodelDesktop ${SOURCES} ${HEADERS} ${FORMS_H})
 
 target_link_libraries(GWmodelDesktop 
     PRIVATE 
-    ${ARMADILLO_LIBRARIES}
-    ${BLAS_LIBRARIES}
-    ${GSL_LIBRARIES}
-    ${QGIS_CORE_LIBRARY}
-    ${QGIS_GUI_LIBRARY}
-    ${QWT_LIBRARY}
-    ${GDAL_LIBRARY}
-    ${GEOS_LIBRARY}
-    ${SQLITE3_LIBRARY}
-    ${OpenMP_C_LIBRARIES}
-    ${OpenMP_CXX_LIBRARIES}
     Qt5::Xml 
     Qt5::PrintSupport 
     Qt5::Network
     Qt5::Gui 
     Qt5::Svg 
     Qt5::Core 
+    ${ARMADILLO_LIBRARIES}
+    ${BLAS_LIBRARIES}
+    ${GSL_LIBRARIES}
+    ${QSCINTILLA_LIBRARY}
+    ${QGIS_GUI_LIBRARY}
+    ${QGIS_CORE_LIBRARY}
+    ${QWT_LIBRARY}
+    ${GDAL_LIBRARY}
+    ${GEOS_LIBRARY}
+    ${SQLITE3_LIBRARY}
+    ${OpenMP_C_LIBRARIES}
+    ${OpenMP_CXX_LIBRARIES}
 )
 
 if(ENABLE_CUDA)
