@@ -503,7 +503,7 @@ void GwmApp::onOpenProject()
     }
 }
 
-void QgisApp::addWindow( QAction *action )
+void GwmApp::addWindow( QAction *action )
 {
 #ifdef Q_OS_MAC
   mWindowActions->addAction( action );
@@ -515,7 +515,7 @@ void QgisApp::addWindow( QAction *action )
 #endif
 }
 
-void QgisApp::removeWindow( QAction *action )
+void GwmApp::removeWindow( QAction *action )
 {
 #ifdef Q_OS_MAC
   mWindowActions->removeAction( action );
