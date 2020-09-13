@@ -85,6 +85,10 @@ public:
 	void unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
     void onSaveProject();
     void onOpenProject();
+    void addWindow( QAction *action );
+    void removeWindow( QAction *action );
+
+
 private:
     void addLayerToModel(QgsVectorLayer* layer);
     void createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));
@@ -164,6 +168,19 @@ private:
     QMap<QgsVectorLayer*, QList<QgsRubberBand*>> mMapLayerRubberDict;
 
     GwmSymbolWindow* mSymbolWindow;
+
+#ifdef Q_OS_MAC
+    QAction *mActionWindowMinimize = nullptr;
+    QAction *mActionWindowZoom = nullptr;
+    QAction *mActionWindowSeparator1 = nullptr;
+    QAction *mActionWindowAllToFront = nullptr;
+    QAction *mActionWindowSeparator2 = nullptr;
+    QActionGroup *mWindowActions = nullptr;
+#endif
+
+#ifdef Q_OS_MAC
+    QMenu *mWindowMenu = nullptr;
+#endif
 
 //    MainWidget* mainWidget;
 
