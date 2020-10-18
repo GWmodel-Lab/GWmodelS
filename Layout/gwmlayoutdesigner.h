@@ -10,6 +10,8 @@
 #include <QLabel>
 #include <QProgressBar>
 #include <QPrinter>
+#include <QToolButton>
+#include <QComboBox>
 
 #include <qgis.h>
 #include <qgsmasterlayoutinterface.h>

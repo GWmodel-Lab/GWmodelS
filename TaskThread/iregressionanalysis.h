@@ -26,7 +26,7 @@ struct IRegressionAnalysis
 
     virtual GwmDiagnostic diagnostic() const = 0;
 
-    virtual arma::mat regression(const arma::mat& x, const arma::vec& y) = 0;
+    virtual mat regression(const mat& x, const vec& y) = 0;
 };
 
 #endif // GWMREGRESSIONANALYSIS_H

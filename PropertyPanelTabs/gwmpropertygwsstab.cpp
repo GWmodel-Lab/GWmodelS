@@ -1,11 +1,16 @@
 #include "gwmpropertygwsstab.h"
 #include "ui_gwmpropertygwsstab.h"
 
+#include <QVBoxLayout>
+#include <QScrollArea>
+#include <QGroupBox>
+#include <QTableWidget>
+
+#include <armadillo>
+
 #include <QStandardItemModel>
 #include "TaskThread/gwmgwsstaskthread.h"
 #include "SpatialWeight/gwmbandwidthweight.h"
-#include <QVBoxLayout>
-#include <QScrollArea>
 
 QMap<GwmBandwidthWeight::KernelFunctionType, QString> GwmPropertyGWSSTab::kernelFunctionNameDict = {
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Gaussian, QStringLiteral("Gaussian")),

@@ -5,6 +5,9 @@
 #include <omp.h>
 #include <qgsmemoryproviderutils.h>
 
+#include <armadillo>
+using namespace arma;
+
 
 GwmDiagnostic GwmBasicGWRAlgorithm::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
@@ -174,6 +177,7 @@ void GwmBasicGWRAlgorithm::run()
     emit success();
 }
 
+#ifdef ENABLE_CUDA
 void GwmBasicGWRAlgorithm::initCuda(IGWmodelCUDA* cuda, const mat& x, const vec& y)
 {
     arma::uword nDp = mDataPoints.n_rows, nVar = x.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
@@ -206,6 +210,7 @@ void GwmBasicGWRAlgorithm::initCuda(IGWmodelCUDA* cuda, const mat& x, const vec&
         }
     }
 }
+#endif
 
 mat GwmBasicGWRAlgorithm::regression(const mat &x, const vec &y)
 {
@@ -300,6 +305,7 @@ double GwmBasicGWRAlgorithm::indepVarsSelectCriterionOmp(const QList<GwmVariable
     else return DBL_MAX;
 }
 
+#ifdef ENABLE_CUDA
 double GwmBasicGWRAlgorithm::indepVarsSelectCriterionCuda(const QList<GwmVariable> &indepVars)
 {
     mat x;
@@ -351,6 +357,7 @@ double GwmBasicGWRAlgorithm::indepVarsSelectCriterionCuda(const QList<GwmVariabl
     GWCUDA_Del(cuda);
     return value;
 }
+#endif
 
 mat GwmBasicGWRAlgorithm::regressionSerial(const mat &x, const vec &y)
 {
@@ -405,6 +412,7 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
     return betas.t();
 }
 
+#ifdef ENABLE_CUDA
 mat GwmBasicGWRAlgorithm::regressionCuda(const mat &x, const vec &y)
 {
     int nDp = mDataPoints.n_rows, nVar = x.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
@@ -443,6 +451,7 @@ mat GwmBasicGWRAlgorithm::regressionCuda(const mat &x, const vec &y)
     GWCUDA_Del(cuda);
     return betas.t();
 }
+#endif
 
 mat GwmBasicGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
@@ -527,6 +536,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat
     return betas.t();
 }
 
+#ifdef ENABLE_CUDA
 mat GwmBasicGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
     int nDp = mDataPoints.n_rows, nVar = x.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
@@ -582,6 +592,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, ma
     GWCUDA_Del(cuda);
     return betas.t();
 }
+#endif
 
 void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString name)
 {
@@ -727,6 +738,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *ba
     else return DBL_MAX;
 }
 
+#ifdef ENABLE_CUDA
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICCuda(GwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows, nVar = mX.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
@@ -773,6 +785,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICCuda(GwmBandwidthWeight *b
     GWCUDA_Del(cuda);
     return aic;
 }
+#endif
 
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *bandwidthWeight)
 {
@@ -858,6 +871,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *ban
     else return DBL_MAX;
 }
 
+#ifdef ENABLE_CUDA
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVCuda(GwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows, nVar = mX.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
@@ -898,6 +912,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVCuda(GwmBandwidthWeight *ba
     GWCUDA_Del(cuda);
     return cv;
 }
+#endif
 
 void GwmBasicGWRAlgorithm::fTest(GwmBasicGWRAlgorithm::FTestParameters params)
 {
@@ -1076,6 +1091,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQOmp()
     return flag ? sum(trQtQ) : DBL_MAX;
 }
 
+#ifdef ENABLE_CUDA
 double GwmBasicGWRAlgorithm::calcTrQtQCuda()
 {
     int nDp = mDataPoints.n_rows, nVar = mX.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
@@ -1101,6 +1117,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQCuda()
     GWCUDA_Del(cuda);
     return trQtQ;
 }
+#endif
 
 vec GwmBasicGWRAlgorithm::calcDiagBSerial(int i)
 {
@@ -1184,6 +1201,7 @@ vec GwmBasicGWRAlgorithm::calcDiagBOmp(int i)
     return { sum(diagB), sum(diagB % diagB) };
 }
 
+#ifdef ENABLE_CUDA
 vec GwmBasicGWRAlgorithm::calcDiagBCuda(int i)
 {
     int nDp = mDataPoints.n_rows, nVar = mX.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
@@ -1214,6 +1232,7 @@ vec GwmBasicGWRAlgorithm::calcDiagBCuda(int i)
     GWCUDA_Del(cuda);
     return diagB;
 }
+#endif
 
 bool GwmBasicGWRAlgorithm::isValid()
 {
@@ -1294,12 +1313,14 @@ void GwmBasicGWRAlgorithm::setBandwidthSelectionCriterionType(const BandwidthSel
 {
     mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
     QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
+    #ifdef ENABLE_CUDA
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVCuda),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::CUDA), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICCuda),
+    #endif
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial),
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp),
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVCuda),
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial),
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp),
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::CUDA), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICCuda)
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp)
     };
     mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
 }
@@ -1326,6 +1347,7 @@ void GwmBasicGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &ty
             mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBOmp;
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             break;
+#ifdef ENABLE_CUDA
         case IParallelalbe::ParallelType::CUDA:
             mRegressionFunction = &GwmBasicGWRAlgorithm::regressionCuda;
             mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixCuda;
@@ -1334,6 +1356,7 @@ void GwmBasicGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &ty
             mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBCuda;
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             break;
+#endif
         default:
             mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
             mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixSerial;

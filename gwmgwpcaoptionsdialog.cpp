@@ -8,9 +8,6 @@
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
-#include <GWmodelCUDA/ICUDAInspector.h>
-
-
 GwmGWPCAOptionsDialog::GwmGWPCAOptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGWPCATaskThread *thread, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmGWPCAOptionsDialog),
@@ -73,29 +70,8 @@ GwmGWPCAOptionsDialog::GwmGWPCAOptionsDialog(QList<GwmLayerGroupItem*> originIte
 
     connect(ui->mKspinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
 
-    // 获取显卡信息
-    ICUDAInspector* inspector = CUDAInspector_Create();
-    int gpuCount = inspector->GetDeviceCount();
-    if (gpuCount > 0)
-    {
-        for (int i = 0; i < gpuCount; ++i)
-        {
-            char name[255] = { "" };
-            int nameLength = inspector->GetDeviceName(i);
-            for (int n = 0; n < nameLength; ++n)
-            {
-                name[n] = inspector->GetNameChar(n);
-            }
-            name[nameLength] = '\0';
-            QString gpuItem(name);
-            ui->mGPUSelection->addItem(gpuItem);
-        }
-        CUDAInspector_Delete(inspector);
-    }
-    else
-    {
-        ui->mCalcParallelGPURadio->setEnabled(false);
-    }
+
+    ui->mCalcParallelGPURadio->hide();
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);

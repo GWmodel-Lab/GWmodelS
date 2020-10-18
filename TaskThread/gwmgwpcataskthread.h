@@ -16,7 +16,7 @@ class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidt
         CV
     };
 
-    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+    typedef QList<QPair<QString, mat> > CreateResultLayerData;
 
     typedef double (GwmGWPCATaskThread::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
 
@@ -42,7 +42,7 @@ public:
         mOmpThreadNum = threadNum;
     };
 
-    BandwidthCriterionList GwmGWPCATaskThread::bandwidthSelectorCriterions() const
+    BandwidthCriterionList bandwidthSelectorCriterions() const
     {
         return mSelector.bandwidthCriterion();
     }

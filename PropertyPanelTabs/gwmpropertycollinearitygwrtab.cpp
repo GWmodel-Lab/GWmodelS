@@ -3,9 +3,6 @@
 
 #include <armadillo>
 
-#include "TaskThread/gwmgwrmodelselectionthread.h"
-#include "TaskThread/gwmbandwidthselecttaskthread.h"
-
 #include <QStandardItemModel>
 
 using namespace arma;

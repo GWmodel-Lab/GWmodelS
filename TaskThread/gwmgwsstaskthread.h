@@ -52,7 +52,7 @@ public:
     };
 
     typedef double (GwmGWSSTaskThread::*CVFunction)(const mat& ,GwmBandwidthWeight*);
-    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+    typedef QList<QPair<QString, mat> > CreateResultLayerData;
 
     typedef bool (GwmGWSSTaskThread::*CalFunction)();
 

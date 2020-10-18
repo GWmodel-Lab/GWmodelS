@@ -49,14 +49,11 @@ public:
     QString crsRotateTheta();
     QString crsRotateP();
     bool bandwidthType();
-    GwmGWRTaskThread::ParallelMethod approachType();
     double bandwidthSize();
     GwmGeneralizedGWRAlgorithm::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
     GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
-    GwmGWRTaskThread::DistanceSourceType distanceSourceType();
     QVariant distanceSourceParameters();
-    GwmGWRTaskThread::ParallelMethod parallelMethod();
     QVariant parallelParameters();
     double epsilonSize();
     QString epsilonUnit();

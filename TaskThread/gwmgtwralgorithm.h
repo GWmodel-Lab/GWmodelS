@@ -38,7 +38,7 @@ public:
         return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     }
 
-    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+    typedef QList<QPair<QString, mat> > CreateResultLayerData;
     typedef double (GwmGTWRAlgorithm::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
     typedef mat (GwmGTWRAlgorithm::*RegressionFunctionType)(const mat&, const vec&);
     typedef mat (GwmGTWRAlgorithm::*RegressionHatmatrixFunctionType)(const mat&, const vec&, mat&, vec&, vec&);
@@ -83,7 +83,7 @@ public:
     QList<GwmVariable> independentVariables() const override;
     void setIndependentVariables(const QList<GwmVariable> &variables) override;
     GwmDiagnostic diagnostic() const override;
-    arma::mat regression(const arma::mat &x, const arma::vec &y) override;
+    mat regression(const mat &x, const vec &y) override;
 
     // IBandwidthSizeSelectable interface
 public:

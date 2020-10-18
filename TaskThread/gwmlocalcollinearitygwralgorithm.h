@@ -1,12 +1,15 @@
 #ifndef GWMLCRGWRTASKTHREAD_H
 #define GWMLCRGWRTASKTHREAD_H
 
+#include <armadillo>
 
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "TaskThread/gwmbandwidthsizeselector.h"
 #include "TaskThread/gwmindependentvariableselector.h"
 
 #include "TaskThread/iparallelable.h"
+
+using namespace arma;
 
 class GwmLocalCollinearityGWRAlgorithm:public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable,public IOpenmpParallelable
 {
@@ -17,7 +20,7 @@ public:
         CV
     };
 
-    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+    typedef QList<QPair<QString, mat> > CreateResultLayerData;
 
     static GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
 
@@ -46,17 +49,17 @@ public:
     }
     bool isAutoselectBandwidth() const;
 
-    void GwmLocalCollinearityGWRAlgorithm::setIsAutoselectBandwidth(bool value)
+    void setIsAutoselectBandwidth(bool value)
     {
         mIsAutoselectBandwidth = value;
     }
 
-    bool GwmLocalCollinearityGWRAlgorithm::autoselectBandwidth() const
+    bool autoselectBandwidth() const
     {
         return mIsAutoselectBandwidth;
     }
 
-    BandwidthCriterionList GwmLocalCollinearityGWRAlgorithm::bandwidthSelectorCriterions() const
+    BandwidthCriterionList bandwidthSelectorCriterions() const
     {
         return selector.bandwidthCriterion();
     }
@@ -73,7 +76,7 @@ public:
 protected:
     void run() override;
 
-    arma::mat regression(const arma::mat &x, const arma::vec &y);
+    mat regression(const mat &x, const vec &y) override;
     //返回cv的函数
     double LcrCV(double bw,int kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
     //ridge.lm函数

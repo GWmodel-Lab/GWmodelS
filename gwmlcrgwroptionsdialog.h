@@ -72,7 +72,6 @@ public:
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
 
     bool bandwidthType();
-    GwmGWRTaskThread::DistanceSourceType distanceSourceType();
 private slots:
     void on_cbxHatmatrix_toggled(bool checked);
     void on_cbkRegressionPoints_toggled(bool checked);

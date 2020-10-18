@@ -1972,7 +1972,7 @@ void GwmLayoutDesigner::exportToRaster()
 	}
 
 #ifdef Q_OS_MAC
-	QgisApp::instance()->activateWindow();
+    GwmApp::Instance()->activateWindow();
 	this->raise();
 #endif
 	QPair<QString, QString> fileNExt = QgsGuiUtils::getSaveAsImageName(this, tr("Save Layout As"), outputFileName);
@@ -2076,7 +2076,7 @@ void GwmLayoutDesigner::exportToPdf()
 	}
 
 #ifdef Q_OS_MAC
-	QgisApp::instance()->activateWindow();
+    GwmApp::Instance()->activateWindow();
 	this->raise();
 #endif
 	outputFileName = QFileDialog::getSaveFileName(
@@ -2189,7 +2189,7 @@ void GwmLayoutDesigner::exportToSvg()
 	}
 
 #ifdef Q_OS_MAC
-	QgisApp::instance()->activateWindow();
+    GwmApp::Instance()->activateWindow();
 	this->raise();
 #endif
 	outputFileName = QFileDialog::getSaveFileName(
@@ -2420,7 +2420,7 @@ void GwmLayoutDesigner::exportReportToRaster()
 	setLastExportPath(fileNExt.first);
 
 #ifdef Q_OS_MAC
-	QgisApp::instance()->activateWindow();
+    GwmApp::Instance()->activateWindow();
 	this->raise();
 #endif
 
@@ -2536,7 +2536,7 @@ void GwmLayoutDesigner::exportReportToSvg()
 		outputFileName += QLatin1String(".svg");
 	}
 #ifdef Q_OS_MAC
-	QgisApp::instance()->activateWindow();
+    GwmApp::Instance()->activateWindow();
 	this->raise();
 #endif
 	setLastExportPath(outputFileName);
@@ -2649,7 +2649,7 @@ void GwmLayoutDesigner::exportReportToPdf()
 	QString outputFileName = defaultPath + '/' + QgsFileUtils::stringToSafeFilename(mMasterLayout->name()) + QStringLiteral(".pdf");
 
 #ifdef Q_OS_MAC
-	QgisApp::instance()->activateWindow();
+    GwmApp::Instance()->activateWindow();
 	this->raise();
 #endif
 	outputFileName = QFileDialog::getSaveFileName(
@@ -2980,7 +2980,7 @@ void GwmLayoutDesigner::exportAtlasToRaster()
 		return;
 
 #ifdef Q_OS_MAC
-	QgisApp::instance()->activateWindow();
+    GwmApp::Instance()->activateWindow();
 	this->raise();
 #endif
 
@@ -3114,7 +3114,7 @@ void GwmLayoutDesigner::exportAtlasToSvg()
 	}
 
 #ifdef Q_OS_MAC
-	QgisApp::instance()->activateWindow();
+    GwmApp::Instance()->activateWindow();
 	this->raise();
 #endif
 
@@ -3273,7 +3273,7 @@ void GwmLayoutDesigner::exportAtlasToPdf()
 		outputFileName = defaultPath + '/' + QgsFileUtils::stringToSafeFilename(mMasterLayout->name()) + QStringLiteral(".pdf");
 
 #ifdef Q_OS_MAC
-		QgisApp::instance()->activateWindow();
+        GwmApp::Instance()->activateWindow();
 		this->raise();
 #endif
 		outputFileName = QFileDialog::getSaveFileName(
@@ -3322,7 +3322,7 @@ void GwmLayoutDesigner::exportAtlasToPdf()
 		}
 
 #ifdef Q_OS_MAC
-		QgisApp::instance()->activateWindow();
+        GwmApp::Instance()->activateWindow();
 		this->raise();
 #endif
 
@@ -3484,7 +3484,7 @@ void GwmLayoutDesigner::saveAsTemplate()
 	QgsSettings settings;
 	QString lastSaveDir = settings.value(QStringLiteral("lastComposerTemplateDir"), QDir::homePath(), QgsSettings::App).toString();
 #ifdef Q_OS_MAC
-	QgisApp::instance()->activateWindow();
+    GwmApp::Instance()->activateWindow();
 	this->raise();
 #endif
 	QString saveFileName = QFileDialog::getSaveFileName(

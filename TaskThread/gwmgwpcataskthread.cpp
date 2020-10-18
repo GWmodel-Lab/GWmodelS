@@ -3,6 +3,8 @@
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 
 #include <omp.h>
+#include <armadillo>
+
 GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm()
 {
 
@@ -425,45 +427,49 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
     // 初始化矩阵
     loadings = cube(nDp, nVar, mK, fill::zeros);
     scores = cube(nDp, mK, nDp, fill::zeros);
+    bool flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i=0;i<nDp;i++)
     {
-        //vec distvi = mSpatialWeight.distance()->distance(i);
-        vec wt = mSpatialWeight.weightVector(i);
-        //取wt大于0的部分
-        //临时变量?很麻烦
-        uvec positive = find(wt > 0);
-        vec newWt = wt.elem(positive);
-        mat newX = x.rows(positive);
-        if(newWt.n_rows<=5)
+        if (flag)
         {
-            break;
+            //vec distvi = mSpatialWeight.distance()->distance(i);
+            vec wt = mSpatialWeight.weightVector(i);
+            //取wt大于0的部分
+            //临时变量?很麻烦
+            uvec positive = find(wt > 0);
+            vec newWt = wt.elem(positive);
+            mat newX = x.rows(positive);
+            if(newWt.n_rows<=5)
+            {
+                flag = false;
+            }
+            //调用PCA函数
+            //事先准备好的D和V
+            mat V;
+            vec d;
+            wpca(newX,newWt,V,d);
+            //存储最新的wt
+            if(i == nDp - 1)
+            {
+                mLatestWt = newWt;
+            }
+            d_all.col(i) = d;
+            //计算loadings
+            for(int j=0;j<mK;j++)
+            {
+                loadings.slice(j).row(i) = trans(V.col(j));
+            }
+            //计算scores
+            mat scorei(nDp, mK, fill::zeros);
+            for(int j = 0; j < mK; j++)
+            {
+                mat score = newX.each_row() % trans(V.col(j));
+                scorei.col(j) = sum(score, 1);
+            }
+            scores.slice(i) = scorei;
+            //计算sdev
         }
-        //调用PCA函数
-        //事先准备好的D和V
-        mat V;
-        vec d;
-        wpca(newX,newWt,V,d);
-        //存储最新的wt
-        if(i == nDp - 1)
-        {
-            mLatestWt = newWt;
-        }
-        d_all.col(i) = d;
-        //计算loadings
-        for(int j=0;j<mK;j++)
-        {
-            loadings.slice(j).row(i) = trans(V.col(j));
-        }
-        //计算scores
-        mat scorei(nDp, mK, fill::zeros);
-        for(int j = 0; j < mK; j++)
-        {
-            mat score = newX.each_row() % trans(V.col(j));
-            scorei.col(j) = sum(score, 1);
-        }
-        scores.slice(i) = scorei;
-        //计算sdev
     }
     //R代码中的d1计算
     d_all = trans(d_all);
@@ -528,36 +534,40 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &st
     mat d_all(nVar, nDp,fill::zeros);
     // 初始化矩阵
     loadings = cube(nDp, nVar, mK, fill::zeros);
+
+    bool flag = true;
     //scores = cube(nDp, mK, nDp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i=0;i<nDp;i++)
     {
-        //vec distvi = mSpatialWeight.distance()->distance(i);
-        vec wt = mSpatialWeight.weightVector(i);
-        //取wt大于0的部分
-        //临时变量?很麻烦
-        uvec positive = find(wt > 0);
-        vec newWt = wt.elem(positive);
-        mat newX = x.rows(positive);
-        if(newWt.n_rows<=5)
+        if (flag)
         {
-            break;
-        }
-        //调用PCA函数
-        //事先准备好的D和V
-        mat V;
-        vec d;
-        wpca(newX,newWt,V,d);
-        //存储最新的wt
-        if(i == nDp - 1)
-        {
-            mLatestWt = newWt;
-        }
-        d_all.col(i) = d;
-        //计算loadings
-        for(int j = 0; j < mK; j++)
-        {
-            loadings.slice(j).row(i) = trans(V.col(j));
+            vec wt = mSpatialWeight.weightVector(i);
+            //取wt大于0的部分
+            //临时变量?很麻烦
+            uvec positive = find(wt > 0);
+            vec newWt = wt.elem(positive);
+            mat newX = x.rows(positive);
+            if(newWt.n_rows<=5)
+            {
+                flag = false;
+            }
+            //调用PCA函数
+            //事先准备好的D和V
+            mat V;
+            vec d;
+            wpca(newX,newWt,V,d);
+            //存储最新的wt
+            if(i == nDp - 1)
+            {
+                mLatestWt = newWt;
+            }
+            d_all.col(i) = d;
+            //计算loadings
+            for(int j = 0; j < mK; j++)
+            {
+                loadings.slice(j).row(i) = trans(V.col(j));
+            }
         }
     }
     //R代码中的d1计算

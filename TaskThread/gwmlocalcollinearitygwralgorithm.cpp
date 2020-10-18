@@ -1,6 +1,9 @@
 #include "gwmlocalcollinearitygwralgorithm.h"
 
 #include <omp.h>
+#include <armadillo>
+
+using namespace arma;
 
 GwmLocalCollinearityGWRAlgorithm::GwmLocalCollinearityGWRAlgorithm():GwmGeographicalWeightedRegressionAlgorithm()
 {
@@ -129,7 +132,7 @@ vec GwmLocalCollinearityGWRAlgorithm::ridgelm(const vec &w, double lambda)
     return resultb;
 }
 
-arma::mat GwmLocalCollinearityGWRAlgorithm::regression(const arma::mat &x, const arma::vec &y)
+mat GwmLocalCollinearityGWRAlgorithm::regression(const mat &x, const vec &y)
 {
     return (this->*mRegressionFunction)(x, y);
 }

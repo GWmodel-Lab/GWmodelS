@@ -4,6 +4,8 @@
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QFileDialog>
+#include <QDialogButtonBox>
+
 #include <SpatialWeight/gwmcrsdistance.h>
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
@@ -150,18 +152,18 @@ bool GwmGWSSOptionsDialog::bandwidthType()
     else return false;
 }
 
-GwmGWRTaskThread::ParallelMethod GwmGWSSOptionsDialog::approachType()
+IParallelalbe::ParallelType GwmGWSSOptionsDialog::approachType()
 {
     if(ui->mCalcParallelNoneRadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::None;
+        return IParallelalbe::ParallelType::SerialOnly;
     }
     else if(ui->mCalcParallelMultithreadRadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::Multithread;
+        return IParallelalbe::ParallelType::OpenMP;
     }
     else if(ui->mCalcParallelGPURadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::GPU;
+        return IParallelalbe::ParallelType::CUDA;
     }
-    else return GwmGWRTaskThread::ParallelMethod::None;
+    else return IParallelalbe::ParallelType::SerialOnly;
 }
 
 
@@ -187,16 +189,16 @@ void GwmGWSSOptionsDialog::onGPURadioToggled(bool checked)
 }
 
 
-GwmGWRTaskThread::DistanceSourceType GwmGWSSOptionsDialog::distanceSourceType()
+GwmDistance::DistanceType GwmGWSSOptionsDialog::distanceSourceType()
 {
     if (ui->mDistTypeCRSRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
+        return GwmDistance::DistanceType::CRSDistance;
     else if (ui->mDistTypeDmatRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::DMatFile;
+        return GwmDistance::DistanceType::DMatDistance;
     else if (ui->mDistTypeMinkowskiRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::Minkowski;
+        return GwmDistance::DistanceType::MinkwoskiDistance;
     else
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
+        return GwmDistance::DistanceType::CRSDistance;
 }
 
 QVariant GwmGWSSOptionsDialog::distanceSourceParameters()
@@ -268,22 +270,6 @@ GwmBandwidthWeight::KernelFunctionType GwmGWSSOptionsDialog::bandwidthKernelFunc
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
     return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
-}
-
-GwmGWRTaskThread::ParallelMethod GwmGWSSOptionsDialog::parallelMethod()
-{
-    if (ui->mCalcParallelMultithreadRadio->isChecked())
-    {
-        return GwmGWRTaskThread::ParallelMethod::Multithread;
-    }
-    else if (ui->mCalcParallelGPURadio->isChecked())
-    {
-        return GwmGWRTaskThread::ParallelMethod::GPU;
-    }
-    else
-    {
-        return GwmGWRTaskThread::ParallelMethod::None;
-    }
 }
 
 QVariant GwmGWSSOptionsDialog::parallelParameters()
@@ -397,7 +383,8 @@ void GwmGWSSOptionsDialog::enableAccept()
     if (mTaskThread->isValid())
     {
         ui->mCheckMessage->setText(tr("Valid."));
-        ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+        ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Ok);
+        ui->btbOkCancle->addButton(QDialogButtonBox::StandardButton::Cancel);
     }
     else
     {

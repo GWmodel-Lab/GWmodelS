@@ -8,7 +8,6 @@
 #include <armadillo>
 #include "gwmlayervectoritem.h"
 #include "Model/gwmlayerattributeitem.h"
-#include "TaskThread/gwmgwrtaskthread.h"
 #include <TaskThread/gwmbasicgwralgorithm.h>
 
 class GwmLayerBasicGWRItem : public GwmLayerVectorItem

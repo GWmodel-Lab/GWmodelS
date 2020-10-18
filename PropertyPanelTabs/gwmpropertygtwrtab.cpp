@@ -3,25 +3,9 @@
 
 #include <armadillo>
 
-#include "TaskThread/gwmgwrmodelselectionthread.h"
-#include "TaskThread/gwmbandwidthselecttaskthread.h"
-
 #include <QStandardItemModel>
 
 using namespace arma;
-
-QMap<GwmGWRTaskThread::KernelFunction, QString> GwmPropertyGTWRTab::kernelFunctionNameDict = {
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Gaussian, QStringLiteral("Gaussian")),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Exponential, QStringLiteral("Exponential")),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Bisquare, QStringLiteral("Bisquare")),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Tricube, QStringLiteral("Tricube")),
-    std::make_pair(GwmGWRTaskThread::KernelFunction::Boxcar, QStringLiteral("Boxcar"))
-};
-
-QMap<GwmGWRTaskThread::BandwidthType, QString> GwmPropertyGTWRTab::bandwidthTypeNameDict = {
-    std::make_pair(GwmGWRTaskThread::BandwidthType::Adaptive, QStringLiteral("Adaptive bandwidth:")),
-    std::make_pair(GwmGWRTaskThread::BandwidthType::Fixed, QStringLiteral("Fixed bandwidth:"))
-};
 
 GwmPropertyGTWRTab::GwmPropertyGTWRTab(QWidget *parent, GwmLayerGTWRItem *item) :
     QWidget(parent),

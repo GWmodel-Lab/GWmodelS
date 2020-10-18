@@ -25,10 +25,6 @@ class GwmPropertyGWRTab : public QWidget
     Q_OBJECT
 
 public:
-    static QMap<GwmGWRTaskThread::KernelFunction, QString> kernelFunctionNameDict;
-    static QMap<GwmGWRTaskThread::BandwidthType, QString> bandwidthTypeNameDict;
-
-public:
     explicit GwmPropertyGWRTab(QWidget *parent = nullptr, GwmLayerBasicGWRItem* item = nullptr);
     ~GwmPropertyGWRTab();
 

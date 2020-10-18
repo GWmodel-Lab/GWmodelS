@@ -1,5 +1,5 @@
 #include "gwmrobustgwroptionsdialog.h"
-#include "ui_GwmRobustGWROptionsDialog.h"
+#include "ui_gwmrobustgwroptionsdialog.h"
 #include <omp.h>
 #include <QComboBox>
 #include <QButtonGroup>
@@ -9,7 +9,9 @@
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
+#ifdef ENABLE_CUDA
 #include <GWmodelCUDA/ICUDAInspector.h>
+#endif
 
 GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmRobustGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
@@ -62,6 +64,7 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onGPURadioToggled);
 
+#ifdef ENABLE_CUDA
     // 获取显卡信息
     ICUDAInspector* inspector = CUDAInspector_Create();
     int gpuCount = inspector->GetDeviceCount();
@@ -85,6 +88,9 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     {
         ui->mCalcParallelGPURadio->setEnabled(false);
     }
+#else
+    ui->mCalcParallelGPURadio->setEnabled(false);
+#endif
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mCalcParallelNoneRadio->setChecked(true);
@@ -335,18 +341,6 @@ GwmBandwidthWeight::KernelFunctionType GwmRobustGWROptionsDialog::bandwidthKerne
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
     return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
-}
-
-GwmGWRTaskThread::DistanceSourceType GwmRobustGWROptionsDialog::distanceSourceType()
-{
-    if (ui->mDistTypeCRSRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
-    else if (ui->mDistTypeDmatRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::DMatFile;
-    else if (ui->mDistTypeMinkowskiRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::Minkowski;
-    else
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
 }
 
 QVariant GwmRobustGWROptionsDialog::distanceSourceParameters()

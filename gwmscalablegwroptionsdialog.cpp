@@ -258,18 +258,6 @@ GwmBandwidthWeight::KernelFunctionType GwmScalableGWROptionsDialog::bandwidthKer
     return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
-GwmGWRTaskThread::DistanceSourceType GwmScalableGWROptionsDialog::distanceSourceType()
-{
-    if (ui->mDistTypeCRSRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
-    else if (ui->mDistTypeDmatRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::DMatFile;
-    else if (ui->mDistTypeMinkowskiRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::Minkowski;
-    else
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
-}
-
 QVariant GwmScalableGWROptionsDialog::distanceSourceParameters()
 {
     if (ui->mDistTypeDmatRadio->isChecked())
@@ -287,9 +275,9 @@ QVariant GwmScalableGWROptionsDialog::distanceSourceParameters()
     else return QVariant();
 }
 
-void GwmScalableGWROptionsDialog::setTaskThread(GwmGWRTaskThread *taskThread)
+void GwmScalableGWROptionsDialog::setTaskThread(GwmScalableGWRAlgorithm *taskThread)
 {
-
+    mTaskThread = taskThread;
 }
 
 void GwmScalableGWROptionsDialog::updateFieldsAndEnable()

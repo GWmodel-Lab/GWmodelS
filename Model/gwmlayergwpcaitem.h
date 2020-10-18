@@ -29,7 +29,7 @@ public:
 public:
     bool isBandwidthOptimized;
 
-    bool GwmLayerGWPCAItem::bandwidthOptimized() const
+    bool bandwidthOptimized() const
     {
         return isBandwidthOptimized;
     }

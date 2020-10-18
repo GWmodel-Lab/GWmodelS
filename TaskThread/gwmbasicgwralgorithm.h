@@ -5,7 +5,10 @@
 #include "TaskThread/gwmbandwidthsizeselector.h"
 #include "TaskThread/gwmindependentvariableselector.h"
 #include "TaskThread/iparallelable.h"
+
+#ifdef ENABLE_CUDA
 #include "GWmodelCUDA/IGWmodelCUDA.h"
+#endif
 
 class GwmBasicGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public IIndependentVariableSelectable, public IOpenmpParallelable, public ICudaParallelable
 {
@@ -46,7 +49,7 @@ public:
     typedef mat (GwmBasicGWRAlgorithm::*Regression)(const mat&, const vec&);
     typedef mat (GwmBasicGWRAlgorithm::*RegressionHatmatrix)(const mat&, const vec&, mat&, vec&, vec&, mat&);
 
-    typedef QList<QPair<QString, const mat> > CreateResultLayerData;
+    typedef QList<QPair<QString, mat> > CreateResultLayerData;
 
 private:
     GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
@@ -118,7 +121,7 @@ public:     // IIndependentVariableSelectable interface
     }
 
 protected:  // IRegressionAnalysis interface
-    mat regression(const mat& x, const vec& y) override;
+    virtual mat regression(const mat& x, const vec& y) override;
 
 public:     // IParallelalbe interface
     int parallelAbility() const override;
@@ -148,36 +151,50 @@ protected:
 
     void createResultLayer(CreateResultLayerData data,QString name = QStringLiteral("_GWR"));
 
+#ifdef ENABLE_CUDA
     void initCuda(IGWmodelCUDA *cuda, const mat &x, const vec &y);
+#endif
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight);
-    double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* bandwidthWeight);
-    double bandwidthSizeCriterionCVCuda(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight);
-    double bandwidthSizeCriterionAICOmp(GwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAICOmp(GwmBandwidthWeight* bandwidthWeight); 
+#ifdef ENABLE_CUDA
+    double bandwidthSizeCriterionCVCuda(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICCuda(GwmBandwidthWeight* bandwidthWeight);
+#endif
 
     double indepVarsSelectCriterionSerial(const QList<GwmVariable>& indepVars);
     double indepVarsSelectCriterionOmp(const QList<GwmVariable>& indepVars);
+#ifdef ENABLE_CUDA
     double indepVarsSelectCriterionCuda(const QList<GwmVariable>& indepVars);
+#endif
 
     mat regressionSerial(const mat& x, const vec& y);
     mat regressionOmp(const mat& x, const vec& y);
+#ifdef ENABLE_CUDA
     mat regressionCuda(const mat& x, const vec& y);
+#endif
 
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
     mat regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+#ifdef ENABLE_CUDA
     mat regressionHatmatrixCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+#endif
 
     void fTest(FTestParameters params);
 
     double calcTrQtQSerial();
     double calcTrQtQOmp();
+#ifdef ENABLE_CUDA
     double calcTrQtQCuda();
+#endif
 
     vec calcDiagBSerial(int i);
     vec calcDiagBOmp(int i);
+#ifdef ENABLE_CUDA
     vec calcDiagBCuda(int i);
+#endif
 
 protected:
     GwmFTestResult mF1TestResult;
@@ -286,7 +303,12 @@ inline IndepVarsCriterionList GwmBasicGWRAlgorithm::indepVarSelectorCriterions()
 
 inline int GwmBasicGWRAlgorithm::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
+    return IParallelalbe::SerialOnly
+            | IParallelalbe::OpenMP
+        #ifdef ENABLE_CUDA
+            | IParallelalbe::CUDA
+        #endif
+            ;
 }
 
 inline IParallelalbe::ParallelType GwmBasicGWRAlgorithm::parallelType() const

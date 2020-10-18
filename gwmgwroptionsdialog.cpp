@@ -8,7 +8,9 @@
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
+#ifdef ENABLE_CUDA
 #include <GWmodelCUDA/ICUDAInspector.h>
+#endif
 
 
 GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmBasicGWRAlgorithm *thread, QWidget *parent) :
@@ -70,6 +72,7 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWROptionsDialog::onGPURadioToggled);
 
+#ifdef ENABLE_CUDA
     // 获取显卡信息
     ICUDAInspector* inspector = CUDAInspector_Create();
     int gpuCount = inspector->GetDeviceCount();
@@ -93,6 +96,9 @@ GwmGWROptionsDialog::GwmGWROptionsDialog(QList<GwmLayerGroupItem*> originItemLis
     {
         ui->mCalcParallelGPURadio->setEnabled(false);
     }
+#else
+    ui->mCalcParallelGPURadio->setEnabled(false);
+#endif
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);
@@ -276,20 +282,6 @@ bool GwmGWROptionsDialog::bandwidthType()
     else return true;
 }
 
-GwmGWRTaskThread::ParallelMethod GwmGWROptionsDialog::approachType()
-{
-    if(ui->mCalcParallelNoneRadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::None;
-    }
-    else if(ui->mCalcParallelMultithreadRadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::Multithread;
-    }
-    else if(ui->mCalcParallelGPURadio->isChecked()){
-        return GwmGWRTaskThread::ParallelMethod::GPU;
-    }
-    else return GwmGWRTaskThread::ParallelMethod::None;
-}
-
 void GwmGWROptionsDialog::onNoneRadioToggled(bool checked)
 {
     if(checked){
@@ -412,18 +404,6 @@ GwmBandwidthWeight::KernelFunctionType GwmGWROptionsDialog::bandwidthKernelFunct
     return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
-GwmGWRTaskThread::DistanceSourceType GwmGWROptionsDialog::distanceSourceType()
-{
-    if (ui->mDistTypeCRSRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
-    else if (ui->mDistTypeDmatRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::DMatFile;
-    else if (ui->mDistTypeMinkowskiRadio->isChecked())
-        return GwmGWRTaskThread::DistanceSourceType::Minkowski;
-    else
-        return GwmGWRTaskThread::DistanceSourceType::CRS;
-}
-
 QVariant GwmGWROptionsDialog::distanceSourceParameters()
 {
     if (ui->mDistTypeDmatRadio->isChecked())
@@ -439,22 +419,6 @@ QVariant GwmGWROptionsDialog::distanceSourceParameters()
     }
 
     else return QVariant();
-}
-
-GwmGWRTaskThread::ParallelMethod GwmGWROptionsDialog::parallelMethod()
-{
-    if (ui->mCalcParallelMultithreadRadio->isChecked())
-    {
-        return GwmGWRTaskThread::ParallelMethod::Multithread;
-    }
-    else if (ui->mCalcParallelGPURadio->isChecked())
-    {
-        return GwmGWRTaskThread::ParallelMethod::GPU;
-    }
-    else
-    {
-        return GwmGWRTaskThread::ParallelMethod::None;
-    }
 }
 
 QVariant GwmGWROptionsDialog::parallelParameters()
@@ -476,9 +440,9 @@ QVariant GwmGWROptionsDialog::parallelParameters()
     }
 }
 
-void GwmGWROptionsDialog::setTaskThread(GwmGWRTaskThread *taskThread)
+void GwmGWROptionsDialog::setTaskThread(GwmBasicGWRAlgorithm *taskThread)
 {
-
+    mTaskThread = taskThread;
 }
 
 void GwmGWROptionsDialog::updateFieldsAndEnable()
