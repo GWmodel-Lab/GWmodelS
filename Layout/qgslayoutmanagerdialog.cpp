@@ -358,7 +358,7 @@ void QgsLayoutManagerDialog::showEvent( QShowEvent *event )
 {
   if ( !event->spontaneous() )
   {
-    QgisApp::instance()->addWindow( mWindowAction );
+    GwmApp::Instance()->addWindow( mWindowAction );
   }
 }
 

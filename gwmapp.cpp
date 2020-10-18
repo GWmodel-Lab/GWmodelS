@@ -125,6 +125,26 @@ GwmApp::GwmApp(QWidget *parent)
     setupPropertyPanel();
     QgsGui::editorWidgetRegistry()->initEditors(mMapCanvas);
 
+#ifdef Q_OS_MAC
+    // Window Menu Items
+
+    mActionWindowMinimize = new QAction( tr( "Minimize" ), this );
+    mActionWindowMinimize->setShortcut( tr( "Ctrl+M", "Minimize Window" ) );
+    mActionWindowMinimize->setStatusTip( tr( "Minimizes the active window to the dock" ) );
+    connect( mActionWindowMinimize, SIGNAL( triggered() ), this, SLOT( showActiveWindowMinimized() ) );
+
+    mActionWindowZoom = new QAction( tr( "Zoom" ), this );
+    mActionWindowZoom->setStatusTip( tr( "Toggles between a predefined size and the window size set by the user" ) );
+    connect( mActionWindowZoom, SIGNAL( triggered() ), this, SLOT( toggleActiveWindowMaximized() ) );
+
+    mActionWindowAllToFront = new QAction( tr( "Bring All to Front" ), this );
+    mActionWindowAllToFront->setStatusTip( tr( "Bring forward all open windows" ) );
+    connect( mActionWindowAllToFront, SIGNAL( triggered() ), this, SLOT( bringAllToFront() ) );
+
+    // list of open windows
+    mWindowActions = new QActionGroup( this );
+#endif
+
 	functionProfile(&GwmApp::initLayouts, this, QStringLiteral("Initialize layouts support"));
 
 
@@ -481,6 +501,28 @@ void GwmApp::onOpenProject()
     {
         onMapModelChanged();
     }
+}
+
+void GwmApp::addWindow( QAction *action )
+{
+#ifdef Q_OS_MAC
+  mWindowActions->addAction( action );
+  mWindowMenu->addAction( action );
+  action->setCheckable( true );
+  action->setChecked( true );
+#else
+  Q_UNUSED( action )
+#endif
+}
+
+void GwmApp::removeWindow( QAction *action )
+{
+#ifdef Q_OS_MAC
+  mWindowActions->removeAction( action );
+  mWindowMenu->removeAction( action );
+#else
+  Q_UNUSED( action )
+#endif
 }
 
 void GwmApp::addLayerToModel(QgsVectorLayer *layer)
