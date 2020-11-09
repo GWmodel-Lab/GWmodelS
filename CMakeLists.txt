@@ -393,12 +393,23 @@ qt5_wrap_ui(FORMS_H ${FORMS})
 if(WIN32)
     set(QT_USEQTMAIN TRUE)
     add_executable(GWmodelDesktop WIN32 ${SOURCES} ${HEADERS} ${FORMS_H})
-else(WIN32)
-    if(APPLE)
-        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-    endif(APPLE)
-    add_executable(GWmodelDesktop ${SOURCES} ${HEADERS} ${FORMS_H})
 endif(WIN32)
+
+if(UNIX AND NOT CYGWIN)
+    if(APPLE)
+        set(QT_USEQTMAIN TRUE)
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+        add_executable(GWmodelDesktop MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${FORMS_H})
+        set_target_properties(GWmodelDesktop PROPERTIES FRAMEWORK TRUE)
+    else(APPLE)
+        add_executable(GWmodelDesktop ${SOURCES} ${HEADERS} ${FORMS_H})    
+    endif(APPLE)    
+endif(UNIX AND NOT CYGWIN)
+
+if(CYGWIN)
+    message(FATAL_ERROR "Not support Cygwin currently!")
+endif(CYGWIN)
 
 
 target_link_libraries(GWmodelDesktop 
