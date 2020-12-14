@@ -85,9 +85,8 @@ bool GwmGWSSTaskThread::CalculateSerial(){
         }
         mat centerized = mX.each_row() - mLocalMean.row(i);
         mLVar.row(i) = Wi.t() * (centerized % centerized);
-        mStandardDev = sqrt(mLVar);
+        mStandardDev.row(i) = sqrt(mLVar.row(i));
         mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
-        mLCV = mStandardDev / mLocalMean;
         if(nVar >= 2){
             int tag = 0;
             for(int j = 0; j < nVar-1; j++){
@@ -105,6 +104,7 @@ bool GwmGWSSTaskThread::CalculateSerial(){
         }
         emit tick(i,nRp);
     }
+    mLCV = mStandardDev / mLocalMean;
     return true;
 }
 
@@ -133,9 +133,8 @@ bool GwmGWSSTaskThread::CalculateOmp(){
         }
         mat centerized = mX.each_row() - mLocalMean.row(i);
         mLVar.row(i) = Wi.t() * (centerized % centerized);
-        mStandardDev = sqrt(mLVar);
+        mStandardDev.row(i) = sqrt(mLVar.row(i));
         mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
-        mLCV = mStandardDev / mLocalMean;
         if(nVar >= 2){
             int tag = 0;
             for(int j = 0; j < nVar-1; j++){
@@ -153,6 +152,7 @@ bool GwmGWSSTaskThread::CalculateOmp(){
         }
         emit tick(++current,nRp);
     }
+    mLCV = mStandardDev / mLocalMean;
     return true;
 }
 
