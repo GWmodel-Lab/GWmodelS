@@ -393,7 +393,7 @@ qt5_wrap_ui(FORMS_H ${FORMS})
 if(WIN32)
     set(QT_USEQTMAIN TRUE)
     set(app_WINRC app_win32.rc)
-    set_property(SOURCE app_win32.rc APPEND PROPERTY OBJECT_DEPENDS ${PROJECT_SOURCE_DIR}/images/icons/GWmodelS-256.ico)
+    set_property(SOURCE app_win32.rc APPEND PROPERTY OBJECT_DEPENDS ${PROJECT_SOURCE_DIR}/icons/GWmodelS.ico)
     add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC})
 endif(WIN32)
 
