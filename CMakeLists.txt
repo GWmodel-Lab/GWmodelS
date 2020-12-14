@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8.0 FATAL_ERROR)
-project(GWmodelDesktop LANGUAGES CXX)
+project(GWmodelS LANGUAGES CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
@@ -392,7 +392,9 @@ qt5_wrap_ui(FORMS_H ${FORMS})
 
 if(WIN32)
     set(QT_USEQTMAIN TRUE)
-    add_executable(GWmodelDesktop WIN32 ${SOURCES} ${HEADERS} ${FORMS_H})
+    set(app_WINRC app_win32.rc)
+    set_property(SOURCE app_win32.rc APPEND PROPERTY OBJECT_DEPENDS ${PROJECT_SOURCE_DIR}/images/icons/GWmodelS-256.ico)
+    add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC})
 endif(WIN32)
 
 if(UNIX AND NOT CYGWIN)
@@ -400,10 +402,10 @@ if(UNIX AND NOT CYGWIN)
         set(QT_USEQTMAIN TRUE)
         set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
         set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-        add_executable(GWmodelDesktop MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${FORMS_H})
-        set_target_properties(GWmodelDesktop PROPERTIES FRAMEWORK TRUE)
+        add_executable(GWmodelS MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${FORMS_H})
+        set_target_properties(GWmodelS PROPERTIES FRAMEWORK TRUE)
     else(APPLE)
-        add_executable(GWmodelDesktop ${SOURCES} ${HEADERS} ${FORMS_H})    
+        add_executable(GWmodelS ${SOURCES} ${HEADERS} ${FORMS_H})    
     endif(APPLE)    
 endif(UNIX AND NOT CYGWIN)
 
@@ -412,7 +414,7 @@ if(CYGWIN)
 endif(CYGWIN)
 
 
-target_link_libraries(GWmodelDesktop 
+target_link_libraries(GWmodelS 
     PRIVATE 
     Qt5::Xml 
     Qt5::PrintSupport 
@@ -435,7 +437,7 @@ target_link_libraries(GWmodelDesktop
 )
 
 if(ENABLE_CUDA)
-target_link_libraries(GWmodelDesktop 
+target_link_libraries(GWmodelS 
     PRIVATE 
     ${GWMODELCUDA_LIBRARIES}
 )
