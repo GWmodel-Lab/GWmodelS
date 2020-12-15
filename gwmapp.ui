@@ -19,6 +19,11 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normalon>:/images/icons/GWmodelS-256.ico</normalon>
+   </iconset>
+  </property>
   <widget class="QgsMapCanvas" name="mapCanvas"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

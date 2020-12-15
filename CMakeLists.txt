@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8.0 FATAL_ERROR)
-project(GWmodelDesktop LANGUAGES CXX)
+project(GWmodelS LANGUAGES CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
@@ -392,18 +392,29 @@ qt5_wrap_ui(FORMS_H ${FORMS})
 
 if(WIN32)
     set(QT_USEQTMAIN TRUE)
-    add_executable(GWmodelDesktop WIN32 ${SOURCES} ${HEADERS} ${FORMS_H})
+    set(app_WINRC app_win32.rc)
+    set_property(SOURCE app_win32.rc APPEND PROPERTY OBJECT_DEPENDS ${PROJECT_SOURCE_DIR}/icons/GWmodelS.ico)
+    add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC})
 endif(WIN32)
 
 if(UNIX AND NOT CYGWIN)
     if(APPLE)
         set(QT_USEQTMAIN TRUE)
-        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
         set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-        add_executable(GWmodelDesktop MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${FORMS_H})
-        set_target_properties(GWmodelDesktop PROPERTIES FRAMEWORK TRUE)
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+        set(MACOSX_BUNDLE_GUI_IDENTIFIER ${IDENTIFIER})
+        set(MACOSX_BUNDLE_BUNDLE_NAME GWmodelS)
+        set(MACOSX_BUNDLE_COPYRIGHT ${COPYRIGHT})
+        set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${spectral_VERSION})
+        set(MACOSX_BUNDLE_BUNDLE_VERSION ${spectral_VERSION})
+        set(ICON_NAME "GWmodelS.icns")
+        set(app_MACICON ${PROJECT_SOURCE_DIR}/icons/${ICON_NAME})
+        set(MACOSX_BUNDLE_ICON_FILE ${ICON_NAME})
+        set_source_files_properties(${app_MACICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+        add_executable(GWmodelS MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${FORMS_H} ${app_MACICON})
+        set_target_properties(GWmodelS PROPERTIES FRAMEWORK TRUE MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/macOS/Info.plist.in)
     else(APPLE)
-        add_executable(GWmodelDesktop ${SOURCES} ${HEADERS} ${FORMS_H})    
+        add_executable(GWmodelS ${SOURCES} ${HEADERS} ${FORMS_H})    
     endif(APPLE)    
 endif(UNIX AND NOT CYGWIN)
 
@@ -412,7 +423,7 @@ if(CYGWIN)
 endif(CYGWIN)
 
 
-target_link_libraries(GWmodelDesktop 
+target_link_libraries(GWmodelS 
     PRIVATE 
     Qt5::Xml 
     Qt5::PrintSupport 
@@ -435,7 +446,7 @@ target_link_libraries(GWmodelDesktop
 )
 
 if(ENABLE_CUDA)
-target_link_libraries(GWmodelDesktop 
+target_link_libraries(GWmodelS 
     PRIVATE 
     ${GWMODELCUDA_LIBRARIES}
 )
