@@ -239,7 +239,7 @@ class QgsDelimitedTextProviderMetadata final: public QgsProviderMetadata
 {
   public:
     QgsDelimitedTextProviderMetadata();
-    QgsDataProvider *createProvider( const QString &uri, const QgsDataProvider::ProviderOptions &options ) override;
+    QgsDataProvider *createProvider( const QString &uri, const QgsDataProvider::ProviderOptions &options, QgsDataProvider::ReadFlags flags = QgsDataProvider::ReadFlags() ) override;
     QVariantMap decodeUri( const QString &uri ) override;
     QString encodeUri( const QVariantMap &parts ) override;
 };

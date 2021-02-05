@@ -1212,7 +1212,7 @@ QString QgsDelimitedTextProviderMetadata::encodeUri( const QVariantMap &parts )
   return QStringLiteral( "file://%1" ).arg( parts.value( QStringLiteral( "path" ) ).toString() );
 }
 
-QgsDataProvider *QgsDelimitedTextProviderMetadata::createProvider( const QString &uri, const QgsDataProvider::ProviderOptions &options )
+QgsDataProvider *QgsDelimitedTextProviderMetadata::createProvider( const QString &uri, const QgsDataProvider::ProviderOptions &options, QgsDataProvider::ReadFlags flags)
 {
   return new QgsDelimitedTextProvider( uri, options );
 }
