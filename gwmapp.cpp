@@ -301,6 +301,10 @@ void GwmApp::setupFeaturePanel()
     connect(mFeaturePanel, &GwmFeaturePanel::showSymbolSettingSignal, this, &GwmApp::onShowSymbolSetting);
     connect(mFeaturePanel, &GwmFeaturePanel::showCoordinateTransDlg,this,&GwmApp::onShowCoordinateTransDlg);
     connect(mFeaturePanel, &GwmFeaturePanel::currentChanged,this,&GwmApp::onFeaturePanelCurrentChanged);
+    connect(mFeaturePanel,&GwmFeaturePanel::sendDataSigEsriShp,this, [&]()
+    {
+        onExportLayer(tr("ESRI Shapefile (*.shp)"));
+    });
     connect(mFeaturePanel,&GwmFeaturePanel::sendDataSigCsv,this,&GwmApp::onExportLayerAsCsv);
     connect(ui->featureSortUpBtn, &QAbstractButton::clicked, mFeaturePanel, &GwmFeaturePanel::onSortUpBtnClicked);
     connect(ui->featureSortDownBtn, &QAbstractButton::clicked, mFeaturePanel, &GwmFeaturePanel::onSortDownBtnClicked);
