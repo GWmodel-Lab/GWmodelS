@@ -363,6 +363,7 @@ void GwmMultiscaleGWROptionsDialog::onSpecifiedParameterCurrentChanged(const QMo
         {
             ui->mBwSizeFixedSize->setValue(option->bandwidthSize);
         }
+        ui->mBwKernelFunctionCombo->setCurrentIndex(int(option->kernel));
         switch (option->distanceType) {
         case GwmDistance::DistanceType::CRSDistance:
             ui->mDistTypeCRSRadio->setChecked(true);
