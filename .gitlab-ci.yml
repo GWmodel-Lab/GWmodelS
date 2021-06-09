@@ -1,0 +1,38 @@
+stages:
+    - build
+    - release
+
+build_win:
+    stage: build
+    only: 
+        - master
+        - feature-ci
+        - tags
+    tags:
+        - Build
+        - Windows10
+    script:
+        - mkdir build
+        - cd build
+        - cmake.exe -G"Visual Studio 15 2017 Win64" .. -DCMAKE_PREFIX_PATH="C:/usr;C:/usr/apps/Qt5;C:/usr/apps/gdal-dev;C:/usr/apps/proj-dev" -DOSGEO4W_ROOT="C:/usr" -DOSGEO4W_QGIS_SUBDIR="qgis-ltr-dev" -DBLAS_LIBRARIES="C:/usr/lib/libopenblas.lib" -DLAPACK_LIBRARIES="C:/usr/lib/libopenblas.lib" 
+        - cmake --build . --target GWmodelS --config Release
+    artifacts:
+        paths:
+            - build/Release/GWmodelS.exe
+
+release_gitlab_windows:
+    stage: release
+    only:
+        - tags
+    tags:
+        - Build
+        - Windows10
+    dependencies:
+        - build_win
+    script:
+        - copy GWmodelS.exe C:/GWmodelS/GWmodelDesktop-Installer/packages/org.gwmodellab/data/GWmodelS.exe
+        - cd C:/GWmodelS/GWmodelDesktop-Installer
+        - binarycreator.exe -c config/config.xml -p packages "GWmodelS-Installer-$CI_COMMIT_TAG.exe" -v
+    artifacts:
+        paths:
+            - GWmodelS-Installer-$CI_COMMIT_TAG.exe
