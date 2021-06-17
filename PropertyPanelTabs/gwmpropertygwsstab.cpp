@@ -5,6 +5,7 @@
 #include <QScrollArea>
 #include <QGroupBox>
 #include <QTableWidget>
+#include <QHeaderView>
 
 #include <armadillo>
 
@@ -119,6 +120,7 @@ void GwmPropertyGWSSTab::updateUI()
         layout->addWidget(tablewidget);
         groupBox->setLayout(layout);
         ui->verticalLayout->addWidget(groupBox);
+        tablewidget->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
     }
 
 }
