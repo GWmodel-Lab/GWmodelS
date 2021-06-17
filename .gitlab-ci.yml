@@ -8,6 +8,7 @@ build_win:
         - master
         - feature-ci
         - tags
+        - merge_requests
     tags:
         - Build
         - Windows10
