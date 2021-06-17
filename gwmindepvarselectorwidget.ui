@@ -6,14 +6,17 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>567</width>
-    <height>201</height>
+    <width>347</width>
+    <height>228</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,0,1">
+  <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,0">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetNoConstraint</enum>
+   </property>
    <property name="leftMargin">
     <number>0</number>
    </property>
@@ -85,13 +88,6 @@
      </item>
     </layout>
    </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string> Candidate</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="0">
     <widget class="QListView" name="mIndepVarView">
      <property name="defaultDropAction">
@@ -111,6 +107,9 @@
      </property>
     </widget>
    </item>
+   <item row="1" column="2">
+    <widget class="QListView" name="mSelectedIndepVarView"/>
+   </item>
    <item row="0" column="2">
     <widget class="QLabel" name="label_2">
      <property name="text">
@@ -118,8 +117,12 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="2">
-    <widget class="QListView" name="mSelectedIndepVarView"/>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string> Candidate</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
