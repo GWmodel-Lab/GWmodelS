@@ -192,7 +192,13 @@ void GwmApp::onOpenFileImportShapefile(){
 
 void GwmApp::onOpenFileImportJson()
 {
-    QFileDialog::getOpenFileName(this, tr("Open GeoJson"), tr(""), tr("GeoJson (*.json *.geojson)"));
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open GeoJson"), tr(""), tr("GeoJson (*.json *.geojson)"));
+    QFileInfo fileInfo(filePath);
+    if (fileInfo.exists())
+    {
+        QString fileName = fileInfo.baseName();
+        createLayerToModel(filePath, fileName, "ogr");
+    }
 }
 
 void GwmApp::onOpenFileImportCsv()
