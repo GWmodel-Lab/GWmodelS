@@ -39,12 +39,15 @@ GwmBasicGWRAlgorithm::GwmBasicGWRAlgorithm() : GwmGeographicalWeightedRegression
 
 void GwmBasicGWRAlgorithm::run()
 {
-    // 点位初始化
-    emit message(QString(tr("Setting data points")) + (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
-    initPoints();
+    if (!checkCanceled())
+    {
+        // 点位初始化
+        emit message(QString(tr("Setting data points")) + (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
+        initPoints();
+    }
 
     // 优选模型
-    if (!hasRegressionLayer() && mIsAutoselectIndepVars)
+    if (!checkCanceled() && !hasRegressionLayer() && mIsAutoselectIndepVars)
     {
         emit message(QString(tr("Automatically selecting independent variables ...")));
         mIndepVarSelectModelsTotalNum = (mIndepVars.size() + 1) * (mIndepVars.size()) / 2;
@@ -62,12 +65,15 @@ void GwmBasicGWRAlgorithm::run()
         }
     }
 
-    // 初始化
-    emit message(QString(tr("Setting X and Y.")));
-    initXY(mX, mY, mDepVar, mIndepVars);
+    if (!checkCanceled())
+    {
+        // 初始化
+        emit message(QString(tr("Setting X and Y.")));
+        initXY(mX, mY, mDepVar, mIndepVars);
+    }
 
     // 优选带宽
-    if (!hasRegressionLayer() && mIsAutoselectBandwidth)
+    if (!checkCanceled() && !hasRegressionLayer() && mIsAutoselectBandwidth)
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
         emit tick(0, 0);
@@ -87,11 +93,20 @@ void GwmBasicGWRAlgorithm::run()
         }
     }
 
+    if (!checkCanceled())
+    {
+        mBetas = regression(mX, mY);
+    }
+
+    if (checkCanceled())
+    {
+        return;
+    }
+
     // 解算模型
     if (mHasHatMatrix)
     {
         uword nDp = mDataPoints.n_rows;
-        mBetas = regression(mX, mY);
         // 诊断
         mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mShat);
         double trS = mShat(0), trStS = mShat(1);
@@ -125,7 +140,7 @@ void GwmBasicGWRAlgorithm::run()
         };
         createResultLayer(resultLayerData);
 
-        if (mHasHatMatrix && mHasFTest)
+        if (!checkCanceled() && mHasFTest)
         {
             double trQtQ = DBL_MAX;
             if (isStoreS())
@@ -151,7 +166,6 @@ void GwmBasicGWRAlgorithm::run()
     }
     else
     {
-        mBetas = regression(mX, mY);
         CreateResultLayerData resultLayerData;
         if (mHasRegressionLayerXY && mHasPredict)
         {
@@ -462,7 +476,8 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, 
     shat = vec(2, fill::zeros);
     qDiag = vec(nDp, fill::zeros);
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
-    for (uword i = 0; i < nDp; i++)
+    bool flag = true;
+    for (uword i = 0; i < nDp & !checkCanceled(); i++)
     {
         vec w = mSpatialWeight.weightVector(i);
         mat xtw = trans(x.each_col() % w);
@@ -1366,5 +1381,18 @@ void GwmBasicGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &ty
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             break;
         }
+    }
+}
+
+bool GwmBasicGWRAlgorithm::checkCanceled()
+{
+    if (isCanceled())
+    {
+        emit canceled();
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }

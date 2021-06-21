@@ -147,6 +147,8 @@ protected:
         return (mSpatialWeight.distance()->type() == GwmDistance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
     }
 
+    bool checkCanceled();
+
 protected:
 
     void createResultLayer(CreateResultLayerData data,QString name = QStringLiteral("_GWR"));
