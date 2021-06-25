@@ -28,6 +28,9 @@ public:
     virtual QString name() const;
 
 protected:
+    bool checkCanceled();
+
+protected:
     bool mIsCanceled = false;
 };
 

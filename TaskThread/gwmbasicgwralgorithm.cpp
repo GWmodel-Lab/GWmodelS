@@ -1383,16 +1383,3 @@ void GwmBasicGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &ty
         }
     }
 }
-
-bool GwmBasicGWRAlgorithm::checkCanceled()
-{
-    if (isCanceled())
-    {
-        emit canceled();
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
