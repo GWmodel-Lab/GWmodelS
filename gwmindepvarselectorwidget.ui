@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>347</width>
-    <height>228</height>
+    <width>431</width>
+    <height>255</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,6 +29,13 @@
    <property name="bottomMargin">
     <number>0</number>
    </property>
+   <item row="0" column="2">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Selected</string>
+     </property>
+    </widget>
+   </item>
    <item row="1" column="1">
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <property name="spacing">
@@ -88,6 +95,16 @@
      </item>
     </layout>
    </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string> Candidate</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QListView" name="mSelectedIndepVarView"/>
+   </item>
    <item row="1" column="0">
     <widget class="QListView" name="mIndepVarView">
      <property name="defaultDropAction">
@@ -104,23 +121,6 @@
      </property>
      <property name="uniformItemSizes">
       <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="2">
-    <widget class="QListView" name="mSelectedIndepVarView"/>
-   </item>
-   <item row="0" column="2">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Selected</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string> Candidate</string>
      </property>
     </widget>
    </item>
