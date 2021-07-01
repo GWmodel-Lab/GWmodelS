@@ -35,12 +35,12 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-22</y>
+        <y>0</y>
         <width>628</width>
-        <height>701</height>
+        <height>901</height>
        </rect>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_6">
+      <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0,0,0,0,0">
        <item>
         <layout class="QFormLayout" name="formLayout_6">
          <property name="sizeConstraint">
@@ -130,7 +130,17 @@
            <enum>QLayout::SetNoConstraint</enum>
           </property>
           <item>
-           <widget class="GwmIndepVarSelectorWidget" name="mIndepVarSelector" native="true"/>
+           <widget class="GwmIndepVarSelectorWidget" name="mIndepVarSelector" native="true">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>582</width>
+              <height>200</height>
+             </size>
+            </property>
+           </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_7">
