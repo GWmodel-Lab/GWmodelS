@@ -3,6 +3,7 @@
 
 #include <qitemselectionmodel.h>
 #include <QDebug>
+#include <QString>
 
 #include <qgsproject.h>
 #include <qgslayoutmanager.h>
@@ -329,6 +330,12 @@ QVector<double> GwmLayoutBatchDialog::predefinedScales(QgsMasterLayoutInterface*
 
 void GwmLayoutBatchDialog::exportToRasterBatch(const QString &ext)
 {
+    if (ui->txtOutputDirectory->text().size() <= 0)
+    {
+        QMessageBox::information(this, "Batch Layout", "No directory is selected", QMessageBox::Yes);
+        return ;
+    }
+
     auto selectLayoutIndexList = ui->lsvLayout->selectionModel()->selectedRows();
     if (selectLayoutIndexList.isEmpty())
     {
