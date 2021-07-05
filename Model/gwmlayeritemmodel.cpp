@@ -92,6 +92,7 @@ bool GwmLayerItemModel::setData(const QModelIndex &index, const QVariant &value,
     if (state)
     {
         emit layerItemChangedSignal(item);
+        emit dataChanged(index, index);
     }
     return state;
 }
