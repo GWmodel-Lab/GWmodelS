@@ -166,7 +166,7 @@ bool GwmLayerVectorItem::setData(int col, int role, QVariant value)
             }
             break;
         case Qt::EditRole:
-            if (mLayer) mLayer->setName(value.toString());
+            if (mLayer && value.toString().size()) mLayer->setName(value.toString());
             break;
         default:
             return false;

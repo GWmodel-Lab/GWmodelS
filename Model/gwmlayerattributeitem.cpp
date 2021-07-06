@@ -36,7 +36,7 @@ bool GwmLayerAttributeItem::setData(int col, int role, QVariant value){
     {
         switch (role) {
         case Qt::DisplayRole:
-            mAttributeName = value.toString();
+            mAttributeName = value.toString().size() == 0 ? mAttributeName : value.toString();
             return true;
         default:
             break;

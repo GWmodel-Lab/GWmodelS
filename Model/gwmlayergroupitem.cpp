@@ -64,7 +64,10 @@ bool GwmLayerGroupItem::setData(int col, int role, QVariant value)
             mCheckState = Qt::CheckState(value.toInt());
             break;
         case Qt::EditRole:
-            if (mOriginChild) mOriginChild->layer()->setName(value.toString());
+            if (mOriginChild && value.toString().size())
+                mOriginChild->layer()->setName(value.toString());
+            else
+                mOriginChild->layer()->setName(mOriginChild->layer()->name());
             break;
         default:
             return false;
