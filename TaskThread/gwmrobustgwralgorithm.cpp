@@ -25,12 +25,14 @@ GwmDiagnostic GwmRobustGWRAlgorithm::CalcDiagnostic(const mat& x, const vec& y, 
 
 void GwmRobustGWRAlgorithm::run()
 {
-    //点位初始化
-    emit message(QString(tr("Setting data points")) + (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
-    initPoints();
-    // 设置矩阵
-    initXY(mX, mY, mDepVar, mIndepVars);
-
+    if(!checkCanceled())
+    {
+        //点位初始化
+        emit message(QString(tr("Setting data points")) + (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
+        initPoints();
+        // 设置矩阵
+        initXY(mX, mY, mDepVar, mIndepVars);
+    }
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     mWeightMask = vec(nDp, fill::ones);
 
@@ -38,7 +40,7 @@ void GwmRobustGWRAlgorithm::run()
     mBetas = regression(mX,mY);
 
     //诊断+结果图层
-    if(mHasHatMatrix)
+    if(mHasHatMatrix && !checkCanceled())
     {
         mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mShat);
         double trS = mShat(0), trStS = mShat(1);
@@ -51,7 +53,7 @@ void GwmRobustGWRAlgorithm::run()
         vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
         vec dyhat2 = (mY - yhat) % (mY - yhat);
         vec localR2 = vec(nDp, fill::zeros);
-        for (uword i = 0; i < nDp; i++)
+        for (uword i = 0; i < nDp & !checkCanceled(); i++)
         {
             vec w = mSpatialWeight.weightVector(i);
             double tss = sum(dybar2 % w);
@@ -71,7 +73,7 @@ void GwmRobustGWRAlgorithm::run()
         };
         createResultLayer(resultLayerData);
 
-        if (mHasHatMatrix && mHasFTest)
+        if (!checkCanceled() && mHasHatMatrix && mHasFTest)
         {
             double trQtQ = DBL_MAX;
             if (isStoreS())
@@ -84,15 +86,18 @@ void GwmRobustGWRAlgorithm::run()
             {
                 trQtQ = (this->*mCalcTrQtQFunction)();
             }
-            FTestParameters fTestParams;
-            fTestParams.nDp = mDataLayer->featureCount();
-            fTestParams.nVar = mIndepVars.size() + 1;
-            fTestParams.trS = mShat(0);
-            fTestParams.trStS = mShat(1);
-            fTestParams.trQ = sum(mQDiag);
-            fTestParams.trQtQ = trQtQ;
-            fTestParams.gwrRSS = sum(res % res);
-            GwmBasicGWRAlgorithm::fTest(fTestParams);
+            if(!checkCanceled())
+            {
+                FTestParameters fTestParams;
+                fTestParams.nDp = mDataLayer->featureCount();
+                fTestParams.nVar = mIndepVars.size() + 1;
+                fTestParams.trS = mShat(0);
+                fTestParams.trStS = mShat(1);
+                fTestParams.trQ = sum(mQDiag);
+                fTestParams.trQtQ = trQtQ;
+                fTestParams.gwrRSS = sum(res % res);
+                GwmBasicGWRAlgorithm::fTest(fTestParams);
+            }
         }
     }
     else
@@ -104,11 +109,12 @@ void GwmRobustGWRAlgorithm::run()
     }
 
     emit success();
+
 }
 
 mat GwmRobustGWRAlgorithm::regression(const mat &x, const vec &y)
 {
-    if(mHasHatMatrix)
+    if(mHasHatMatrix && !checkCanceled())
     {
         if (mFiltered)
         {
@@ -129,7 +135,7 @@ vec GwmRobustGWRAlgorithm::filtWeight(vec residual, double mse)
     vec r = abs(residual / sqrt(mse));
     vec wvect(r.size(), fill::ones);
     //数组赋值
-    for(int i=0;i<r.size();i++)
+    for(int i=0;i<r.size() & !checkCanceled();i++)
     {
         if(r[i]<=2)
         {
@@ -248,7 +254,7 @@ mat GwmRobustGWRAlgorithm::robustGWRCaliFirst(const mat &x, const vec &y, mat &b
     vec WVect(nDp,fill::zeros);
 
     //生成W.vect
-    for(int i=0;i<studentizedResidual.size();i++){
+    for(int i=0;i<studentizedResidual.size() & !checkCanceled();i++){
         if(fabs(studentizedResidual[i])>3){
             WVect(i)=0;
         }else{
@@ -278,7 +284,7 @@ mat GwmRobustGWRAlgorithm::robustGWRCaliSecond(const mat &x, const vec &y, mat &
     double mse = sum((residual % residual))/ residual.size();
     //计算WVect
     mWeightMask = filtWeight(residual, mse);
-    while(diffmse>delta && iter<maxiter){
+    while(diffmse>delta && iter<maxiter && !checkCanceled()){
         double oldmse = mse;
         betas = (this->*mRegressionHatmatrixFunction)(x,y,betasSE,shat,qDiag,S);
         //计算residual
@@ -303,7 +309,7 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y,
     shat = vec(2, fill::zeros);
     qDiag = vec(nDp, fill::zeros);
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
-    for (uword i = 0; i < nDp; i++)
+    for (uword i = 0; i < nDp & !checkCanceled(); i++)
     {
         vec w = mSpatialWeight.weightVector(i) % mWeightMask;
         mat xtw = trans(x.each_col() % w);
@@ -346,30 +352,33 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, ma
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.weightVector(i)  % mWeightMask;
-        mat xtw = trans(x.each_col() % w);
-        mat xtwx = xtw * x;
-        mat xtwy = xtw * y;
-        try
+        if(!checkCanceled())
         {
-            mat xtwx_inv = inv_sympd(xtwx);
-            betas.col(i) = xtwx_inv * xtwy;
-            mat ci = xtwx_inv * xtw;
-            betasSE.col(i) = sum(ci % ci, 1);
-            mat si = x.row(i) * ci;
-            shat_all(0, thread) += si(0, i);
-            shat_all(1, thread) += det(si * si.t());
-            vec p = - si.t();
-            p(i) += 1.0;
-            qDiag_all.col(thread) += p % p;
-            S.row(isStoreS() ? i : 0) = si;
+            int thread = omp_get_thread_num();
+            vec w = mSpatialWeight.weightVector(i)  % mWeightMask;
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                betasSE.col(i) = sum(ci % ci, 1);
+                mat si = x.row(i) * ci;
+                shat_all(0, thread) += si(0, i);
+                shat_all(1, thread) += det(si * si.t());
+                vec p = - si.t();
+                p(i) += 1.0;
+                qDiag_all.col(thread) += p % p;
+                S.row(isStoreS() ? i : 0) = si;
+            }
+            catch (std::exception e)
+            {
+                emit error(e.what());
+            }
+            emit tick(++current, nDp);
         }
-        catch (std::exception e)
-        {
-            emit error(e.what());
-        }
-        emit tick(++current, nDp);
     }
     shat = sum(shat_all, 1);
     qDiag = sum(qDiag_all, 1);

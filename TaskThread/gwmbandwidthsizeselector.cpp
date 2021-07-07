@@ -94,7 +94,7 @@ GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable 
     double d1 = f2 - f1;
     double xopt = f1 < f2 ? x1 : x2;
     double ea = 100;
-    while ((fabs(d) > eps) && (fabs(d1) > eps) && iter < ea)
+    while ((fabs(d) > eps) && (fabs(d1) > eps) && iter < ea && !checkCanceled())
     {
         d = R * d;
         if (f1 < f2)
@@ -130,4 +130,16 @@ GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable 
     wopt->setAdaptive(mBandwidth->adaptive());
     wopt->setBandwidth(xopt);
     return wopt;
+}
+
+bool GwmBandwidthSizeSelector::checkCanceled()
+{
+    if(isCanceled())
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

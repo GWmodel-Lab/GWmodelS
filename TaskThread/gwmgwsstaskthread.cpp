@@ -35,31 +35,40 @@ bool GwmGWSSTaskThread::isValid()
 
 void GwmGWSSTaskThread::run()
 {
-    // 点位初始化
-    initPoints();
-    // 初始化
-    initXY(mX, mVariables);
+    if(!checkCanceled())
+    {
+        // 点位初始化
+        initPoints();
+        // 初始化
+        initXY(mX, mVariables);
+    }
     int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
     (this->*mCalFunciton)();
     CreateResultLayerData resultLayerData;
-    resultLayerData.push_back(qMakePair(QString("LM"), mLocalMean));
-    resultLayerData.push_back(qMakePair(QString("LSD"), mStandardDev));
-    resultLayerData.push_back(qMakePair(QString("LVar"), mLVar));
-    resultLayerData.push_back(qMakePair(QString("LSke"), mLocalSkewness));
-    resultLayerData.push_back(qMakePair(QString("LCV"), mLCV));
-    if(mQuantile){
+    if(!checkCanceled())
+    {
+        resultLayerData.push_back(qMakePair(QString("LM"), mLocalMean));
+        resultLayerData.push_back(qMakePair(QString("LSD"), mStandardDev));
+        resultLayerData.push_back(qMakePair(QString("LVar"), mLVar));
+        resultLayerData.push_back(qMakePair(QString("LSke"), mLocalSkewness));
+        resultLayerData.push_back(qMakePair(QString("LCV"), mLCV));
+    }
+    if(mQuantile && !checkCanceled()){
         resultLayerData.push_back(qMakePair(QString("Median"), mLocalMedian));
         resultLayerData.push_back(qMakePair(QString("IQR"), mIQR));
         resultLayerData.push_back(qMakePair(QString("QI"), mQI));
     }
-    if(nVar >= 2){
+    if(nVar >= 2 && !checkCanceled()){
         resultLayerData.push_back(qMakePair(QString("Cov"), mCovmat));
         resultLayerData.push_back(qMakePair(QString("Corr"), mCorrmat));
         resultLayerData.push_back(qMakePair(QString("Spearman_rho"), mSCorrmat));
     }
-    mResultList = resultLayerData;
-    createResultLayer(resultLayerData);
-    emit success();
+    if(!checkCanceled())
+    {
+        mResultList = resultLayerData;
+        createResultLayer(resultLayerData);
+        emit success();
+    }
 }
 
 bool GwmGWSSTaskThread::CalculateSerial(){
@@ -67,16 +76,16 @@ bool GwmGWSSTaskThread::CalculateSerial(){
     rankX.each_col([&](vec x) { x = rank(x); });
     int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
     emit tick(0,nRp);
-    for(int i = 0; i < nRp; i++){
+    for(int i = 0; i < nRp & !checkCanceled(); i++){
 //        vec d = mSpatialWeight.distance()->distance(i);
         vec w = mSpatialWeight.weightVector(i);
         double sumw = sum(w);
         vec Wi = w / sumw;
         mLocalMean.row(i) = trans(Wi) * mX;
-        if(mQuantile){
+        if(mQuantile && !checkCanceled()){
 //            mat cor = cor(mX);
             mat quant = mat(3,nVar);
-            for(int j = 0; j < nVar; j++){
+            for(int j = 0; j < nVar & !checkCanceled(); j++){
                 quant.col(j) = findq(mX.col(j), Wi);
             }
             mLocalMedian.row(i) = quant.row(1);
@@ -87,10 +96,10 @@ bool GwmGWSSTaskThread::CalculateSerial(){
         mLVar.row(i) = Wi.t() * (centerized % centerized);
         mStandardDev.row(i) = sqrt(mLVar.row(i));
         mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
-        if(nVar >= 2){
+        if(nVar >= 2 && !checkCanceled()){
             int tag = 0;
-            for(int j = 0; j < nVar-1; j++){
-                for(int k = j+1; k < nVar; k++){
+            for(int j = 0; j < nVar-1 & !checkCanceled(); j++){
+                for(int k = j+1; k < nVar & !checkCanceled(); k++){
                     double covjk = covwt(mX.col(j), mX.col(k), Wi);
                     double sumW2 = sum(Wi % Wi);
                     double covjj = mLVar(i, j) / (1.0 - sumW2);
@@ -117,40 +126,43 @@ bool GwmGWSSTaskThread::CalculateOmp(){
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i = 0; i < nRp; i++){
 //        vec d = mSpatialWeight.distance()->distance(i);
-        vec w = mSpatialWeight.weightVector(i);
-        double sumw = sum(w);
-        vec Wi = w / sumw;
-        mLocalMean.row(i) = Wi.t() * mX;
-        if(mQuantile){
-//            mat cor = cor(mX);
-            mat quant = mat(3,nVar);
-            for(int j = 0; j < nVar; j++){
-                quant.col(j) = findq(mX.col(j), Wi);
+        if(!checkCanceled())
+        {
+            vec w = mSpatialWeight.weightVector(i);
+            double sumw = sum(w);
+            vec Wi = w / sumw;
+            mLocalMean.row(i) = Wi.t() * mX;
+            if(mQuantile && !checkCanceled()){
+    //            mat cor = cor(mX);
+                mat quant = mat(3,nVar);
+                for(int j = 0; j < nVar & !checkCanceled(); j++){
+                    quant.col(j) = findq(mX.col(j), Wi);
+                }
+                mLocalMedian.row(i) = quant.row(1);
+                mIQR.row(i) = quant.row(2) - quant.row(0);
+                mQI.row(i) = (2 * quant.row(1) - quant.row(2) - quant.row(0))/mIQR.row(i);
             }
-            mLocalMedian.row(i) = quant.row(1);
-            mIQR.row(i) = quant.row(2) - quant.row(0);
-            mQI.row(i) = (2 * quant.row(1) - quant.row(2) - quant.row(0))/mIQR.row(i);
-        }
-        mat centerized = mX.each_row() - mLocalMean.row(i);
-        mLVar.row(i) = Wi.t() * (centerized % centerized);
-        mStandardDev.row(i) = sqrt(mLVar.row(i));
-        mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
-        if(nVar >= 2){
-            int tag = 0;
-            for(int j = 0; j < nVar-1; j++){
-                for(int k = j+1; k < nVar; k++){
-                    double covjk = covwt(mX.col(j), mX.col(k), Wi);
-                    double sumW2 = sum(Wi % Wi);
-                    double covjj = mLVar(i, j) / (1.0 - sumW2);
-                    double covkk = mLVar(i, k) / (1.0 - sumW2);
-                    mCovmat(i,tag) = covjk;
-                    mCorrmat(i,tag) = covjk / sqrt(covjj * covkk);
-                    mSCorrmat(i,tag) = corwt(rankX.col(j),rankX.col(k),Wi);
-                    tag++;
+            mat centerized = mX.each_row() - mLocalMean.row(i);
+            mLVar.row(i) = Wi.t() * (centerized % centerized);
+            mStandardDev.row(i) = sqrt(mLVar.row(i));
+            mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
+            if(nVar >= 2 && !checkCanceled()){
+                int tag = 0;
+                for(int j = 0; j < nVar-1 & !checkCanceled(); j++){
+                    for(int k = j+1; k < nVar & !checkCanceled(); k++){
+                        double covjk = covwt(mX.col(j), mX.col(k), Wi);
+                        double sumW2 = sum(Wi % Wi);
+                        double covjj = mLVar(i, j) / (1.0 - sumW2);
+                        double covkk = mLVar(i, k) / (1.0 - sumW2);
+                        mCovmat(i,tag) = covjk;
+                        mCorrmat(i,tag) = covjk / sqrt(covjj * covkk);
+                        mSCorrmat(i,tag) = corwt(rankX.col(j),rankX.col(k),Wi);
+                        tag++;
+                    }
                 }
             }
+            emit tick(++current,nRp);
         }
-        emit tick(++current,nRp);
     }
     mLCV = mStandardDev / mLocalMean;
     return true;
@@ -165,7 +177,7 @@ vec GwmGWSSTaskThread::findq(const mat &x, const vec &w)
     vec wo = w(sort_index(x));
     vec Cum = cumsum(wo);
     int cond = lw - 1;
-    for(int j = 0; j < lp ; j++){
+    for(int j = 0; j < lp; j++){
         double k = 0.25 * (j + 1);
         for(int i = 0; i < lw; i++){
             if(Cum(i) > k){

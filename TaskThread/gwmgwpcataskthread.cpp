@@ -12,15 +12,18 @@ GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm()
 
 void GwmGWPCATaskThread::run()
 {
-    // 设置矩阵
-    emit message(QString(tr("Setting data points ...")));
-    initPoints();
-    //
-    emit message(QString(tr("Setting X and Y.")));
-    initXY(mX,mVariables);
+    if(!checkCanceled())
+    {
+        // 设置矩阵
+        emit message(QString(tr("Setting data points ...")));
+        initPoints();
+        //
+        emit message(QString(tr("Setting X and Y.")));
+        initXY(mX,mVariables);
+    }
     //选带宽
     //这里判断是否选带宽
-    if(mIsAutoselectBandwidth)
+    if(mIsAutoselectBandwidth && !checkCanceled())
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
         emit tick(0, 0);
@@ -32,16 +35,19 @@ void GwmGWPCATaskThread::run()
         mSelector.setLower(lower);
         mSelector.setUpper(upper);
         GwmBandwidthWeight* bandwidthWeight = mSelector.optimize(this);
-        if(bandwidthWeight)
+        if(bandwidthWeight && !checkCanceled())
         {
             mSpatialWeight.setWeight(bandwidthWeight);
         }
     }
-    emit message(QString(tr("Principle components analyzing ...")));
-    //存储d的计算值
-    mLatestWt = mat(mDataPoints.n_rows,1,fill::zeros);
+    if(!checkCanceled())
+    {
+        emit message(QString(tr("Principle components analyzing ...")));
+        //存储d的计算值
+        mLatestWt = mat(mDataPoints.n_rows,1,fill::zeros);
+    }
     mat sdev;
-    if(scoresCal() && mDataPoints.n_rows <= 4096)
+    if(scoresCal() && mDataPoints.n_rows <= 4096 && !checkCanceled())
     {
         mLocalPV = pca(mX,mLoadings,sdev,mScores);
     }
@@ -57,18 +63,21 @@ void GwmGWPCATaskThread::run()
     // 取RW矩阵每一行最大的列的索引
     QList<QString> win_var_PC1;
     uvec iWinVar = index_max(mLoadings.slice(0), 1);
-    for(int i = 0; i < mDataPoints.n_rows; i++)
+    for(int i = 0; i < mDataPoints.n_rows & !checkCanceled(); i++)
     {
         win_var_PC1.append(mVariables.at(iWinVar(i)).name);
     }
-    //Com.1_PV列
-    //有几列生成几列
-    CreateResultLayerData resultLayerData = {
-        qMakePair(QString("Comp.%1_PV"), mLocalPV),
-        qMakePair(QString("local_CP"), sum(mLocalPV, 1))
-    };
-    createResultLayer(resultLayerData,win_var_PC1);
-    emit success();
+    if(!checkCanceled())
+    {
+        //Com.1_PV列
+        //有几列生成几列
+        CreateResultLayerData resultLayerData = {
+            qMakePair(QString("Comp.%1_PV"), mLocalPV),
+            qMakePair(QString("local_CP"), sum(mLocalPV, 1))
+        };
+        createResultLayer(resultLayerData,win_var_PC1);
+        emit success();
+    }
 }
 
 bool GwmGWPCATaskThread::isValid()
@@ -282,7 +291,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
     double score = 0;
     //主循环开始
     //主循环
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n & !checkCanceled(); i++)
     {
         vec distvi = mSpatialWeight.distance()->distance(i);
         vec wt = weight->weight(distvi);
@@ -322,7 +331,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
-        if(flag)
+        if(flag && !checkCanceled())
         {
             int thread = omp_get_thread_num();
             vec distvi = mSpatialWeight.distance()->distance(i);
@@ -372,7 +381,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings
     // 初始化矩阵
     loadings = cube(nDp, nVar, mK, fill::zeros);
     scores = cube(nDp, mK, nDp, fill::zeros);
-    for(int i=0;i<nDp;i++)
+    for(int i=0;i<nDp & !checkCanceled();i++)
     {
         //vec distvi = mSpatialWeight.distance()->distance(i);
         vec wt = mSpatialWeight.weightVector(i);
@@ -394,14 +403,14 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings
         mLatestWt = newWt;
         d_all.col(i) = d;
         //计算loadings
-        for(int j = 0; j < mK; j++)
+        for(int j = 0; j < mK & !checkCanceled(); j++)
         {
             loadings.slice(j).row(i) = trans(V.col(j));
         }
         //计算scores
         //如果点数大于4096不保存scores
         mat scorei(nDp, mK, fill::zeros);
-        for(int j = 0; j < mK; j++)
+        for(int j = 0; j < mK & !checkCanceled(); j++)
         {
             mat score = newX.each_row() % trans(V.col(j));
             scorei.col(j) = sum(score, 1);
@@ -431,7 +440,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i=0;i<nDp;i++)
     {
-        if (flag)
+        if (flag && !checkCanceled())
         {
             //vec distvi = mSpatialWeight.distance()->distance(i);
             vec wt = mSpatialWeight.weightVector(i);
@@ -458,14 +467,20 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
             //计算loadings
             for(int j=0;j<mK;j++)
             {
-                loadings.slice(j).row(i) = trans(V.col(j));
+                if(!checkCanceled())
+                {
+                    loadings.slice(j).row(i) = trans(V.col(j));
+                }
             }
             //计算scores
             mat scorei(nDp, mK, fill::zeros);
             for(int j = 0; j < mK; j++)
             {
-                mat score = newX.each_row() % trans(V.col(j));
-                scorei.col(j) = sum(score, 1);
+                if(!checkCanceled())
+                {
+                    mat score = newX.each_row() % trans(V.col(j));
+                    scorei.col(j) = sum(score, 1);
+                }
             }
             scores.slice(i) = scorei;
             //计算sdev
@@ -490,7 +505,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat 
     // 初始化矩阵
     loadings = cube(nDp, nVar, mK, fill::zeros);
     //scores = cube(nDp, mK, nDp, fill::zeros);
-    for(int i=0;i<nDp;i++)
+    for(int i=0;i<nDp & !checkCanceled();i++)
     {
         //vec distvi = mSpatialWeight.distance()->distance(i);
         vec wt = mSpatialWeight.weightVector(i);
@@ -512,7 +527,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat 
         mLatestWt = newWt;
         d_all.col(i) = d;
         //计算loadings
-        for(int j = 0; j < mK; j++)
+        for(int j = 0; j < mK & !checkCanceled(); j++)
         {
             loadings.slice(j).row(i) = trans(V.col(j));
         }
@@ -540,7 +555,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &st
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i=0;i<nDp;i++)
     {
-        if (flag)
+        if (flag && !checkCanceled())
         {
             vec wt = mSpatialWeight.weightVector(i);
             //取wt大于0的部分
@@ -566,7 +581,10 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &st
             //计算loadings
             for(int j = 0; j < mK; j++)
             {
-                loadings.slice(j).row(i) = trans(V.col(j));
+                if(!checkCanceled())
+                {
+                    loadings.slice(j).row(i) = trans(V.col(j));
+                }
             }
         }
     }

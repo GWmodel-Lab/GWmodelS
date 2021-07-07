@@ -35,6 +35,11 @@ public:
 
 public:
     GwmBandwidthWeight* optimize(IBandwidthSizeSelectable* instance);
+    bool isCanceled() const;
+    void setCanceled(bool newCanceled);
+    bool checkCanceled();
+protected:
+    bool mIsCanceled = false;
 
 private:
     GwmBandwidthWeight* mBandwidth;
@@ -71,6 +76,16 @@ inline double GwmBandwidthSizeSelector::upper() const
 inline void GwmBandwidthSizeSelector::setUpper(double upper)
 {
     mUpper = upper;
+}
+
+inline bool GwmBandwidthSizeSelector::isCanceled() const
+{
+    return mIsCanceled;
+}
+
+inline void GwmBandwidthSizeSelector::setCanceled(bool newCanceled)
+{
+    mIsCanceled = newCanceled;
 }
 
 #endif // GWMBANDWIDTHSIZESELECTOR_H
