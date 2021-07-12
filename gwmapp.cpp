@@ -334,10 +334,10 @@ void GwmApp::setupMapPanel()
     mMapCanvas->setMapTool(mMapIdentifyTool);
 
     // 连接信号槽
-    connect(mMapModel, &GwmLayerItemModel::layerAddedSignal, this, &GwmApp::onMapModelChanged);
-    connect(mMapModel, &GwmLayerItemModel::layerRemovedSignal, this, &GwmApp::onMapModelChanged);
-    connect(mMapModel, &GwmLayerItemModel::layerItemChangedSignal, this, &GwmApp::onMapModelChanged);
-    connect(mMapModel, &GwmLayerItemModel::layerItemMovedSignal, this, &GwmApp::onMapModelChanged);
+    connect(mMapModel, &GwmLayerItemModel::layerAddedSignal, this, QOverload<>::of(&GwmApp::onMapModelChanged));
+    connect(mMapModel,&GwmLayerItemModel::layerRemovedSignal, this, QOverload<>::of(&GwmApp::onMapModelChanged));
+    connect(mMapModel, &GwmLayerItemModel::layerItemChangedSignal, this, QOverload<GwmLayerItem *>::of(&GwmApp::onMapModelChanged));
+    connect(mMapModel, &GwmLayerItemModel::layerItemMovedSignal, this, QOverload<>::of(&GwmApp::onMapModelChanged));
     connect(mMapCanvas, &QgsMapCanvas::selectionChanged, this, &GwmApp::onMapSelectionChanged);
 }
 
@@ -812,7 +812,8 @@ void GwmApp::onMapSelectionChanged(QgsVectorLayer *layer)
         }
     }
     rubbers0.clear();
-    // 添加新的橡皮条
+
+     //添加新的橡皮条
     QgsFeatureList selectedFeatures = layer->selectedFeatures();
     for (QgsFeature feature : selectedFeatures)
     {
@@ -821,13 +822,14 @@ void GwmApp::onMapSelectionChanged(QgsVectorLayer *layer)
         rubber->addGeometry(geometry, layer);
         rubber->setStrokeColor(QColor(255, 0, 0));
         rubber->setFillColor(QColor(255, 0, 0, 144));
+        rubber->show();
         mMapLayerRubberDict[layer] += rubber;
         qDebug() << "[MainWindow::onMapSelectionChanged]"
                  << "selected" << geometry.asWkt();
     }
 }
 
-void GwmApp::onMapModelChanged()
+void GwmApp::onMapModelChanged(GwmLayerItem *item)
 {
     mMapLayerList = mMapModel->toMapLayerList();
     mMapCanvas->setLayers(mMapLayerList);
@@ -841,6 +843,66 @@ void GwmApp::onMapModelChanged()
         mMapCanvas->setExtent(extent);
     }
     mMapCanvas->refresh();
+
+    QgsVectorLayer *layer = mMapModel->layerFromItem(item);
+    QList<QgsRubberBand*> rubbers0 = mMapLayerRubberDict[layer];
+    if(item->checkState()!=Qt::CheckState::Checked){
+    if (rubbers0.size() > 0)
+    {
+        for (QgsRubberBand* rubber : rubbers0)
+        {
+            rubber->hide();
+        }
+    }
+    }
+    else{
+        if (rubbers0.size() > 0)
+        {
+            for (QgsRubberBand* rubber : rubbers0)
+            {
+                rubber->show();
+            }
+        }
+
+    }
+}
+
+void GwmApp::onMapModelChanged()
+{
+    mMapLayerList = mMapModel->toMapLayerList();
+    mMapCanvas->setLayers(mMapLayerList);
+    QList<QgsMapLayer*> maplist=mMapLayerRubberDict.keys();
+    for(QgsMapLayer* formlayer:mMapLayerRubberDict.keys()){
+        for(QgsMapLayer* nowlayer:mMapLayerList){
+            if(formlayer==nowlayer){
+                maplist.removeAll(nowlayer);
+            }
+        }
+    }
+
+    for(QgsMapLayer* layer:maplist){
+        QList<QgsRubberBand*> rubbers0 = mMapLayerRubberDict[layer];
+        if (rubbers0.size() > 0)
+        {
+            for (QgsRubberBand* rubber : rubbers0)
+            {
+                rubber->reset();
+            }
+        }
+        rubbers0.clear();
+    }
+
+    if (mMapLayerList.size() == 1)
+    {
+        QgsMapLayer* firstLayer = mMapLayerList.first();
+        QgsRectangle extent = mMapCanvas->mapSettings().layerExtentToOutputExtent(firstLayer, firstLayer->extent());
+        qDebug() << "[MainWindow::onMapModelChanged]"
+                 << "origin extent: " << firstLayer->extent()
+                 << "trans extent: " << extent;
+        mMapCanvas->setExtent(extent);
+    }
+    mMapCanvas->refresh();
+
 }
 
 void GwmApp::onShowLayerProperty(const QModelIndex &index)
