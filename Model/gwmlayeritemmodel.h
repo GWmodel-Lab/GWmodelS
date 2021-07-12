@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include "gwmlayergroupitem.h"
+#include "gwmlayeritem.h"
 
 class GwmLayerItemModel : public QAbstractItemModel
 {

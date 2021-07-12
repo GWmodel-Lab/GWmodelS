@@ -117,6 +117,7 @@ public slots:
      * @brief 当模型项发生改变时触发的槽
      * @param item 改变的项
      */
+    void onMapModelChanged(GwmLayerItem *item);
     void onMapModelChanged();
     void onShowLayerProperty(const QModelIndex& index);
     void onFeaturePanelRowOrderChanged(int from, int dest);
@@ -143,8 +144,7 @@ public slots:
     void onLcrGWRBtnClicked();
     void onGTWRBtnClicked();
     void onGWPCABtnClicked();
-	void populateLayoutsMenu(QMenu *menu);
-
+    void populateLayoutsMenu(QMenu *menu);
 	
 private:
     void setupMenus();
@@ -165,7 +165,7 @@ private:
     QList<QgsMapLayer*> mMapLayerList;
     QgsMapTool* mMapPanTool;
     QgsMapTool* mMapIdentifyTool;
-    QMap<QgsVectorLayer*, QList<QgsRubberBand*>> mMapLayerRubberDict;
+    QMap<QgsMapLayer*, QList<QgsRubberBand*>> mMapLayerRubberDict;
 
     GwmSymbolWindow* mSymbolWindow;
 

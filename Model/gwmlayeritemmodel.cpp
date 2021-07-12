@@ -183,12 +183,11 @@ bool GwmLayerItemModel::removeRows(int row, int count, const QModelIndex &parent
 {
     GwmLayerItem* parentItem = itemFromIndex(parent);
     bool success = false;
-
-	QList<QgsMapLayer*> layers;
+    QList<QgsMapLayer*> layers;
 
 	for (size_t i = row; i < row + count; i++)
 	{
-		GwmLayerItem* item = parentItem->child(row);
+        GwmLayerItem* item = parentItem->child(row);
 		GwmLayerItem::GwmLayerItemType type = item->itemType();
 		switch (type)
 		{
@@ -383,7 +382,8 @@ QList<GwmLayerItem *> GwmLayerItemModel::takeRows(int row, int count, const QMod
                 break;
 			}
 		}
-        emit layerRemovedSignal();
+             emit layerRemovedSignal();
+
     }
     return takenItems;
 }
@@ -619,7 +619,7 @@ void GwmLayerItemModel::remove(const QModelIndex &index)
 	bool success = removeRows(row, 1, index.parent());
 	if (success)
 	{
-	    emit layerRemovedSignal();
+        emit layerRemovedSignal();
 	}
 }
 
