@@ -28,6 +28,8 @@ signals:
     void sendDataSigEsriShp(const QModelIndex &index);
     // 导出GeoJSON
     void sendDataSigGeoJson(const QModelIndex &index);
+    // 导出GPKG
+    void sendDataSigGPKG(const QModelIndex &index);
     // 导出Excel
     void sendDataSigExcel(const QModelIndex &index);
     // 导出Csv
@@ -76,6 +78,8 @@ public slots:
     void esrishp();
     // 发送信号(导出GeoJSON)
     void geojson();
+    //发送信号(导出GPKG)
+    void gpkg();
     // 发送信号(导出Excel)
     void excel();
     // 发送信号(导出csv)

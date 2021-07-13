@@ -31,7 +31,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -44,6 +44,7 @@
      </property>
      <addaction name="action_ESRI_Shapefile"/>
      <addaction name="actionGeo_Json"/>
+     <addaction name="action_GPKG"/>
      <addaction name="separator"/>
      <addaction name="action_CSV"/>
     </widget>
@@ -204,7 +205,7 @@
    <property name="minimumSize">
     <size>
      <width>240</width>
-     <height>38</height>
+     <height>42</height>
     </size>
    </property>
    <property name="features">
@@ -477,6 +478,11 @@
   <action name="actionGTWR">
    <property name="text">
     <string>GTWR</string>
+   </property>
+  </action>
+  <action name="action_GPKG">
+   <property name="text">
+    <string>GPKG</string>
    </property>
   </action>
  </widget>

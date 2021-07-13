@@ -106,6 +106,7 @@ private:
 public slots:
     void onOpenFileImportShapefile();
     void onOpenFileImportJson();
+    void onOpenFileImportGPKG();
     void onOpenFileImportCsv();
     void onShowSymbolSetting(const QModelIndex &index);
     void onCsvToDat();
