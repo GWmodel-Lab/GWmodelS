@@ -20,10 +20,10 @@ void GwmGeneralizedLinearModel::fit(){
     mat coefold;
     mat eta = vec(uword(0));
     mat mu;
-    if(mWeight.is_empty()){
+    if(mWeight.is_empty() && !checkCanceled()){
         mWeight = ones(nObs);
     }
-    if(mOffset.is_empty()){
+    if(mOffset.is_empty() && !checkCanceled()){
         mOffset = zeros(nObs);
     }
     if(mFamily == GwmGeneralizedGWRAlgorithm::Family::Poisson){
@@ -39,7 +39,7 @@ void GwmGeneralizedLinearModel::fit(){
     }
     mat n = mModel->initialize();
     mMuStart = mModel->muStart();
-    if(empty){
+    if(empty && !checkCanceled()){
         eta = zeros(nObs) + mOffset;
 //        if(!mModel->valideta(eta)){
 
@@ -60,16 +60,16 @@ void GwmGeneralizedLinearModel::fit(){
         mat coef;
         bool boundary = false;
         bool conv = false;
-        for(int iter = 0; iter < mMaxit; iter++){
+        for(int iter = 0; iter < mMaxit & !checkCanceled(); iter++){
             mat varmu = mModel->variance(mu);
             mat muetaval = mModel->muEta(eta);
             mat z = (eta - mOffset) + (mY - mu)/muetaval;
             mat w = sqrt((mWeight % (muetaval % muetaval))/varmu);
             mat xadj = mat(mX.n_rows,mX.n_cols);
-            for (int i = 0; i < mX.n_cols; i++){
+            for (int i = 0; i < mX.n_cols & !checkCanceled(); i++){
                 xadj.col(i) = mX.col(i)%w;
             }
-            for (int i = 0; i < mX.n_rows; i++){
+            for (int i = 0; i < mX.n_rows & !checkCanceled(); i++){
                 start.col(i) = GwmGeneralizedGWRAlgorithm::gwReg(xadj,z%w,vec(mX.n_rows,fill::ones),i);
             }
             mat starttrans = trans(start);
@@ -77,9 +77,9 @@ void GwmGeneralizedLinearModel::fit(){
             mu = mModel->linkinv(eta + mOffset);
             vec devtemp = mModel->devResids(mY,mu,mWeight);
             mDev = sum(devtemp);
-            if (isinf(mDev)) {
+            if (isinf(mDev) && !checkCanceled()) {
                 int ii = 1;
-                while (isinf(mDev)) {
+                while (isinf(mDev) && !checkCanceled()) {
                     if (ii > mMaxit){
                         return;
                     }
@@ -91,7 +91,7 @@ void GwmGeneralizedLinearModel::fit(){
                     mDev = sum(devtemp);
                 }
             }
-            if (abs(mDev - devold)/(0.1 + abs(mDev)) < mEpsilon) {
+            if (abs(mDev - devold)/(0.1 + abs(mDev)) < mEpsilon && !checkCanceled()) {
                        conv = true;
                        coef = start;
                        break;
@@ -103,7 +103,7 @@ void GwmGeneralizedLinearModel::fit(){
     }
     vec wtdmu = (mIntercept)? sum(mWeight % mY)/sum(mWeight) : mModel->linkinv(mOffset);
     vec wtdmu1 = vec(mY.n_rows);
-    for(int i = 0; i < wtdmu1.n_rows; i++){
+    for(int i = 0; i < wtdmu1.n_rows & !checkCanceled(); i++){
         wtdmu1.row(i) = wtdmu;
     }
     vec nulldevtemp = mModel->devResids(mY,wtdmu1,mWeight);
@@ -138,5 +138,17 @@ double GwmGeneralizedLinearModel::nullDev(){
 
 double GwmGeneralizedLinearModel::dev(){
     return mDev;
+}
+
+bool GwmGeneralizedLinearModel::checkCanceled()
+{
+    if(isCanceled())
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 

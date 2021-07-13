@@ -36,8 +36,11 @@ void GwmRobustGWRAlgorithm::run()
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     mWeightMask = vec(nDp, fill::ones);
 
-    emit message("Regression ...");
-    mBetas = regression(mX,mY);
+    if(!checkCanceled())
+    {
+        emit message("Regression ...");
+        mBetas = regression(mX,mY);
+    }
 
     //诊断+结果图层
     if(mHasHatMatrix && !checkCanceled())
@@ -108,8 +111,8 @@ void GwmRobustGWRAlgorithm::run()
         createResultLayer(resultLayerData);
     }
 
-    emit success();
-
+    if(!checkCanceled()) emit success();
+    else return;
 }
 
 mat GwmRobustGWRAlgorithm::regression(const mat &x, const vec &y)

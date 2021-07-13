@@ -52,6 +52,12 @@ GwmMultiscaleGWRAlgorithm::GwmMultiscaleGWRAlgorithm()
 {
 }
 
+void GwmMultiscaleGWRAlgorithm::setCanceled(bool canceled)
+{
+    selector.setCanceled(canceled);
+    return GwmTaskThread::setCanceled(canceled);
+}
+
 void GwmMultiscaleGWRAlgorithm::run()
 {
     if(!checkCanceled())
@@ -88,7 +94,6 @@ void GwmMultiscaleGWRAlgorithm::run()
             mXi = mX.col(i);
             GwmBandwidthWeight* bw0 = bandwidth(i);
             bool adaptive = bw0->adaptive();
-            GwmBandwidthSizeSelector selector;
             selector.setBandwidth(bw0);
             selector.setLower(adaptive ? mAdaptiveLower : 0.0);
             selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
@@ -147,7 +152,8 @@ void GwmMultiscaleGWRAlgorithm::run()
         });
     }
 
-    emit success();
+    if(!checkCanceled()) emit success();
+    else return;
 }
 
 mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
@@ -654,7 +660,8 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial(GwmBandwidt
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(cv);
 //    emit message(msg);
-    return cv;
+    if(!checkCanceled()) return cv;
+    else return DBL_MAX;
 }
 
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWeight *bandwidthWeight)
@@ -732,7 +739,8 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial(GwmBandwid
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(value);
 //    emit message(msg);
-    return value;
+    if(!checkCanceled()) return value;
+    else return DBL_MAX;
 }
 
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICOmp(GwmBandwidthWeight *bandwidthWeight)
@@ -812,7 +820,8 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial(GwmBandwidt
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(cv);
 //    emit message(msg);
-    return cv;
+    if(!checkCanceled()) return cv;
+    else return DBL_MAX;
 }
 
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWeight *bandwidthWeight)
@@ -892,7 +901,8 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial(GwmBandwid
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(value);
 //    emit message(msg);
-    return value;
+    if(!checkCanceled()) return value;
+    else return DBL_MAX;
 }
 
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICOmp(GwmBandwidthWeight *bandwidthWeight)

@@ -14,7 +14,7 @@ public:
     GwmTaskThread();
 
     bool isCanceled() const;
-    void setCanceled(bool newCanceled);
+    virtual void setCanceled(bool newCanceled);
 
 signals:
     void tick(int current, int total);

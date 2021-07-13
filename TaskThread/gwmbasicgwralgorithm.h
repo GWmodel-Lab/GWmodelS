@@ -90,6 +90,7 @@ public:
     bool hasPredict() const;
     void setHasPredict(bool hasPredict);
 
+    void setCanceled(bool canceled);
 
 protected:  // QThread interface
     void run() override;

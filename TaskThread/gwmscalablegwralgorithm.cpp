@@ -210,7 +210,10 @@ void GwmScalableGWRAlgorithm::run()
             }
             else
             {
-                mBetas = regressionSerial(mX, mY);
+                if(!checkCanceled())
+                {
+                   mBetas = regressionSerial(mX, mY);
+                }
                 if (hasRegressionLayerXY && mHasPredict && !checkCanceled())
                 {
                     vec yhat = Fitted(mRegressionLayerX, mBetas);
@@ -237,6 +240,10 @@ void GwmScalableGWRAlgorithm::run()
         }
         emit success();
 
+    }
+    if (checkCanceled())
+    {
+        return;
     }
 
 }

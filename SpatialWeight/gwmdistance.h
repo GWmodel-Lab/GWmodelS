@@ -38,8 +38,13 @@ public:
     double maxDistance();
     double minDistance();
 
+    bool isCanceled() const;
+    void setCanceled(bool newCanceled);
+    bool checkCanceled();
+
 protected:
     int mTotal = 0;
+    bool mIsCanceled = false;
 };
 
 inline int GwmDistance::total() const
@@ -52,5 +57,14 @@ inline void GwmDistance::setTotal(int total)
     mTotal = total;
 }
 
+inline bool GwmDistance::isCanceled() const
+{
+    return mIsCanceled;
+}
+
+inline void GwmDistance::setCanceled(bool newCanceled)
+{
+    mIsCanceled = newCanceled;
+}
 
 #endif // GWMDISTANCE_H

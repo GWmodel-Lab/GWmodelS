@@ -92,6 +92,8 @@ public:
     // IOpenmpParallelable interface
 public:
     void setOmpThreadNum(const int threadNum);
+
+    void setCanceled(bool canceled);
 private:
     double mLambda;
 

@@ -4,6 +4,8 @@
 #include "gwmbasicgwralgorithm.h"
 #include "gwmggwrbandwidthsizeselector.h"
 
+class GwmGeneralizedLinearModel;
+
 struct GwmGGWRDiagnostic
 {
     double RSS;
@@ -83,6 +85,8 @@ public:
 
 public:
     GwmGeneralizedGWRAlgorithm();
+
+    void setCanceled(bool canceled);
 
 public:     // GwmTaskThread interface
     QString name() const override { return tr("GGWR"); };
@@ -218,6 +222,8 @@ protected:
 
     IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
+
+    GwmGeneralizedLinearModel* mGlm = nullptr;
 };
 
 

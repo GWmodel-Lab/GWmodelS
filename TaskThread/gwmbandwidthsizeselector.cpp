@@ -85,8 +85,8 @@ GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable 
     double x2 = adaptBw ? round(xU - d) : (xU - d);
     w1->setBandwidth(x1);
     w2->setBandwidth(x2);
-    double f1 = instance->criterion(w1);
-    double f2 = instance->criterion(w2);
+    double f1 = checkCanceled() ? DBL_MAX : instance->criterion(w1);
+    double f2 = checkCanceled() ? DBL_MAX : instance->criterion(w2);
     if (f1 < DBL_MAX)
         mBandwidthCriterion[x1] = f1;
     if (f2 < DBL_MAX)
@@ -125,11 +125,15 @@ GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable 
     }
     delete w1;
     delete w2;
-    GwmBandwidthWeight* wopt = new GwmBandwidthWeight();
-    wopt->setKernel(mBandwidth->kernel());
-    wopt->setAdaptive(mBandwidth->adaptive());
-    wopt->setBandwidth(xopt);
-    return wopt;
+    if(!checkCanceled())
+    {
+        GwmBandwidthWeight* wopt = new GwmBandwidthWeight();
+        wopt->setKernel(mBandwidth->kernel());
+        wopt->setAdaptive(mBandwidth->adaptive());
+        wopt->setBandwidth(xopt);
+        return wopt;
+    }
+    else return nullptr;
 }
 
 bool GwmBandwidthSizeSelector::checkCanceled()

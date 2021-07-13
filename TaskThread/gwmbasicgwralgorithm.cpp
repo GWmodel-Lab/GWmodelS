@@ -36,6 +36,12 @@ GwmBasicGWRAlgorithm::GwmBasicGWRAlgorithm() : GwmGeographicalWeightedRegression
 
 }
 
+void GwmBasicGWRAlgorithm::setCanceled(bool canceled)
+{
+    mBandwidthSizeSelector.setCanceled(canceled);
+    mSpatialWeight.distance()->setCanceled(canceled);
+    return GwmTaskThread::setCanceled(canceled);
+}
 
 void GwmBasicGWRAlgorithm::run()
 {
@@ -191,7 +197,8 @@ void GwmBasicGWRAlgorithm::run()
         createResultLayer(resultLayerData);
     }
 
-    emit success();
+    if(!checkCanceled()) emit success();
+    else return;
 }
 
 #ifdef ENABLE_CUDA

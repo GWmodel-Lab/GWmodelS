@@ -69,6 +69,7 @@ void GwmGWSSTaskThread::run()
         createResultLayer(resultLayerData);
         emit success();
     }
+    if(checkCanceled()) return;
 }
 
 bool GwmGWSSTaskThread::CalculateSerial(){

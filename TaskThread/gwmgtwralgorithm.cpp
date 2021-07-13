@@ -24,6 +24,12 @@ GwmGTWRAlgorithm::GwmGTWRAlgorithm() : GwmSpatialTemporalMonoscaleAlgorithm()
 
 }
 
+//void GwmGTWRAlgorithm::setCanceled(bool canceled)
+//{
+//    mBandwidthSizeSelector.setCanceled(canceled);
+//    mSTWeight.distance()->setCanceled(canceled);
+//    return GwmTaskThread::setCanceled(canceled);
+//}
 
 void GwmGTWRAlgorithm::run()
 {
@@ -96,29 +102,33 @@ void GwmGTWRAlgorithm::run()
     }
     else
     {
-        mBetas = regression(mX, mY);
-        CreateResultLayerData resultLayerData;
-        if (mHasRegressionLayerXY && mHasPredict && !checkCanceled())
+        if(!checkCanceled())
         {
-            vec yhat = Fitted(mRegressionLayerX, mBetas);
-            vec residual = mRegressionLayerY - yhat;
-            resultLayerData = {
-                qMakePair(QString(mDepVar.name), mRegressionLayerY),
-                qMakePair(QString("%1"), mBetas),
-                qMakePair(QString("yhat"), yhat),
-                qMakePair(QString("residual"), residual)
-            };
+            mBetas = regression(mX, mY);
+            CreateResultLayerData resultLayerData;
+            if (mHasRegressionLayerXY && mHasPredict)
+            {
+                vec yhat = Fitted(mRegressionLayerX, mBetas);
+                vec residual = mRegressionLayerY - yhat;
+                resultLayerData = {
+                    qMakePair(QString(mDepVar.name), mRegressionLayerY),
+                    qMakePair(QString("%1"), mBetas),
+                    qMakePair(QString("yhat"), yhat),
+                    qMakePair(QString("residual"), residual)
+                };
+            }
+            else
+            {
+                resultLayerData = {
+                    qMakePair(QString("%1"), mBetas)
+                };
+            }
+            createResultLayer(resultLayerData);
         }
-        else
-        {
-            resultLayerData = {
-                qMakePair(QString("%1"), mBetas)
-            };
-        }
-        createResultLayer(resultLayerData);
     }
 
-    emit success();
+    if(!checkCanceled()) emit success();
+    else return;
 }
 
 
@@ -129,9 +139,12 @@ bool GwmGTWRAlgorithm::isValid()
 
 arma::mat GwmGTWRAlgorithm::regression(const arma::mat &x, const arma::vec &y)
 {
-    if (mHasHatMatrix && !checkCanceled())
-        return regressionHatmatrixSerial(x, y, mBetasSE, mSHat, mQDiag);
-    else return regressionSerial(x, y);
+    if(!checkCanceled())
+    {
+        if (mHasHatMatrix)
+            return regressionHatmatrixSerial(x, y, mBetasSE, mSHat, mQDiag);
+        else return regressionSerial(x, y);
+    }
 }
 
 void GwmGTWRAlgorithm::initPoints()

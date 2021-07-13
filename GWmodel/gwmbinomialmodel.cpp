@@ -130,4 +130,3 @@ double GwmBinomialModel::y_log_y(double y, double mu)
 {
     return (y != 0.) ? (y * log(y/mu)) : 0;
 }
-

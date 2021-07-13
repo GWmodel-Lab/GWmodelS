@@ -10,6 +10,13 @@ GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm()
 
 }
 
+void GwmGWPCATaskThread::setCanceled(bool canceled)
+{
+    mSelector.setCanceled(canceled);
+    mSpatialWeight.distance()->setCanceled(canceled);
+    return GwmTaskThread::setCanceled(canceled);
+}
+
 void GwmGWPCATaskThread::run()
 {
     if(!checkCanceled())
@@ -77,6 +84,10 @@ void GwmGWPCATaskThread::run()
         };
         createResultLayer(resultLayerData,win_var_PC1);
         emit success();
+    }
+    if(checkCanceled())
+    {
+        return;
     }
 }
 

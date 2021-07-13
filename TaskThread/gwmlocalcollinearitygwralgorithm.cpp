@@ -30,6 +30,13 @@ double GwmLocalCollinearityGWRAlgorithm::cnThresh() const
     return mCnThresh;
 }
 
+void GwmLocalCollinearityGWRAlgorithm::setCanceled(bool canceled)
+{
+    selector.setCanceled(canceled);
+    mSpatialWeight.distance()->setCanceled(canceled);
+    return GwmTaskThread::setCanceled(canceled);
+}
+
 void GwmLocalCollinearityGWRAlgorithm::run()
 {
     if(!checkCanceled())
@@ -86,6 +93,10 @@ void GwmLocalCollinearityGWRAlgorithm::run()
         };
         createResultLayer(resultLayerData);
         emit success();
+    }
+    if(checkCanceled())
+    {
+        return;
     }
 }
 
