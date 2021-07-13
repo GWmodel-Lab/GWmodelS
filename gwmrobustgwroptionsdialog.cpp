@@ -53,6 +53,7 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onDistTypeDmatToggled);
     connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &GwmRobustGWROptionsDialog::onDmatFileOpenClicked);
 
+    ui->stackedWidget->setCurrentIndex(0);
     QButtonGroup* calcParallelTypeBtnGroup = new QButtonGroup(this);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
