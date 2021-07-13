@@ -24,12 +24,12 @@ GwmGTWRAlgorithm::GwmGTWRAlgorithm() : GwmSpatialTemporalMonoscaleAlgorithm()
 
 }
 
-//void GwmGTWRAlgorithm::setCanceled(bool canceled)
-//{
-//    mBandwidthSizeSelector.setCanceled(canceled);
-//    mSTWeight.distance()->setCanceled(canceled);
-//    return GwmTaskThread::setCanceled(canceled);
-//}
+void GwmGTWRAlgorithm::setCanceled(bool canceled)
+{
+    mBandwidthSizeSelector.setCanceled(canceled);
+    mSTWeight.distance()->setCanceled(canceled);
+    return GwmTaskThread::setCanceled(canceled);
+}
 
 void GwmGTWRAlgorithm::run()
 {

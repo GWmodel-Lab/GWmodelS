@@ -101,7 +101,7 @@ public:
 
 public:
     bool hasRegressionLayer();
-//    void setCanceled(bool canceled);
+    void setCanceled(bool canceled);
 
 protected:
     virtual void initPoints();
