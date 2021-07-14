@@ -143,6 +143,10 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
         subMenu->addAction(pGeo);
         connect(pGeo, &QAction::triggered,this,&GwmFeaturePanel::geojson);
 
+        QAction *pGPKG = new QAction("GPKG",subMenu);
+        subMenu->addAction(pGPKG);
+        connect(pGPKG,&QAction::triggered,this,&GwmFeaturePanel::gpkg);
+
         QAction *pCsv = new QAction("csv",subMenu);
         subMenu->addAction(pCsv);
         connect(pCsv, &QAction::triggered,this,&GwmFeaturePanel::csv);
@@ -254,6 +258,13 @@ void GwmFeaturePanel::geojson()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
     emit sendDataSigGeoJson(selected[0]);
+}
+
+//导出GPKG
+void GwmFeaturePanel::gpkg()
+{
+    QModelIndexList selected = this->selectionModel()->selectedIndexes();
+    emit sendDataSigGPKG(selected[0]);
 }
 
 // 导出Csv

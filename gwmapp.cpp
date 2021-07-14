@@ -159,6 +159,7 @@ void GwmApp::setupMenus()
 {
     connect(ui->action_ESRI_Shapefile, &QAction::triggered, this, &GwmApp::onOpenFileImportShapefile);
     connect(ui->actionGeo_Json, &QAction::triggered, this, &GwmApp::onOpenFileImportJson);
+    connect(ui->action_GPKG,&QAction::triggered,this,&GwmApp::onOpenFileImportGPKG);
     connect(ui->action_CSV, &QAction::triggered, this, &GwmApp::onOpenFileImportCsv);
     connect(ui->action_CsvToDat, &QAction::triggered, this, &GwmApp::onCsvToDat);
     connect(ui->actionRobustGWR,&QAction::triggered,this,&GwmApp::onRobustGWR);
@@ -193,6 +194,17 @@ void GwmApp::onOpenFileImportShapefile(){
 void GwmApp::onOpenFileImportJson()
 {
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open GeoJson"), tr(""), tr("GeoJson (*.json *.geojson)"));
+    QFileInfo fileInfo(filePath);
+    if (fileInfo.exists())
+    {
+        QString fileName = fileInfo.baseName();
+        createLayerToModel(filePath, fileName, "ogr");
+    }
+}
+
+void GwmApp::onOpenFileImportGPKG()
+{
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open GPKG"), tr(""), tr("GPKG (*.gpkg)"));
     QFileInfo fileInfo(filePath);
     if (fileInfo.exists())
     {
@@ -262,7 +274,8 @@ void GwmApp::setupToolbar()
     connect(ui->actionSave_Layer, &QAction::triggered, this, &GwmApp::onSaveLayer);
     connect(ui->actionSave_Layer_As, &QAction::triggered, this, [&]()
     {
-        onExportLayer(tr("ESRI Shapefile (*.shp)"));
+        onExportLayer(tr("ESRI Shapefile (*.shp);;Geo Package (*.gpkg)"));
+
     });
     connect(ui->actionZoom_to_Area, &QAction::triggered,this,&GwmApp::onZoomToSelection);
     connect(ui->actionZoom_to_Layer, &QAction::triggered,this,&GwmApp::onZoomToLayerBtn);
@@ -310,6 +323,10 @@ void GwmApp::setupFeaturePanel()
     connect(mFeaturePanel,&GwmFeaturePanel::sendDataSigEsriShp,this, [&]()
     {
         onExportLayer(tr("ESRI Shapefile (*.shp)"));
+    });
+    connect(mFeaturePanel,&GwmFeaturePanel::sendDataSigGPKG,this, [&]()
+    {
+        onExportLayer(tr("Geo Package (*.gpkg)"));
     });
     connect(mFeaturePanel,&GwmFeaturePanel::sendDataSigCsv,this,&GwmApp::onExportLayerAsCsv);
     connect(ui->featureSortUpBtn, &QAbstractButton::clicked, mFeaturePanel, &GwmFeaturePanel::onSortUpBtnClicked);
