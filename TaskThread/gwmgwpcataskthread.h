@@ -83,6 +83,8 @@ public:  // IOpenmpParallelable interface
     bool scoresCal() const;
     void setScoresCal(bool scoresCal);
 
+    void setCanceled(bool canceled);
+
 private:
     void initPoints();
     void initXY(mat& x, const QList<GwmVariable>& indepVars);

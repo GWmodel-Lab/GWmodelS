@@ -13,15 +13,35 @@ class GwmTaskThread : public QThread
 public:
     GwmTaskThread();
 
+    bool isCanceled() const;
+    virtual void setCanceled(bool newCanceled);
+
 signals:
     void tick(int current, int total);
     void message(QString message);
     void success();
+    void canceled();
     void error(QString e);
     void plot(QVariant data, PlotFunction func);
 
 public:
     virtual QString name() const;
+
+protected:
+    bool checkCanceled();
+
+protected:
+    bool mIsCanceled = false;
 };
+
+inline bool GwmTaskThread::isCanceled() const
+{
+    return mIsCanceled;
+}
+
+inline void GwmTaskThread::setCanceled(bool newCanceled)
+{
+    mIsCanceled = newCanceled;
+}
 
 #endif // GWMTASKTHREAD_H

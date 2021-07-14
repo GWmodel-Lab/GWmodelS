@@ -145,6 +145,8 @@ public:     // IParallelalbe interface
 public:     // IOpenmpParallelable interface
     void setOmpThreadNum(const int threadNum) override;
 
+    void setCanceled(bool canceled);
+
 protected:
     void initPoints();
     void initXY(mat& x, mat& y, const GwmVariable& depVar, const QList<GwmVariable>& indepVars);
@@ -173,6 +175,8 @@ protected:
 
     void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
 
+protected:
+    GwmBandwidthSizeSelector selector;
 private:
     QgsVectorLayer* mRegressionLayer = nullptr;
     mat mDataPoints;

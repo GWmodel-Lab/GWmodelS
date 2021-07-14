@@ -24,18 +24,29 @@ GwmGTWRAlgorithm::GwmGTWRAlgorithm() : GwmSpatialTemporalMonoscaleAlgorithm()
 
 }
 
+void GwmGTWRAlgorithm::setCanceled(bool canceled)
+{
+    mBandwidthSizeSelector.setCanceled(canceled);
+    mSTWeight.distance()->setCanceled(canceled);
+    return GwmTaskThread::setCanceled(canceled);
+}
 
 void GwmGTWRAlgorithm::run()
 {
-    // 点位初始化
-    emit message(QString(tr("Setting data points")) + (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
-    initPoints();
-
-    emit message(QString(tr("Setting X and Y...")));
-    initXY(mX, mY, mDepVar, mIndepVars);
+    if(!checkCanceled())
+    {
+        // 点位初始化
+        emit message(QString(tr("Setting data points")) + (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
+        initPoints();
+    }
+    if(!checkCanceled())
+    {
+        emit message(QString(tr("Setting X and Y...")));
+        initXY(mX, mY, mDepVar, mIndepVars);
+    }
 
     // 优选带宽
-    if (!hasRegressionLayer() && mIsAutoselectBandwidth)
+    if (!hasRegressionLayer() && mIsAutoselectBandwidth && !checkCanceled())
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
         emit tick(0, 0);
@@ -46,7 +57,7 @@ void GwmGTWRAlgorithm::run()
         mBandwidthSizeSelector.setLower(lower);
         mBandwidthSizeSelector.setUpper(upper);
         GwmBandwidthWeight* bandwidthWeight = mBandwidthSizeSelector.optimize(this);
-        if (bandwidthWeight)
+        if (bandwidthWeight && !checkCanceled())
         {
             mSTWeight.setWeight(bandwidthWeight);
             // 绘图
@@ -55,7 +66,7 @@ void GwmGTWRAlgorithm::run()
         }
     }
 
-    if (mHasHatMatrix)
+    if (mHasHatMatrix && !checkCanceled())
     {
         emit message(tr("Calibrating..."));
         uword nDp = mDataPoints.n_rows;
@@ -71,7 +82,7 @@ void GwmGTWRAlgorithm::run()
         vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
         vec dyhat2 = (mY - yhat) % (mY - yhat);
         vec localR2 = vec(nDp, fill::zeros);
-        for (uword i = 0; i < nDp; i++)
+        for (uword i = 0; i < nDp & !checkCanceled(); i++)
         {
             vec w = mSTWeight.weightVector(i);
             double tss = sum(dybar2 % w);
@@ -91,29 +102,33 @@ void GwmGTWRAlgorithm::run()
     }
     else
     {
-        mBetas = regression(mX, mY);
-        CreateResultLayerData resultLayerData;
-        if (mHasRegressionLayerXY && mHasPredict)
+        if(!checkCanceled())
         {
-            vec yhat = Fitted(mRegressionLayerX, mBetas);
-            vec residual = mRegressionLayerY - yhat;
-            resultLayerData = {
-                qMakePair(QString(mDepVar.name), mRegressionLayerY),
-                qMakePair(QString("%1"), mBetas),
-                qMakePair(QString("yhat"), yhat),
-                qMakePair(QString("residual"), residual)
-            };
+            mBetas = regression(mX, mY);
+            CreateResultLayerData resultLayerData;
+            if (mHasRegressionLayerXY && mHasPredict)
+            {
+                vec yhat = Fitted(mRegressionLayerX, mBetas);
+                vec residual = mRegressionLayerY - yhat;
+                resultLayerData = {
+                    qMakePair(QString(mDepVar.name), mRegressionLayerY),
+                    qMakePair(QString("%1"), mBetas),
+                    qMakePair(QString("yhat"), yhat),
+                    qMakePair(QString("residual"), residual)
+                };
+            }
+            else
+            {
+                resultLayerData = {
+                    qMakePair(QString("%1"), mBetas)
+                };
+            }
+            createResultLayer(resultLayerData);
         }
-        else
-        {
-            resultLayerData = {
-                qMakePair(QString("%1"), mBetas)
-            };
-        }
-        createResultLayer(resultLayerData);
     }
 
-    emit success();
+    if(!checkCanceled()) emit success();
+    else return;
 }
 
 
@@ -124,9 +139,12 @@ bool GwmGTWRAlgorithm::isValid()
 
 arma::mat GwmGTWRAlgorithm::regression(const arma::mat &x, const arma::vec &y)
 {
-    if (mHasHatMatrix)
-        return regressionHatmatrixSerial(x, y, mBetasSE, mSHat, mQDiag);
-    else return regressionSerial(x, y);
+    if(!checkCanceled())
+    {
+        if (mHasHatMatrix)
+            return regressionHatmatrixSerial(x, y, mBetasSE, mSHat, mQDiag);
+        else return regressionSerial(x, y);
+    }
 }
 
 void GwmGTWRAlgorithm::initPoints()
@@ -210,7 +228,7 @@ mat GwmGTWRAlgorithm::regressionSerial(const mat &x, const vec &y)
     emit message("Regression ...");
     uword nRp = mRegressionPoints.n_rows, nVar = x.n_cols;
     mat betas(nVar, nRp, fill::zeros);
-    for (uword i = 0; i < nRp; i++)
+    for (uword i = 0; i < nRp & !checkCanceled(); i++)
     {
         vec w = mSTWeight.weightVector(i);
         mat xtw = trans(x.each_col() % w);
@@ -239,21 +257,24 @@ mat GwmGTWRAlgorithm::regressionOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nRp; i++)
     {
-        vec w = mSTWeight.weightVector(i);
-        mat xtw = trans(x.each_col() % w);
-        mat xtwx = xtw * x;
-        mat xtwy = xtw * y;
-        try
+        if(!checkCanceled())
         {
-            mat xtwx_inv = inv_sympd(xtwx);
-            betas.col(i) = xtwx_inv * xtwy;
-            emit tick(current + 1, nRp);
+            vec w = mSTWeight.weightVector(i);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                emit tick(current + 1, nRp);
+            }
+            catch (exception e)
+            {
+                emit error(e.what());
+            }
+            emit tick(++current, nRp);
         }
-        catch (exception e)
-        {
-            emit error(e.what());
-        }
-        emit tick(++current, nRp);
     }
     return betas.t();
 }
@@ -265,7 +286,7 @@ mat GwmGTWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, mat 
     betasSE = mat(nVar, nDp, fill::zeros);
     shat = vec(2, fill::zeros);
     qDiag = vec(nDp, fill::zeros);
-    for (uword i = 0; i < nDp; i++)
+    for (uword i = 0; i < nDp & !checkCanceled(); i++)
     {
         vec w = mSTWeight.weightVector(i);
         mat xtw = trans(x.each_col() % w);
@@ -306,29 +327,32 @@ mat GwmGTWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat &be
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        int thread = omp_get_thread_num();
-        vec w = mSTWeight.weightVector(i);
-        mat xtw = trans(x.each_col() % w);
-        mat xtwx = xtw * x;
-        mat xtwy = xtw * y;
-        try
+        if(!checkCanceled())
         {
-            mat xtwx_inv = inv_sympd(xtwx);
-            betas.col(i) = xtwx_inv * xtwy;
-            mat ci = xtwx_inv * xtw;
-            betasSE.col(i) = sum(ci % ci, 1);
-            mat si = x.row(i) * ci;
-            shat_all(0, thread) += si(0, i);
-            shat_all(1, thread) += det(si * si.t());
-            vec p = - si.t();
-            p(i) += 1.0;
-            qDiag_all.col(thread) += p % p;
+            int thread = omp_get_thread_num();
+            vec w = mSTWeight.weightVector(i);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                betasSE.col(i) = sum(ci % ci, 1);
+                mat si = x.row(i) * ci;
+                shat_all(0, thread) += si(0, i);
+                shat_all(1, thread) += det(si * si.t());
+                vec p = - si.t();
+                p(i) += 1.0;
+                qDiag_all.col(thread) += p % p;
+            }
+            catch (std::exception e)
+            {
+                emit error(e.what());
+            }
+            emit tick(++current, nDp);
         }
-        catch (std::exception e)
-        {
-            emit error(e.what());
-        }
-        emit tick(++current, nDp);
     }
     shat = sum(shat_all, 1);
     qDiag = sum(qDiag_all, 1);
@@ -341,7 +365,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *band
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
-    for (uword i = 0; i < nDp; i++)
+    for (uword i = 0; i < nDp & !checkCanceled(); i++)
     {
         vec d = mSTWeight.distanceVector(i);
         vec w = bandwidthWeight->weight(d);
@@ -361,14 +385,18 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *band
             return DBL_MAX;
         }
     }
-    if (isfinite(cv))
+    if(!checkCanceled())
     {
-        QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
-                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-                .arg(bandwidthWeight->bandwidth())
-                .arg(cv);
-        emit message(msg);
-        return cv;
+        if (isfinite(cv))
+        {
+            QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
+                    .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                    .arg(bandwidthWeight->bandwidth())
+                    .arg(cv);
+            emit message(msg);
+            return cv;
+        }
+        else return DBL_MAX;
     }
     else return DBL_MAX;
 }
@@ -382,7 +410,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *bandwid
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        if (flag)
+        if (flag && !checkCanceled())
         {
             int thread = omp_get_thread_num();
             vec d = mSTWeight.distance()->distance(i);
@@ -407,7 +435,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *bandwid
             }
         }
     }
-    if (flag)
+    if (flag && !checkCanceled())
     {
         double cv = sum(cv_all);
         QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
@@ -425,7 +453,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight *ban
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp; i++)
+    for (uword i = 0; i < nDp & !checkCanceled(); i++)
     {
         vec d = mSTWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -447,14 +475,18 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight *ban
         }
     }
     double value = AICc(mX, mY, betas.t(), shat);
-    if (isfinite(value))
+    if(!checkCanceled())
     {
-        QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
-                .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
-                .arg(bandwidthWeight->bandwidth())
-                .arg(value);
-        emit message(msg);
-        return value;
+        if (isfinite(value))
+        {
+            QString msg = QString(tr("%1 bandwidth: %2 (AIC Score: %3)"))
+                    .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
+                    .arg(bandwidthWeight->bandwidth())
+                    .arg(value);
+            emit message(msg);
+            return value;
+        }
+        else return DBL_MAX;
     }
     else return DBL_MAX;
 }
@@ -468,7 +500,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *bandwi
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        if (flag)
+        if (flag && !checkCanceled())
         {
             int thread = omp_get_thread_num();
             vec d = mSTWeight.distance()->distance(i);
@@ -491,7 +523,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *bandwi
             }
         }
     }
-    if (flag)
+    if (flag && !checkCanceled())
     {
         vec shat = sum(shat_all, 1);
         double value = AICc(mX, mY, betas.t(), shat);

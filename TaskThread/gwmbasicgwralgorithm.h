@@ -90,6 +90,7 @@ public:
     bool hasPredict() const;
     void setHasPredict(bool hasPredict);
 
+    void setCanceled(bool canceled);
 
 protected:  // QThread interface
     void run() override;
@@ -146,7 +147,6 @@ protected:
     {
         return (mSpatialWeight.distance()->type() == GwmDistance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
     }
-
 protected:
 
     void createResultLayer(CreateResultLayerData data,QString name = QStringLiteral("_GWR"));

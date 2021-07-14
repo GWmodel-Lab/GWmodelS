@@ -28,6 +28,7 @@ protected:
     mat mResiduals;
     double mNullDev;
     double mAIC;
+    bool mIsCanceled = false;
 
 public:
     void fit();
@@ -39,8 +40,20 @@ public:
     double dev();
     double nullDev();
     double aic();
+    bool isCanceled() const;
+    void setCanceled(bool newCanceled);
+    bool checkCanceled();
 
 
 };
+inline bool GwmGeneralizedLinearModel::isCanceled() const
+{
+    return mIsCanceled;
+}
+
+inline void GwmGeneralizedLinearModel::setCanceled(bool newCanceled)
+{
+    mIsCanceled = newCanceled;
+}
 
 #endif // GWMGENERALIZEDLINEARMODEL_H

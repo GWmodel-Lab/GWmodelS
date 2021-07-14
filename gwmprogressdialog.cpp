@@ -48,8 +48,8 @@ void GwmProgressDialog::accept()
 
 void GwmProgressDialog::reject()
 {
-    mTaskThread->exit(1);
-    return QDialog::reject();
+    mTaskThread->setCanceled(true);
+    connect(mTaskThread, &GwmTaskThread::canceled, this, &GwmProgressDialog::onCanceled);
 }
 
 void GwmProgressDialog::onTick(int current, int total)
@@ -83,6 +83,13 @@ void GwmProgressDialog::onSuccess()
         ui->buttonBox->setStandardButtons(QDialogButtonBox::Ok |
                                           QDialogButtonBox::Cancel);
     }
+}
+
+void GwmProgressDialog::onCanceled()
+{
+    disconnect(mTaskThread, &GwmTaskThread::canceled, this, &GwmProgressDialog::onCanceled);
+    qDebug() << "[GwmProgressDialog::onCanceled]" << "mTaskThread live is" << mTaskThread->isRunning();
+    return QDialog::reject();
 }
 
 void GwmProgressDialog::onError(QString e)

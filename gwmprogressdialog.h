@@ -29,6 +29,7 @@ public slots:
     void onTick(int current, int total);
     void onMessage(QString message);
     void onSuccess();
+    void onCanceled();
     void onError(QString e);
     void onPlot(QVariant data, PlotFunction func);
 

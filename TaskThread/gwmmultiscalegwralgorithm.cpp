@@ -52,10 +52,19 @@ GwmMultiscaleGWRAlgorithm::GwmMultiscaleGWRAlgorithm()
 {
 }
 
+void GwmMultiscaleGWRAlgorithm::setCanceled(bool canceled)
+{
+    selector.setCanceled(canceled);
+    return GwmTaskThread::setCanceled(canceled);
+}
+
 void GwmMultiscaleGWRAlgorithm::run()
 {
-    initPoints();
-    initXY(mX, mY, mDepVar, mIndepVars);
+    if(!checkCanceled())
+    {
+        initPoints();
+        initXY(mX, mY, mDepVar, mIndepVars);
+    }
     uword nDp = mX.n_rows, nVar = mX.n_cols;
 
     // ********************************
@@ -63,7 +72,7 @@ void GwmMultiscaleGWRAlgorithm::run()
     // ********************************
     mX0 = mX;
     mY0 = mY;
-    for (uword i = 1; i < nVar; i++)
+    for (uword i = 1; i < nVar & !checkCanceled(); i++)
     {
         if (mPreditorCentered[i])
         {
@@ -75,7 +84,7 @@ void GwmMultiscaleGWRAlgorithm::run()
     // Intialize the bandwidth
     // ***********************
     mYi = mY;
-    for (uword i = 0; i < nVar; i++)
+    for (uword i = 0; i < nVar & !checkCanceled(); i++)
     {
         if (mBandwidthInitilize[i] == BandwidthInitilizeType::Null)
         {
@@ -85,7 +94,6 @@ void GwmMultiscaleGWRAlgorithm::run()
             mXi = mX.col(i);
             GwmBandwidthWeight* bw0 = bandwidth(i);
             bool adaptive = bw0->adaptive();
-            GwmBandwidthSizeSelector selector;
             selector.setBandwidth(bw0);
             selector.setLower(adaptive ? mAdaptiveLower : 0.0);
             selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
@@ -117,7 +125,7 @@ void GwmMultiscaleGWRAlgorithm::run()
     mInitSpatialWeight.setWeight(initBw);
 
     // 初始化诊断信息矩阵
-    if (mHasHatMatrix)
+    if (mHasHatMatrix && !checkCanceled())
     {
         mS0 = mat(nDp, nDp, fill::zeros);
         mSArray = cube(nDp, nDp, nVar, fill::zeros);
@@ -126,7 +134,7 @@ void GwmMultiscaleGWRAlgorithm::run()
 
     mBetas = regression(mX, mY);
 
-    if (mHasHatMatrix)
+    if (mHasHatMatrix && !checkCanceled())
     {
         mDiagnostic = CalcDiagnostic(mX, mY, mS0, mRSS0);
         vec yhat = fitted(mX, mBetas);
@@ -144,7 +152,8 @@ void GwmMultiscaleGWRAlgorithm::run()
         });
     }
 
-    emit success();
+    if(!checkCanceled()) emit success();
+    else return;
 }
 
 mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
@@ -152,12 +161,12 @@ mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
     uword nDp = x.n_rows, nVar = x.n_cols;
     mat betas = (this->*mRegressionAll)(x, y);
 
-    if (mHasHatMatrix)
+    if (mHasHatMatrix && !checkCanceled())
     {
         mat idm(nVar, nVar, fill::eye);
-        for (uword i = 0; i < nVar; ++i)
+        for (uword i = 0; i < nVar & !checkCanceled(); ++i)
         {
-            for (uword j = 0; j < nDp; ++j)
+            for (uword j = 0; j < nDp & !checkCanceled(); ++j)
             {
                 mSArray.slice(i).row(j) = x(j, i) * (idm.row(i) * mC.slice(j));
             }
@@ -172,9 +181,9 @@ mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
     vec resid = y - fitted(x, betas);
     double RSS0 = sum(resid % resid), RSS1 = DBL_MAX;
     double criterion = DBL_MAX;
-    for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
+    for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold & !checkCanceled(); iteration++)
     {
-        for (uword i = 0; i < nVar; i++)
+        for (uword i = 0; i < nVar & !checkCanceled(); i++)
         {
             QString varName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i-1].name;
             vec fi = betas.col(i) % x.col(i);
@@ -220,7 +229,7 @@ mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
 
             mat S;
             betas.col(i) = (this->*mRegressionVar)(x.col(i), yi, i, S);
-            if (mHasHatMatrix)
+            if (mHasHatMatrix && !checkCanceled())
             {
                 mat SArrayi = mSArray.slice(i);
                 mSArray.slice(i) = S * SArrayi + S - S * mS0;
@@ -421,10 +430,10 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
 {
     int nDp = x.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
-    if (mHasHatMatrix)
+    if (mHasHatMatrix && !checkCanceled())
     {
         mat betasSE(nVar, nDp, fill::zeros);
-        for (int i = 0; i < nDp; i++)
+        for (int i = 0; i < nDp & !checkCanceled(); i++)
         {
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
@@ -447,7 +456,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
     }
     else
     {
-        for (int i = 0; i < nDp; i++)
+        for (int i = 0; i < nDp & !checkCanceled(); i++)
         {
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
@@ -469,27 +478,30 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllOmp(const mat &x, const vec &y)
 {
     int nDp = x.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
-    if (mHasHatMatrix)
+    if (mHasHatMatrix && !checkCanceled())
     {
         mat betasSE(nVar, nDp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mInitSpatialWeight.weightVector(i);
-            mat xtw = trans(x.each_col() % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
+            if(!checkCanceled())
             {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-                mat ci = xtwx_inv * xtw;
-                betasSE.col(i) = sum(ci % ci, 1);
-                mat si = x.row(i) * ci;
-                mS0.row(i) = si;
-                mC.slice(i) = ci;
-            } catch (exception e) {
-                emit error(e.what());
+                vec w = mInitSpatialWeight.weightVector(i);
+                mat xtw = trans(x.each_col() % w);
+                mat xtwx = xtw * x;
+                mat xtwy = xtw * y;
+                try
+                {
+                    mat xtwx_inv = inv_sympd(xtwx);
+                    betas.col(i) = xtwx_inv * xtwy;
+                    mat ci = xtwx_inv * xtw;
+                    betasSE.col(i) = sum(ci % ci, 1);
+                    mat si = x.row(i) * ci;
+                    mS0.row(i) = si;
+                    mC.slice(i) = ci;
+                } catch (exception e) {
+                    emit error(e.what());
+                }
             }
         }
         mBetasSE = betasSE.t();
@@ -499,16 +511,19 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mInitSpatialWeight.weightVector(i);
-            mat xtw = trans(x.each_col() % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
+            if(!checkCanceled())
             {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-            } catch (exception e) {
-                emit error(e.what());
+                vec w = mInitSpatialWeight.weightVector(i);
+                mat xtw = trans(x.each_col() % w);
+                mat xtwx = xtw * x;
+                mat xtwy = xtw * y;
+                try
+                {
+                    mat xtwx_inv = inv_sympd(xtwx);
+                    betas.col(i) = xtwx_inv * xtwy;
+                } catch (exception e) {
+                    emit error(e.what());
+                }
             }
         }
     }
@@ -519,11 +534,11 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, c
 {
     int nDp = x.n_rows;
     mat betas(1, nDp, fill::zeros);
-    if (mHasHatMatrix)
+    if (mHasHatMatrix && !checkCanceled())
     {
         mat ci, si;
         S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
-        for (int i = 0; i < nDp; i++)
+        for (int i = 0; i < nDp & !checkCanceled(); i++)
         {
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
@@ -543,7 +558,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, c
     }
     else
     {
-        for (int i = 0; i < nDp; i++)
+        for (int i = 0; i < nDp & !checkCanceled(); i++)
         {
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
@@ -572,19 +587,22 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarOmp(const vec &x, const vec &y, cons
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeights[var].weightVector(i);
-            mat xtw = trans(x % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
+            if(!checkCanceled())
             {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-                mat ci = xtwx_inv * xtw;
-                mat si = x(i) * ci;
-                S.row(i) = si;
-            } catch (exception e) {
-                emit error(e.what());
+                vec w = mSpatialWeights[var].weightVector(i);
+                mat xtw = trans(x % w);
+                mat xtwx = xtw * x;
+                mat xtwy = xtw * y;
+                try
+                {
+                    mat xtwx_inv = inv_sympd(xtwx);
+                    betas.col(i) = xtwx_inv * xtwy;
+                    mat ci = xtwx_inv * xtw;
+                    mat si = x(i) * ci;
+                    S.row(i) = si;
+                } catch (exception e) {
+                    emit error(e.what());
+                }
             }
         }
     }
@@ -593,16 +611,19 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarOmp(const vec &x, const vec &y, cons
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeights[var].weightVector(i);
-            mat xtw = trans(x % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
+            if(!checkCanceled())
             {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-            } catch (exception e) {
-                emit error(e.what());
+                vec w = mSpatialWeights[var].weightVector(i);
+                mat xtw = trans(x % w);
+                mat xtwx = xtw * x;
+                mat xtwy = xtw * y;
+                try
+                {
+                    mat xtwx_inv = inv_sympd(xtwx);
+                    betas.col(i) = xtwx_inv * xtwy;
+                } catch (exception e) {
+                    emit error(e.what());
+                }
             }
         }
     }
@@ -614,7 +635,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial(GwmBandwidt
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
-    for (uword i = 0; i < nDp; i++)
+    for (uword i = 0; i < nDp & !checkCanceled(); i++)
     {
         vec d = mInitSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -639,7 +660,8 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial(GwmBandwidt
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(cv);
 //    emit message(msg);
-    return cv;
+    if(!checkCanceled()) return cv;
+    else return DBL_MAX;
 }
 
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWeight *bandwidthWeight)
@@ -651,7 +673,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWe
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        if (flag)
+        if (flag && !checkCanceled())
         {
             int thread = omp_get_thread_num();
             vec d = mInitSpatialWeight.distance()->distance(i);
@@ -678,7 +700,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWe
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(cv);
 //    emit message(msg);
-    if (flag)
+    if (flag && !checkCanceled())
     {
         return sum(cv_all);
     }
@@ -690,7 +712,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial(GwmBandwid
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp; i++)
+    for (uword i = 0; i < nDp & !checkCanceled(); i++)
     {
         vec d = mInitSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -717,7 +739,8 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial(GwmBandwid
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(value);
 //    emit message(msg);
-    return value;
+    if(!checkCanceled()) return value;
+    else return DBL_MAX;
 }
 
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICOmp(GwmBandwidthWeight *bandwidthWeight)
@@ -729,7 +752,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICOmp(GwmBandwidthW
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        if (flag)
+        if (flag && !checkCanceled())
         {
             int thread = omp_get_thread_num();
             vec d = mInitSpatialWeight.distance()->distance(i);
@@ -752,7 +775,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICOmp(GwmBandwidthW
             }
         }
     }
-    if (flag)
+    if (flag && !checkCanceled())
     {
         vec shat = sum(shat_all, 1);
         double value = GwmMultiscaleGWRAlgorithm::AICc(mX, mY, betas.t(), shat);
@@ -772,7 +795,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial(GwmBandwidt
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
-    for (uword i = 0; i < nDp; i++)
+    for (uword i = 0; i < nDp & !checkCanceled(); i++)
     {
         vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -797,7 +820,8 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial(GwmBandwidt
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(cv);
 //    emit message(msg);
-    return cv;
+    if(!checkCanceled()) return cv;
+    else return DBL_MAX;
 }
 
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWeight *bandwidthWeight)
@@ -810,7 +834,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWe
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        if (flag)
+        if (flag && !checkCanceled())
         {
             int thread = omp_get_thread_num();
             vec d = mSpatialWeights[var].distance()->distance(i);
@@ -832,7 +856,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWe
             }
         }
     }
-    if (flag)
+    if (flag && !checkCanceled())
     {
 //    QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
 //            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
@@ -850,7 +874,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial(GwmBandwid
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp; i++)
+    for (uword i = 0; i < nDp & !checkCanceled(); i++)
     {
         vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -877,7 +901,8 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial(GwmBandwid
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(value);
 //    emit message(msg);
-    return value;
+    if(!checkCanceled()) return value;
+    else return DBL_MAX;
 }
 
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICOmp(GwmBandwidthWeight *bandwidthWeight)
@@ -890,7 +915,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICOmp(GwmBandwidthW
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        if (flag)
+        if (flag && !checkCanceled())
         {
             int thread = omp_get_thread_num();
             vec d = mSpatialWeights[var].distance()->distance(i);
@@ -913,7 +938,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICOmp(GwmBandwidthW
             }
         }
     }
-    if (flag)
+    if (flag && !checkCanceled())
     {
         vec shat = sum(shat_all, 1);
         double value = GwmMultiscaleGWRAlgorithm::AICc(mXi, mYi, betas.t(), shat);
