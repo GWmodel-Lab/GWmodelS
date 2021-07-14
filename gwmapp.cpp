@@ -324,10 +324,15 @@ void GwmApp::setupFeaturePanel()
     {
         onExportLayer(tr("ESRI Shapefile (*.shp)"));
     });
+    connect(mFeaturePanel,&GwmFeaturePanel::sendDataSigGeoJson,this, [&]()
+    {
+        onExportLayer(tr("GeoJson (*.json *.geojson)"));
+    });
     connect(mFeaturePanel,&GwmFeaturePanel::sendDataSigGPKG,this, [&]()
     {
         onExportLayer(tr("Geo Package (*.gpkg)"));
     });
+
     connect(mFeaturePanel,&GwmFeaturePanel::sendDataSigCsv,this,&GwmApp::onExportLayerAsCsv);
     connect(ui->featureSortUpBtn, &QAbstractButton::clicked, mFeaturePanel, &GwmFeaturePanel::onSortUpBtnClicked);
     connect(ui->featureSortDownBtn, &QAbstractButton::clicked, mFeaturePanel, &GwmFeaturePanel::onSortDownBtnClicked);
