@@ -319,6 +319,9 @@ bool GwmLayerVectorItem::save(QString filePath, QString fileName, QString fileTy
     if (fileType == "shp"){
         options.driverName = "ESRI Shapefile";
     }
+    else if(fileType =="json" || fileType =="geojson"){
+        options.driverName = "GeoJson";
+    }
     else if(fileType =="gpkg"){
         options.driverName = "GPKG";
     }
