@@ -84,7 +84,8 @@ GwmLayoutDesigner::GwmLayoutDesigner(QWidget *parent)
 	}
 	setupUi(this);
 
-	setAttribute(Qt::WA_DeleteOnClose);
+    setAttribute(Qt::WA_DeleteOnClose);
+    setAttribute(Qt::WA_QuitOnClose,false);
 	setDockOptions(dockOptions() | QMainWindow::GroupedDragging);
 
 	createLayoutView();
