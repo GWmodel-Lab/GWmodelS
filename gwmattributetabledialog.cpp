@@ -55,6 +55,7 @@ GwmAttributeTableDialog::GwmAttributeTableDialog(QgsVectorLayer *theVecLayer,Qgs
     this->mymapCanvas = myMapCanvas;
     mVectorLayerTools = new QgsGuiVectorLayerTools();
     mEditorContext.setVectorLayerTools(mVectorLayerTools);
+    setAttribute(Qt::WA_QuitOnClose,false);
 
     QgsFeatureRequest r;
     mMainView->init(theVecLayer,myMapCanvas,r,mEditorContext,true);

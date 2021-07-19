@@ -371,9 +371,10 @@ GwmLayoutDesigner* GwmApp::createPrintLayout(const QString& t)
 		title = QgsProject::instance()->layoutManager()->generateUniqueTitle(QgsMasterLayoutInterface::PrintLayout);
 	}
 
-	QgsPrintLayout* layout = new QgsPrintLayout(QgsProject::instance());
+    QgsPrintLayout* layout = new QgsPrintLayout(QgsProject::instance());
 	layout->setName(title);
 	layout->initializeDefaults();
+
 	if (QgsProject::instance()->layoutManager()->addLayout(layout))
 		return openLayoutDesignerDialog(layout);
 	else
