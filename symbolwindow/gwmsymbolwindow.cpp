@@ -69,6 +69,8 @@ GwmSymbolWindow::GwmSymbolWindow(QgsVectorLayer* vectorLayer,QWidget *parent) : 
     setWindowTitle("Symbol");
     _initRendererWidgetFunctions();
 
+    setAttribute(Qt::WA_QuitOnClose,false);
+
     QgsRendererRegistry *reg = QgsApplication::rendererRegistry();
     QStringList renderers = reg->renderersList( mLayer );
     const auto constRenderers = renderers;
