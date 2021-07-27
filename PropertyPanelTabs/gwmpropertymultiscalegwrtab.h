@@ -3,6 +3,10 @@
 
 #include <QWidget>
 #include <QTableWidgetItem>
+#include <QStandardItemModel>
+#include <QMenu>
+#include <QAction>
+#include <QTableWidget>
 
 #include "gwmplot.h"
 #include "Model/gwmlayermultiscalegwritem.h"
@@ -25,9 +29,16 @@ private:
     GwmLayerMultiscaleGWRItem* mLayerItem;
     GwmPropertyMultiscaleParameterSpecifiedItemModel* mParameterSpecifiedModel = nullptr;
 
+    QString FilePath;
 public:
     void updateUI();
+    bool openSelectFile();
+    void GetNode(GwmPropertyMultiscaleParameterSpecifiedItemModel* model);
+    void GetItem();
+private slots:
+    void on_btnSaveRes_clicked();
+
 };
 
 
-#endif // GWMPROPERTYGWRTAB_H
+#endif // GWMPROPERTYGWRTA.B_H
