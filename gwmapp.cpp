@@ -179,6 +179,10 @@ void GwmApp::toggleToolbarGeneral(bool flag)
     ui->actionZoom_to_Area->setEnabled(flag);
     ui->actionSave_Layer->setEnabled(flag);
     ui->actionSave_Layer_As->setEnabled(flag);
+    ui->featureSortUpBtn->setEnabled(flag);
+    ui->featureSortDownBtn->setEnabled(flag);
+    ui->featureRemoveBtn->setEnabled(flag);
+    ui->featureSymbolBtn->setEnabled(flag);
 }
 
 void GwmApp::onOpenFileImportShapefile(){
