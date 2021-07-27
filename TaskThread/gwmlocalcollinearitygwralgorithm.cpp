@@ -258,6 +258,8 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandw
             }
         }
         betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
+        if(selector.counter<10)
+            emit tick(selector.counter*10 + i * 10 / n, 100);
     }
     //yhat赋值
     //vec mYHat = fitted(mX,betas);

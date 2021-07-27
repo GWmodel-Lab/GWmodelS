@@ -705,6 +705,8 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight*
         {
             return DBL_MAX;
         }
+        if(mBandwidthSizeSelector.counter<10)
+            emit tick(mBandwidthSizeSelector.counter*10 + i * 10 / nDp, 100);
     }
     if(!checkCanceled())
     {
@@ -846,6 +848,9 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *
         {
             return DBL_MAX;
         }
+//        emit tick(i,nDp);
+        if(mBandwidthSizeSelector.counter<10)
+            emit tick(mBandwidthSizeSelector.counter*10 + i * 10 / nDp, 100);
     }
     if(!checkCanceled())
     {

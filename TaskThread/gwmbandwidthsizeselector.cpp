@@ -86,7 +86,9 @@ GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable 
     w1->setBandwidth(x1);
     w2->setBandwidth(x2);
     double f1 = checkCanceled() ? DBL_MAX : instance->criterion(w1);
+    counter++;
     double f2 = checkCanceled() ? DBL_MAX : instance->criterion(w2);
+    counter++;
     if (f1 < DBL_MAX)
         mBandwidthCriterion[x1] = f1;
     if (f2 < DBL_MAX)
@@ -122,6 +124,7 @@ GwmBandwidthWeight* GwmBandwidthSizeSelector::optimize(IBandwidthSizeSelectable 
         iter = iter + 1;
         xopt = (f1 < f2) ? x1 : x2;
         d1 = f2 - f1;
+        counter++;
     }
     delete w1;
     delete w2;

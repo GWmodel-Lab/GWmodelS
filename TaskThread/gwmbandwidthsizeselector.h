@@ -38,6 +38,7 @@ public:
     bool isCanceled() const;
     void setCanceled(bool newCanceled);
     bool checkCanceled();
+    int counter = 0;
 protected:
     bool mIsCanceled = false;
 

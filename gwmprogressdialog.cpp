@@ -64,7 +64,7 @@ void GwmProgressDialog::onMessage(QString message)
 {
     qDebug() << "[GwmProgressDialog::onMessage]"
              << "message" << message;
-//    ui->progressMessage->setText(message);
+    ui->progressMessage->setText(message);
     QLabel* logItem = new QLabel(message, ui->logScrollAreaContents);
     ui->logScrollAreaContents->layout()->addWidget(logItem);
 }

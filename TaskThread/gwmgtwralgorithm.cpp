@@ -384,6 +384,8 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *band
         {
             return DBL_MAX;
         }
+        if(mBandwidthSizeSelector.counter<10)
+            emit tick(mBandwidthSizeSelector.counter*10 + i * 10 / nDp, 100);
     }
     if(!checkCanceled())
     {
@@ -473,6 +475,8 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight *ban
         {
             return DBL_MAX;
         }
+        if(mBandwidthSizeSelector.counter<10)
+            emit tick(mBandwidthSizeSelector.counter*10 + i * 10 / nDp, 100);
     }
     double value = AICc(mX, mY, betas.t(), shat);
     if(!checkCanceled())

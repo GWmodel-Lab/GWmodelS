@@ -539,6 +539,8 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial(GwmBandwid
         else{
             cv.row(i) = mY.row(i) - exp(yhatnoi)/(1+exp(yhatnoi));
         }
+        if(mBandwidthSizeSelector.counter<10)
+            emit tick(mBandwidthSizeSelector.counter*10 + i * 10 / n, 100);
     }
     vec cvsquare = trans(cv) * cv ;
     double res = sum(cvsquare);
@@ -622,6 +624,8 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwi
         mat Ci = CiMat(mX,wi);
         S.row(i) = mX.row(i) * Ci;
         trS(0) += S(i,i);
+        if(mBandwidthSizeSelector.counter<10)
+            emit tick(mBandwidthSizeSelector.counter*10 + i * 10 / n, 100);
     }
     double AICc;
     if(!checkCanceled())
