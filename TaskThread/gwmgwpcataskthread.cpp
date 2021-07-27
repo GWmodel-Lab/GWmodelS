@@ -1,7 +1,7 @@
 #include "gwmgwpcataskthread.h"
 #include <SpatialWeight/gwmcrsdistance.h>
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
-
+#include "gwmtaskthread.h"
 #include <omp.h>
 #include <armadillo>
 
@@ -81,6 +81,11 @@ void GwmGWPCATaskThread::run()
         CreateResultLayerData resultLayerData = {
             qMakePair(QString("Comp.%1_PV"), mLocalPV),
             qMakePair(QString("local_CP"), sum(mLocalPV, 1))
+        };
+        if(scoresCal()){
+            for(int i = 0; i < mK; i++){
+                resultLayerData += qMakePair(QString("Scores%1"), mScores.slice(i));
+            }
         };
         createResultLayer(resultLayerData,win_var_PC1);
         emit success();
