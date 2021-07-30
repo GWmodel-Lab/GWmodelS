@@ -1418,7 +1418,7 @@ void GwmApp::populateLayoutsMenu(QMenu * menu)
 
 void GwmApp::initLayouts()
 {
-	QgsLayoutGuiUtils::registerGuiForKnownItemTypes(mMapCanvas);
+    QgsLayoutGuiUtils::registerGuiForKnownItemTypes(mMapCanvas);
 
 	//mLayoutQptDropHandler = new QgsLayoutQptDropHandler(this);
 	//registerCustomLayoutDropHandler(mLayoutQptDropHandler);
