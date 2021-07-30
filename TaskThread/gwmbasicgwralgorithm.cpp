@@ -82,7 +82,7 @@ void GwmBasicGWRAlgorithm::run()
     if (!checkCanceled() && !hasRegressionLayer() && mIsAutoselectBandwidth)
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
-        emit tick(0, 0);
+        //emit tick(0, 0);
         GwmBandwidthWeight* bandwidthWeight0 = mSpatialWeight.weight<GwmBandwidthWeight>();
         mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
@@ -197,7 +197,11 @@ void GwmBasicGWRAlgorithm::run()
         createResultLayer(resultLayerData);
     }
 
-    if(!checkCanceled()) emit success();
+    if(!checkCanceled())
+    {
+        emit tick(100,100);
+        emit success();
+    }
     else return;
 }
 
@@ -398,7 +402,7 @@ mat GwmBasicGWRAlgorithm::regressionSerial(const mat &x, const vec &y)
         {
             mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
-            emit tick(i + 1, nRp);
+            emit tick(i, nRp);
         }
         catch (exception e)
         {
@@ -427,13 +431,12 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
-                emit tick(current + 1, nRp);
             }
             catch (exception e)
             {
                 emit error(e.what());
             }
-            emit tick(++current, nRp);
+            emit tick(current++, nRp);
         }
     }
     return betas.t();
@@ -514,7 +517,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, 
         {
             emit error(e.what());
         }
-        emit tick(i + 1, nDp);
+        emit tick(i, nDp);
     }
     betasSE = betasSE.t();
     return betas.t();
@@ -558,7 +561,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat
             {
                 emit error(e.what());
             }
-            emit tick(++current, nDp);
+            emit tick(current++, nDp);
         }
     }
     shat = sum(shat_all, 1);
@@ -731,6 +734,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *ba
     mat betas(nVar, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
@@ -755,6 +759,9 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *ba
             {
                 flag = false;
             }
+            if(mBandwidthSizeSelector.counter<10)
+                emit tick(mBandwidthSizeSelector.counter*10 + current * 10 / nDp, 100);
+            current++;
         }
     }
     if (flag && !checkCanceled())
@@ -848,7 +855,6 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *
         {
             return DBL_MAX;
         }
-//        emit tick(i,nDp);
         if(mBandwidthSizeSelector.counter<10)
             emit tick(mBandwidthSizeSelector.counter*10 + i * 10 / nDp, 100);
     }
@@ -874,6 +880,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *ban
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp ; i++)
     {
@@ -900,6 +907,9 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *ban
             {
                 flag = false;
             }
+            if(mBandwidthSizeSelector.counter<10)
+                emit tick(mBandwidthSizeSelector.counter*10 + current * 10 / nDp, 100);
+            current++;
         }
     }
     if (flag && !checkCanceled())

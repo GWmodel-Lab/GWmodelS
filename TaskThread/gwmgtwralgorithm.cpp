@@ -127,7 +127,11 @@ void GwmGTWRAlgorithm::run()
         }
     }
 
-    if(!checkCanceled()) emit success();
+    if(!checkCanceled())
+    {
+        emit success();
+        emit tick(100,100);
+    }
     else return;
 }
 
@@ -238,7 +242,7 @@ mat GwmGTWRAlgorithm::regressionSerial(const mat &x, const vec &y)
         {
             mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
-            emit tick(i + 1, nRp);
+            emit tick(i, nRp);
         }
         catch (exception e)
         {
@@ -267,13 +271,12 @@ mat GwmGTWRAlgorithm::regressionOmp(const mat &x, const vec &y)
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
-                emit tick(current + 1, nRp);
             }
             catch (exception e)
             {
                 emit error(e.what());
             }
-            emit tick(++current, nRp);
+            emit tick(current++, nRp);
         }
     }
     return betas.t();
@@ -309,7 +312,7 @@ mat GwmGTWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, mat 
         {
             emit error(e.what());
         }
-        emit tick(i + 1, nDp);
+        emit tick(i, nDp);
     }
     betasSE = betasSE.t();
     return betas.t();
@@ -351,7 +354,7 @@ mat GwmGTWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat &be
             {
                 emit error(e.what());
             }
-            emit tick(++current, nDp);
+            emit tick(current++, nDp);
         }
     }
     shat = sum(shat_all, 1);
@@ -409,6 +412,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *bandwid
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
@@ -435,6 +439,9 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *bandwid
             {
                 flag = false;
             }
+            if(mBandwidthSizeSelector.counter<10)
+                emit tick(mBandwidthSizeSelector.counter*10 + current * 10 / nDp, 100);
+            current++;
         }
     }
     if (flag && !checkCanceled())
@@ -501,6 +508,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *bandwi
     mat betas(nVar, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
@@ -525,6 +533,9 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *bandwi
             {
                 flag = false;
             }
+            if(mBandwidthSizeSelector.counter<10)
+                emit tick(mBandwidthSizeSelector.counter*10 + current * 10 / nDp, 100);
+            current++;
         }
     }
     if (flag && !checkCanceled())

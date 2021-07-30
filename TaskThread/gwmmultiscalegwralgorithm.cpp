@@ -152,7 +152,11 @@ void GwmMultiscaleGWRAlgorithm::run()
         });
     }
 
-    if(!checkCanceled()) emit success();
+    if(!checkCanceled())
+    {
+        emit success();
+        emit tick(100,100);
+    }
     else return;
 }
 
@@ -183,6 +187,7 @@ mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
     double criterion = DBL_MAX;
     for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold & !checkCanceled(); iteration++)
     {
+        emit tick(iteration - 1, mMaxIteration);
         for (uword i = 0; i < nVar & !checkCanceled(); i++)
         {
             QString varName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i-1].name;

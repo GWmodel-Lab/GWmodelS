@@ -54,7 +54,7 @@ void GwmGeneralizedGWRAlgorithm::run()
     if (mIsAutoselectBandwidth && !checkCanceled())
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
-        emit tick(0, 0);
+        //emit tick(0, 0);
         if ((mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance) && !checkCanceled())
         {
             GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
@@ -101,6 +101,7 @@ void GwmGeneralizedGWRAlgorithm::run()
         for(int i = 0; i < nRp & !checkCanceled(); i++){
             vec weight = mSpatialWeight.weightVector(i);
             mWtMat2.col(i) = weight;
+            emit tick(i, nRp);
         }
         if ((mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance) && !checkCanceled())
         {
@@ -111,12 +112,14 @@ void GwmGeneralizedGWRAlgorithm::run()
         for(int i = 0; i < nDp & !checkCanceled(); i++){
             vec weight = mSpatialWeight.weightVector(i);
             mWtMat1.col(i) = weight;
+            emit tick(i, nDp);
         }
     }
     else{
         for(int i = 0; i < nRp & !checkCanceled(); i++){
             vec weight = mSpatialWeight.weightVector(i);
             mWtMat2.col(i) = weight;
+            emit tick(i, nRp);
         }
         mWtMat1 = mWtMat2;
     }
@@ -213,6 +216,7 @@ void GwmGeneralizedGWRAlgorithm::run()
         {
             createResultLayer(mResultList,QStringLiteral("_GGWR"));
         }
+        emit tick(100,100);
         emit success();
     }
 }
@@ -282,7 +286,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonSerial(const mat &x, const vec 
                 mBetasSE.col(i) = sqrt(mBetasSE.col(i));
     //            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
 
-                emit tick(i + 1, nDp);
+                emit tick(i, nDp);
             }
             catch (exception e) {
                 isAllCorrect = false;
@@ -297,7 +301,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonSerial(const mat &x, const vec 
                 vec wi = mWtMat2.col(i);
                 vec gwsi = gwReg(x, myAdj, wi * mWt2, i);
                 betas.col(i) = gwsi;
-                emit tick(i + 1,nRp);
+                emit tick(i,nRp);
             }
             catch (exception e) {
                 isAllCorrect = false;
@@ -330,8 +334,9 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
     bool isAllCorrect = true;
     bool isStoreS = (nDp <= 8192);
     mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
+    int current = 0;
     if(mHasHatMatrix && !checkCanceled()){
-        mat shat = mat(2,mOmpThreadNum,fill::zeros);
+        mat shat = mat(2,mOmpThreadNum,fill::zeros);       
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for(int i = 0; i < nDp; i++){
             mat ci,s_ri;
@@ -356,7 +361,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
                     mBetasSE.col(i) = sqrt(mBetasSE.col(i));
         //            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
 
-                    emit tick(i + 1, nDp);
+                    emit tick(current++, nDp);
                 }
                 catch (exception e) {
                     isAllCorrect = false;
@@ -376,7 +381,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
                     vec wi = mWtMat2.col(i);
                     vec gwsi = gwReg(x, myAdj, wi * mWt2, i);
                     betas.col(i) = gwsi;
-                    emit tick(i + 1,nRp);
+                    emit tick(current++, nRp);
                 }
                 catch (exception e) {
                     isAllCorrect = false;
@@ -404,6 +409,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialOmp(const mat &x, const vec &y
     bool isStoreS = (nDp <= 8192);
     mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
 //    mat S = mat(uword(0), uword(0));
+    int current = 0;
     if(mHasHatMatrix){
         mat shat = mat(mOmpThreadNum,2,fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
@@ -425,7 +431,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialOmp(const mat &x, const vec &y
                     mBetasSE.col(i) = diag(temp * trans(ci));
                     shat(thread,0) += s_ri(0, i);
                     shat(thread,1) += det(s_ri * trans(s_ri));
-                    emit tick(i + 1, nDp);
+                    emit tick(current++, nDp);
                 }
                 catch (exception e) {
                     isAllCorrect = false;
@@ -445,7 +451,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialOmp(const mat &x, const vec &y
                     vec wi = mWtMat2.col(i);
                     vec gwsi = gwReg(x, myAdj, wi * mWt2, i);
                     mBetas.col(i) = gwsi;
-                    emit tick(i + 1, nRp);
+                    emit tick(current++, nRp);
                 }
                 catch (exception e) {
                     isAllCorrect = false;
@@ -490,7 +496,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialSerial(const mat &x, const vec
                 mBetasSE.col(i) = diag(temp * trans(ci));
                 mShat(0) += s_ri(0, i);
                 mShat(1) += det(s_ri * trans(s_ri));
-                emit tick(i + 1, nDp);
+                emit tick(i, nDp);
             }
             catch (exception e) {
                 isAllCorrect = false;
@@ -505,7 +511,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialSerial(const mat &x, const vec
                 vec wi = mWtMat2.col(i);
                 vec gwsi = gwReg(x, myAdj, wi * mWt2, i);
                 mBetas.col(i) = gwsi;
-                emit tick(i + 1, nRp);
+                emit tick(i, nRp);
             }
             catch (exception e) {
                 isAllCorrect = false;
@@ -527,6 +533,8 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial(GwmBandwid
         vec w = bandwidthWeight->weight(d);
         w.row(i) = 0;
         wt.col(i) = w;
+        if(mBandwidthSizeSelector.counter<10)
+            emit tick(mBandwidthSizeSelector.counter*10 + i * 5 / n, 100);
     }
     if (!checkCanceled()) (this->*mCalWtFunction)(mX,mY,wt);
     for (int i = 0; i < n & !checkCanceled(); i++){
@@ -540,7 +548,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial(GwmBandwid
             cv.row(i) = mY.row(i) - exp(yhatnoi)/(1+exp(yhatnoi));
         }
         if(mBandwidthSizeSelector.counter<10)
-            emit tick(mBandwidthSizeSelector.counter*10 + i * 10 / n, 100);
+            emit tick(mBandwidthSizeSelector.counter*10 + i * 5 / n + 5, 100);
     }
     vec cvsquare = trans(cv) * cv ;
     double res = sum(cvsquare);
@@ -563,6 +571,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
     int n = mDataPoints.n_rows;
     vec cv = vec(n);
     mat wt = mat(n,n);
+    int current1 = 0, current2 = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -572,6 +581,9 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
             vec w = bandwidthWeight->weight(d);
             w.row(i) = 0;
             wt.col(i) = w;
+            if(mBandwidthSizeSelector.counter<10)
+                emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
+            current1++;
         }
     }
     if (!checkCanceled()) (this->*mCalWtFunction)(mX,mY,wt);
@@ -588,6 +600,9 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
             else{
                 cv.row(i) = mY.row(i) - exp(yhatnoi)/(1+exp(yhatnoi));
             }
+            if(mBandwidthSizeSelector.counter<10)
+                emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            current2++;
         }
     }
     vec cvsquare = trans(cv) * cv ;
@@ -616,6 +631,8 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwi
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         wt.col(i) = w;
+        if(mBandwidthSizeSelector.counter<10)
+            emit tick(mBandwidthSizeSelector.counter*10 + i * 5 / n, 100);
     }
     if(!checkCanceled()) (this->*mCalWtFunction)(mX,mY,wt);
     vec trS = vec(1,fill::zeros);
@@ -625,7 +642,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwi
         S.row(i) = mX.row(i) * Ci;
         trS(0) += S(i,i);
         if(mBandwidthSizeSelector.counter<10)
-            emit tick(mBandwidthSizeSelector.counter*10 + i * 10 / n, 100);
+            emit tick(mBandwidthSizeSelector.counter*10 + i * 5 / n + 5, 100);
     }
     double AICc;
     if(!checkCanceled())
@@ -657,6 +674,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
     vec cv = vec(n);
     mat S = mat(n,n);
     mat wt = mat(n,n);
+    int current1 = 0, current2 = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -665,6 +683,9 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
             vec d = mSpatialWeight.distance()->distance(i);
             vec w = bandwidthWeight->weight(d);
             wt.col(i) = w;
+            if(mBandwidthSizeSelector.counter<10)
+                emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
+            current1++;
         }
     }
     if (!checkCanceled())  (this->*mCalWtFunction)(mX,mY,wt);
@@ -678,6 +699,9 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
             mat Ci = CiMat(mX,wi);
             S.row(i) = mX.row(i) * Ci;
             trS(thread) += S(i,i);
+            if(mBandwidthSizeSelector.counter<10)
+                emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            current2++;
         }
     }
     double AICc;
