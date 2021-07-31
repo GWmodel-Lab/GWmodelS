@@ -181,14 +181,28 @@ void GwmPropertyMultiscaleGWRTab::on_btnSaveRes_clicked()
 
               out << "  Bandwidth and Distance"<<endl;
               out << "----------------------------------------------"<<endl;
+              out << "Name\t\t"; out << "Adaptive\t"; out << "Size\t"; out << "Type\t";
+              out << "Kernel\t"; out << "Seled\t";out << "Approach\t";out << "Distance\t"<<endl;
+              out << "------------------------------------------------------------------------------------------------------------"<<endl;
               for(int i = 0 ; i < mParameterSpecifiedModel->rowCount() ; i++){
-                  out <<"functions is  coming" << endl;
+                  out << mParameterSpecifiedModel->data(ui->trvBandwdithDistance->model()->index(i,0)).toString();
+                  i == 0 ? out << "\t" : out << "\t\t";
+                  out << mParameterSpecifiedModel->data(ui->trvBandwdithDistance->model()->index(i,1)).toString();
+                  out <<"\t";
+                  for(int j = 0 ; j < 6; j++){
+                      out << mParameterSpecifiedModel->data(ui->trvBandwdithDistance->model()->index(i,0).child(j, 1)).toString();
+                      out << "\t";
+                  }
+                  out <<"" <<endl;
               }
+
 
               out << "" <<endl;
               out << "**********************************************" << endl;
               out << "" << endl;
-              out << "GWmodel Lab";
+              out << "GWmodel Lab\t"; out << "http://gwmodel.whu.edu.cn/"<<endl;
+              out << "Contact us\t"; out << "binbinlu@whu.edu.cn";
+              myfile.close();
           }
 }
 

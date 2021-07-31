@@ -241,7 +241,9 @@ void GwmPropertyGGWRTab::on_btnSaveRes_clicked()
               out << "" <<endl;
               out << "**********************************************" << endl;
               out << "" << endl;
-              out << "GWmodel Lab";
+              out << "GWmodel Lab\t"; out << "http://gwmodel.whu.edu.cn/"<<endl;
+              out << "Contact us\t"; out << "binbinlu@whu.edu.cn";
+              myfile.close();
           }
 }
 
