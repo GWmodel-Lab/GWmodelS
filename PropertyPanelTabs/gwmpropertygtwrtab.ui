@@ -296,6 +296,19 @@
          <layout class="QVBoxLayout" name="verticalLayout_3"/>
         </widget>
        </item>
+       <item>
+        <widget class="QPushButton" name="btnSaveRes">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Save</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </widget>

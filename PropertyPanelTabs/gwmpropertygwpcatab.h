@@ -3,6 +3,10 @@
 
 #include <QWidget>
 #include <QTableWidgetItem>
+#include <QStandardItemModel>
+#include <QMenu>
+#include <QAction>
+#include <QTableWidget>
 
 #include "gwmplot.h"
 #include "Model/gwmlayergwpcaitem.h"
@@ -26,11 +30,14 @@ private:
     Ui::GwmPropertyGWPCATab *ui;
     GwmLayerGWPCAItem* mLayerItem;
 
-
+    QString FilePath;
 public:
     void updateUI();
 
     GwmPlot* mBandwidthSelPlot;
+private slots:
+    void on_btnSaveRes_clicked();
+    bool openSelectFile();
 };
 
 

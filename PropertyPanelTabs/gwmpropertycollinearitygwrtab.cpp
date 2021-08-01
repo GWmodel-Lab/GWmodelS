@@ -1,7 +1,21 @@
 #include "gwmpropertycollinearitygwrtab.h"
 #include "ui_gwmpropertycollinearitygwrtab.h"
 
+
 #include <armadillo>
+
+#include <QMessageBox>
+#include <QtableWidget>
+#include <QListWidget>
+#include <QDebug>
+#include <QVariant>
+#include <QMenu>
+#include <QAction>
+#include <QFileDialog>
+#include <QItemSelectionModel>
+#include <QModelIndexList>
+#include <QModelIndex>
+#include <QHeaderView>
 
 #include <QStandardItemModel>
 
@@ -177,3 +191,83 @@ void GwmPropertyCollinearityGWRTab::updateUI()
     ui->lblLambda->setText(QString("%1").arg(mLayerItem->getLambda(),0,'f',4));
     ui->lblMcnThresh->setText(QString("%1").arg(mLayerItem->getMcnThresh(),0,'f',4));
 }
+
+//信号处理函数
+
+
+bool GwmPropertyCollinearityGWRTab::openSelectFile()//弹出选择文件对话框
+{
+  QString strPath = QFileDialog::getSaveFileName(NULL,QString::fromUtf8("选择文件"),"",QObject::tr("txt(*.txt)"));
+  if(strPath == "")
+  {
+     QMessageBox::information(this,QString::fromUtf8("提示"),QString::fromUtf8("选择文件失败，无路径"),"OK");
+    return false;//用户点击的取消按钮
+  }
+  FilePath = strPath;
+  return true;
+}
+
+void GwmPropertyCollinearityGWRTab::on_btnSaveRes_clicked()
+{
+    if(false == openSelectFile())//弹出选择文件对话框 如果成功选择文件，主线程myWidget类就有对象存储了文件路径
+      {
+        return;
+      }
+      if(FilePath == "")//如果没有选择文件，即文件路径为空
+      {
+        return;
+      }
+
+      QFile myfile(FilePath);//创建一个输出文件的文档
+      if (myfile.open(QFile::WriteOnly|QFile::Text))//注意WriteOnly是往文本中写入的时候用，ReadOnly是在读文本中内容的时候用，Truncate表示将原来文件中的内容清空
+      {
+          QTextStream out(&myfile);
+          out << "  Model Calibration Information"<<endl;
+          out << "----------------------------------------------"<<endl;
+          out << "Kernel function:  "; out << ui->lblKernelFunction->text() <<endl;
+          out << "Bandwidth Type:   "; out << ui->lblBandwidthType->text() <<endl;
+          out << "BandWidth: "; out << ui->lblBandwidthSize->text() << endl;
+          out << "Distance metric:   "; out << ui->lblDistanceMetric->text() <<endl;
+          out << "Lambda: "; out << ui->lblLambda->text() << endl;
+          out << "The threshold:   "; out << ui->lblMcnThresh->text() <<endl;
+          out << "" << endl;
+          out << "**********************************************" << endl;
+          out << "" << endl;
+          out << "  Diagnostic Information"<<endl;
+          out << "----------------------------------------------"<<endl;
+          out << "Number of data points: "; out << ui->lblNumberDataPoints->text() << endl;
+          out << "Effective number of parameters:  "; out << ui->lblENP->text() <<endl;
+          out << "Effective degrees of freedom:   "; out << ui->lblEDF->text() <<endl;
+          out << "AIC: "; out << ui->lblAIC->text() << endl;
+          out << "AICc:  "; out << ui->lblAICc->text() <<endl;
+          out << "Residual sum of squares:   "; out << ui->lblRSS->text() <<endl;
+          out << "" <<endl;
+          out << "**********************************************" << endl;
+          out << "" << endl;
+          out << "  Summary of GWR Coefficient Estimates"<<endl;
+          out << "----------------------------------------------"<<endl;
+          for(int i = 0 ; i < 6 ; i++){
+              out << ui->tbwCoefficient->horizontalHeaderItem(i)->text();
+              out << (i == 0 ? "\t\t" : "\t");
+          }
+          out << "" <<endl;
+
+          for(int i = 0 ; i < ui->tbwCoefficient->rowCount() ; i++){
+              for (int j = 0 ; j < 6; j++){
+                   out << ui->tbwCoefficient->item(i, j)->text();
+
+                   out << ((j == 0 && i != 0) ? "\t\t" : "\t");
+              }
+              out << "" << endl;
+          }
+          out << "" <<endl;
+          out << "**********************************************" << endl;
+          out << "" << endl;
+          out << "GWmodel Lab\t"; out << "http://gwmodel.whu.edu.cn/"<<endl;
+          out << "Contact us\t"; out << "binbinlu@whu.edu.cn";
+          myfile.close();
+      }
+}
+
+
+

@@ -3,6 +3,10 @@
 
 #include <QWidget>
 #include <QTableWidgetItem>
+#include <QStandardItemModel>
+#include <QMenu>
+#include <QAction>
+#include <QTableWidget>
 
 #include "gwmplot.h"
 #include "Model/gwmlayerscalablegwritem.h"
@@ -22,8 +26,12 @@ public:
 private:
     Ui::GwmPropertyScalableGWRTab *ui;
     GwmLayerScalableGWRItem* mLayerItem;
+    QString FilePath;
 
 public:
     void updateUI();
+    bool openSelectFile();
+private slots:
+    void on_btnSaveRes_clicked();
 };
 #endif // GWMPROPERTYSCALABLEGWRTAB_H
