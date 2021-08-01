@@ -52,6 +52,7 @@ void GwmLocalCollinearityGWRAlgorithm::run()
     //这里判断是否选带宽
     if(mIsAutoselectBandwidth && !checkCanceled())
     {
+        emit message(QString(tr("Automatically selecting bandwidth ...")));
         GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
         selector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
@@ -71,6 +72,7 @@ void GwmLocalCollinearityGWRAlgorithm::run()
         vec locallambda(mDataPoints.n_rows,fill::zeros);
         vec hatrow(mDataPoints.n_rows,fill::zeros);
         //yhat赋值
+        emit message("Regressoin...");
         mBetas = regression(mX, mY);
         //vec mYHat = fitted(mX,mBetas);
         vec mYHat = sum(mBetas % mX,1);
@@ -92,6 +94,7 @@ void GwmLocalCollinearityGWRAlgorithm::run()
             qMakePair(QString("y"), mY),
         };
         createResultLayer(resultLayerData);
+        emit tick(100,100);
         emit success();
     }
     if(checkCanceled())
@@ -258,6 +261,8 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandw
             }
         }
         betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
+        if(selector.counter<10)
+            emit tick(selector.counter*10 + i * 10 / n, 100);
     }
     //yhat赋值
     //vec mYHat = fitted(mX,betas);
@@ -297,6 +302,7 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidt
     //取mX不含第一列的部分
     mat mXnot1 = mX.cols(1, mX.n_cols - 1);
     //主循环
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -330,6 +336,9 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidt
                 }
             }
             betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
+            if(selector.counter<10)
+                emit tick(selector.counter*10 + current * 10 / n, 100);
+            current++;
         }
     }
     //yhat赋值
@@ -399,7 +408,7 @@ mat GwmLocalCollinearityGWRAlgorithm::regressionSerial(const mat &x, const vec &
             this->mTrS += hatrow(i);
             this->mTrStS += sum(hatrow % hatrow);
         }
-        emit tick(i+1, mDataPoints.n_rows);
+        emit tick(i, mDataPoints.n_rows);
     }
     return betas;
 }
@@ -457,7 +466,7 @@ mat GwmLocalCollinearityGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
                 //this->mTrS += hatrow(i);
                 //this->mTrStS += sum(hatrow % hatrow);
             }
-            emit tick(++current, mDataPoints.n_rows);
+            emit tick(current++, mDataPoints.n_rows);
         }
     }
     vec shat = sum(shat_all,1);

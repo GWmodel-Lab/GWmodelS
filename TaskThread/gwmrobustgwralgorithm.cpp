@@ -111,7 +111,11 @@ void GwmRobustGWRAlgorithm::run()
         createResultLayer(resultLayerData);
     }
 
-    if(!checkCanceled()) emit success();
+    if(!checkCanceled())
+    {
+        emit success();
+        emit tick(100,100);
+    }
     else return;
 }
 
@@ -336,7 +340,7 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y,
         {
             emit error(e.what());
         }
-        emit tick(i + 1, nDp);
+        emit tick(i, nDp);
     }
     betasSE = betasSE.t();
     return betas.t();
@@ -380,7 +384,7 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, ma
             {
                 emit error(e.what());
             }
-            emit tick(++current, nDp);
+            emit tick(current++, nDp);
         }
     }
     shat = sum(shat_all, 1);

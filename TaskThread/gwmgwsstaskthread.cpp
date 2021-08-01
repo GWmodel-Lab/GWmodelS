@@ -68,6 +68,7 @@ void GwmGWSSTaskThread::run()
         mResultList = resultLayerData;
         createResultLayer(resultLayerData);
         emit success();
+        emit tick(100, 100);
     }
     if(checkCanceled()) return;
 }
@@ -162,7 +163,7 @@ bool GwmGWSSTaskThread::CalculateOmp(){
                     }
                 }
             }
-            emit tick(++current,nRp);
+            emit tick(current++,nRp);
         }
     }
     mLCV = mStandardDev / mLocalMean;

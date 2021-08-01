@@ -89,6 +89,7 @@ void GwmGWPCATaskThread::run()
         };
         createResultLayer(resultLayerData,win_var_PC1);
         emit success();
+        emit tick(100, 100);
     }
     if(checkCanceled())
     {
@@ -331,6 +332,8 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
         V = V.cols(0, mK - 1);
         V = V * trans(V);
         score = score + pow(sum(mX.row(i) - mX.row(i) * V),2);
+        if(mSelector.counter<10)
+            emit tick(mSelector.counter * 10 + i * 10 / n, 100);
     }
     return score;
 }
@@ -344,6 +347,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
     //主循环
     bool flag = true;
     vec score_all(mOmpThreadNum, fill::zeros);
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -373,6 +377,9 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
                 V = V * trans(V);
                 score_all(thread) += pow(sum(mX.row(i) - mX.row(i) * V),2);
             }
+            if(mSelector.counter<10)
+                emit tick(mSelector.counter * 10 + current * 10 / n, 100);
+            current++;
         }
     }
     score = sum(score_all);
@@ -432,6 +439,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings
             scorei.col(j) = sum(score, 1);
         }
         scores.slice(i) = scorei;
+        emit tick(i, nDp);
     }
     //R代码中的d1计算
     d_all = trans(d_all);
@@ -453,6 +461,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
     loadings = cube(nDp, nVar, mK, fill::zeros);
     scores = cube(nDp, mK, nDp, fill::zeros);
     bool flag = true;
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i=0;i<nDp;i++)
     {
@@ -500,6 +509,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
             }
             scores.slice(i) = scorei;
             //计算sdev
+            emit tick(current++, nDp);
         }
     }
     //R代码中的d1计算
@@ -547,6 +557,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat 
         {
             loadings.slice(j).row(i) = trans(V.col(j));
         }
+        emit tick(i, nDp);
     }
     //R代码中的d1计算
     d_all = trans(d_all);
@@ -568,6 +579,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &st
 
     bool flag = true;
     //scores = cube(nDp, mK, nDp, fill::zeros);
+    int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i=0;i<nDp;i++)
     {
@@ -602,6 +614,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &st
                     loadings.slice(j).row(i) = trans(V.col(j));
                 }
             }
+            emit tick(current++, nDp);
         }
     }
     //R代码中的d1计算

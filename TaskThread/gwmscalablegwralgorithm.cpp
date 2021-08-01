@@ -239,6 +239,7 @@ void GwmScalableGWRAlgorithm::run()
             return;
         }
         emit success();
+        emit tick(100,100);
 
     }
     if (checkCanceled())
@@ -353,6 +354,7 @@ double GwmScalableGWRAlgorithm::optimize(const mat &Mx0, const mat &My0, double&
             alpha = gsl_vector_get(minizer->x, 1);
             cv = minizer->fval;
             emit message(QString().sprintf("Scalable GWR optimizing: b.tilde=%.3lf alpha=%.3lf (CV: %.3lf)", b_tilde, alpha, cv));
+            if(iter<100) emit tick(iter, 100);
         }
         while (status == GSL_CONTINUE && iter < mMaxIter && !checkCanceled());
         b_tilde = gsl_vector_get(minizer->x, 0);
@@ -402,6 +404,7 @@ void GwmScalableGWRAlgorithm::prepare()
                 mMy0(yindex, i) = sum(XtGY);
             }
         }
+        emit tick(i, n);
     }
 }
 
@@ -457,6 +460,7 @@ mat GwmScalableGWRAlgorithm::regressionSerial(const arma::mat &x, const arma::ve
                 mMy0(yindex, i) = sum(XtGY);
             }
         }
+        emit tick(i, nRp);
     }
 
     int poly1 = mPolynomial + 1;
@@ -560,6 +564,7 @@ arma::mat GwmScalableGWRAlgorithm::regressionHatmatrixSerial(const arma::mat &x,
                 mMy0(yindex, i) = sum(XtGY);
             }
         }
+        emit tick(i, n);
     }
 
     vec R0 = vec(poly1, fill::ones) * b;
