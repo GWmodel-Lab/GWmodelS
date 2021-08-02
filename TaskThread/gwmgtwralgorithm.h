@@ -124,7 +124,7 @@ private:
         return mHasHatMatrix && (mDataPoints.n_rows < 8192);
     }
 
-    void createResultLayer(CreateResultLayerData data, QString name = QStringLiteral("_GWR"));
+    void createResultLayer(CreateResultLayerData data, QString name = QStringLiteral("_GTWR"));
 
 protected:
     QgsVectorLayer* mRegressionLayer = nullptr;

@@ -163,7 +163,7 @@ void GwmLocalCollinearityGWRAlgorithm::createResultLayer(CreateResultLayerData d
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
-    layerName += QStringLiteral("_GWR");
+    layerName += QStringLiteral("_LCGWR");
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(srcLayer->crs());
 
