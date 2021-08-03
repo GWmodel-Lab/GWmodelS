@@ -61,6 +61,7 @@ void GwmGWPCATaskThread::run()
     else
     {
         mLocalPV = pca(mX,mLoadings,sdev);
+        mScoresCal = false;
     }
     mVariance = sdev % sdev;
 
