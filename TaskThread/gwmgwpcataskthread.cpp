@@ -61,6 +61,7 @@ void GwmGWPCATaskThread::run()
     else
     {
         mLocalPV = pca(mX,mLoadings,sdev);
+        mScoresCal = false;
     }
     mVariance = sdev % sdev;
 
@@ -477,6 +478,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
             if(newWt.n_rows<=5)
             {
                 flag = false;
+                continue;
             }
             //调用PCA函数
             //事先准备好的D和V
@@ -488,7 +490,11 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
             {
                 mLatestWt = newWt;
             }
-            d_all.col(i) = d;
+            if (d.n_rows==nVar){
+                d_all.col(i) = d;
+            }else{
+                continue;
+            }
             //计算loadings
             for(int j=0;j<mK;j++)
             {
@@ -504,7 +510,9 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
                 if(!checkCanceled())
                 {
                     mat score = newX.each_row() % trans(V.col(j));
-                    scorei.col(j) = sum(score, 1);
+                    if(score.n_rows==nDp){
+                        scorei.col(j) = sum(score, 1);
+                    }
                 }
             }
             scores.slice(i) = scorei;
@@ -594,6 +602,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &st
             if(newWt.n_rows<=5)
             {
                 flag = false;
+                continue;
             }
             //调用PCA函数
             //事先准备好的D和V
@@ -605,7 +614,11 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &st
             {
                 mLatestWt = newWt;
             }
-            d_all.col(i) = d;
+            if (d.n_rows==nVar){
+                d_all.col(i) = d;
+            }else{
+                continue;
+            }
             //计算loadings
             for(int j = 0; j < mK; j++)
             {
