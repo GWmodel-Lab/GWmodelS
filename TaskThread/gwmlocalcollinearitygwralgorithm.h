@@ -112,13 +112,16 @@ private:
     bool mIsAutoselectBandwidth = false;
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
+#ifdef ENABLE_OpenMP
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
-
+#endif
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::CV;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial;
 
     mat regressionSerial(const mat& x, const vec& y);
+#ifdef ENABLE_OpenMP
     mat regressionOmp(const mat& x, const vec& y);
+#endif
     Regression mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
 
     IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;

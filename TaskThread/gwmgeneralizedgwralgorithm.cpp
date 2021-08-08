@@ -5,9 +5,11 @@
 #include "GWmodel/gwmgeneralizedlinearmodel.h"
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
-#include <omp.h>
 #include <exception>
 
+#ifdef ENABLE_OpenMP
+#include <omp.h>
+#endif
 using namespace std;
 
 GwmEnumValueNameMapper<GwmGeneralizedGWRAlgorithm::Family> GwmGeneralizedGWRAlgorithm::FamilyValueNameMapper = {
@@ -311,7 +313,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonSerial(const mat &x, const vec 
     }
     return betas;
 }
-
+#ifdef ENABLE_OpenMP
 mat GwmGeneralizedGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
 {
     int nDp = mDataLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
@@ -392,7 +394,8 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
     }
     return betas;
 }
-
+#endif
+#ifdef ENABLE_OpenMP
 mat GwmGeneralizedGWRAlgorithm::regressionBinomialOmp(const mat &x, const vec &y)
 {
     int nVar = x.n_cols;
@@ -463,7 +466,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialOmp(const mat &x, const vec &y
 
     return betas;
 }
-
+#endif
 mat GwmGeneralizedGWRAlgorithm::regressionBinomialSerial(const mat &x, const vec &y)
 {
     int nVar = x.n_cols;
@@ -565,7 +568,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial(GwmBandwid
     else return DBL_MAX;
 
 }
-
+#ifdef ENABLE_OpenMP
 double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthWeight *bandwidthWeight)
 {
     int n = mDataPoints.n_rows;
@@ -619,7 +622,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
     }
     else return DBL_MAX;
 }
-
+#endif
 double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     int n = mDataPoints.n_rows;
@@ -667,7 +670,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwi
     }
     else return DBL_MAX;
 }
-
+#ifdef ENABLE_OpenMP
 double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidthWeight *bandwidthWeight)
 {
     int n = mDataPoints.n_rows;
@@ -727,7 +730,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
     }
     else return DBL_MAX;
 }
-
+#endif
 mat GwmGeneralizedGWRAlgorithm::PoissonWtSerial(const mat &x, const vec &y, mat wt){
     int varn = x.n_cols;
     int dpn = x.n_rows;
@@ -765,7 +768,7 @@ mat GwmGeneralizedGWRAlgorithm::PoissonWtSerial(const mat &x, const vec &y, mat 
 //    return cv;
     return mu;
 }
-
+#ifdef ENABLE_OpenMP
 mat GwmGeneralizedGWRAlgorithm::PoissonWtOmp(const mat &x, const vec &y, mat wt){
     int varn = x.n_cols;
     int dpn = x.n_rows;
@@ -802,7 +805,7 @@ mat GwmGeneralizedGWRAlgorithm::PoissonWtOmp(const mat &x, const vec &y, mat wt)
 //    return cv;
     return mu;
 }
-
+#endif
 mat GwmGeneralizedGWRAlgorithm::BinomialWtSerial(const mat &x, const vec &y, mat wt){
     int varn = x.n_cols;
     int dpn = x.n_rows;
@@ -840,7 +843,7 @@ mat GwmGeneralizedGWRAlgorithm::BinomialWtSerial(const mat &x, const vec &y, mat
     }
     return mu;
 }
-
+#ifdef ENABLE_OpenMP
 mat GwmGeneralizedGWRAlgorithm::BinomialWtOmp(const mat &x, const vec &y, mat wt){
     int varn = x.n_cols;
     int dpn = x.n_rows;
@@ -878,7 +881,7 @@ mat GwmGeneralizedGWRAlgorithm::BinomialWtOmp(const mat &x, const vec &y, mat wt
     }
     return mu;
 }
-
+#endif
 void GwmGeneralizedGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString name)
 {
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
@@ -942,10 +945,14 @@ void GwmGeneralizedGWRAlgorithm::setBandwidthSelectionCriterionType(const Bandwi
     mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
     QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
+    #ifdef ENABLE_OpenMP
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp),
+    #endif
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial),
+    #ifdef ENABLE_OpenMP
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp),
+    #endif
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial)
     };
     mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
@@ -1051,20 +1058,28 @@ bool GwmGeneralizedGWRAlgorithm::setFamily(Family family){
     mFamily = family;
     QMap<QPair<Family, IParallelalbe::ParallelType>, GGWRRegressionFunction> mapper = {
         std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::regressionPoissonSerial),
+    #ifdef ENABLE_OpenMP
         std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::regressionPoissonOmp),
-        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::regressionPoissonSerial),
+    #endif
+//        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::regressionPoissonSerial),
         std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::regressionBinomialSerial),
+    #ifdef ENABLE_OpenMP
         std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::regressionBinomialOmp),
-        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::regressionBinomialSerial)
+    #endif
+//        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::regressionBinomialSerial)
     };
     mGGWRRegressionFunction = mapper[qMakePair(family, mParallelType)];
     QMap<QPair<Family, IParallelalbe::ParallelType>, CalWtFunction> mapper1 = {
         std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::PoissonWtSerial),
+    #ifdef ENABLE_OpenMP
         std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::PoissonWtOmp),
-        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::PoissonWtSerial),
+    #endif
+//        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::PoissonWtSerial),
         std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::BinomialWtSerial),
+    #ifdef ENABLE_OpenMP
         std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::BinomialWtOmp),
-        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::BinomialWtSerial)
+    #endif
+//        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::BinomialWtSerial)
     };
     mCalWtFunction = mapper1[qMakePair(family, mParallelType)];
     return true;

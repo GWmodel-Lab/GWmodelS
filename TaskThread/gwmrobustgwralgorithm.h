@@ -46,7 +46,9 @@ protected:
     vec filtWeight(vec residual, double mse);
 
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+#ifdef ENABLE_OpenMP
     mat regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+#endif
 #ifdef ENABLE_CUDA
     mat regressionHatmatrixCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
 #endif
@@ -83,7 +85,9 @@ inline void GwmRobustGWRAlgorithm::setFiltered(bool value)
 inline int GwmRobustGWRAlgorithm::parallelAbility() const
 {
     return IParallelalbe::SerialOnly
+        #ifdef ENABLE_OpenMP
             | IParallelalbe::OpenMP
+        #endif
         #ifdef ENABLE_CUDA
             | IParallelalbe::CUDA
         #endif

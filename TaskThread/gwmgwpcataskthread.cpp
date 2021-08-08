@@ -2,7 +2,9 @@
 #include <SpatialWeight/gwmcrsdistance.h>
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "gwmtaskthread.h"
+#ifdef ENABLE_OpenMP
 #include <omp.h>
+#endif
 #include <armadillo>
 
 GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm()
@@ -195,7 +197,9 @@ void GwmGWPCATaskThread::setBandwidthSelectionCriterionType(const GwmGWPCATaskTh
     mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
     QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial),
+    #ifdef ENABLE_OpenMP
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp),
+    #endif
         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmGWPCATaskThread::bandwidthSizeCriterionCVCuda),
         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmGWPCATaskThread::bandwidthSizeCriterionAICSerial),
         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmGWPCATaskThread::bandwidthSizeCriterionAICOmp),
@@ -230,11 +234,13 @@ void GwmGWPCATaskThread::setParallelType(const IParallelalbe::ParallelType &type
             mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial;
             mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaLoadingsSdevSerial;
             break;
+#ifdef ENABLE_OpenMP
         case IParallelalbe::ParallelType::OpenMP:
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp;
             mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaLoadingsSdevOmp;
             break;
+#endif
         default:
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial;
@@ -338,7 +344,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
     }
     return score;
 }
-
+#ifdef ENABLE_OpenMP
 double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weight)
 {
     int n = mX.n_rows;
@@ -386,7 +392,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
     score = sum(score_all);
     return score;
 }
-
+#endif
 bool GwmGWPCATaskThread::scoresCal() const
 {
     return mScoresCal;
@@ -452,7 +458,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings
     mat pv = variance.cols(0, mK - 1).each_col() % (1.0 / sum(variance,1)) * 100.0;
     return pv;
 }
-
+#ifdef ENABLE_OpenMP
 mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, mat &stddev, cube &scores)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
@@ -530,7 +536,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
     mat pv = variance.cols(0,mK-1).each_col() % (1 / sum(variance,1)) *100;
     return pv;
 }
-
+#endif
 mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat &stddev)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
@@ -576,7 +582,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat 
     mat pv = variance.cols(0, mK - 1).each_col() % (1.0 / sum(variance,1)) * 100.0;
     return pv;
 }
-
+#ifdef ENABLE_OpenMP
 mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &stddev)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
@@ -639,3 +645,4 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &st
     mat pv = variance.cols(0, mK - 1).each_col() % (1.0 / sum(variance,1)) * 100.0;
     return pv;
 }
+#endif

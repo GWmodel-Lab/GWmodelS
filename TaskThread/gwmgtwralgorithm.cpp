@@ -1,7 +1,7 @@
 #include "gwmgtwralgorithm.h"
-
+#ifdef ENABLE_OpenMP
 #include <omp.h>
-
+#endif
 #include <qgsmemoryproviderutils.h>
 
 GwmDiagnostic GwmGTWRAlgorithm::CalcDiagnostic(const mat &x, const vec &y, const mat &betas, const vec &shat)
@@ -251,7 +251,7 @@ mat GwmGTWRAlgorithm::regressionSerial(const mat &x, const vec &y)
     }
     return betas.t();
 }
-
+#ifdef ENABLE_OpenMP
 mat GwmGTWRAlgorithm::regressionOmp(const mat &x, const vec &y)
 {
     emit message("Regression ...");
@@ -281,7 +281,7 @@ mat GwmGTWRAlgorithm::regressionOmp(const mat &x, const vec &y)
     }
     return betas.t();
 }
-
+#endif
 mat GwmGTWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag)
 {
     uword nDp = x.n_rows, nVar = x.n_cols;
@@ -317,7 +317,7 @@ mat GwmGTWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, mat 
     betasSE = betasSE.t();
     return betas.t();
 }
-
+#ifdef ENABLE_OpenMP
 mat GwmGTWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag)
 {
     emit message("Regression ...");
@@ -362,7 +362,7 @@ mat GwmGTWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat &be
     betasSE = betasSE.t();
     return betas.t();
 }
-
+#endif
 double GwmGTWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows;
@@ -405,7 +405,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *band
     }
     else return DBL_MAX;
 }
-
+#ifdef ENABLE_OpenMP
 double GwmGTWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows;
@@ -456,7 +456,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *bandwid
     }
     else return DBL_MAX;
 }
-
+#endif
 double GwmGTWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
@@ -501,7 +501,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight *ban
     }
     else return DBL_MAX;
 }
-
+#ifdef ENABLE_OpenMP
 double GwmGTWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
@@ -555,7 +555,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *bandwi
     }
     else return DBL_MAX;
 }
-
+#endif
 void GwmGTWRAlgorithm::createResultLayer(GwmGTWRAlgorithm::CreateResultLayerData data, QString name)
 {
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
@@ -622,11 +622,13 @@ void GwmGTWRAlgorithm::setParallelType(const ParallelType &type)
             mRegressionHatmatrixFunction = &GwmGTWRAlgorithm::regressionHatmatrixSerial;
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             break;
+#ifdef ENABLE_OpenMP
         case IParallelalbe::ParallelType::OpenMP:
             mRegressionFunction = &GwmGTWRAlgorithm::regressionOmp;
             mRegressionHatmatrixFunction = &GwmGTWRAlgorithm::regressionHatmatrixOmp;
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             break;
+#endif
         default:
             mRegressionFunction = &GwmGTWRAlgorithm::regressionSerial;
             mRegressionHatmatrixFunction = &GwmGTWRAlgorithm::regressionHatmatrixSerial;

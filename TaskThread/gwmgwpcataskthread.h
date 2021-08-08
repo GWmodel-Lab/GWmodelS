@@ -105,12 +105,18 @@ private:
     }
 
     mat pcaLoadingsSdevScoresSerial(const mat& x, cube& loadings, mat& stddev, cube& scores);
+#ifdef ENABLE_OpenMP
     mat pcaLoadingsSdevScoresOmp(const mat& x, cube& loadings, mat& stddev, cube& scores);
+#endif
     mat pcaLoadingsSdevSerial(const mat& x, cube& loadings, mat& stddev);
+#ifdef ENABLE_OpenMP
     mat pcaLoadingsSdevOmp(const mat& x, cube& loadings, mat& stddev);
+#endif
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
+#ifdef ENABLE_OpenMP
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
+#endif
     double criterion(GwmBandwidthWeight *weight)
     {
         return (this->*mBandwidthSelectCriterionFunction)(weight);
@@ -153,7 +159,11 @@ inline mat GwmGWPCATaskThread::variance() const
 
 inline int GwmGWPCATaskThread::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
+    return IParallelalbe::SerialOnly
+        #ifdef ENABLE_OpenMP
+            | IParallelalbe::OpenMP
+        #endif
+            ;
 }
 
 inline IParallelalbe::ParallelType GwmGWPCATaskThread::parallelType() const

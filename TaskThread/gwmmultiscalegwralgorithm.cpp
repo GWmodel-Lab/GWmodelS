@@ -1,5 +1,7 @@
 #include "gwmmultiscalegwralgorithm.h"
+#ifdef ENABLE_OpenMP
 #include <omp.h>
+#endif
 #include <exception>
 #include "GWmodel/GWmodel.h"
 #include <SpatialWeight/gwmcrsdistance.h>
@@ -478,7 +480,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
     }
     return betas.t();
 }
-
+#ifdef ENABLE_OpenMP
 mat GwmMultiscaleGWRAlgorithm::regressionAllOmp(const mat &x, const vec &y)
 {
     int nDp = x.n_rows, nVar = x.n_cols;
@@ -534,7 +536,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllOmp(const mat &x, const vec &y)
     }
     return betas.t();
 }
-
+#endif
 vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, const int var, mat &S)
 {
     int nDp = x.n_rows;
@@ -580,7 +582,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, c
     }
     return betas.t();
 }
-
+#ifdef ENABLE_OpenMP
 vec GwmMultiscaleGWRAlgorithm::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S)
 {
     int nDp = x.n_rows;
@@ -634,7 +636,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarOmp(const vec &x, const vec &y, cons
     }
     return betas.t();
 }
-
+#endif
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows;
@@ -668,7 +670,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial(GwmBandwidt
     if(!checkCanceled()) return cv;
     else return DBL_MAX;
 }
-
+#ifdef ENABLE_OpenMP
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows;
@@ -711,7 +713,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWe
     }
     else return DBL_MAX;
 }
-
+#endif
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
@@ -747,7 +749,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial(GwmBandwid
     if(!checkCanceled()) return value;
     else return DBL_MAX;
 }
-
+#ifdef ENABLE_OpenMP
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICOmp(GwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
@@ -793,7 +795,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICOmp(GwmBandwidthW
     }
     else return DBL_MAX;
 }
-
+#endif
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
@@ -828,7 +830,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial(GwmBandwidt
     if(!checkCanceled()) return cv;
     else return DBL_MAX;
 }
-
+#ifdef ENABLE_OpenMP
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
@@ -872,7 +874,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWe
     }
     else return DBL_MAX;
 }
-
+#endif
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
@@ -909,7 +911,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial(GwmBandwid
     if(!checkCanceled()) return value;
     else return DBL_MAX;
 }
-
+#ifdef ENABLE_OpenMP
 double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICOmp(GwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
@@ -956,18 +958,22 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICOmp(GwmBandwidthW
     }
     return DBL_MAX;
 }
-
+#endif
 GwmMultiscaleGWRAlgorithm::BandwidthSizeCriterionFunction GwmMultiscaleGWRAlgorithm::bandwidthSizeCriterionAll(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType type)
 {
     QMap<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> > mapper = {
         std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
             std::make_pair(IParallelalbe::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial),
+        #ifdef ENABLE_OpenMP
             std::make_pair(IParallelalbe::ParallelType::OpenMP, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVOmp),
+        #endif
             std::make_pair(IParallelalbe::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial)
         }),
         std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
             std::make_pair(IParallelalbe::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial),
+        #ifdef ENABLE_OpenMP
             std::make_pair(IParallelalbe::ParallelType::OpenMP, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICOmp),
+        #endif
             std::make_pair(IParallelalbe::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial)
         })
     };
@@ -979,12 +985,16 @@ GwmMultiscaleGWRAlgorithm::BandwidthSizeCriterionFunction GwmMultiscaleGWRAlgori
     QMap<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> > mapper = {
         std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
             std::make_pair(IParallelalbe::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial),
+        #ifdef ENABLE_OpenMP
             std::make_pair(IParallelalbe::ParallelType::OpenMP, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVOmp),
+        #endif
             std::make_pair(IParallelalbe::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial)
         }),
         std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
             std::make_pair(IParallelalbe::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial),
+        #ifdef ENABLE_OpenMP
             std::make_pair(IParallelalbe::ParallelType::OpenMP, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICOmp),
+        #endif
             std::make_pair(IParallelalbe::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial)
         })
     };
@@ -1001,14 +1011,16 @@ void GwmMultiscaleGWRAlgorithm::setParallelType(const IParallelalbe::ParallelTyp
             mRegressionAll = &GwmMultiscaleGWRAlgorithm::regressionAllSerial;
             mRegressionVar = &GwmMultiscaleGWRAlgorithm::regressionVarSerial;
             break;
+#ifdef ENABLE_OpenMP
         case IParallelalbe::ParallelType::OpenMP:
             mRegressionAll = &GwmMultiscaleGWRAlgorithm::regressionAllOmp;
             mRegressionVar = &GwmMultiscaleGWRAlgorithm::regressionVarOmp;
             break;
-        case IParallelalbe::ParallelType::CUDA:
-            mRegressionAll = &GwmMultiscaleGWRAlgorithm::regressionAllOmp;
-            mRegressionVar = &GwmMultiscaleGWRAlgorithm::regressionVarOmp;
-            break;
+#endif
+//        case IParallelalbe::ParallelType::CUDA:
+//            mRegressionAll = &GwmMultiscaleGWRAlgorithm::regressionAllOmp;
+//            mRegressionVar = &GwmMultiscaleGWRAlgorithm::regressionVarOmp;
+//            break;
         default:
             break;
         }

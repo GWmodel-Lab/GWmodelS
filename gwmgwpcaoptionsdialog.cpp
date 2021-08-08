@@ -1,6 +1,8 @@
 #include "gwmgwpcaoptionsdialog.h"
 #include "ui_gwmgwpcaoptionsdialog.h"
+#ifdef ENABLE_OpenMP
 #include <omp.h>
+#endif
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QFileDialog>
@@ -61,11 +63,15 @@ GwmGWPCAOptionsDialog::GwmGWPCAOptionsDialog(QList<GwmLayerGroupItem*> originIte
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
+#ifdef ENABLE_OpenMP
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);
-    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWPCAOptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWPCAOptionsDialog::onMultithreadingRadioToggled);
+#else
+    ui->mCalcParallelMultithreadRadio->setEnabled(false);
+#endif
+    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWPCAOptionsDialog::onNoneRadioToggled);    
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWPCAOptionsDialog::onGPURadioToggled);
 
     connect(ui->mKspinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);

@@ -132,18 +132,18 @@ protected:
 
     mat regressionPoissonSerial(const mat& x, const vec& y);
     mat regressionBinomialSerial(const mat& x, const vec& y);
-
+#ifdef ENABLE_OpenMP
     mat regressionPoissonOmp(const mat& x, const vec& y);
     mat regressionBinomialOmp(const mat& x, const vec& y);
-
+#endif
     mat diag(mat a);
 
     mat PoissonWtSerial(const mat& x, const vec& y,mat w);
     mat BinomialWtSerial(const mat& x, const vec& y,mat w);
-
+#ifdef ENABLE_OpenMP
     mat PoissonWtOmp(const mat& x, const vec& y,mat w);
     mat BinomialWtOmp(const mat& x, const vec& y,mat w);
-
+#endif
     void CalGLMModel(const mat& x, const vec& y);
 
     void createResultLayer(CreateResultLayerData data,QString name = QStringLiteral("_GGWR"));
@@ -152,10 +152,10 @@ private:
 
     double bandwidthSizeGGWRCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeGGWRCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight);
-
+#ifdef ENABLE_OpenMP
     double bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeGGWRCriterionAICOmp(GwmBandwidthWeight* bandwidthWeight);
-
+#endif
 public:
     Family getFamily() const;
     double getTol() const;
@@ -313,7 +313,12 @@ inline void GwmGeneralizedGWRAlgorithm::setIsAutoselectBandwidth(bool value)
 
 inline int GwmGeneralizedGWRAlgorithm::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP | IParallelalbe::CUDA;
+    return IParallelalbe::SerialOnly
+        #ifdef ENABLE_OpenMP
+            | IParallelalbe::OpenMP
+        #endif
+//            | IParallelalbe::CUDA
+            ;
 }
 
 inline IParallelalbe::ParallelType GwmGeneralizedGWRAlgorithm::parallelType() const
