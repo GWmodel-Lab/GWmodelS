@@ -1,6 +1,8 @@
 #include "gwmgtwroptionsdialog.h"
 #include "ui_gwmgtwroptionsdialog.h"
+#ifdef ENABLE_OpenMP
 #include <omp.h>
+#endif
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QFileDialog>
@@ -59,11 +61,15 @@ GwmGTWROptionsDialog::GwmGTWROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     QButtonGroup* calcParallelTypeBtnGroup = new QButtonGroup(this);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
+#ifdef ENABLE_OpenMP
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);
-    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGTWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGTWROptionsDialog::onMultithreadingRadioToggled);
+#else
+    ui->mCalcParallelMultithreadRadio->setEnabled(false);
+#endif
+    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGTWROptionsDialog::onNoneRadioToggled);   
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);

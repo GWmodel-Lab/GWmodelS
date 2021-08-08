@@ -1,7 +1,9 @@
 #include "gwmgwsstaskthread.h"
 #include "gwmgwsstaskthread.h"
 #include "SpatialWeight/gwmcrsdistance.h"
+#ifdef ENABLE_OpenMP
 #include <omp.h>
+#endif
 
 vec GwmGWSSTaskThread::del(vec x, int rowcount){
     vec res;
@@ -118,7 +120,7 @@ bool GwmGWSSTaskThread::CalculateSerial(){
     mLCV = mStandardDev / mLocalMean;
     return true;
 }
-
+#ifdef ENABLE_OpenMP
 bool GwmGWSSTaskThread::CalculateOmp(){
     mat rankX = mX;
     rankX.each_col([&](vec x) { x = rank(x); });
@@ -169,7 +171,7 @@ bool GwmGWSSTaskThread::CalculateOmp(){
     mLCV = mStandardDev / mLocalMean;
     return true;
 }
-
+#endif
 vec GwmGWSSTaskThread::findq(const mat &x, const vec &w)
 {
     int lw = w.n_rows;
@@ -336,9 +338,11 @@ void GwmGWSSTaskThread::setParallelType(const IParallelalbe::ParallelType &type)
 //            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
             mCalFunciton = &GwmGWSSTaskThread::CalculateSerial;
             break;
+#ifdef ENABLE_OpenMP
         case IParallelalbe::ParallelType::OpenMP:
             mCalFunciton = &GwmGWSSTaskThread::CalculateOmp;
             break;
+#endif
         default:
             mCalFunciton = &GwmGWSSTaskThread::CalculateSerial;
             break;

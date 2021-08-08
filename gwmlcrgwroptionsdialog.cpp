@@ -1,6 +1,5 @@
 #include "gwmlcrgwroptionsdialog.h"
 #include "ui_gwmlcrgwroptionsdialog.h"
-#include <omp.h>
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QFileDialog>
@@ -9,7 +8,9 @@
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
-
+#ifdef ENABLE_OpenMP
+#include <omp.h>
+#endif
 
 GwmLcrGWROptionsDialog::GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmLocalCollinearityGWRAlgorithm* thread,QWidget *parent) :
     QDialog(parent),
@@ -62,12 +63,17 @@ GwmLcrGWROptionsDialog::GwmLcrGWROptionsDialog(QList<GwmLayerGroupItem*> originI
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
+#ifdef ENABLE_OpenMP
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);
+#else
+    ui->mCalcParallelMultithreadRadio->setEnabled(false);
+#endif
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmLcrGWROptionsDialog::onGPURadioToggled);
+    ui->mCalcParallelGPURadio->hide();
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);

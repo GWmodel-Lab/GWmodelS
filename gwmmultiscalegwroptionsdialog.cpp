@@ -1,6 +1,8 @@
 #include "gwmmultiscalegwroptionsdialog.h"
 #include "ui_gwmmultiscalegwroptionsdialog.h"
+#ifdef ENABLE_OpenMP
 #include <omp.h>
+#endif
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QFileDialog>
@@ -84,11 +86,15 @@ GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroup
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
 //    calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
+#ifdef ENABLE_OpenMP
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);
-    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onMultithreadingRadioToggled);
+#else
+    ui->mCalcParallelMultithreadRadio->setEnabled(false);
+#endif
+    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onNoneRadioToggled);   
 //    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::onGPURadioToggled);
     ui->mCalcParallelGPURadio->hide();
 

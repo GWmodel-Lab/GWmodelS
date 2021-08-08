@@ -1,7 +1,10 @@
 #include "gwmlocalcollinearitygwralgorithm.h"
 
-#include <omp.h>
 #include <armadillo>
+
+#ifdef ENABLE_OpenMP
+#include <omp.h>
+#endif
 
 using namespace arma;
 
@@ -113,7 +116,9 @@ void GwmLocalCollinearityGWRAlgorithm::setBandwidthSelectionCriterionType(const 
      mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
      QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
          std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial),
+    #ifdef ENABLE_OpenMP
          std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp),
+    #endif
          //std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVCuda),
          //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICSerial),
          //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICOmp),
@@ -286,7 +291,7 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandw
     }
     else return DBL_MAX;
 }
-
+#ifdef ENABLE_OpenMP
 double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weight)
 {
     //vec cv_all(mOmpThreadNum, fill::zeros);
@@ -363,7 +368,7 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidt
     }
     else return DBL_MAX;
 }
-
+#endif
 mat GwmLocalCollinearityGWRAlgorithm::regressionSerial(const mat &x, const vec &y)
 {
     mat betas(mDataPoints.n_rows,x.n_cols,fill::zeros);
@@ -412,7 +417,7 @@ mat GwmLocalCollinearityGWRAlgorithm::regressionSerial(const mat &x, const vec &
     }
     return betas;
 }
-
+#ifdef ENABLE_OpenMP
 mat GwmLocalCollinearityGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
 {
     mat betas(mDataPoints.n_rows,x.n_cols,fill::zeros);
@@ -474,7 +479,7 @@ mat GwmLocalCollinearityGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
     this->mTrStS = sum(shat.row(1));
     return betas;
 }
-
+#endif
 void GwmLocalCollinearityGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &type)
 {
     if(type & parallelAbility())
@@ -485,10 +490,12 @@ void GwmLocalCollinearityGWRAlgorithm::setParallelType(const IParallelalbe::Para
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
             break;
+#ifdef ENABLE_OpenMP
         case IParallelalbe::ParallelType::OpenMP:
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionOmp;
             break;
+#endif
         }
     }
 }

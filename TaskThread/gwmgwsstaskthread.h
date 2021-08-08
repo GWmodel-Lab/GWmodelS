@@ -60,8 +60,9 @@ protected:
     static vec findq(const mat& x, const vec& w);
 
     bool CalculateSerial();
+#ifdef ENABLE_OpenMP
     bool CalculateOmp();
-
+#endif
 public:
     GwmGWSSTaskThread();
 
@@ -195,7 +196,11 @@ inline void GwmGWSSTaskThread::setBandwidth(GwmBandwidthWeight *bandwidth)
 
 inline int GwmGWSSTaskThread::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
+    return IParallelalbe::SerialOnly
+        #ifdef ENABLE_OpenMP
+            | IParallelalbe::OpenMP
+        #endif
+            ;
 }
 
 inline IParallelalbe::ParallelType GwmGWSSTaskThread::parallelType() const

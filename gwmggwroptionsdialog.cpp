@@ -60,8 +60,13 @@ GwmGGWROptionsDialog::GwmGGWROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGGWROptionsDialog::onNoneRadioToggled);
+#ifdef ENABLE_OpenMP
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGGWROptionsDialog::onMultithreadingRadioToggled);
+#else
+    ui->mCalcParallelMultithreadRadio->setEnabled(false);
+#endif
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGGWROptionsDialog::onGPURadioToggled);
+    ui->mCalcParallelGPURadio->hide();
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);

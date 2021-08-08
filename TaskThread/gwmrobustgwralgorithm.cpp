@@ -1,7 +1,10 @@
 #include "gwmrobustgwralgorithm.h"
 
 #include <gsl/gsl_cdf.h>
+
+#ifdef ENABLE_OpenMP
 #include <omp.h>
+#endif
 
 GwmRobustGWRAlgorithm::GwmRobustGWRAlgorithm(): GwmBasicGWRAlgorithm()
 {
@@ -228,9 +231,11 @@ void GwmRobustGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &t
         case IParallelalbe::ParallelType::SerialOnly:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
             break;
+#ifdef ENABLE_OpenMP
         case IParallelalbe::ParallelType::OpenMP:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixOmp;
             break;
+#endif
 #ifdef ENABLE_CUDA
         case IParallelalbe::ParallelType::CUDA:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixCuda;
@@ -346,6 +351,7 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y,
     return betas.t();
 }
 
+#ifdef ENABLE_OpenMP
 mat GwmRobustGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
     emit message("Regression ...");
@@ -392,6 +398,7 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, ma
     betasSE = betasSE.t();
     return betas.t();
 }
+#endif
 
 #ifdef ENABLE_CUDA
 mat GwmRobustGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)

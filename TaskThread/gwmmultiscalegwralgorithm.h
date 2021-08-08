@@ -157,21 +157,33 @@ protected:
     }
 
     mat regressionAllSerial(const mat& x, const vec& y);
+#ifdef ENABLE_OpenMP
     mat regressionAllOmp(const mat& x, const vec& y);
+#endif
     vec regressionVarSerial(const vec& x, const vec& y, const int var, mat& S);
+#ifdef ENABLE_OpenMP
     vec regressionVarOmp(const vec& x, const vec& y, const int var, mat& S);
+#endif
 
     BandwidthSizeCriterionFunction bandwidthSizeCriterionAll(BandwidthSelectionCriterionType type);
     double mBandwidthSizeCriterionAllCVSerial(GwmBandwidthWeight* bandwidthWeight);
+#ifdef ENABLE_OpenMP
     double mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWeight* bandwidthWeight);
+#endif
     double mBandwidthSizeCriterionAllAICSerial(GwmBandwidthWeight* bandwidthWeight);
+#ifdef ENABLE_OpenMP
     double mBandwidthSizeCriterionAllAICOmp(GwmBandwidthWeight* bandwidthWeight);
+#endif
 
     BandwidthSizeCriterionFunction bandwidthSizeCriterionVar(BandwidthSelectionCriterionType type);
     double mBandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight* bandwidthWeight);
+#ifdef ENABLE_OpenMP
     double mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWeight* bandwidthWeight);
+#endif
     double mBandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight* bandwidthWeight);
+#ifdef ENABLE_OpenMP
     double mBandwidthSizeCriterionVarAICOmp(GwmBandwidthWeight* bandwidthWeight);
+#endif
 
     void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
 
@@ -357,7 +369,11 @@ inline mat GwmMultiscaleGWRAlgorithm::betas() const
 
 inline int GwmMultiscaleGWRAlgorithm::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
+    return IParallelalbe::SerialOnly
+        #ifdef ENABLE_OpenMP
+            | IParallelalbe::OpenMP
+        #endif
+            ;
 }
 
 inline IParallelalbe::ParallelType GwmMultiscaleGWRAlgorithm::parallelType() const

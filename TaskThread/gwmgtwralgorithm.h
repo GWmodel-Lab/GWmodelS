@@ -109,15 +109,23 @@ protected:
 
 private:
     mat regressionSerial(const mat& x, const vec& y);
+#ifdef ENABLE_OpenMP
     mat regressionOmp(const mat& x, const vec& y);
+#endif
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag);
+#ifdef ENABLE_OpenMP
     mat regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag);
+#endif
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight);
+#ifdef ENABLE_OpenMP
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* bandwidthWeight);
+#endif
 
     double bandwidthSizeCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight);
+#ifdef ENABLE_OpenMP
     double bandwidthSizeCriterionAICOmp(GwmBandwidthWeight* bandwidthWeight);
+#endif
 
     bool isStoreS()
     {
@@ -205,9 +213,13 @@ inline void GwmGTWRAlgorithm::setBandwidthSelectionCriterionType(const Bandwidth
     mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
     QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmGTWRAlgorithm::bandwidthSizeCriterionCVSerial),
+    #ifdef ENABLE_OpenMP
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmGTWRAlgorithm::bandwidthSizeCriterionCVOmp),
+    #endif
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmGTWRAlgorithm::bandwidthSizeCriterionAICSerial),
+    #ifdef ENABLE_OpenMP
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmGTWRAlgorithm::bandwidthSizeCriterionAICOmp),
+    #endif
     };
     mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
 }
@@ -279,7 +291,11 @@ inline BandwidthCriterionList GwmGTWRAlgorithm::bandwidthSelectorCriterions() co
 
 inline int GwmGTWRAlgorithm::parallelAbility() const
 {
-    return ParallelType::SerialOnly | ParallelType::OpenMP;
+    return ParallelType::SerialOnly
+        #ifdef ENABLE_OpenMP
+            | ParallelType::OpenMP
+        #endif
+            ;
 }
 
 inline IParallelalbe::ParallelType GwmGTWRAlgorithm::parallelType() const

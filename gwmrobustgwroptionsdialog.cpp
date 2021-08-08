@@ -1,6 +1,5 @@
 #include "gwmrobustgwroptionsdialog.h"
 #include "ui_gwmrobustgwroptionsdialog.h"
-#include <omp.h>
 #include <QComboBox>
 #include <QButtonGroup>
 #include <QFileDialog>
@@ -8,6 +7,10 @@
 #include <SpatialWeight/gwmcrsdistance.h>
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
+
+#ifdef ENABLE_OpenMP
+#include <omp.h>
+#endif
 
 #ifdef ENABLE_CUDA
 #include <GWmodelCUDA/ICUDAInspector.h>
@@ -58,12 +61,16 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
-    int cores = omp_get_num_procs();
-    ui->mThreadNum->setValue(cores);
-    ui->mThreadNum->setMaximum(cores);
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onGPURadioToggled);
+#ifdef ENABLE_OpenMP
+    int cores = omp_get_num_procs();
+    ui->mThreadNum->setValue(cores);
+    ui->mThreadNum->setMaximum(cores);
+#else
+    ui->mCalcParallelMultithreadRadio->setEnabled(false);
+#endif
 
 #ifdef ENABLE_CUDA
     // 获取显卡信息

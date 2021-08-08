@@ -157,27 +157,35 @@ protected:
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight);
+#ifdef ENABLE_OpenMP
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* bandwidthWeight);
-    double bandwidthSizeCriterionAICOmp(GwmBandwidthWeight* bandwidthWeight); 
+    double bandwidthSizeCriterionAICOmp(GwmBandwidthWeight* bandwidthWeight);
+#endif
 #ifdef ENABLE_CUDA
     double bandwidthSizeCriterionCVCuda(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICCuda(GwmBandwidthWeight* bandwidthWeight);
 #endif
 
     double indepVarsSelectCriterionSerial(const QList<GwmVariable>& indepVars);
+#ifdef ENABLE_OpenMP
     double indepVarsSelectCriterionOmp(const QList<GwmVariable>& indepVars);
+#endif
 #ifdef ENABLE_CUDA
     double indepVarsSelectCriterionCuda(const QList<GwmVariable>& indepVars);
 #endif
 
     mat regressionSerial(const mat& x, const vec& y);
+#ifdef ENABLE_OpenMP
     mat regressionOmp(const mat& x, const vec& y);
+#endif
 #ifdef ENABLE_CUDA
     mat regressionCuda(const mat& x, const vec& y);
 #endif
 
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+#ifdef ENABLE_OpenMP
     mat regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+#endif
 #ifdef ENABLE_CUDA
     mat regressionHatmatrixCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
 #endif
@@ -185,13 +193,17 @@ protected:
     void fTest(FTestParameters params);
 
     double calcTrQtQSerial();
+#ifdef ENABLE_OpenMP
     double calcTrQtQOmp();
+#endif
 #ifdef ENABLE_CUDA
     double calcTrQtQCuda();
 #endif
 
     vec calcDiagBSerial(int i);
+#ifdef ENABLE_OpenMP
     vec calcDiagBOmp(int i);
+#endif
 #ifdef ENABLE_CUDA
     vec calcDiagBCuda(int i);
 #endif
@@ -304,7 +316,9 @@ inline IndepVarsCriterionList GwmBasicGWRAlgorithm::indepVarSelectorCriterions()
 inline int GwmBasicGWRAlgorithm::parallelAbility() const
 {
     return IParallelalbe::SerialOnly
+        #ifdef ENABLE_OpenMP
             | IParallelalbe::OpenMP
+        #endif
         #ifdef ENABLE_CUDA
             | IParallelalbe::CUDA
         #endif
