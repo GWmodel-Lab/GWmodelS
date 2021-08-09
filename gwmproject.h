@@ -2,7 +2,7 @@
 #define GWMPROJECT_H
 
 #include <qgsproject.h>
-
+#include <QString>
 #include "Model/gwmlayeritemmodel.h"
 
 class GwmProject : public QObject
@@ -42,6 +42,8 @@ public:
     bool dirty() const;
     void setDirty(bool dirty);
 
+    QString filePath() const;
+    void setFilePath(const QString &filepath);
 private:
     GwmLayerItemModel* mLayerItemModel = nullptr;
 
@@ -49,6 +51,7 @@ private:
 
     QString mName = "Untitled Project";
     bool mDirty = false;
+    QString mFilePath ;
 };
 
 inline QString GwmProject::name() const
@@ -56,7 +59,10 @@ inline QString GwmProject::name() const
     return mName;
 }
 
-
+inline QString GwmProject::filePath() const
+{
+    return mFilePath;
+}
 
 inline bool GwmProject::dirty() const
 {

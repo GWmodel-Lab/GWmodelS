@@ -146,7 +146,7 @@ public slots:
     void onGTWRBtnClicked();
     void onGWPCABtnClicked();
     void populateLayoutsMenu(QMenu *menu);
-	
+
 private:
     void setupMenus();
     void toggleToolbarGeneral(bool flag);
