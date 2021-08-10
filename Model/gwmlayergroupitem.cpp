@@ -7,7 +7,6 @@
 #include "gwmlayerggwritem.h"
 #include "gwmlayergwpcaitem.h"
 #include "gwmlayergtwritem.h"
-
 #include <qmessagebox.h>
 
 #include "gwmapp.h"
@@ -225,7 +224,7 @@ bool GwmLayerGroupItem::readXml(QDomNode &node)
 
     QDomElement analyseList = node.firstChildElement("analyseList");
     if (analyseList.isNull())
-        return false;
+        return true;
 
     QDomElement analyseNode = analyseList.firstChildElement("analyse");
     while (!analyseNode.isNull())

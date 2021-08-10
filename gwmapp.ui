@@ -49,6 +49,7 @@
      <addaction name="action_CSV"/>
     </widget>
     <addaction name="action_Open_Project"/>
+    <addaction name="action_Save_NowProject"/>
     <addaction name="action_Save_Project"/>
     <addaction name="separator"/>
     <addaction name="menu_Import_Layer"/>
@@ -276,7 +277,7 @@
   </action>
   <action name="action_Save_Project">
    <property name="text">
-    <string>&amp;Save Project</string>
+    <string>&amp;Save Project As</string>
    </property>
   </action>
   <action name="action_ESRI_Shapefile">
@@ -483,6 +484,11 @@
   <action name="action_GPKG">
    <property name="text">
     <string>GPKG</string>
+   </property>
+  </action>
+  <action name="action_Save_NowProject">
+   <property name="text">
+    <string>&amp;Save Project</string>
    </property>
   </action>
  </widget>

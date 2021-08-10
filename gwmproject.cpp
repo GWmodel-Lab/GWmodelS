@@ -65,7 +65,7 @@ bool GwmProject::read(const QFileInfo &projectFile)
     }
 
     QgsCoordinateReferenceSystem crs;
-    crs.readXml(nodeCrs.firstChild());
+    crs.readXml(nodeCrs);
     if (crs.isValid())
     {
         QgsProject::instance()->setCrs(crs);
@@ -106,8 +106,8 @@ bool GwmProject::read(const QFileInfo &projectFile)
 
 void GwmProject::save(const QFileInfo &projectFile)
 {
-    if (!mDirty)
-        return;
+//    if (!mDirty)
+//        return;
 
     // 保存临时图层
     for (auto groupItem : mLayerItemModel->rootChildren())
@@ -174,4 +174,9 @@ void GwmProject::setDirty(bool dirty)
 {
     mDirty = dirty;
     emit dirtyChanged(mDirty);
+}
+
+void GwmProject::setFilePath(const QString &filepath)
+{
+    mFilePath = filepath;
 }

@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
     QString pluginDir = "./plugins";
     QgsProviderRegistry::instance(pluginDir);
     QgsProject::instance()->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(4326));
-
     qRegisterMetaType<PlotFunction>("PlotFunction");
 
     GwmApp w;

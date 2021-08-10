@@ -171,6 +171,7 @@ void GwmApp::setupMenus()
     connect(ui->actionGTWR,&QAction::triggered, this, &GwmApp::onGTWRBtnClicked);
     connect(ui->action_Open_Project, &QAction::triggered, this, &GwmApp::onOpenProject);
     connect(ui->action_Save_Project, &QAction::triggered, this, &GwmApp::onSaveProject);
+    connect(ui->action_Save_NowProject, &QAction::triggered, this, &GwmApp::onSaveNowProject);
 }
 
 void GwmApp::toggleToolbarGeneral(bool flag)
@@ -513,8 +514,23 @@ void GwmApp::onSaveProject()
 {
     QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
     QFileInfo fileInfo(filePath);
+    GwmProject::instance()->setFilePath(filePath);
     GwmProject::instance()->setName(fileInfo.completeBaseName());
     GwmProject::instance()->save(fileInfo);
+}
+
+void GwmApp::onSaveNowProject()
+{
+    if (GwmProject::instance()->filePath()==""){
+        QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
+        QFileInfo fileInfo(filePath);
+        GwmProject::instance()->setName(fileInfo.completeBaseName());
+        GwmProject::instance()->save(fileInfo);
+    }
+    else{
+    QString filePath = GwmProject::instance()->filePath();
+    QFileInfo fileInfo(filePath);
+    GwmProject::instance()->save(fileInfo);}
 }
 
 void GwmApp::onOpenProject()
@@ -537,6 +553,7 @@ void GwmApp::onOpenProject()
     if (fileInfo.exists() && fileInfo.isFile() && GwmProject::instance()->read(fileInfo))
     {
         onMapModelChanged();
+        GwmProject::instance()->setFilePath(filePath);
     }
 }
 

@@ -454,7 +454,9 @@ void GwmLayerItemModel::appendItem(QgsVectorLayer *layer, const QString path, co
 
 bool GwmLayerItemModel::clear()
 {
-    return removeRows(0, rowCount());
+    if(rowCount()==0)
+        return true;
+    else return removeRows(0, rowCount());
 }
 
 GwmLayerGroupItem *GwmLayerItemModel::item(int i)

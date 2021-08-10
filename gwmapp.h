@@ -84,6 +84,7 @@ public:
 	void registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
 	void unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
     void onSaveProject();
+    void onSaveNowProject();
     void onOpenProject();
     void addWindow( QAction *action );
     void removeWindow( QAction *action );
@@ -146,7 +147,7 @@ public slots:
     void onGTWRBtnClicked();
     void onGWPCABtnClicked();
     void populateLayoutsMenu(QMenu *menu);
-	
+
 private:
     void setupMenus();
     void toggleToolbarGeneral(bool flag);
