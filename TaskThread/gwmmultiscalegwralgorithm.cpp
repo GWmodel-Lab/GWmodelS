@@ -879,7 +879,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial(GwmBandwid
 {
     int var = mBandwidthSelectionCurrentIndex;
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
-    mat betas(nVar, nDp, fill::zeros);
+    mat betas(1, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp & !checkCanceled(); i++)
     {
@@ -916,7 +916,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICOmp(GwmBandwidthW
 {
     int var = mBandwidthSelectionCurrentIndex;
     int nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
-    mat betas(nVar, nDp, fill::zeros);
+    mat betas(1, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
