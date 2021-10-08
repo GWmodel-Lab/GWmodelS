@@ -193,7 +193,7 @@
    <item row="0" column="0" colspan="2">
     <widget class="QGroupBox" name="groupBox_5">
      <property name="title">
-      <string>Print Setting</string>
+      <string>Map Setting</string>
      </property>
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">

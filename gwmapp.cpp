@@ -104,7 +104,7 @@ GwmApp::GwmApp(QWidget *parent)
 		QMessageBox::critical(
 			this,
 			tr("Multiple Instances of GwmApp"),
-			tr("Multiple instances of GWmodel Desktop application object detected.\nPlease contact the developers.\n"));
+            tr("Multiple instances of GWmodelS application object detected.\nPlease contact the developers.\n"));
 		abort();
 	}
 	mInstance = this;
@@ -172,6 +172,23 @@ void GwmApp::setupMenus()
     connect(ui->action_Open_Project, &QAction::triggered, this, &GwmApp::onOpenProject);
     connect(ui->action_Save_Project, &QAction::triggered, this, &GwmApp::onSaveProject);
     connect(ui->action_Save_NowProject, &QAction::triggered, this, &GwmApp::onSaveNowProject);
+    connect(ui->actionBasic_GWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
+    //以下信号为暂未实现的功能
+    connect(ui->actionGW_Averages, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionGW_Covariance, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionGlyph_Plot, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionSWIM, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionFlow_Visualization, &QAction::triggered, this, &GwmApp::developingMessageBox);
+
+}
+
+void GwmApp::developingMessageBox()
+{
+    QMessageBox::information(NULL, "warning", tr("敬请期待!"));//, QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
 }
 
 void GwmApp::toggleToolbarGeneral(bool flag)
@@ -512,7 +529,7 @@ bool GwmApp::uniqueLayoutTitle(QWidget * parent, QString & title, bool acceptEmp
 
 void GwmApp::onSaveProject()
 {
-    QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
+    QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodelS Project (*.gwm)"));
     QFileInfo fileInfo(filePath);
     GwmProject::instance()->setFilePath(filePath);
     GwmProject::instance()->setName(fileInfo.completeBaseName());
@@ -522,7 +539,7 @@ void GwmApp::onSaveProject()
 void GwmApp::onSaveNowProject()
 {
     if (GwmProject::instance()->filePath()==""){
-        QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
+        QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodelS Project (*.gwm)"));
         QFileInfo fileInfo(filePath);
         GwmProject::instance()->setName(fileInfo.completeBaseName());
         GwmProject::instance()->save(fileInfo);
@@ -548,7 +565,7 @@ void GwmApp::onOpenProject()
             onSaveProject();
         }
     }
-    QString filePath = QFileDialog::getOpenFileName(this, tr("Open Project"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open Project"), tr(""), tr("GWmodelS Project (*.gwm)"));
     QFileInfo fileInfo(filePath);
     if (fileInfo.exists() && fileInfo.isFile() && GwmProject::instance()->read(fileInfo))
     {
@@ -1447,6 +1464,6 @@ void GwmApp::updateWindowTitle()
 {
     QString projectName = GwmProject::instance()->name();
     bool projectDirty = GwmProject::instance()->dirty();
-    QString title = QString("%1%2 - GWmodel Desktop").arg(projectName).arg((projectDirty ? " *" : ""));
+    QString title = QString("%1%2 - GWmodelS").arg(projectName).arg((projectDirty ? " *" : ""));
     setWindowTitle(title);
 }

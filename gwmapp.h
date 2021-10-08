@@ -55,6 +55,7 @@ private:
     void setupPropertyPanel();
     void setupMapPanel();
 	void initLayouts();
+    void developingMessageBox();
 
 	void startProfile(const QString &name)
 	{
