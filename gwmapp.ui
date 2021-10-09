@@ -36,23 +36,13 @@
    </property>
    <widget class="QMenu" name="menu_File">
     <property name="title">
-     <string>&amp;File</string>
+     <string>File</string>
     </property>
-    <widget class="QMenu" name="menu_Import_Layer">
-     <property name="title">
-      <string>&amp;Import Layer</string>
-     </property>
-     <addaction name="action_ESRI_Shapefile"/>
-     <addaction name="actionGeo_Json"/>
-     <addaction name="action_GPKG"/>
-     <addaction name="separator"/>
-     <addaction name="action_CSV"/>
-    </widget>
+    <addaction name="actionNew"/>
     <addaction name="action_Open_Project"/>
+    <addaction name="separator"/>
     <addaction name="action_Save_NowProject"/>
     <addaction name="action_Save_Project"/>
-    <addaction name="separator"/>
-    <addaction name="menu_Import_Layer"/>
     <addaction name="separator"/>
     <addaction name="action_Exit"/>
    </widget>
@@ -67,11 +57,59 @@
     <addaction name="action_GGWR"/>
     <addaction name="actionMultiscale_GWR"/>
     <addaction name="actionGTWR"/>
+   </widget>
+   <widget class="QMenu" name="menuLayer_Data">
+    <property name="title">
+     <string>Layer/Data</string>
+    </property>
+    <addaction name="action_ESRI_Shapefile"/>
+    <addaction name="actionGeo_Json"/>
+    <addaction name="action_GPKG"/>
     <addaction name="separator"/>
+    <addaction name="action_CSV"/>
+   </widget>
+   <widget class="QMenu" name="menuGWSS">
+    <property name="title">
+     <string>GWSS</string>
+    </property>
+    <addaction name="actionGW_Averages"/>
+    <addaction name="actionGW_Covariance"/>
+    <addaction name="actionGW_Correlations"/>
+   </widget>
+   <widget class="QMenu" name="menuGWPCA">
+    <property name="title">
+     <string>GWPCA</string>
+    </property>
+    <addaction name="actionBasic_GWPCA"/>
+    <addaction name="actionRobust_GWPCA"/>
+    <addaction name="separator"/>
+    <addaction name="actionGlyph_Plot"/>
+   </widget>
+   <widget class="QMenu" name="menuSWIM">
+    <property name="title">
+     <string>SWIM</string>
+    </property>
+    <addaction name="actionFlow_data"/>
+    <addaction name="actionFlow_distance"/>
     <addaction name="action_CsvToDat"/>
+    <addaction name="actionSWIM"/>
+    <addaction name="actionFlow_Visualization"/>
+   </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>About</string>
+    </property>
+    <addaction name="actionInformation"/>
+    <addaction name="actionGWmodel_Team"/>
+    <addaction name="actionDevelopment_Team"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menuGWR"/>
+   <addaction name="menuLayer_Data"/>
+   <addaction name="menuGWSS"/>
+   <addaction name="menuGWPCA"/>
+   <addaction name="menuSWIM"/>
+   <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dckFeaturePanel">
@@ -271,38 +309,21 @@
    <addaction name="actionLayout_Batch"/>
   </widget>
   <action name="action_Open_Project">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>&amp;Open Project</string>
+    <string>&amp;Open</string>
    </property>
   </action>
   <action name="action_Save_Project">
    <property name="text">
-    <string>&amp;Save Project As</string>
-   </property>
-  </action>
-  <action name="action_ESRI_Shapefile">
-   <property name="text">
-    <string>&amp;ESRI Shapefile</string>
-   </property>
-  </action>
-  <action name="actionGeo_Json">
-   <property name="text">
-    <string>Geo&amp;JSON</string>
-   </property>
-  </action>
-  <action name="action_CSV">
-   <property name="text">
-    <string>&amp;CSV</string>
+    <string>&amp;Save As</string>
    </property>
   </action>
   <action name="action_Exit">
    <property name="text">
     <string>&amp;Exit</string>
-   </property>
-  </action>
-  <action name="action_CsvToDat">
-   <property name="text">
-    <string>CsvToDmat</string>
    </property>
   </action>
   <action name="actionRobustGWR">
@@ -481,14 +502,139 @@
     <string>GTWR</string>
    </property>
   </action>
+  <action name="action_Save_NowProject">
+   <property name="text">
+    <string>&amp;Save</string>
+   </property>
+  </action>
+  <action name="action_ESRI_Shapefile">
+   <property name="text">
+    <string>ESRI Shapefile</string>
+   </property>
+  </action>
+  <action name="actionGeo_Json">
+   <property name="text">
+    <string>GeoJSON</string>
+   </property>
+  </action>
   <action name="action_GPKG">
    <property name="text">
     <string>GPKG</string>
    </property>
   </action>
-  <action name="action_Save_NowProject">
+  <action name="action_CSV">
    <property name="text">
-    <string>&amp;Save Project</string>
+    <string>CSV</string>
+   </property>
+  </action>
+  <action name="actionBasic_GWR_2">
+   <property name="text">
+    <string>Basic GWR</string>
+   </property>
+  </action>
+  <action name="actionScalable_GWR_2">
+   <property name="text">
+    <string>Scalable GWR</string>
+   </property>
+  </action>
+  <action name="actionRobust_GWR">
+   <property name="text">
+    <string>Robust GWR</string>
+   </property>
+  </action>
+  <action name="actionLocally_Compensated_Ridge_GWR">
+   <property name="text">
+    <string>Locally Compensated Ridge GWR</string>
+   </property>
+  </action>
+  <action name="actionGeneralized_GWR">
+   <property name="text">
+    <string>Generalized GWR</string>
+   </property>
+  </action>
+  <action name="actionMultiscale_GWR_2">
+   <property name="text">
+    <string>Multiscale GWR</string>
+   </property>
+  </action>
+  <action name="actionGTWR_2">
+   <property name="text">
+    <string>GTWR</string>
+   </property>
+  </action>
+  <action name="actionGW_Averages">
+   <property name="text">
+    <string>GW Averages</string>
+   </property>
+  </action>
+  <action name="actionGW_Covariance">
+   <property name="text">
+    <string>GW Covariance</string>
+   </property>
+  </action>
+  <action name="actionGW_Correlations">
+   <property name="text">
+    <string>GW Correlations</string>
+   </property>
+  </action>
+  <action name="actionBasic_GWPCA">
+   <property name="text">
+    <string>Basic GWPCA</string>
+   </property>
+  </action>
+  <action name="actionRobust_GWPCA">
+   <property name="text">
+    <string>Robust GWPCA</string>
+   </property>
+  </action>
+  <action name="actionGlyph_Plot">
+   <property name="text">
+    <string>Glyph Plot</string>
+   </property>
+  </action>
+  <action name="actionFlow_data">
+   <property name="text">
+    <string>Flow data</string>
+   </property>
+  </action>
+  <action name="actionFlow_distance">
+   <property name="text">
+    <string>Flow distance</string>
+   </property>
+  </action>
+  <action name="action_CsvToDat">
+   <property name="text">
+    <string>CsvToMat</string>
+   </property>
+  </action>
+  <action name="actionSWIM">
+   <property name="text">
+    <string>SWIM</string>
+   </property>
+  </action>
+  <action name="actionFlow_Visualization">
+   <property name="text">
+    <string>Flow Visualization</string>
+   </property>
+  </action>
+  <action name="actionInformation">
+   <property name="text">
+    <string>Information</string>
+   </property>
+  </action>
+  <action name="actionGWmodel_Team">
+   <property name="text">
+    <string>GWmodel Team</string>
+   </property>
+  </action>
+  <action name="actionDevelopment_Team">
+   <property name="text">
+    <string>Development Team</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
    </property>
   </action>
  </widget>

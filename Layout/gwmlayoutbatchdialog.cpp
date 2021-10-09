@@ -89,6 +89,7 @@ GwmLayoutBatchDialog::GwmLayoutBatchDialog(QWidget *parent)
     ui->btnExportRaster->setPopupMode(QToolButton::InstantPopup);
 
     toggleWidgets(false);
+    setWindowTitle(QString("Layout Batch Processing"));
 }
 
 GwmLayoutBatchDialog::~GwmLayoutBatchDialog()
