@@ -9,5 +9,8 @@
         <file>res/icon/view larger.png</file>
         <file>res/icon/csv.png</file>
         <file>res/icon/select.png</file>
+        <file>images/icons/GWPCA.png</file>
+        <file>images/icons/GWR.png</file>
+        <file>images/icons/GWSS.png</file>
     </qresource>
 </RCC>

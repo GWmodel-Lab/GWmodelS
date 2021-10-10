@@ -104,8 +104,8 @@
     <addaction name="actionDevelopment_Team"/>
    </widget>
    <addaction name="menu_File"/>
-   <addaction name="menuGWR"/>
    <addaction name="menuLayer_Data"/>
+   <addaction name="menuGWR"/>
    <addaction name="menuGWSS"/>
    <addaction name="menuGWPCA"/>
    <addaction name="menuSWIM"/>
@@ -456,18 +456,36 @@
    </property>
   </action>
   <action name="actionGWR">
+   <property name="icon">
+    <iconset resource="images/images.qrc">
+     <normaloff>:/images/icons/GWR.png</normaloff>:/images/icons/GWR.png</iconset>
+   </property>
    <property name="text">
     <string>GWR</string>
    </property>
   </action>
   <action name="actionGWSS">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icon/images/icons/GWSS.png</normaloff>:/icon/images/icons/GWSS.png</iconset>
+   </property>
    <property name="text">
     <string>GWSS</string>
    </property>
   </action>
   <action name="actionGWPCA">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icon/images/icons/GWPCA.png</normaloff>:/icon/images/icons/GWPCA.png</iconset>
+   </property>
    <property name="text">
     <string>GWPCA</string>
+   </property>
+   <property name="visible">
+    <bool>true</bool>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
    </property>
   </action>
   <action name="actionNew_Layout">
@@ -660,6 +678,7 @@
  </customwidgets>
  <resources>
   <include location="images/images.qrc"/>
+  <include location="res.qrc"/>
  </resources>
  <connections/>
 </ui>

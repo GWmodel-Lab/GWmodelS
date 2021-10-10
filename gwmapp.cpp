@@ -124,6 +124,9 @@ GwmApp::GwmApp(QWidget *parent)
     setupFeaturePanel();
     setupPropertyPanel();
     QgsGui::editorWidgetRegistry()->initEditors(mMapCanvas);
+//    ui->actionGWR->setIcon(QIcon("images/icons/res/GWR.png"));
+//    ui->actionGWSS->setIcon(QIcon("C:/Users/GWmodelS/Documents/gwmodeldesktop/images/icons/GWSS.svg"));
+//    ui->actionGWPCA->setIcon(QIcon("C:/Users/GWmodelS/Documents/gwmodeldesktop/images/icons/GWPCA.svg"));
 
 #ifdef Q_OS_MAC
     // Window Menu Items
