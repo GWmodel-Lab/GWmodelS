@@ -84,6 +84,7 @@ public:
 	bool uniqueLayoutTitle(QWidget *parent, QString &title, bool acceptEmpty, QgsMasterLayoutInterface::Type type, const QString &currentTitle = QString());
 	void registerCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
 	void unregisterCustomLayoutDropHandler(QgsLayoutCustomDropHandler *handler);
+    void onNewProject();
     void onSaveProject();
     void onSaveNowProject();
     void onOpenProject();

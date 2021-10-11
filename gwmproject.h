@@ -25,6 +25,7 @@ signals:
 public:
     bool read(const QFileInfo& projectFile);
     void save(const QFileInfo& projectFile);
+    void newProject(const QFileInfo& projectFile);
 
 public:
     void onLayerModelChanged();
