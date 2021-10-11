@@ -158,6 +158,29 @@ void GwmProject::save(const QFileInfo &projectFile)
     setDirty(false);
 }
 
+void GwmProject::newProject(const QFileInfo &projectFile){
+    if (!mLayerItemModel->clear())
+    {
+        QMessageBox::warning(GwmApp::Instance(), tr("Close Error!"), tr("Cannot close old project."));
+    }
+
+    QDomDocument doc;
+    QDomProcessingInstruction xmlInstruction = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"");
+    doc.appendChild(xmlInstruction);
+
+    QDomElement project = doc.createElement("gwmproject");
+    project.setAttribute("name", mName);
+    doc.appendChild(project);
+
+    QFile file(projectFile.filePath());
+    if (file.open(QIODevice::WriteOnly))
+    {
+        QTextStream stream(&file);
+        doc.save(stream, 2);
+    }
+    file.close();
+}
+
 void GwmProject::onLayerModelChanged()
 {
     setDirty(true);

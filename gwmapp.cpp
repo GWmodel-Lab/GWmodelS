@@ -173,6 +173,7 @@ void GwmApp::setupMenus()
     connect(ui->action_Save_Project, &QAction::triggered, this, &GwmApp::onSaveProject);
     connect(ui->action_Save_NowProject, &QAction::triggered, this, &GwmApp::onSaveNowProject);
     connect(ui->actionBasic_GWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
+    connect(ui->actionNew, &QAction::triggered,this,&GwmApp::onNewProject);
     //以下信号为暂未实现的功能
     connect(ui->actionGW_Averages, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionGW_Covariance, &QAction::triggered, this, &GwmApp::developingMessageBox);
@@ -527,22 +528,53 @@ bool GwmApp::uniqueLayoutTitle(QWidget * parent, QString & title, bool acceptEmp
     return true;
 }
 
+void GwmApp::onNewProject(){
+    if (GwmProject::instance()->dirty())
+    {
+        QString title = tr("This project has been changed");
+        QString body = tr("Do you want to save it before open a new project?");
+//        QMessageBox::StandardButtons buttons = QMessageBox::StandardButton::Yes
+//                | QMessageBox::StandardButton::No
+//                | QMessageBox::StandardButton::Cancel;
+        int confirm = QMessageBox::question(GwmApp::Instance(), title, body);
+        if (confirm == QMessageBox::StandardButton::Yes)
+        {
+            onSaveProject();
+        }
+    }
+    QString filePath = QFileDialog::getSaveFileName(this, tr("New Project"), tr(""), tr("GWmodel Desktop Project (*.gwm)"));
+
+    if(filePath!="")
+    {
+        QFileInfo fileInfo(filePath);
+        GwmProject::instance()->setFilePath(filePath);
+        GwmProject::instance()->setName(fileInfo.completeBaseName());
+        GwmProject::instance()->newProject(fileInfo);}
+}
+
 void GwmApp::onSaveProject()
 {
     QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodelS Project (*.gwm)"));
+    if(filePath !="")
+    {
     QFileInfo fileInfo(filePath);
     GwmProject::instance()->setFilePath(filePath);
     GwmProject::instance()->setName(fileInfo.completeBaseName());
     GwmProject::instance()->save(fileInfo);
+    }
 }
 
 void GwmApp::onSaveNowProject()
 {
     if (GwmProject::instance()->filePath()==""){
         QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodelS Project (*.gwm)"));
-        QFileInfo fileInfo(filePath);
-        GwmProject::instance()->setName(fileInfo.completeBaseName());
-        GwmProject::instance()->save(fileInfo);
+        if(filePath !="")
+        {
+            QFileInfo fileInfo(filePath);
+            GwmProject::instance()->setFilePath(filePath);
+            GwmProject::instance()->setName(fileInfo.completeBaseName());
+            GwmProject::instance()->save(fileInfo);
+        }
     }
     else{
     QString filePath = GwmProject::instance()->filePath();
