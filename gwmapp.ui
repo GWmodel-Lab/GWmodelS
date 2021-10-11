@@ -458,7 +458,7 @@
   <action name="actionGWR">
    <property name="icon">
     <iconset resource="images/images.qrc">
-     <normaloff>:/images/icons/GWR.png</normaloff>:/images/icons/GWR.png</iconset>
+     <normaloff>:/images/icons/GWR.svg</normaloff>:/images/icons/GWR.svg</iconset>
    </property>
    <property name="text">
     <string>GWR</string>
@@ -466,8 +466,8 @@
   </action>
   <action name="actionGWSS">
    <property name="icon">
-    <iconset resource="res.qrc">
-     <normaloff>:/icon/images/icons/GWSS.png</normaloff>:/icon/images/icons/GWSS.png</iconset>
+    <iconset resource="images/images.qrc">
+     <normaloff>:/images/icons/GWSS.svg</normaloff>:/images/icons/GWSS.svg</iconset>
    </property>
    <property name="text">
     <string>GWSS</string>
@@ -475,8 +475,8 @@
   </action>
   <action name="actionGWPCA">
    <property name="icon">
-    <iconset resource="res.qrc">
-     <normaloff>:/icon/images/icons/GWPCA.png</normaloff>:/icon/images/icons/GWPCA.png</iconset>
+    <iconset resource="images/images.qrc">
+     <normaloff>:/images/icons/GWPCA.svg</normaloff>:/images/icons/GWPCA.svg</iconset>
    </property>
    <property name="text">
     <string>GWPCA</string>
@@ -678,7 +678,6 @@
  </customwidgets>
  <resources>
   <include location="images/images.qrc"/>
-  <include location="res.qrc"/>
  </resources>
  <connections/>
 </ui>
