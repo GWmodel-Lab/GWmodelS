@@ -48,7 +48,7 @@ if(NOT QWT_FOUND)
 endif(NOT QWT_FOUND)
 include_directories(${QWT_INCLUDE_DIR})
 
-option(ENABLE_OpenMP off)
+option(ENABLE_OpenMP on)
 if(ENABLE_OpenMP)
     add_definitions(-D ENABLE_OpenMP)
     find_package(OpenMP REQUIRED)
