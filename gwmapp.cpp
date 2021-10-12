@@ -83,6 +83,9 @@
 #include "gwmgtwroptionsdialog.h"
 #include "Model/gwmlayergtwritem.h"
 
+#include "aboutdevelopteam.h"
+#include "aboutdevelopers.h"
+
 static bool cmpByText_(QAction *a, QAction *b)
 {
 	return QString::localeAwareCompare(a->text(), b->text()) < 0;
@@ -187,7 +190,74 @@ void GwmApp::setupMenus()
     connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionSWIM, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionFlow_Visualization, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    //about信号槽连接
+//    connect(ui->actionInformation, &QAction::triggered, this, [&]()
+//    {
+//        QString title = tr("Infomation");
+//        QString message = tr("GWmodelS\n\n") + tr("* Version: v1.0\n") + tr("* Developer: GWmodel Lab\n") +
+//                tr("* Contact us: binbinlu@whu.edu.cn\n") + tr("* Website: http://gwmodel.whu.edu.cn/");
+//        myMessageBox(message, title,0);
+//    });
 
+    connect(ui->actionInformation, &QAction::triggered, this, &GwmApp::aboutInformation);
+    connect(ui->actionGWmodel_Team, &QAction::triggered, this, [&]()
+    {
+        QString message = "GWmodelS";
+        gotoPages(QString("http://gwmodel.whu.edu.cn/"));
+    });
+//    connect(ui->actionDevelopment_Team, &QAction::triggered, this, [&]()
+//    {
+//        QString title = tr("Develop Team");
+//        QString message = tr("@GWModel Contributors:\n") +
+//                          tr(" \t                                                                 _________________\n") +
+//                          tr(" \t Binbin Lu, Yigong Hu, Paul Harris, |Martin Charlton|, Chris Brunsdon, \n") +
+//                          tr(" \t                                                ￣￣￣￣￣￣￣￣￣￣￣ \n") +
+//                          tr(" \t  Tomoki Nakaya, Daisuke Murakami\n\n") +
+//                          tr("@GWmodelS Developers:\n \t Binbin Lu, Yigong Hu, Haokun Tang, Tongyao Zhang, \n") +
+//                          tr(" \t Linyi Zhang, liuqi Liao, Tianyang Xia, Zuoyao Yin, Zheyi Dong, Jintao Dong\n") +
+//                          tr(" \t and ALL MEMBERS of GWmodel Lab!\n\n");
+//        myMessageBox(message, title, 1);
+//    });
+    connect(ui->actionDevelopment_Team, &QAction::triggered, this, &GwmApp::aboutDeveloperTeam);
+
+}
+
+void GwmApp::aboutInformation()
+{
+    aboutdevelopteam *messageBox = new aboutdevelopteam(this);
+    messageBox->setWindowTitle("Infomation");
+    messageBox->show();
+}
+
+void GwmApp::aboutDeveloperTeam()
+{
+    aboutDevelopers *messageBox = new aboutDevelopers(this);
+    messageBox->setWindowTitle("Develop Team");
+    messageBox->show();
+}
+
+void GwmApp::gotoPages(QString URL)
+{
+    QDesktopServices::openUrl(QUrl(URL));
+}
+
+void GwmApp::myMessageBox(QString message, QString title, int styleCode)
+{
+    QMessageBox msgBox(QMessageBox::NoIcon, "Title", "");
+    msgBox.setWindowTitle(title);
+    msgBox.setInformativeText(message);
+    switch (styleCode)
+    {
+        case 0:
+            msgBox.setStyleSheet("QLabel{""min-width:300px;" "min-height:0px;""}");
+        break;
+        case 1:
+            msgBox.setStyleSheet("QLabel{""min-width:800px;" "min-height:0px;""}");
+            msgBox.setIconPixmap(QPixmap("/images/icons/qbrowser-icon.png"));
+        break;
+        default: break;
+    }
+    msgBox.exec();
 }
 
 void GwmApp::developingMessageBox()

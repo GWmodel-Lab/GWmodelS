@@ -56,6 +56,7 @@ private:
     void setupMapPanel();
 	void initLayouts();
     void developingMessageBox();
+    void aboutInformation();
 
 	void startProfile(const QString &name)
 	{
@@ -90,6 +91,9 @@ public:
     void onOpenProject();
     void addWindow( QAction *action );
     void removeWindow( QAction *action );
+    void myMessageBox(QString message, QString title, int styleCode);
+    void gotoPages(QString URL);
+    void aboutDeveloperTeam();
 
 
 private:
