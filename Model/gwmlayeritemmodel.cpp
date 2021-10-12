@@ -1,7 +1,7 @@
 #include "gwmlayeritemmodel.h"
 #include "gwmlayerggwritem.h"
 
-#include <qgsproject.h>
+#include <Qgsproject.h>
 
 GwmLayerItemModel::GwmLayerItemModel(QObject *parent)
     : QAbstractItemModel(parent)
@@ -91,13 +91,6 @@ bool GwmLayerItemModel::setData(const QModelIndex &index, const QVariant &value,
     bool state = item->setData(index.column(), role, value);
     if (state)
     {
-//        QgsProject::instance()->removeAllMapLayers();
-//        QList<QgsMapLayer *> ml = this->toMapLayerList();
-//        for (int i = 0; i < ml.size(); i++)
-//          {
-//              QgsMapLayer *ly = (QgsMapLayer *)ml[ml.size()-i-1];
-//              QgsProject::instance()->addMapLayer(ly,true,false);
-//         }
         emit dataChanged(index, index);
         emit layerItemChangedSignal(item);
     }
