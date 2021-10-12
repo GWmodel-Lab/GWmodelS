@@ -194,7 +194,7 @@ font: 11pt &quot;Times New Roman&quot;;</string>
   <widget class="QLabel" name="label_7">
    <property name="geometry">
     <rect>
-     <x>220</x>
+     <x>170</x>
      <y>250</y>
      <width>551</width>
      <height>16</height>
