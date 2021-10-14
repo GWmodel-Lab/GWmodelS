@@ -94,66 +94,6 @@ bool GwmLayerItemModel::setData(const QModelIndex &index, const QVariant &value,
     {
         emit dataChanged(index, index);
         emit layerItemChangedSignal(item);
-//        switch (type)
-//        {
-//        case GwmLayerItem::Base:
-//            break;
-//        case GwmLayerItem::Group:
-//        {
-//            auto groupItem = static_cast<GwmLayerGroupItem*>(item);
-//            QgsProject::instance()->addMapLayer(groupItem->originChild()->layer(),false,true);
-//            break;
-//        }
-//        case GwmLayerItem::Vector:
-//        case GwmLayerItem::Origin:
-//        case GwmLayerItem::GWR:
-//        case GwmLayerItem::Symbol:
-//        case GwmLayerItem::ScalableGWR:
-//        case GwmLayerItem::GeneralizedGWR:
-//        case GwmLayerItem::MultiscaleGWR:
-//        case GwmLayerItem::GWSS:
-//        case GwmLayerItem::CollinearityGWR:
-//        case GwmLayerItem::GTWR:
-//        case GwmLayerItem::GWPCA:
-//        {
-//            auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
-//            QgsProject::instance()->addMapLayer(vectorItem->layer());
-//            break;
-//        }
-//        default:
-//            break;
-//        }
-//    }
-//    else{
-//        switch (type)
-//        {
-//        case GwmLayerItem::Base:
-//            break;
-//        case GwmLayerItem::Group:
-//        {
-//            auto groupItem = static_cast<GwmLayerGroupItem*>(item);
-//            QgsProject::instance()->removeMapLayer(groupItem->originChild()->layer());
-//            break;
-//        }
-//        case GwmLayerItem::Vector:
-//        case GwmLayerItem::Origin:
-//        case GwmLayerItem::GWR:
-//        case GwmLayerItem::Symbol:
-//        case GwmLayerItem::ScalableGWR:
-//        case GwmLayerItem::GeneralizedGWR:
-//        case GwmLayerItem::MultiscaleGWR:
-//        case GwmLayerItem::GWSS:
-//        case GwmLayerItem::CollinearityGWR:
-//        case GwmLayerItem::GTWR:
-//        case GwmLayerItem::GWPCA:
-//        {
-//            auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
-//            QgsProject::instance()->removeMapLayer(vectorItem->layer());
-//            break;
-//        }
-//        default:
-//            break;
-//        }
     }
     return state;
 }
@@ -316,13 +256,6 @@ GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
         {
             auto groupItem = static_cast<GwmLayerGroupItem*>(item);
             QgsProject::instance()->addMapLayer(groupItem->originChild()->layer());
-//            QgsProject::instance()->removeAllMapLayers();
-//            QList<QgsMapLayer *> ml = this->toMapLayerList();
-//            for (int i = 0; i < ml.size(); i++)
-//              {
-//                  QgsMapLayer *ly = (QgsMapLayer *)ml[ml.size()-i-1];
-//                  QgsProject::instance()->addMapLayer(ly,true,false);
-//             }
             connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
             break;
         }
@@ -340,13 +273,6 @@ GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
         {
             auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
             QgsProject::instance()->addMapLayer(vectorItem->layer());
-//            QgsProject::instance()->removeAllMapLayers();
-//            QList<QgsMapLayer *> ml = this->toMapLayerList();
-//            for (int i = 0; i < ml.size(); i++)
-//              {
-//                  QgsMapLayer *ly = (QgsMapLayer *)ml[ml.size()-i-1];
-//                  QgsProject::instance()->addMapLayer(ly,true,false);
-//             }
             connect(vectorItem, &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
             break;
         }
