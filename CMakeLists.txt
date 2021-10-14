@@ -211,6 +211,8 @@ set(SOURCES
     symbolwindow/gwmsymbolwindow.cpp
     gwmtoolbar.cpp
     main.cpp
+    aboutdevelopteam.cpp
+    aboutdevelopers.cpp
 )
 
 set(HEADERS
@@ -326,6 +328,8 @@ set(HEADERS
     symbolwindow/gwmsymbolwindow.h
     gwmtoolbar.h
     prefix.h
+    aboutdevelopteam.h
+    aboutdevelopers.h
 )
 
 set(FORMS
@@ -390,6 +394,8 @@ set(FORMS
     symbolwindow/qgssymbolselectordialogbase.ui
     symbolwindow/qgsunitselectionwidget.ui
     symbolwindow/widget_set_dd_value.ui
+    aboutdevelopteam.ui
+    aboutdevelopers.ui
 )
 qt5_add_resources(GWMODEL_ICONS images/images.qrc)
 qt5_wrap_ui(FORMS_H ${FORMS})
