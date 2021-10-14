@@ -1070,7 +1070,6 @@ void GwmApp::onMapModelChanged()
         mMapCanvas->setExtent(extent);
     }
     mMapCanvas->refresh();
-
 }
 
 void GwmApp::onShowLayerProperty(const QModelIndex &index)

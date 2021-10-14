@@ -1,7 +1,7 @@
 #include "gwmlayeritemmodel.h"
 #include "gwmlayerggwritem.h"
 
-#include <qgsproject.h>
+#include <Qgsproject.h>
 
 GwmLayerItemModel::GwmLayerItemModel(QObject *parent)
     : QAbstractItemModel(parent)
@@ -89,17 +89,11 @@ bool GwmLayerItemModel::setData(const QModelIndex &index, const QVariant &value,
 {
     GwmLayerItem* item = itemFromIndex(index);
     bool state = item->setData(index.column(), role, value);
+    GwmLayerItem::GwmLayerItemType type = item->itemType();
     if (state)
     {
-        emit layerItemChangedSignal(item);
-        QgsProject::instance()->removeAllMapLayers();
-        QList<QgsMapLayer *> ml = this->toMapLayerList();
-        for (int i = 0; i < ml.size(); i++)
-          {
-              QgsMapLayer *ly = (QgsMapLayer *)ml[ml.size()-i-1];
-              QgsProject::instance()->addMapLayer(ly,true,false);
-         }
         emit dataChanged(index, index);
+        emit layerItemChangedSignal(item);
     }
     return state;
 }
@@ -133,14 +127,7 @@ bool GwmLayerItemModel::insertItem(int row, GwmLayerItem *item, const QModelInde
         case GwmLayerItem::Group:
         {
             auto groupItem = static_cast<GwmLayerGroupItem*>(item);
-//            QgsProject::instance()->addMapLayer(groupItem->originChild()->layer());
-            QgsProject::instance()->removeAllMapLayers();
-            QList<QgsMapLayer *> ml = this->toMapLayerList();
-            for (int i = 0; i < ml.size(); i++)
-              {
-                  QgsMapLayer *ly = (QgsMapLayer *)ml[ml.size()-i-1];
-                  QgsProject::instance()->addMapLayer(ly,true,false);
-             }
+            QgsProject::instance()->addMapLayer(groupItem->originChild()->layer());
             connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
             break;
         }
@@ -157,14 +144,7 @@ bool GwmLayerItemModel::insertItem(int row, GwmLayerItem *item, const QModelInde
         case GwmLayerItem::GWPCA:
         {
             auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
-//            QgsProject::instance()->addMapLayer(vectorItem->layer());
-            QgsProject::instance()->removeAllMapLayers();
-            QList<QgsMapLayer *> ml = this->toMapLayerList();
-            for (int i = 0; i < ml.size(); i++)
-              {
-                  QgsMapLayer *ly = (QgsMapLayer *)ml[ml.size()-i-1];
-                  QgsProject::instance()->addMapLayer(ly,true,false);
-             }
+            QgsProject::instance()->addMapLayer(vectorItem->layer());
             connect(vectorItem, &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
             break;
         }
@@ -275,14 +255,7 @@ GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
         case GwmLayerItem::Group:
         {
             auto groupItem = static_cast<GwmLayerGroupItem*>(item);
-//            QgsProject::instance()->addMapLayer(groupItem->originChild()->layer());
-            QgsProject::instance()->removeAllMapLayers();
-            QList<QgsMapLayer *> ml = this->toMapLayerList();
-            for (int i = 0; i < ml.size(); i++)
-              {
-                  QgsMapLayer *ly = (QgsMapLayer *)ml[ml.size()-i-1];
-                  QgsProject::instance()->addMapLayer(ly,true,false);
-             }
+            QgsProject::instance()->addMapLayer(groupItem->originChild()->layer());
             connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
             break;
         }
@@ -299,14 +272,7 @@ GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
         case GwmLayerItem::GWPCA:
         {
             auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
-//            QgsProject::instance()->addMapLayer(vectorItem->layer());
-            QgsProject::instance()->removeAllMapLayers();
-            QList<QgsMapLayer *> ml = this->toMapLayerList();
-            for (int i = 0; i < ml.size(); i++)
-              {
-                  QgsMapLayer *ly = (QgsMapLayer *)ml[ml.size()-i-1];
-                  QgsProject::instance()->addMapLayer(ly,true,false);
-             }
+            QgsProject::instance()->addMapLayer(vectorItem->layer());
             connect(vectorItem, &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
             break;
         }
@@ -341,7 +307,7 @@ bool GwmLayerItemModel::appentItem(GwmLayerItem *item, const QModelIndex &parent
         case GwmLayerItem::Group:
         {
             auto groupItem = static_cast<GwmLayerGroupItem*>(item);
-//            QgsProject::instance()->addMapLayer(groupItem->originChild()->layer());
+            QgsProject::instance()->addMapLayer(groupItem->originChild()->layer());
 
             connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
             for (auto item : groupItem->analyseChildren())
@@ -436,15 +402,8 @@ void GwmLayerItemModel::appendItem(QgsVectorLayer *layer, const QString path, co
     bool success = mRootItem->appendChildren(QList<GwmLayerItem*>() << groupItem);
 	if (success)
     {
-//        QgsProject::instance()->addMapLayer(layer);
+        QgsProject::instance()->addMapLayer(layer);
 
-        QgsProject::instance()->removeAllMapLayers();
-        QList<QgsMapLayer *> ml = this->toMapLayerList();
-        for (int i = 0; i < ml.size(); i++)
-          {
-              QgsMapLayer *ly = (QgsMapLayer *)ml[ml.size()-i-1];
-              QgsProject::instance()->addMapLayer(ly,true,false);
-         }
 		connect(groupItem->originChild(), &GwmLayerVectorItem::itemSymbolChangedSignal, this, &GwmLayerItemModel::onVectorItemSymbolChanged);
 	}
     endInsertRows();

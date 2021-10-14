@@ -161,11 +161,13 @@ void GwmLayoutBatchDialog::onLayerModelDataChanged(const QModelIndex &topLeft, c
                     QgsVectorLayer* layer = mLayerModel->layerFromIndex(topLeft);
                     int layerCheckedIndex = mLayerModel->checkedIndex(layer);
                     mConfigurationModel->insertLayer(layerCheckedIndex, layer);
+//                    QgsProject::instance()->addMapLayer(layer);
                 }
                 else
                 {
                     QgsVectorLayer* layer = mLayerModel->layerFromIndex(topLeft);
                     mConfigurationModel->removeLayer(layer);
+//                    QgsProject::instance()->removeMapLayer(layer);
                 }
             }
         }
