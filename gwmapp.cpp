@@ -297,12 +297,14 @@ void GwmApp::setupToolbar()
         mMapCanvas->setMapTool(mMapPanTool);
     });
     connect(ui->actionEdit, &QAction::triggered, this, &GwmApp::onEditMode);
-    connect(ui->actionSave_Layer, &QAction::triggered, this, &GwmApp::onSaveLayer);
-    connect(ui->actionSave_Layer_As, &QAction::triggered, this, [&]()
-    {
-        onExportLayer(tr("ESRI Shapefile (*.shp);;Geo Package (*.gpkg)"));
+//    connect(ui->actionSave_Layer, &QAction::triggered, this, &GwmApp::onSaveLayer);
+//    connect(ui->actionSave_Layer_As, &QAction::triggered, this, [&]()
+//    {
+//        onExportLayer(tr("ESRI Shapefile (*.shp);;Geo Package (*.gpkg)"));
 
-    });
+//    });
+    connect(ui->actionSave_Layer, &QAction::triggered, this, &GwmApp::onSaveNowProject);
+    connect(ui->actionSave_Layer_As, &QAction::triggered, this, &GwmApp::onSaveProject);
     connect(ui->actionZoom_to_Area, &QAction::triggered,this,&GwmApp::onZoomToSelection);
     connect(ui->actionZoom_to_Layer, &QAction::triggered,this,&GwmApp::onZoomToLayerBtn);
     connect(ui->actionZoom_Full_Extent, &QAction::triggered, this, [&]()
