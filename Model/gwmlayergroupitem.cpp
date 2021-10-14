@@ -61,6 +61,36 @@ bool GwmLayerGroupItem::setData(int col, int role, QVariant value)
         switch (role) {
         case Qt::CheckStateRole:
             mCheckState = Qt::CheckState(value.toInt());
+            if (mCheckState == Qt::CheckState::Checked)
+            {
+                if(this->originChild()->checkState() == Qt::CheckState::Checked)
+                {
+                    QgsProject::instance()->addMapLayer(this->originChild()->layer());
+                }
+                QList<GwmLayerVectorItem *> analyseChildrens = this->analyseChildren();
+                for(GwmLayerVectorItem * anaitem : analyseChildrens)
+                {
+                if(anaitem->checkState() == Qt::CheckState::Checked)
+                {
+                    QgsProject::instance()->addMapLayer(anaitem->layer());
+                }
+                }
+            }
+            else
+            {
+                if(this->originChild()->checkState() == Qt::CheckState::Checked)
+                {
+                    QgsProject::instance()->takeMapLayer(this->originChild()->layer());
+                }
+                QList<GwmLayerVectorItem *> analyseChildrens = this->analyseChildren();
+                for(GwmLayerVectorItem * anaitem : analyseChildrens)
+                {
+                if(anaitem->checkState() == Qt::CheckState::Checked)
+                {
+                    QgsProject::instance()->takeMapLayer(anaitem->layer());
+                }
+                }
+            }
             break;
         case Qt::EditRole:
             if (mOriginChild && value.toString().size())

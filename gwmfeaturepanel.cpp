@@ -189,13 +189,6 @@ void GwmFeaturePanel::showLayer()
             break;
         }
     }
-    QgsProject::instance()->removeAllMapLayers();
-    QList<QgsMapLayer *> ml = mMapModel->toMapLayerList();
-    for (int i = 0; i < ml.size(); i++)
-     {
-          QgsMapLayer *ly = (QgsMapLayer *)ml[ml.size()-i-1];
-          QgsProject::instance()->addMapLayer(ly,true,false);
-     }
 }
 
 void GwmFeaturePanel::mousePressEvent(QMouseEvent *event)

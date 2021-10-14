@@ -156,13 +156,16 @@ bool GwmLayerVectorItem::setData(int col, int role, QVariant value)
         switch (role) {
         case Qt::CheckStateRole:
             mCheckState = Qt::CheckState(value.toInt());
-            if (mCheckState == Qt::CheckState::Checked)
+            if (this->parentItem()->checkState() == Qt::CheckState::Checked)
             {
+                if (mCheckState == Qt::CheckState::Checked)
+                {
                 QgsProject::instance()->addMapLayer(mLayer);
-            }
-            else
-            {
-                QgsProject::instance()->takeMapLayer(mLayer);
+                }
+                else
+                {
+                    QgsProject::instance()->takeMapLayer(mLayer);
+                }
             }
             break;
         case Qt::EditRole:
