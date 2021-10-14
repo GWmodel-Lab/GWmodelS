@@ -5,7 +5,7 @@ aboutDevelopers::aboutDevelopers(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::aboutDevelopers)
 {
-    ui->setupUi(this);
+    ui->setupUi( this );
 }
 
 aboutDevelopers::~aboutDevelopers()
