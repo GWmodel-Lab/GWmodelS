@@ -1,7 +1,7 @@
 #include "gwmlayeritemmodel.h"
 #include "gwmlayerggwritem.h"
 
-#include <Qgsproject.h>
+#include <qgsproject.h>
 
 GwmLayerItemModel::GwmLayerItemModel(QObject *parent)
     : QAbstractItemModel(parent)

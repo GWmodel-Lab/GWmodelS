@@ -2,7 +2,7 @@
 #include "ui_gwmpropertyggwrtab.h"
 
 #include <QMessageBox>
-#include <QtableWidget>
+#include <QTableWidget>
 #include <QListWidget>
 #include <QDebug>
 #include <QVariant>
