@@ -4,7 +4,7 @@
 #include <armadillo>
 
 #include <QMessageBox>
-#include <QtableWidget>
+#include <QTableWidget>
 #include <QListWidget>
 #include <QDebug>
 #include <QVariant>
