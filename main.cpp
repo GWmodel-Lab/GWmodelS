@@ -27,5 +27,7 @@ int main(int argc, char *argv[])
 
     GwmApp w;
     w.show();
+
+
     return a.exec();
 }

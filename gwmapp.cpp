@@ -164,6 +164,9 @@ GwmApp::~GwmApp()
 void GwmApp::setupMenus()
 {
     connect(ui->action_ESRI_Shapefile, &QAction::triggered, this, &GwmApp::onOpenFileImportShapefile);
+    connect(ui->action_Exit,&QAction::triggered, this, [&](){
+        this->close();
+    });
     connect(ui->actionGeo_Json, &QAction::triggered, this, &GwmApp::onOpenFileImportJson);
     connect(ui->action_GPKG,&QAction::triggered,this,&GwmApp::onOpenFileImportGPKG);
     connect(ui->action_CSV, &QAction::triggered, this, &GwmApp::onOpenFileImportCsv);
@@ -227,6 +230,7 @@ void GwmApp::aboutInformation()
     aboutdevelopteam *messageBox = new aboutdevelopteam(this);
     messageBox->setWindowTitle("Infomation");
     messageBox->show();
+
 }
 
 void GwmApp::aboutDeveloperTeam()

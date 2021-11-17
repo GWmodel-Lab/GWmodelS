@@ -229,7 +229,7 @@ bool GwmLayerItemModel::removeRows(int row, int count, const QModelIndex &parent
     endRemoveRows();
 
     if (success)
-    {
+    {   
         QgsProject::instance()->removeMapLayers(layers);
         emit layerRemovedSignal();
     }
