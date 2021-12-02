@@ -16,12 +16,13 @@ class GwmPropertyStatisticsTab : public QWidget
 public:
     explicit GwmPropertyStatisticsTab(QWidget *parent = nullptr, GwmLayerOriginItem* layerItem = new GwmLayerOriginItem);
     ~GwmPropertyStatisticsTab();
-
+    GwmLayerOriginItem* mLayerItem;
     void createModel();
+
 
 private:
     Ui::GwmPropertyStatisticsTab *ui;
-    GwmLayerOriginItem* mLayerItem;
+//    GwmLayerOriginItem* mLayerItem;
     QStandardItemModel* mModel;
 };
 

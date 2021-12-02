@@ -37,7 +37,7 @@ private:
 
 private slots:
     void onTabCloseRequest(int index);
-
+    void onLayerTabCloseRequest(QWidget* tabWidget);
 };
 
 #endif // GWMPROPERTYPANEL_H
