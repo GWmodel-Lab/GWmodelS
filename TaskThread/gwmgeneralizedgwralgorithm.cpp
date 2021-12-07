@@ -11,6 +11,7 @@
 #include <omp.h>
 #endif
 using namespace std;
+int GwmGeneralizedGWRAlgorithm::treeChildCount = 0;
 
 GwmEnumValueNameMapper<GwmGeneralizedGWRAlgorithm::Family> GwmGeneralizedGWRAlgorithm::FamilyValueNameMapper = {
     std::make_pair(GwmGeneralizedGWRAlgorithm::Family::Poisson, "Poisson"),
@@ -884,6 +885,14 @@ mat GwmGeneralizedGWRAlgorithm::BinomialWtOmp(const mat &x, const vec &y, mat wt
 #endif
 void GwmGeneralizedGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString name)
 {
+    //避免图层名重复
+    if(treeChildCount > 0)
+    {
+        name = name + "(" + QString::number(treeChildCount) + ")";
+    }
+    //节点记录标签
+    treeChildCount++ ;
+
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();

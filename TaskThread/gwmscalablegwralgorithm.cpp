@@ -5,6 +5,8 @@
 
 #include <SpatialWeight/gwmbandwidthweight.h>
 
+int GwmScalableGWRAlgorithm::treeChildCount = 0;
+
 
 double GwmScalableGWRAlgorithm::Loocv(const vec &target, const mat &x, const vec &y, int bw, int poly, const mat &Mx0, const mat &My0)
 {
@@ -686,7 +688,17 @@ void GwmScalableGWRAlgorithm::createResultLayer(initializer_list<CreateResultLay
     QgsVectorLayer* srcLayer = hasRegressionLayer() ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
-    layerName += QStringLiteral("_SGWR");
+    //避免图层名重复
+    if(treeChildCount > 0)
+    {
+        layerName += QStringLiteral("_SGWR") + "(" + QString::number(treeChildCount) + ")";
+    } else
+    {
+        layerName += QStringLiteral("_SGWR");
+    }
+    //节点记录标签
+    treeChildCount++ ;
+
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(srcLayer->crs());
 

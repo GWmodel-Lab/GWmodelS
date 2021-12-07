@@ -250,6 +250,8 @@ protected:
     int mOmpThreadNum = 8;
     int mGpuId = 0;
     int mGroupSize = 64;
+public:
+    static int treeChildCount;
 
 };
 

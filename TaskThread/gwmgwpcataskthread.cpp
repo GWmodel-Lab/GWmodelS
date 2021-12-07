@@ -7,6 +7,8 @@
 #endif
 #include <armadillo>
 
+int GwmGWPCATaskThread::treeChildCount = 0;
+
 GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm()
 {
 
@@ -255,7 +257,17 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
     QgsVectorLayer* srcLayer = mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
-    layerName += QStringLiteral("_GWPCA");
+    //避免图层名重复
+    if(treeChildCount > 0)
+    {
+        layerName += QStringLiteral("_GWPCA") + "(" + QString::number(treeChildCount) + ")";
+    } else
+    {
+        layerName += QStringLiteral("_GWPCA");
+    }
+    //节点记录标签
+    treeChildCount++ ;
+
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(srcLayer->crs());
 

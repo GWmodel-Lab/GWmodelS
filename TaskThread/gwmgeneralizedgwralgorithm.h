@@ -184,6 +184,8 @@ public:
     bool hasHatMatrix() const;
     void setHasHatMatrix(bool value);
 
+    //子节点命名记录标
+    static int treeChildCount;
 
 
 protected:

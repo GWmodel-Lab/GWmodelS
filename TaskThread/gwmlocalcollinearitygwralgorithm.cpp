@@ -6,6 +6,8 @@
 #include <omp.h>
 #endif
 
+int GwmLocalCollinearityGWRAlgorithm::treeChildCount = 0;
+
 using namespace arma;
 
 GwmLocalCollinearityGWRAlgorithm::GwmLocalCollinearityGWRAlgorithm():GwmGeographicalWeightedRegressionAlgorithm()
@@ -168,7 +170,17 @@ void GwmLocalCollinearityGWRAlgorithm::createResultLayer(CreateResultLayerData d
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
-    layerName += QStringLiteral("_LCGWR");
+    //避免图层名重复
+    if(treeChildCount > 0)
+    {
+        layerName += ( QStringLiteral("_LCGWR") + "(" + QString::number(treeChildCount) + ")" );
+    } else
+    {
+        layerName += QStringLiteral("_LCGWR");
+    }
+    //节点记录标签
+    treeChildCount++ ;
+
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(srcLayer->crs());
 

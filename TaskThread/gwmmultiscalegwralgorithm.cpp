@@ -8,6 +8,8 @@
 
 using namespace std;
 
+int GwmMultiscaleGWRAlgorithm::treeChildCount = 0;
+
 GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> GwmMultiscaleGWRAlgorithm::BandwidthInitilizeTypeNameMapper = {
     make_pair(GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Null, tr("Not initilized, not specified")),
     make_pair(GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Initial, tr("Initilized")),
@@ -380,7 +382,18 @@ void GwmMultiscaleGWRAlgorithm::createResultLayer(initializer_list<CreateResultL
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
-    layerName += QStringLiteral("_MGWR");
+    //避免图层名重复
+    if(treeChildCount > 0)
+    {
+        layerName += QStringLiteral("_MGWR") + "(" + QString::number(treeChildCount) + ")";
+    } else
+    {
+        layerName += QStringLiteral("_MGWR");
+    }
+    //节点记录标签
+    treeChildCount++ ;
+
+
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(srcLayer->crs());
 

@@ -102,6 +102,8 @@ public:
 public:
     bool hasRegressionLayer();
     void setCanceled(bool canceled);
+    //记录标签
+    static int treeChildCount;
 
 protected:
     virtual void initPoints();

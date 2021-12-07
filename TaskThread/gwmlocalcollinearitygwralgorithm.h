@@ -112,6 +112,9 @@ private:
     bool mIsAutoselectBandwidth = false;
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
+
+public:
+    static int treeChildCount;
 #ifdef ENABLE_OpenMP
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
 #endif
@@ -129,6 +132,8 @@ private:
     int mGpuId = 0;
     int mGroupSize = 64;
 };
+
+
 
 inline int GwmLocalCollinearityGWRAlgorithm::parallelAbility() const
 {

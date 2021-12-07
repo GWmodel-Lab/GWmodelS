@@ -158,7 +158,12 @@ protected:
 
     CreateResultLayerData mResultList;
 
+public:
+    static int treeChildCount;
+
 };
+
+
 
 inline bool GwmGWSSTaskThread::quantile() const
 {

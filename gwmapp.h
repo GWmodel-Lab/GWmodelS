@@ -177,6 +177,7 @@ private:
 
     GwmSymbolWindow* mSymbolWindow;
 
+
 #ifdef Q_OS_MAC
     QAction *mActionWindowMinimize = nullptr;
     QAction *mActionWindowZoom = nullptr;
