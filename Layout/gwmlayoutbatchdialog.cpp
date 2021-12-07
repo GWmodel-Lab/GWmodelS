@@ -357,7 +357,7 @@ void GwmLayoutBatchDialog::exportToRasterBatch(const QString &ext)
 
     if (QgsPrintLayout* layout = dynamic_cast<QgsPrintLayout*>(currentLayout))
     {
-        toggleWidgets(true);
+        //toggleWidgets(true);
 
         if (!checkBeforeExport(layout))
             return;
@@ -373,6 +373,7 @@ void GwmLayoutBatchDialog::exportToRasterBatch(const QString &ext)
         QSize imageSize;
         if (getRasterExportSettings(layout, settings, imageSize, scales))
         {
+            toggleWidgets(true);
             // 批量导出
             auto rootItem = static_cast<GwmLayoutBatchConfigurationItemRoot*>(mConfigurationModel->itemFromIndex(QModelIndex()));
             if (rootItem)
