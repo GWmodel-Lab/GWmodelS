@@ -70,6 +70,7 @@ public:
 
     Qt::CheckState checkState() const;
     void setCheckState(const Qt::CheckState &checkState);
+    QWidget* tabWidget = nullptr;
 
 protected:
     GwmLayerItem* mParentItem;
@@ -77,7 +78,6 @@ protected:
 
 private:
     QList<GwmLayerGroupItem*> mChildren;
-
 };
 
 #endif // GWMLAYERITEM_H

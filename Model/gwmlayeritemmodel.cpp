@@ -191,6 +191,9 @@ bool GwmLayerItemModel::removeRows(int row, int count, const QModelIndex &parent
 	{
         GwmLayerItem* item = parentItem->child(row);
 		GwmLayerItem::GwmLayerItemType type = item->itemType();
+        if(item->tabWidget!=nullptr){
+            emit layerpropertyRemovedSignal(item->tabWidget);
+        }
 		switch (type)
 		{
         case GwmLayerItem::Base:

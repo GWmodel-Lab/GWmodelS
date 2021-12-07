@@ -14,6 +14,7 @@ signals:
     void layerRemovedSignal();
     void layerItemChangedSignal(GwmLayerItem* item);
     void layerItemMovedSignal();
+    void layerpropertyRemovedSignal(QWidget* tabWidget);
 
 public:
     explicit GwmLayerItemModel(QObject *parent = nullptr);
