@@ -4,9 +4,11 @@
 #include <gsl/gsl_cdf.h>
 #include <omp.h>
 #include <qgsmemoryproviderutils.h>
+#include "gwmapp.h"
 
 #include <armadillo>
 using namespace arma;
+int GwmBasicGWRAlgorithm::treeChildCount = 0;
 
 
 GwmDiagnostic GwmBasicGWRAlgorithm::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
@@ -636,6 +638,14 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, ma
 
 void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString name)
 {
+    //避免图层名重复
+    if(treeChildCount > 0)
+    {
+        name = name + "(" + QString::number(treeChildCount) + ")";
+    }
+    //节点记录标签
+    treeChildCount++ ;
+
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();

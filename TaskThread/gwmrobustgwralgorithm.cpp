@@ -6,6 +6,8 @@
 #include <omp.h>
 #endif
 
+int GwmRobustGWRAlgorithm::treeChildCount = 0;
+
 GwmRobustGWRAlgorithm::GwmRobustGWRAlgorithm(): GwmBasicGWRAlgorithm()
 {
 
@@ -169,7 +171,17 @@ void GwmRobustGWRAlgorithm::createResultLayer(CreateResultLayerData data)
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
-    layerName += QStringLiteral("_RGWR");
+    //避免图层名重复
+    if(treeChildCount > 0)
+    {
+        layerName += QStringLiteral("_RGWR") + "(" + QString::number(treeChildCount) + ")";
+    } else
+    {
+        layerName += QStringLiteral("_RGWR");
+    }
+    //节点记录标签
+    treeChildCount++ ;
+
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(srcLayer->crs());
 

@@ -150,6 +150,9 @@ private:
 
     //用户选择是否计算scores
     bool mScoresCal;
+
+public:
+    static int treeChildCount;
 };
 
 inline mat GwmGWPCATaskThread::variance() const

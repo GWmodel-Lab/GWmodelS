@@ -153,7 +153,6 @@ GwmApp::GwmApp(QWidget *parent)
 
 	functionProfile(&GwmApp::initLayouts, this, QStringLiteral("Initialize layouts support"));
 
-
 }
 
 GwmApp::~GwmApp()

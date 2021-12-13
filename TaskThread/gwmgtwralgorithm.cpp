@@ -3,6 +3,7 @@
 #include <omp.h>
 #endif
 #include <qgsmemoryproviderutils.h>
+int GwmGTWRAlgorithm::treeChildCount = 0;
 
 GwmDiagnostic GwmGTWRAlgorithm::CalcDiagnostic(const mat &x, const vec &y, const mat &betas, const vec &shat)
 {
@@ -558,6 +559,14 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *bandwi
 #endif
 void GwmGTWRAlgorithm::createResultLayer(GwmGTWRAlgorithm::CreateResultLayerData data, QString name)
 {
+    //避免图层名重复
+    if(treeChildCount > 0)
+    {
+        name = name + "(" + QString::number(treeChildCount) + ")";
+    }
+    //节点记录标签
+    treeChildCount++ ;
+
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();

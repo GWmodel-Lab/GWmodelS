@@ -235,7 +235,12 @@ private:
 
     IParallelalbe::ParallelType mParallelType = IParallelalbe::SerialOnly;
     int mOmpThreadNum = 8;
+
+public:
+    static int treeChildCount;
 };
+
+
 
 inline GwmVariable GwmMultiscaleGWRAlgorithm::dependentVariable() const
 {

@@ -5,6 +5,8 @@
 #include <omp.h>
 #endif
 
+int GwmGWSSTaskThread::treeChildCount = 0;
+
 vec GwmGWSSTaskThread::del(vec x, int rowcount){
     vec res;
     if(rowcount == 0)
@@ -266,7 +268,16 @@ void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
     int nVar = mVariables.size();
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
-    layerName += QStringLiteral("_GWSS");
+    //避免图层名重复
+    if(treeChildCount > 0)
+    {
+        layerName += QStringLiteral("_GWSS") + "(" + QString::number(treeChildCount) + ")";
+    } else
+    {
+        layerName += QStringLiteral("_GWSS");
+    }
+    //节点记录标签
+    treeChildCount++ ;
 
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(srcLayer->crs());

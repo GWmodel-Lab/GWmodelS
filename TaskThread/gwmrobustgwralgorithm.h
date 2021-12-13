@@ -65,7 +65,11 @@ private:
     vec mWeightMask;
 
     RegressionHatmatrix mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
+
+public:
+    static int treeChildCount;
 };
+
 
 
 inline bool GwmRobustGWRAlgorithm::filtered() const

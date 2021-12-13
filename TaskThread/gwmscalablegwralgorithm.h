@@ -109,7 +109,12 @@ private:
     mat mMy0;
     vec mShat;
     mat mBetasSE;
+
+public:
+    static int treeChildCount;
 };
+
+
 
 inline void GwmScalableGWRAlgorithm::setPolynomial(int polynomial)
 {
