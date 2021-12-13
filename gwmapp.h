@@ -94,7 +94,7 @@ public:
     void myMessageBox(QString message, QString title, int styleCode);
     void gotoPages(QString URL);
     void aboutDeveloperTeam();
-
+    void onSetProjCRS();
 
 private:
     void addLayerToModel(QgsVectorLayer* layer);
@@ -153,6 +153,7 @@ public slots:
     void onGTWRBtnClicked();
     void onGWPCABtnClicked();
     void populateLayoutsMenu(QMenu *menu);
+    void setProjCrsFromLayer(const QModelIndex &index);
 
 private:
     void setupMenus();

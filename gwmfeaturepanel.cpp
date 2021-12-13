@@ -125,6 +125,13 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
             connect(pProj, &QAction::triggered,this,&GwmFeaturePanel::proj);
         }
 
+        if (item->itemType() == GwmLayerItem::Group || item->itemType() == GwmLayerItem::Origin)
+        {
+            QAction *pProjCrs = new QAction(tr("Set Proj CRS From Layer"),this);
+            menu->addAction(pProjCrs);
+            connect(pProjCrs, &QAction::triggered,this,&GwmFeaturePanel::projCrs);
+        }
+
         QAction *pSymbol = new QAction(tr("Symbology"),this);
         pSymbol->setIcon(QIcon(QStringLiteral(":/images/themes/default/propertyicons/symbology.svg")));
         menu->addAction(pSymbol);
@@ -286,6 +293,14 @@ void GwmFeaturePanel::layerProperty()
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
     emit showLayerPropertySignal(selected[0]);
 }
+
+//设置图层CRS为工程CRS
+void GwmFeaturePanel::projCrs()
+{
+    QModelIndexList selected = this->selectionModel()->selectedIndexes();
+    emit sendSetProjCrsFromLayer(selected[0]);
+}
+
 
 //int GwmFeaturePanel::sumRowHeight(QModelIndex index)
 //{
