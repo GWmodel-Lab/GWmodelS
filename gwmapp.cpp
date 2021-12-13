@@ -740,6 +740,9 @@ void GwmApp::createLayerToModel(const QString &uri, const QString &layerName, co
     if (vectorLayer->isValid())
     {
         mMapModel->appendItem(vectorLayer,uri,providerKey);
+        QgsProject::instance()->setCrs(vectorLayer->crs());
+        mMapCanvas = ui->mapCanvas;
+        mMapCanvas->setDestinationCrs(QgsProject::instance()->crs());
     }
     else delete vectorLayer;
 }
@@ -1238,7 +1241,9 @@ void GwmApp::onGWRBtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwrTaskThread->resultLayer();
-            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer, gwrTaskThread);
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer0, gwrTaskThread);
             mMapModel->appentItem(gwrItem, selectedIndex);
         }
     }
