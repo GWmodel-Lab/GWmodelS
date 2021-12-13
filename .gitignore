@@ -435,3 +435,5 @@ MigrationBackup/
 # VSCode CMake
 
 build/
+/TaskThread/gwmprojcrssettingthread.cpp
+/TaskThread/gwmprojcrssettingthread.h

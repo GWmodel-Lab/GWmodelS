@@ -40,6 +40,8 @@ signals:
     void removeLayerSignal(const QModelIndex &index);
 
     void currentChanged(const QModelIndex &current, const QModelIndex &previous) override;
+    //设置图层CRS为工程CRS
+    void sendSetProjCrsFromLayer(const QModelIndex &index);
 
     /**
      * @brief 当行顺序改变时触发的信号
@@ -88,6 +90,8 @@ public slots:
     void layerProperty();
 
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    //发出信号(设置图层CRS为工程CRS)
+    void projCrs();
 
 private:
     GwmLayerItemModel* mMapModel;

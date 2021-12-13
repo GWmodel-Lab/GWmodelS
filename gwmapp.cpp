@@ -86,6 +86,8 @@
 #include "aboutdevelopteam.h"
 #include "aboutdevelopers.h"
 
+#include "gwmprojcrssettingdialog.h"
+
 static bool cmpByText_(QAction *a, QAction *b)
 {
 	return QString::localeAwareCompare(a->text(), b->text()) < 0;
@@ -182,6 +184,7 @@ void GwmApp::setupMenus()
     connect(ui->action_Save_NowProject, &QAction::triggered, this, &GwmApp::onSaveNowProject);
     connect(ui->actionBasic_GWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
     connect(ui->actionNew, &QAction::triggered,this,&GwmApp::onNewProject);
+    connect(ui->action_SetProjCRS,&QAction::triggered,this,&GwmApp::onSetProjCRS);
     //以下信号为暂未实现的功能
     connect(ui->actionGW_Averages, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionGW_Covariance, &QAction::triggered, this, &GwmApp::developingMessageBox);
@@ -237,6 +240,20 @@ void GwmApp::aboutDeveloperTeam()
     aboutDevelopers *messageBox = new aboutDevelopers(this);
     messageBox->setWindowTitle("Develop Team");
     messageBox->show();
+}
+
+void GwmApp::onSetProjCRS()
+{
+    GwmProjCRSSettingDialog *mProjCRSSettingDlg = new GwmProjCRSSettingDialog(this);
+    if(mProjCRSSettingDlg->exec()==QDialog::Accepted)
+    {
+        QgsCoordinateReferenceSystem desProjCrs = mProjCRSSettingDlg->desProjCrs();
+        QgsProject::instance()->setCrs(desProjCrs);
+        mMapCanvas = ui->mapCanvas;
+        mMapCanvas->setDestinationCrs(QgsProject::instance()->crs());
+        mMapCanvas->setExtent(mMapCanvas->fullExtent());
+        mMapCanvas->refresh();
+    }
 }
 
 void GwmApp::gotoPages(QString URL)
@@ -420,6 +437,7 @@ void GwmApp::setupFeaturePanel()
     connect(mFeaturePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &GwmApp::onFeaturePanelRowOrderChanged);
     connect(mFeaturePanel, &GwmFeaturePanel::showSymbolSettingSignal, this, &GwmApp::onShowSymbolSetting);
     connect(mFeaturePanel, &GwmFeaturePanel::showCoordinateTransDlg,this,&GwmApp::onShowCoordinateTransDlg);
+    connect(mFeaturePanel, &GwmFeaturePanel::sendSetProjCrsFromLayer,this,&GwmApp::setProjCrsFromLayer);
     connect(mFeaturePanel, &GwmFeaturePanel::currentChanged,this,&GwmApp::onFeaturePanelCurrentChanged);
     connect(mFeaturePanel,&GwmFeaturePanel::sendDataSigEsriShp,this, [&]()
     {
@@ -1178,6 +1196,21 @@ void GwmApp::onShowCoordinateTransDlg(const QModelIndex &index)
     }
 }
 
+//设置图层CRS为工程CRS
+void GwmApp::setProjCrsFromLayer(const QModelIndex &index)
+{
+    GwmLayerItem* item = mMapModel->itemFromIndex(index);
+    QgsVectorLayer* currentLayer = mMapModel->layerFromItem(item);
+    // 原始图层的投影坐标系
+    if (currentLayer){
+        QgsCoordinateReferenceSystem desProjCrs = currentLayer->crs();
+        QgsProject::instance()->setCrs(desProjCrs);
+        mMapCanvas = ui->mapCanvas;
+        mMapCanvas->setDestinationCrs(QgsProject::instance()->crs());
+        mMapCanvas->setExtent(mMapCanvas->fullExtent());
+        mMapCanvas->refresh();
+    }
+}
 
 void GwmApp::onGWRBtnClicked()
 {

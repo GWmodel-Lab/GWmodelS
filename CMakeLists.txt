@@ -213,6 +213,7 @@ set(SOURCES
     main.cpp
     aboutdevelopteam.cpp
     aboutdevelopers.cpp
+    gwmprojcrssettingdialog.cpp
 )
 
 set(HEADERS
@@ -330,6 +331,7 @@ set(HEADERS
     prefix.h
     aboutdevelopteam.h
     aboutdevelopers.h
+    gwmprojcrssettingdialog.h
 )
 
 set(FORMS
@@ -396,6 +398,7 @@ set(FORMS
     symbolwindow/widget_set_dd_value.ui
     aboutdevelopteam.ui
     aboutdevelopers.ui
+    gwmprojcrssettingdialog.ui
 )
 qt5_add_resources(GWMODEL_ICONS images/images.qrc)
 qt5_wrap_ui(FORMS_H ${FORMS})
