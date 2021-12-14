@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>593</width>
-    <height>284</height>
+    <width>679</width>
+    <height>359</height>
    </rect>
   </property>
   <property name="cursor">
@@ -20,177 +20,12 @@
    <string notr="true">border-color: rgb(0, 0, 0);
 background-color: rgb(255, 255, 255);</string>
   </property>
-  <widget class="QLabel" name="imgGWmodel">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>40</y>
-     <width>201</width>
-     <height>161</height>
-    </rect>
-   </property>
-   <property name="cursor">
-    <cursorShape>SizeFDiagCursor</cursorShape>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">image: url(:/images/icons/GWmodelS-256.ico);
-</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QGroupBox" name="groupBox">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>240</y>
-     <width>601</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">background-color: rgb(234, 234, 234);</string>
-   </property>
-   <property name="title">
-    <string/>
-   </property>
-   <widget class="QPushButton" name="btnOK">
-    <property name="geometry">
-     <rect>
-      <x>480</x>
-      <y>10</y>
-      <width>93</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">border:1px solid rgb(0, 0, 0);
-</string>
-    </property>
-    <property name="text">
-     <string>OK</string>
-    </property>
-   </widget>
-  </widget>
-  <widget class="Line" name="line">
-   <property name="geometry">
-    <rect>
-     <x>200</x>
-     <y>20</y>
-     <width>20</width>
-     <height>201</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Vertical</enum>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_3">
-   <property name="geometry">
-    <rect>
-     <x>230</x>
-     <y>20</y>
-     <width>91</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">font: 75 13pt &quot;Times New Roman&quot;;</string>
-   </property>
-   <property name="text">
-    <string>GWmodel S</string>
-   </property>
-  </widget>
-  <widget class="QWidget" name="gridLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>230</x>
-     <y>50</y>
-     <width>341</width>
-     <height>101</height>
-    </rect>
-   </property>
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="QLabel" name="label_2">
-      <property name="styleSheet">
-       <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
-      </property>
-      <property name="text">
-       <string>*  Version: BETA</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="label_4">
-      <property name="styleSheet">
-       <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
-      </property>
-      <property name="text">
-       <string>*  Contact Us: binbinlu@whu.edu.cn</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
-     <widget class="QLabel" name="label">
-      <property name="styleSheet">
-       <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
-      </property>
-      <property name="text">
-       <string>*  Develop: GWmodel Lab</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QLabel" name="label_5">
-   <property name="geometry">
-    <rect>
-     <x>230</x>
-     <y>160</y>
-     <width>72</width>
-     <height>15</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
-   </property>
-   <property name="text">
-    <string>*  Website:</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_6">
-   <property name="geometry">
-    <rect>
-     <x>320</x>
-     <y>160</y>
-     <width>261</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">font: 8pt &quot;Adobe Devanagari&quot;;
-font: 11pt &quot;Times New Roman&quot;;
-text-decoration: underline;
-color: rgb(0, 85, 255);</string>
-   </property>
-   <property name="text">
-    <string>http://gwmodel.whu.edu.cn/</string>
-   </property>
-  </widget>
   <widget class="Line" name="line_2">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>591</width>
+     <x>1</x>
+     <y>1</y>
+     <width>799</width>
      <height>16</height>
     </rect>
    </property>
@@ -198,22 +33,192 @@ color: rgb(0, 85, 255);</string>
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QLabel" name="label_7">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>240</x>
-     <y>190</y>
-     <width>511</width>
-     <height>31</height>
+     <x>0</x>
+     <y>30</y>
+     <width>791</width>
+     <height>341</height>
     </rect>
    </property>
-   <property name="styleSheet">
-    <string notr="true">font: 8pt &quot;Times New Roman&quot;;</string>
-   </property>
-   <property name="text">
-    <string>This software is protected by copyright law. Please do NOT  
+   <layout class="QGridLayout" name="gridLayout_6">
+    <item row="0" column="0" rowspan="4" colspan="2">
+     <widget class="QLabel" name="imgGWmodel">
+      <property name="cursor">
+       <cursorShape>SizeFDiagCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">image: url(:/images/icons/GWmodelS-256.ico);
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="3">
+     <widget class="QLabel" name="label_3">
+      <property name="styleSheet">
+       <string notr="true">font: 75 13pt &quot;Times New Roman&quot;;</string>
+      </property>
+      <property name="text">
+       <string>GWmodel S</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0" colspan="6">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(234, 234, 234);</string>
+      </property>
+      <property name="title">
+       <string/>
+      </property>
+      <widget class="QPushButton" name="btnOK">
+       <property name="geometry">
+        <rect>
+         <x>480</x>
+         <y>10</y>
+         <width>93</width>
+         <height>28</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border:1px solid rgb(0, 0, 0);
+</string>
+       </property>
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </widget>
+    </item>
+    <item row="0" column="2" rowspan="4">
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="3" rowspan="2" colspan="3">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="styleSheet">
+         <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+        </property>
+        <property name="text">
+         <string>*  Website:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label">
+        <property name="styleSheet">
+         <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+        </property>
+        <property name="text">
+         <string>*  Developer: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="label_6">
+        <property name="styleSheet">
+         <string notr="true">font: 8pt &quot;Adobe Devanagari&quot;;
+font: 11pt &quot;Times New Roman&quot;;
+text-decoration: underline;
+color: rgb(0, 85, 255);</string>
+        </property>
+        <property name="text">
+         <string>http://gwmodel.whu.edu.cn/</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="styleSheet">
+         <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+        </property>
+        <property name="text">
+         <string>*  Version: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="label_19">
+        <property name="styleSheet">
+         <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+        </property>
+        <property name="text">
+         <string> BETA</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="label_9">
+        <property name="styleSheet">
+         <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+        </property>
+        <property name="text">
+         <string> WHU&amp;HENU joint Team</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="label_8">
+        <property name="styleSheet">
+         <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+        </property>
+        <property name="text">
+         <string>gwmodellab@163.com</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="styleSheet">
+         <string notr="true">font: 10pt &quot;Times New Roman&quot;;</string>
+        </property>
+        <property name="text">
+         <string>*  Contact Us: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item row="3" column="3" colspan="3">
+     <widget class="QLabel" name="label_7">
+      <property name="styleSheet">
+       <string notr="true">font: 8pt &quot;Times New Roman&quot;;</string>
+      </property>
+      <property name="text">
+       <string>This software is protected by copyright law. Please do NOT  
 spread itwithout authorization</string>
-   </property>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>
