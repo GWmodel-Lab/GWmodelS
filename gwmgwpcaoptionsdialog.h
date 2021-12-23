@@ -73,6 +73,7 @@ public:
 private slots:
     void on_cbxHatmatrix_toggled(bool checked);
     void on_cbkRegressionPoints_toggled(bool checked);
+    void on_mRobustCheckBox_stateChanged(int arg1);
 };
 
 #endif // GWMGWROPTIONSDIALOG_H

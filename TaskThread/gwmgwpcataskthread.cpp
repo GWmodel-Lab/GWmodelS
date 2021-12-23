@@ -179,19 +179,16 @@ void GwmGWPCATaskThread::wpca(const mat &x, const vec &wt, mat &V, vec &S)
     //V即为R中的v
 }
 
-mat GwmGWPCATaskThread::rwpca(const mat &x, const vec &wt, double nu=0, double nv=2)
+void GwmGWPCATaskThread::rwpca(const mat &x, const vec &wt, mat &coeff, vec &latent, double nu=0, double nv=2)
 {
     //计算mids
     mat mids = x;
     mids = mids.each_row() - x.row((abs(wt - 0.5)).index_min());
     //计算robustSvd的值
-    mat coeff;
     mat score;
-    vec latent;
     vec tsquared;
     princomp(coeff, score, latent, tsquared, mids.each_col() % wt);
     //?coeff是对的，差一个参数
-    return coeff;
 }
 
 void GwmGWPCATaskThread::setBandwidthSelectionCriterionType(const GwmGWPCATaskThread::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
@@ -257,6 +254,7 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
     QgsVectorLayer* srcLayer = mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
+<<<<<<< HEAD
     //避免图层名重复
     if(treeChildCount > 0)
     {
@@ -268,6 +266,13 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
     //节点记录标签
     treeChildCount++ ;
 
+=======
+    if(!Robust()){
+        layerName += QStringLiteral("_GWPCA");
+    }else{
+        layerName += QStringLiteral("_RGWPCA");
+    }
+>>>>>>> 9835d6e (robustGWPCA)
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(srcLayer->crs());
 
@@ -415,6 +420,15 @@ void GwmGWPCATaskThread::setScoresCal(bool scoresCal)
     mScoresCal = scoresCal;
 }
 
+bool GwmGWPCATaskThread::Robust() const
+{
+    return mRobust;
+}
+
+void GwmGWPCATaskThread::setRobust(bool robust)
+{
+    mRobust=robust;
+}
 mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings, mat &stddev, cube &scores)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
@@ -440,7 +454,11 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings
         //事先准备好的D和V
         mat V;
         vec d;
-        wpca(newX,newWt,V,d);
+        if(!Robust()){
+            wpca(newX,newWt,V,d);
+        }else{
+            rwpca(newX,newWt,V,d);
+        }
         //存储最新的wt
         mLatestWt = newWt;
         d_all.col(i) = d;
@@ -574,7 +592,11 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat 
         //事先准备好的D和V
         mat V;
         vec d;
-        wpca(newX,newWt,V,d);
+        if(!Robust()){
+            wpca(newX,newWt,V,d);
+        }else{
+            rwpca(newX,newWt,V,d);
+        }
         //存储最新的wt
         mLatestWt = newWt;
         d_all.col(i) = d;

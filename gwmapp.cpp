@@ -187,12 +187,15 @@ void GwmApp::setupMenus()
     connect(ui->action_Save_NowProject, &QAction::triggered, this, &GwmApp::onSaveNowProject);
     connect(ui->actionBasic_GWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
     connect(ui->actionNew, &QAction::triggered,this,&GwmApp::onNewProject);
+<<<<<<< HEAD
     connect(ui->action_SetProjCRS,&QAction::triggered,this,&GwmApp::onSetProjCRS);
+=======
+    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::onGWPCABtnClicked);
+>>>>>>> 9835d6e (robustGWPCA)
     //以下信号为暂未实现的功能
     connect(ui->actionGW_Averages, &QAction::triggered, this, &GwmApp::onGWaverageBtnClicked);
     connect(ui->actionGW_Covariance, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::developingMessageBox);
-    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionGlyph_Plot, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
