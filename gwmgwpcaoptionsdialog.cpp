@@ -556,8 +556,8 @@ void GwmGWPCAOptionsDialog::on_cbkRegressionPoints_toggled(bool checked)
 //    ui->cbxHatmatrix->setEnabled(!checked);
 //    ui->cbxHatmatrix->setChecked(!checked);
 }
-void GwmGWPCAOptionsDialog::on_mRobustCheckBox_stateChanged(int arg1)
+void GwmGWPCAOptionsDialog::onRobust()
 {
-
+    ui->mRobustCheckBox->setChecked(true);
 }
 

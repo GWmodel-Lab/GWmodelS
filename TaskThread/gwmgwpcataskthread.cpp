@@ -254,7 +254,7 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
     QgsVectorLayer* srcLayer = mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
-<<<<<<< HEAD
+
     //避免图层名重复
     if(treeChildCount > 0)
     {
@@ -266,13 +266,13 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
     //节点记录标签
     treeChildCount++ ;
 
-=======
+
     if(!Robust()){
         layerName += QStringLiteral("_GWPCA");
     }else{
         layerName += QStringLiteral("_RGWPCA");
     }
->>>>>>> 9835d6e (robustGWPCA)
+
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(srcLayer->crs());
 
@@ -520,7 +520,11 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresOmp(const mat &x, cube &loadings, m
             //事先准备好的D和V
             mat V;
             vec d;
-            wpca(newX,newWt,V,d);
+            if(!Robust()){
+                wpca(newX,newWt,V,d);
+            }else{
+                rwpca(newX,newWt,V,d);
+            }
             //存储最新的wt
             if(i == nDp - 1)
             {
@@ -648,7 +652,11 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &st
             //事先准备好的D和V
             mat V;
             vec d;
-            wpca(newX,newWt,V,d);
+            if(!Robust()){
+                wpca(newX,newWt,V,d);
+            }else{
+                rwpca(newX,newWt,V,d);
+            }
             //存储最新的wt
             if(i == nDp - 1)
             {

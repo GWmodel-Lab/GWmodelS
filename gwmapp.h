@@ -155,6 +155,7 @@ public slots:
     void onGWPCABtnClicked();
     void populateLayoutsMenu(QMenu *menu);
     void setProjCrsFromLayer(const QModelIndex &index);
+    void onRobustGWPCABtnClicked();
 
 private:
     void setupMenus();
