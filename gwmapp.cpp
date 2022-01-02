@@ -1662,3 +1662,37 @@ void GwmApp::updateWindowTitle()
     QString title = QString("%1%2 - GWmodelS").arg(projectName).arg((projectDirty ? " *" : ""));
     setWindowTitle(title);
 }
+
+void GwmApp::closeEvent( QCloseEvent * event )
+{
+    if(GwmProject::instance()->dirty()){
+       QMessageBox::StandardButton result=QMessageBox::question(this, "GWmodelS", "You have unsaved changes,do you want to save before exiting",
+                         QMessageBox::Yes|QMessageBox::No |QMessageBox::Cancel,
+                         QMessageBox::Yes);
+       if (result==QMessageBox::Yes){
+           if (GwmProject::instance()->filePath()==""){
+               QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodelS Project (*.gwm)"));
+               if(filePath !="")
+               {
+                   QFileInfo fileInfo(filePath);
+                   GwmProject::instance()->setFilePath(filePath);
+                   GwmProject::instance()->setName(fileInfo.completeBaseName());
+                   GwmProject::instance()->save(fileInfo);
+                   event->accept();
+               }
+               else
+                   event->ignore();
+           }
+           else{
+                QString filePath = GwmProject::instance()->filePath();
+                QFileInfo fileInfo(filePath);
+                GwmProject::instance()->save(fileInfo);
+                event->accept();
+           }
+       }
+       if (result==QMessageBox::No)
+           event->accept();
+       if(result==QMessageBox::Cancel)
+           event->ignore();
+    }
+}
