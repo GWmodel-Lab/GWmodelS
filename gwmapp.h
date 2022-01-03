@@ -95,7 +95,7 @@ public:
     void gotoPages(QString URL);
     void aboutDeveloperTeam();
     void onSetProjCRS();
-
+    void closeEvent( QCloseEvent * event );
 private:
     void addLayerToModel(QgsVectorLayer* layer);
     void createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));

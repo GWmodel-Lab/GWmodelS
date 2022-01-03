@@ -130,6 +130,7 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
                     break;
                 }
             addTab(tabWidget, tabName);
+            currentChanged(indexOf(tabWidget));
             item->tabWidget = tabWidget;
             }
             else if(indexOf(tabWidget) == -1){
@@ -168,6 +169,7 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
                     break;
                 }
                addTab(tabWidget, tabName);
+               currentChanged(indexOf(tabWidget));
             }
             else{
                 currentChanged(indexOf(tabWidget));

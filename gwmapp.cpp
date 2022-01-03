@@ -1245,8 +1245,11 @@ void GwmApp::onGWRBtnClicked()
             resultLayer0 = resultLayer->clone();
             GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer0, gwrTaskThread);
             mMapModel->appentItem(gwrItem, selectedIndex);
-        }
+            onShowLayerProperty(mMapModel->indexFromItem(gwrItem));
+        }     
     }
+    delete gwrOptionDialog;
+    delete gwrTaskThread;
 }
 
 void GwmApp::onGWRNewBtnClicked()
@@ -1284,6 +1287,7 @@ void GwmApp::onGWRNewBtnClicked()
         GwmDiagnostic diagnostic = algorithm->diagnostic();
         GwmBasicGWRAlgorithm::FTestResultPack fTestResult = algorithm->fTestResult();
     }
+
 }
 
 void GwmApp::onGWSSBtnClicked()
@@ -1312,11 +1316,15 @@ void GwmApp::onGWSSBtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwssTaskThread->resultLayer();
-            GwmLayerGWSSItem* gwssItem = new GwmLayerGWSSItem(selectedItem, resultLayer, gwssTaskThread);
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerGWSSItem* gwssItem = new GwmLayerGWSSItem(selectedItem, resultLayer0, gwssTaskThread);
             mMapModel->appentItem(gwssItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwssItem));
         }
     }
-
+    delete gwssOptionDialog;
+    delete gwssTaskThread;
 }
 
 void GwmApp::onScalableGWRBtnClicked()
@@ -1345,10 +1353,15 @@ void GwmApp::onScalableGWRBtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwrTaskThread->resultLayer();
-            GwmLayerScalableGWRItem* gwrItem = new GwmLayerScalableGWRItem(selectedItem, resultLayer, gwrTaskThread);
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerScalableGWRItem* gwrItem = new GwmLayerScalableGWRItem(selectedItem, resultLayer0, gwrTaskThread);
             mMapModel->appentItem(gwrItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwrItem));
         }
     }
+    delete gwrOptionDialog;
+    delete gwrTaskThread;
 }
 
 void GwmApp::onMultiscaleGWRBtnClicked()
@@ -1377,10 +1390,15 @@ void GwmApp::onMultiscaleGWRBtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwrTaskThread->resultLayer();
-            GwmLayerMultiscaleGWRItem* gwrItem = new GwmLayerMultiscaleGWRItem(selectedItem, resultLayer, gwrTaskThread);
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerMultiscaleGWRItem* gwrItem = new GwmLayerMultiscaleGWRItem(selectedItem, resultLayer0, gwrTaskThread);
             mMapModel->appentItem(gwrItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwrItem));
         }
     }
+    delete gwrOptionDialog;
+    delete gwrTaskThread;
 }
 
 void GwmApp::onRobustGWR()
@@ -1409,10 +1427,15 @@ void GwmApp::onRobustGWR()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwrRobustTaskThread->resultLayer();
-            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer0, gwrRobustTaskThread);
             mMapModel->appentItem(gwrItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwrItem));
         }
     }
+    delete gwrRobustOptionDialog;
+    delete gwrRobustTaskThread;
 }
 
 void GwmApp::onRobustGWRBtnClicked()
@@ -1441,10 +1464,15 @@ void GwmApp::onRobustGWRBtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwrRobustTaskThread->resultLayer();
-            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer, gwrRobustTaskThread);
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerBasicGWRItem* gwrItem = new GwmLayerBasicGWRItem(selectedItem, resultLayer0, gwrRobustTaskThread);
             mMapModel->appentItem(gwrItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwrItem));
         }
     }
+    delete gwrRobustOptionDialog;
+    delete gwrRobustTaskThread;
 }
 
 void GwmApp::onLcrGWRBtnClicked()
@@ -1473,10 +1501,15 @@ void GwmApp::onLcrGWRBtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = lcrGWRTaskThread->resultLayer();
-            GwmLayerCollinearityGWRItem* gwrItem = new GwmLayerCollinearityGWRItem(selectedItem, resultLayer, lcrGWRTaskThread);
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerCollinearityGWRItem* gwrItem = new GwmLayerCollinearityGWRItem(selectedItem, resultLayer0, lcrGWRTaskThread);
             mMapModel->appentItem(gwrItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwrItem));
         }
     }
+    delete gwrLcrOptionDialog;
+    delete lcrGWRTaskThread;
 }
 
 void GwmApp::onGGWRBtnClicked(){
@@ -1504,10 +1537,15 @@ void GwmApp::onGGWRBtnClicked(){
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = ggwrTaskThread->resultLayer();
-            GwmLayerGGWRItem* ggwrItem = new GwmLayerGGWRItem(selectedItem, resultLayer, ggwrTaskThread);
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerGGWRItem* ggwrItem = new GwmLayerGGWRItem(selectedItem, resultLayer0, ggwrTaskThread);
             mMapModel->appentItem(ggwrItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(ggwrItem));
         }
     }
+    delete ggwrOptionDialog;
+    delete ggwrTaskThread;
 }
 
 void GwmApp::onGTWRBtnClicked()
@@ -1536,10 +1574,15 @@ void GwmApp::onGTWRBtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gtwrTaskThread->resultLayer();
-            GwmLayerGTWRItem* gtwrItem = new GwmLayerGTWRItem(selectedItem, resultLayer, gtwrTaskThread);
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerGTWRItem* gtwrItem = new GwmLayerGTWRItem(selectedItem, resultLayer0, gtwrTaskThread);
             mMapModel->appentItem(gtwrItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gtwrItem));
         }
     }
+    delete ggwrOptionDialog;
+    delete gtwrTaskThread;
 }
 
 void GwmApp::onGWPCABtnClicked()
@@ -1568,10 +1611,15 @@ void GwmApp::onGWPCABtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwpcaTaskThread->resultLayer();
-            GwmLayerGWPCAItem * gwrItem = new GwmLayerGWPCAItem(selectedItem, resultLayer, gwpcaTaskThread);
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerGWPCAItem * gwrItem = new GwmLayerGWPCAItem(selectedItem, resultLayer0, gwpcaTaskThread);
             mMapModel->appentItem(gwrItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwrItem));
         }
     }
+    delete gwpcaOptionDialog;
+    delete gwpcaTaskThread;
 }
 
 void GwmApp::populateLayoutsMenu(QMenu * menu)
@@ -1613,4 +1661,38 @@ void GwmApp::updateWindowTitle()
     bool projectDirty = GwmProject::instance()->dirty();
     QString title = QString("%1%2 - GWmodelS").arg(projectName).arg((projectDirty ? " *" : ""));
     setWindowTitle(title);
+}
+
+void GwmApp::closeEvent( QCloseEvent * event )
+{
+    if(GwmProject::instance()->dirty()){
+       QMessageBox::StandardButton result=QMessageBox::question(this, "GWmodelS", "You have unsaved changes,do you want to save before exiting",
+                         QMessageBox::Yes|QMessageBox::No |QMessageBox::Cancel,
+                         QMessageBox::Yes);
+       if (result==QMessageBox::Yes){
+           if (GwmProject::instance()->filePath()==""){
+               QString filePath = QFileDialog::getSaveFileName(this, tr("Save Project"), tr(""), tr("GWmodelS Project (*.gwm)"));
+               if(filePath !="")
+               {
+                   QFileInfo fileInfo(filePath);
+                   GwmProject::instance()->setFilePath(filePath);
+                   GwmProject::instance()->setName(fileInfo.completeBaseName());
+                   GwmProject::instance()->save(fileInfo);
+                   event->accept();
+               }
+               else
+                   event->ignore();
+           }
+           else{
+                QString filePath = GwmProject::instance()->filePath();
+                QFileInfo fileInfo(filePath);
+                GwmProject::instance()->save(fileInfo);
+                event->accept();
+           }
+       }
+       if (result==QMessageBox::No)
+           event->accept();
+       if(result==QMessageBox::Cancel)
+           event->ignore();
+    }
 }
