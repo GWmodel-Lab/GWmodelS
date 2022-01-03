@@ -86,6 +86,9 @@
 #include "aboutdevelopteam.h"
 #include "aboutdevelopers.h"
 
+#include "TaskThread/gwmgwaveragetaskthread.h"
+#include "gwmgwaverageoptionsdialog.h"
+
 #include "gwmprojcrssettingdialog.h"
 
 static bool cmpByText_(QAction *a, QAction *b)
@@ -186,7 +189,7 @@ void GwmApp::setupMenus()
     connect(ui->actionNew, &QAction::triggered,this,&GwmApp::onNewProject);
     connect(ui->action_SetProjCRS,&QAction::triggered,this,&GwmApp::onSetProjCRS);
     //以下信号为暂未实现的功能
-    connect(ui->actionGW_Averages, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionGW_Averages, &QAction::triggered, this, &GwmApp::onGWaverageBtnClicked);
     connect(ui->actionGW_Covariance, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::developingMessageBox);
@@ -1325,6 +1328,38 @@ void GwmApp::onGWSSBtnClicked()
     }
     delete gwssOptionDialog;
     delete gwssTaskThread;
+}
+
+void GwmApp::onGWaverageBtnClicked()
+{
+    GwmGWaverageTaskThread* gwssTaskThread = new GwmGWaverageTaskThread();
+    GwmGWaverageOptionsDialog* gwssOptionDialog = new GwmGWaverageOptionsDialog(mMapModel->rootChildren(), gwssTaskThread);
+    QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mMapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwssOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwssOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwssOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwssTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwssTaskThread->resultLayer();
+            GwmLayerGWSSItem* gwssItem = new GwmLayerGWSSItem(selectedItem, resultLayer, gwssTaskThread);
+            mMapModel->appentItem(gwssItem, selectedIndex);
+        }
+    }
 }
 
 void GwmApp::onScalableGWRBtnClicked()

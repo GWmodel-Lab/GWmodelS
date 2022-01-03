@@ -3,11 +3,13 @@
 
 #include "gwmlayervectoritem.h"
 #include "TaskThread/gwmgwsstaskthread.h"
+#include "TaskThread/gwmgwaveragetaskthread.h"
 
 class GwmLayerGWSSItem : public GwmLayerVectorItem
 {
 public:
     GwmLayerGWSSItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWSSTaskThread* taskThread = nullptr);
+    GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWaverageTaskThread* taskThread);
     ~GwmLayerGWSSItem();
 
     virtual int childNumber() override;
