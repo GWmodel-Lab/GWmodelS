@@ -145,6 +145,7 @@ public slots:
     void onShowCoordinateTransDlg(const QModelIndex &index);
     void onGWRBtnClicked();
     void onGWSSBtnClicked();
+    void onGWaverageBtnClicked();
     void onGWRNewBtnClicked();
     void onScalableGWRBtnClicked();
     void onMultiscaleGWRBtnClicked();

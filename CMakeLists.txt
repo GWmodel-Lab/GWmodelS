@@ -214,6 +214,8 @@ set(SOURCES
     aboutdevelopteam.cpp
     aboutdevelopers.cpp
     gwmprojcrssettingdialog.cpp
+    gwmgwaverageoptionsdialog.cpp
+    TaskThread/gwmgwaveragetaskthread.cpp
 )
 
 set(HEADERS
@@ -332,6 +334,8 @@ set(HEADERS
     aboutdevelopteam.h
     aboutdevelopers.h
     gwmprojcrssettingdialog.h
+    gwmgwaverageoptionsdialog.h
+    TaskThread/gwmgwaveragetaskthread.h
 )
 
 set(FORMS
@@ -399,6 +403,7 @@ set(FORMS
     aboutdevelopteam.ui
     aboutdevelopers.ui
     gwmprojcrssettingdialog.ui
+    gwmgwaverageoptionsdialog.ui
 )
 qt5_add_resources(GWMODEL_ICONS images/images.qrc)
 qt5_wrap_ui(FORMS_H ${FORMS})

@@ -1,5 +1,5 @@
-    #ifndef GWMGWSSTASKTHREAD_H
-#define GWMGWSSTASKTHREAD_H
+    #ifndef GWMGWAVERAGETASKTHREAD_H
+#define GWMGWAVERAGETASKTHREAD_H
 
 #include <QObject>
 
@@ -11,11 +11,11 @@
 
 #include "TaskThread/gwmbandwidthsizeselector.h"
 
-class GwmGWSSTaskThread;
-//typedef double (GwmGWSSTaskThread::*pfGwmCVApproach)(const mat& , GwmBandwidthWeight*);
+class GwmGWaverageTaskThread;
+//typedef double (GwmGWaverageTaskThread::*pfGwmCVApproach)(const mat& , GwmBandwidthWeight*);
 
 
-class GwmGWSSTaskThread : public GwmSpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IOpenmpParallelable
+class GwmGWaverageTaskThread :public GwmSpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IOpenmpParallelable
 {
     Q_OBJECT
 
@@ -51,10 +51,10 @@ public:
         median
     };
 
-    typedef double (GwmGWSSTaskThread::*CVFunction)(const mat& ,GwmBandwidthWeight*);
+    typedef double (GwmGWaverageTaskThread::*CVFunction)(const mat& ,GwmBandwidthWeight*);
     typedef QList<QPair<QString, mat> > CreateResultLayerData;
 
-    typedef bool (GwmGWSSTaskThread::*CalFunction)();
+    typedef bool (GwmGWaverageTaskThread::*CalFunction)();
 
 protected:
     static vec findq(const mat& x, const vec& w);
@@ -64,7 +64,7 @@ protected:
     bool CalculateOmp();
 #endif
 public:
-    GwmGWSSTaskThread();
+    GwmGWaverageTaskThread();
 
     bool quantile() const;
     void setQuantile(bool quantile);
@@ -92,7 +92,7 @@ public:     // GwmTaskThread interface
     QString name() const override { return tr("GWSS"); };
 
 public:
-    mat mDataPoints;
+
     GwmBandwidthWeight* bandwidth() const;
     void setBandwidth(GwmBandwidthWeight* bandwidth);
 
@@ -117,6 +117,7 @@ public:
     {
         return mDataPoints.n_rows;
     }
+
 protected:
     void initPoints();
     void initXY(mat& x, const QList<GwmVariable>& indepVars);
@@ -129,7 +130,7 @@ private:
     bool mQuantile = false;
 
 protected:
-//    mat mDataPoints;
+    mat mDataPoints;
 
 //    GwmBandwidthWeight* mBandwidth;
 
@@ -164,41 +165,41 @@ public:
 
 
 
-inline bool GwmGWSSTaskThread::quantile() const
+inline bool GwmGWaverageTaskThread::quantile() const
 {
     return mQuantile;
 }
 
-inline void GwmGWSSTaskThread::setQuantile(bool quantile)
+inline void GwmGWaverageTaskThread::setQuantile(bool quantile)
 {
     mQuantile = quantile;
 }
 
-inline QList<GwmVariable> GwmGWSSTaskThread::variables() const{
+inline QList<GwmVariable> GwmGWaverageTaskThread::variables() const{
     return mVariables;
 }
 
-inline void GwmGWSSTaskThread::setVariables(const QList<GwmVariable> &variables)
+inline void GwmGWaverageTaskThread::setVariables(const QList<GwmVariable> &variables)
 {
     mVariables = variables;
 }
 
-inline void GwmGWSSTaskThread::setVariables(const QList<GwmVariable> &&variables)
+inline void GwmGWaverageTaskThread::setVariables(const QList<GwmVariable> &&variables)
 {
     mVariables = variables;
 }
 
-inline GwmBandwidthWeight *GwmGWSSTaskThread::bandwidth() const
+inline GwmBandwidthWeight *GwmGWaverageTaskThread::bandwidth() const
 {
     return static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
 }
 
-inline void GwmGWSSTaskThread::setBandwidth(GwmBandwidthWeight *bandwidth)
+inline void GwmGWaverageTaskThread::setBandwidth(GwmBandwidthWeight *bandwidth)
 {
     mSpatialWeight.setWeight(bandwidth);
 }
 
-inline int GwmGWSSTaskThread::parallelAbility() const
+inline int GwmGWaverageTaskThread::parallelAbility() const
 {
     return IParallelalbe::SerialOnly
         #ifdef ENABLE_OpenMP
@@ -207,15 +208,15 @@ inline int GwmGWSSTaskThread::parallelAbility() const
             ;
 }
 
-inline IParallelalbe::ParallelType GwmGWSSTaskThread::parallelType() const
+inline IParallelalbe::ParallelType GwmGWaverageTaskThread::parallelType() const
 {
     return mParallelType;
 }
 
-inline void GwmGWSSTaskThread::setOmpThreadNum(const int threadNum)
+inline void GwmGWaverageTaskThread::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
 }
 
 
-#endif // GWMGWSSTASKTHREAD_H
+#endif // GWMGWAVERAGETASKTHREAD_H
