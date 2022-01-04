@@ -188,11 +188,11 @@ void GwmApp::setupMenus()
     connect(ui->actionBasic_GWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
     connect(ui->actionNew, &QAction::triggered,this,&GwmApp::onNewProject);
     connect(ui->action_SetProjCRS,&QAction::triggered,this,&GwmApp::onSetProjCRS);
+    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::onRobustGWPCABtnClicked);
     //以下信号为暂未实现的功能
     connect(ui->actionGW_Averages, &QAction::triggered, this, &GwmApp::onGWaverageBtnClicked);
     connect(ui->actionGW_Covariance, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::developingMessageBox);
-    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionGlyph_Plot, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
@@ -1660,6 +1660,40 @@ void GwmApp::onGWPCABtnClicked()
     }
     delete gwpcaOptionDialog;
     delete gwpcaTaskThread;
+}
+
+void GwmApp::onRobustGWPCABtnClicked()
+{
+    GwmGWPCATaskThread* gwpcaTaskThread = new GwmGWPCATaskThread();
+    GwmGWPCAOptionsDialog* gwpcaOptionDialog = new GwmGWPCAOptionsDialog(mMapModel->rootChildren(), gwpcaTaskThread);
+    QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
+    gwpcaOptionDialog->onRobust();
+    gwpcaOptionDialog->setWindowTitle("Robust GWPCA Configure");
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mMapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwpcaOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwpcaOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwpcaOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwpcaOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwpcaOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwpcaTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwpcaTaskThread->resultLayer();
+            GwmLayerGWPCAItem * gwrItem = new GwmLayerGWPCAItem(selectedItem, resultLayer, gwpcaTaskThread);
+            mMapModel->appentItem(gwrItem, selectedIndex);
+        }
+    }
 }
 
 void GwmApp::populateLayoutsMenu(QMenu * menu)

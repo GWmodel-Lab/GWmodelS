@@ -120,6 +120,7 @@ GwmGWPCAOptionsDialog::GwmGWPCAOptionsDialog(QList<GwmLayerGroupItem*> originIte
     //connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
     //connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
     connect(ui->mScoresCheckBox,&QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mRobustCheckBox,&QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
 
     updateFieldsAndEnable();
 }
@@ -503,6 +504,7 @@ void GwmGWPCAOptionsDialog::updateFields()
     //mTaskThread->setHasFTest(ui->cbxFTest->isChecked());
     mTaskThread->setK(ui->mKspinBox->value());
     mTaskThread->setScoresCal(ui->mScoresCheckBox->isChecked());
+    mTaskThread->setRobust(ui->mRobustCheckBox->isChecked());
 }
 
 void GwmGWPCAOptionsDialog::enableAccept()
@@ -554,3 +556,8 @@ void GwmGWPCAOptionsDialog::on_cbkRegressionPoints_toggled(bool checked)
 //    ui->cbxHatmatrix->setEnabled(!checked);
 //    ui->cbxHatmatrix->setChecked(!checked);
 }
+void GwmGWPCAOptionsDialog::onRobust()
+{
+    ui->mRobustCheckBox->setChecked(true);
+}
+

@@ -48,7 +48,6 @@ public slots:
     void onVariableAutoSelectionToggled(bool checked);
     void onSelectedIndenpendentVariablesChanged();
 
-
 public:
     QString crsRotateTheta();
     QString crsRotateP();
@@ -67,12 +66,13 @@ public:
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
-
+    void onRobust();
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
 private slots:
     void on_cbxHatmatrix_toggled(bool checked);
     void on_cbkRegressionPoints_toggled(bool checked);
+
 };
 
 #endif // GWMGWROPTIONSDIALOG_H

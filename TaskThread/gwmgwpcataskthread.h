@@ -83,6 +83,9 @@ public:  // IOpenmpParallelable interface
     bool scoresCal() const;
     void setScoresCal(bool scoresCal);
 
+    bool Robust() const;
+    void setRobust(bool robust);
+
     void setCanceled(bool canceled);
 
 private:
@@ -90,7 +93,7 @@ private:
     void initXY(mat& x, const QList<GwmVariable>& indepVars);
     //void wpca(const mat &x, const vec &wt, double nu, double nv, mat &V, vec &S);
     void wpca(const mat &x, const vec &wt, mat &V, vec &S);
-    mat rwpca(const mat &x, const vec &wt, double nu, double nv);
+    void rwpca(const mat &x, const vec &wt, mat &coeff, vec &latent, double nu, double nv);
     void createResultLayer(CreateResultLayerData data,QList<QString> winvar);
 
     mat pca(const mat& x, cube& loadings, mat& sdev, cube& scores)
@@ -127,7 +130,7 @@ private:
     mat mDataPoints;
 
     int mK = 2;
-    bool mRobust=false;
+
     mat mX;
     vec mLatestWt;
 
@@ -151,8 +154,13 @@ private:
     //用户选择是否计算scores
     bool mScoresCal;
 
+
 public:
     static int treeChildCount;
+
+    //用户选择RobustGWPCA
+    bool mRobust;
+
 };
 
 inline mat GwmGWPCATaskThread::variance() const
