@@ -1356,10 +1356,15 @@ void GwmApp::onGWaverageBtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwssTaskThread->resultLayer();
-            GwmLayerGWSSItem* gwssItem = new GwmLayerGWSSItem(selectedItem, resultLayer, gwssTaskThread);
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerGWSSItem* gwssItem = new GwmLayerGWSSItem(selectedItem, resultLayer0, gwssTaskThread);
             mMapModel->appentItem(gwssItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwssItem));
         }
     }
+    delete gwssOptionDialog;
+    delete gwssTaskThread;
 }
 
 void GwmApp::onScalableGWRBtnClicked()
