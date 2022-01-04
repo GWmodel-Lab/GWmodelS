@@ -1668,6 +1668,7 @@ void GwmApp::onRobustGWPCABtnClicked()
     GwmGWPCAOptionsDialog* gwpcaOptionDialog = new GwmGWPCAOptionsDialog(mMapModel->rootChildren(), gwpcaTaskThread);
     QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
     gwpcaOptionDialog->onRobust();
+    gwpcaOptionDialog->setWindowTitle("Robust GWPCA Configure");
     for (QModelIndex selectedIndex : selectedIndexes)
     {
         GwmLayerItem* selectedItem = mMapModel->itemFromIndex(selectedIndex);
