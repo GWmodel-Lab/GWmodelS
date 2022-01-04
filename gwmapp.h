@@ -96,6 +96,8 @@ public:
     void aboutDeveloperTeam();
     void onSetProjCRS();
     void closeEvent( QCloseEvent * event );
+    void gwmcorrelation();
+
 private:
     void addLayerToModel(QgsVectorLayer* layer);
     void createLayerToModel(const QString &uri, const QString &layerName, const QString &providerKey = QString("ogr"));

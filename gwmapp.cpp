@@ -90,6 +90,7 @@
 #include "gwmgwaverageoptionsdialog.h"
 
 #include "gwmprojcrssettingdialog.h"
+#include "gwmcorrelationdialog.h"
 
 static bool cmpByText_(QAction *a, QAction *b)
 {
@@ -192,7 +193,8 @@ void GwmApp::setupMenus()
     //以下信号为暂未实现的功能
     connect(ui->actionGW_Averages, &QAction::triggered, this, &GwmApp::onGWaverageBtnClicked);
     connect(ui->actionGW_Covariance, &QAction::triggered, this, &GwmApp::developingMessageBox);
-    connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::gwmcorrelation);
+    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionGlyph_Plot, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
@@ -227,7 +229,12 @@ void GwmApp::setupMenus()
 //        myMessageBox(message, title, 1);
 //    });
     connect(ui->actionDevelopment_Team, &QAction::triggered, this, &GwmApp::aboutDeveloperTeam);
+}
 
+void GwmApp::gwmcorrelation(){
+    gwmcorrelationdialog *messageBox = new gwmcorrelationdialog(this);
+    messageBox->setWindowTitle("相关系数");
+    messageBox->show();
 }
 
 void GwmApp::aboutInformation()
