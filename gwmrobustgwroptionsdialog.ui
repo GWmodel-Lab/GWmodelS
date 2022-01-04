@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>631</width>
+    <width>654</width>
     <height>720</height>
    </rect>
   </property>
@@ -27,8 +27,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>631</width>
-        <height>677</height>
+        <width>636</width>
+        <height>702</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -120,7 +120,7 @@
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
-          <string>Independent Variable Selection</string>
+          <string>Independent Variables</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1">
           <item>
@@ -138,7 +138,7 @@
           </sizepolicy>
          </property>
          <property name="title">
-          <string>Bandwidth Setting</string>
+          <string>Weighting Scheme</string>
          </property>
          <layout class="QFormLayout" name="formLayout">
           <property name="horizontalSpacing">
@@ -156,7 +156,7 @@
           <item row="0" column="0">
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>Type</string>
+             <string>Bandwidth Type</string>
             </property>
            </widget>
           </item>
@@ -218,7 +218,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Size</string>
+             <string>Bandwidth Size</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -355,7 +355,7 @@
           <item row="2" column="0">
            <widget class="QLabel" name="label_13">
             <property name="text">
-             <string>Kernel</string>
+             <string>Kernel Funtion</string>
             </property>
            </widget>
           </item>
@@ -400,7 +400,7 @@
           </sizepolicy>
          </property>
          <property name="title">
-          <string>Distance Setting</string>
+          <string>Distance Metric</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
@@ -422,7 +422,7 @@
             <item>
              <widget class="QRadioButton" name="mDistTypeDmatRadio">
               <property name="text">
-               <string>Distance Matrix</string>
+               <string>Self-defined (*.dmat)</string>
               </property>
              </widget>
             </item>
@@ -567,18 +567,11 @@
           </sizepolicy>
          </property>
          <property name="title">
-          <string>Algorithm Configuration</string>
+          <string>Computing Configuration</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_5">
-            <item>
-             <widget class="QLabel" name="label_7">
-              <property name="text">
-               <string>Parallel Method</string>
-              </property>
-             </widget>
-            </item>
             <item>
              <widget class="QRadioButton" name="mCalcParallelNoneRadio">
               <property name="sizePolicy">

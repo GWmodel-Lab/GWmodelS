@@ -31,12 +31,12 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>26</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
     <property name="title">
-     <string>File</string>
+     <string>Project</string>
     </property>
     <addaction name="actionNew"/>
     <addaction name="action_Open_Project"/>
@@ -53,12 +53,12 @@
      <string>GWR</string>
     </property>
     <addaction name="actionBasic_GWR"/>
-    <addaction name="actionScalable_GWR"/>
+    <addaction name="actionMultiscale_GWR"/>
+    <addaction name="actionGTWR"/>
     <addaction name="actionRobustGWR"/>
     <addaction name="actionLocal_collinearity_GWR"/>
     <addaction name="action_GGWR"/>
-    <addaction name="actionMultiscale_GWR"/>
-    <addaction name="actionGTWR"/>
+    <addaction name="actionScalable_GWR"/>
    </widget>
    <widget class="QMenu" name="menuLayer_Data">
     <property name="title">
