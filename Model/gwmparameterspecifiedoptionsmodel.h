@@ -15,7 +15,7 @@ struct GwmParameterSpecifiedOption
     bool adaptive = true;
     GwmBandwidthWeight::KernelFunctionType kernel = GwmBandwidthWeight::KernelFunctionType::Gaussian;
     GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Null;
-    GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType approach = GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV;
+    GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType approach = GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC;
     double threshold = 0.01;
 
     GwmDistance::DistanceType distanceType = GwmDistance::DistanceType::CRSDistance;

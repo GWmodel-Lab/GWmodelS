@@ -506,6 +506,8 @@ void GwmMultiscaleGWROptionsDialog::onFixedRadioToggled(bool checked)
     {
         mParameterSpecifiedOptionsModel->item(i)->adaptive = false;
     }
+    ui->mNLowerSpb->setEnabled(false);
+    ui->label_19->setEnabled(false);
 }
 
 void GwmMultiscaleGWROptionsDialog::onVariableRadioToggled(bool checked)
@@ -515,6 +517,8 @@ void GwmMultiscaleGWROptionsDialog::onVariableRadioToggled(bool checked)
     {
         mParameterSpecifiedOptionsModel->item(i)->adaptive = true;
     }
+    ui->mNLowerSpb->setEnabled(true);
+    ui->label_19->setEnabled(true);
 }
 
 double GwmMultiscaleGWROptionsDialog::bandwidthSize(){
