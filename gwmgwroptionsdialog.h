@@ -26,7 +26,6 @@ public:
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
 
     bool hasRegressionLayer() const;
-
     GwmLayerGroupItem* selectedRegressionLayer() const;
 
 public slots:
@@ -66,6 +65,8 @@ public:
 private slots:
     void on_cbxHatmatrix_toggled(bool checked);
     void on_cbkRegressionPoints_toggled(bool checked);
+
+    void on_cbxOLS_clicked(bool checked);
 
 private:
     Ui::GwmGWROptionsDialog *ui;

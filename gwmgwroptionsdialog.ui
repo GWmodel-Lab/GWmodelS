@@ -35,9 +35,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>0</y>
-        <width>653</width>
-        <height>813</height>
+        <y>-70</y>
+        <width>628</width>
+        <height>912</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0,0,0,0,0">
@@ -818,7 +818,7 @@
           <string>Others</string>
          </property>
          <layout class="QFormLayout" name="formLayout_7">
-          <item row="1" column="0">
+          <item row="2" column="0">
            <widget class="QCheckBox" name="cbxFTest">
             <property name="text">
              <string>F Test</string>
@@ -832,6 +832,13 @@
             </property>
             <property name="checked">
              <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="cbxOLS">
+            <property name="text">
+             <string>OLS</string>
             </property>
            </widget>
           </item>

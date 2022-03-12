@@ -80,6 +80,8 @@ void GwmBasicGWRAlgorithm::run()
         initXY(mX, mY, mDepVar, mIndepVars);
     }
 
+
+
     // 优选带宽    
     if (!checkCanceled() && !hasRegressionLayer() && mIsAutoselectBandwidth)
     {
@@ -110,6 +112,9 @@ void GwmBasicGWRAlgorithm::run()
     {
         return;
     }
+
+
+
 
     // 解算模型
     if (mHasHatMatrix && !checkCanceled())
@@ -1338,6 +1343,7 @@ bool GwmBasicGWRAlgorithm::isValid()
     {
         if (mRegressionLayer && mHasHatMatrix)
             return false;
+
 
         if (mRegressionLayer && mHasFTest)
             return false;
