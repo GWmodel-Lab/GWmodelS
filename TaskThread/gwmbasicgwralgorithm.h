@@ -35,7 +35,18 @@ public:
         double trQtQ = 0.0;
     };
 
+    struct OLS
+    {
+         double R2 = 0.0;
+         double adjR2 = 0.0;
+         double FStatistic = 0.0;
+         double FPvalue = 0.0;
+    }
 
+
+    void CalOLS(const mat &x, const vec &y);
+
+    QMap<QString,QList<int>()> Coefficients;
 
     enum BandwidthSelectionCriterionType
     {

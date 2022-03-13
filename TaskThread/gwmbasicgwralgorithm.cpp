@@ -38,6 +38,8 @@ GwmBasicGWRAlgorithm::GwmBasicGWRAlgorithm() : GwmGeographicalWeightedRegression
 
 }
 
+
+
 void GwmBasicGWRAlgorithm::setCanceled(bool canceled)
 {
     mBandwidthSizeSelector.setCanceled(canceled);
@@ -112,6 +114,8 @@ void GwmBasicGWRAlgorithm::run()
     {
         return;
     }
+
+
 
 
 
@@ -655,6 +659,8 @@ void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString 
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
     layerName += name;
+
+
 
     // 设置字段
     QgsFields fields;
