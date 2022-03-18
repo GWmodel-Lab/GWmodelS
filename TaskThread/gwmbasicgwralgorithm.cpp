@@ -47,6 +47,41 @@ void GwmBasicGWRAlgorithm::setCanceled(bool canceled)
     return GwmTaskThread::setCanceled(canceled);
 }
 
+GwmBasicGWRAlgorithm::OLSVar GwmBasicGWRAlgorithm::CalOLS(const mat &x, const vec &y){
+    QMap<QString,QList<int> > Coefficients;
+    int nVar = mX.n_cols;
+    int np = x.n_rows;
+    mat xt = x.t();
+    mat betahat = inv(xt * x)*xt*y;
+    vec yhat = x*betahat;
+    double ymean = mean(y);
+    double sst = sum((y-ymean).t()*(y-ymean));
+    double ssr = sum((yhat-ymean).t()*(yhat-ymean));
+    double sse = sum((y-yhat).t()*(y-yhat));
+    double Rsquared = 1- sse/sst;
+    double adjRsquared = 1-(sse/(np-1-nVar))/(sst/(np-1));
+//    double Ft = (ssr/3)/(sse/100-2-1);
+    vec rs = y-yhat;
+    double rmean = mean(rs);
+    double rsd = sqrt(abs((sum((rs-rmean).t()*(rs-rmean)))/np));
+    mat c = inv((xt * x));
+    vec cdiag = diagvec(c);
+    double unb = sqrt((sse/np-1-nVar));
+    QMap<QString,QList<double> > coeffs;
+    for(int i = 0 ; i < nVar ; i++){
+        QString variableName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i - 1].name;
+        QList<double> coeff;
+        coeff.append(betahat[i]);
+        double std = unb*sqrt(cdiag[i]);
+        coeff.append(std);
+        double tvalue = betahat[i]/std;
+        coeff.append(tvalue);
+        coeffs[variableName]=coeff;
+    }
+    return {rsd,Rsquared,adjRsquared,coeffs};
+}
+
+
 void GwmBasicGWRAlgorithm::run()
 {
     if (!checkCanceled())
@@ -116,9 +151,9 @@ void GwmBasicGWRAlgorithm::run()
     }
 
 
-
-
-
+    if(mOLS&&!checkCanceled()){
+        mOLSVar = CalOLS(mX,mY);
+    }
 
     // 解算模型
     if (mHasHatMatrix && !checkCanceled())

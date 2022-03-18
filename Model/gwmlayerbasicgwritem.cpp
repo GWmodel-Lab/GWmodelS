@@ -1,5 +1,6 @@
 #include "gwmlayerbasicgwritem.h"
 #include "gwmlayergroupitem.h"
+#include "TaskThread/gwmbasicgwralgorithm.h"
 
 GwmLayerBasicGWRItem::GwmLayerBasicGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmBasicGWRAlgorithm *taskThread)
     : GwmLayerVectorItem(parent, vector)
@@ -19,6 +20,8 @@ GwmLayerBasicGWRItem::GwmLayerBasicGWRItem(GwmLayerItem* parent, QgsVectorLayer*
         mFTestResults = taskThread->fTestResult();
         hasHatmatrix = taskThread->hasHatMatrix();
         hasFTest = taskThread->hasFTest();
+        hasols = taskThread->OLS();
+        mOLSVar = taskThread->getOLSVar();
         isRegressionPointGiven = !(taskThread->regressionLayer() == nullptr);
     }
 }
@@ -42,7 +45,7 @@ bool GwmLayerBasicGWRItem::readXml(QDomNode &node)
         isRegressionPointGiven = analyse.attribute("isRegressionPointGiven").toInt();
         isBandwidthOptimized = analyse.attribute("isBandwidthOptimized").toInt();
         isModelOptimized = analyse.attribute("isModelOptimized").toInt();
-
+        hasols = analyse.attribute("hasols").toInt();
         QDomElement nodeDepVar = analyse.firstChildElement("depVar");
         if (nodeDepVar.isNull())
             return false;
@@ -90,6 +93,9 @@ bool GwmLayerBasicGWRItem::readXml(QDomNode &node)
         }
         else return false;
 
+
+
+
         // 读取回归系数表
         if (mLayer)
         {
@@ -106,6 +112,36 @@ bool GwmLayerBasicGWRItem::readXml(QDomNode &node)
                 }
             }
         }
+
+        if(hasols)
+        {
+            QDomElement nodeOLSResult = analyse.firstChildElement("OLSResult");
+            if(!nodeOLSResult.isNull())
+            {
+                mOLSVar.RSD = nodeOLSResult.attribute("rsd").toDouble();
+                mOLSVar.R2 = nodeOLSResult.attribute("R2").toDouble();
+                mOLSVar.adjR2 = nodeOLSResult.attribute("adjR2").toDouble();
+                QMap<QString,QList<double> > coeffcients;
+                QDomElement coeff = nodeOLSResult.firstChildElement("coeff");
+                while (!coeff.isNull())
+                {
+                    if (coeff.hasAttribute("name") && coeff.hasAttribute("coeff") && coeff.hasAttribute("errorStd") )
+                    {
+                        QString cname = coeff.attribute("name");
+                        double ncoeff = coeff.attribute("coeff").toDouble();
+                        double error = coeff.attribute("errorStd").toDouble();
+                        QList<double> varcoeff;
+                        varcoeff.append(ncoeff);
+                        varcoeff.append(error);
+                        coeffcients[cname] = varcoeff;
+                    }
+                    coeff = coeff.nextSiblingElement("coeff");
+                }
+                mOLSVar.Coefficients = coeffcients;
+            }
+        }
+
+
 
         if (hasHatmatrix)
         {
@@ -272,7 +308,7 @@ bool GwmLayerBasicGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
         nodeAnalyse.setAttribute("hasHatmatrix", hasHatmatrix);
         nodeAnalyse.setAttribute("hasFTest", hasFTest);
         nodeAnalyse.setAttribute("isRegressionPointGiven", isRegressionPointGiven);
-
+        nodeAnalyse.setAttribute("hasols",hasols);
         QDomElement nodeDepVar = doc.createElement("depVar");
         nodeDepVar.setAttribute("index", mDepVar.index);
         nodeDepVar.setAttribute("isNumeric", mDepVar.isNumeric);
@@ -309,6 +345,25 @@ bool GwmLayerBasicGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
             nodeDiagnostic.setAttribute("RSquare", mDiagnostic.RSquare);
             nodeDiagnostic.setAttribute("RSquareAdjust", mDiagnostic.RSquareAdjust);
             nodeAnalyse.appendChild(nodeDiagnostic);
+        }
+
+        if (hasols)
+        {
+            QDomElement nodeOLSResult = doc.createElement("OLSResult");
+            nodeOLSResult.setAttribute("rsd",mOLSVar.RSD);
+            nodeOLSResult.setAttribute("R2",mOLSVar.R2);
+            nodeOLSResult.setAttribute("adjR2",mOLSVar.adjR2);
+            QMap<QString,QList<double> >::iterator iter = mOLSVar.Coefficients.begin();
+            while(iter!=mOLSVar.Coefficients.end())
+            {
+                QDomElement nodeOLScoef = doc.createElement("coeff");
+                nodeOLScoef.setAttribute("name",iter.key());
+                nodeOLScoef.setAttribute("coeff",iter.value()[0]);
+                nodeOLScoef.setAttribute("errorStd",iter.value()[1]);
+                iter++;
+                nodeOLSResult.appendChild(nodeOLScoef);
+            }
+           nodeAnalyse.appendChild(nodeOLSResult);
         }
 
         if (isModelOptimized)
@@ -434,6 +489,11 @@ bool GwmLayerBasicGWRItem::regressionPointGiven() const
     return isRegressionPointGiven;
 }
 
+bool GwmLayerBasicGWRItem::ols() const
+{
+    return hasols;
+}
+
 GwmVariable GwmLayerBasicGWRItem::depVar() const
 {
     return mDepVar;
@@ -447,6 +507,11 @@ QList<GwmVariable> GwmLayerBasicGWRItem::indepVars() const
 GwmBasicGWRAlgorithm::FTestResultPack GwmLayerBasicGWRItem::fTestResults() const
 {
     return mFTestResults;
+}
+
+GwmBasicGWRAlgorithm::OLSVar GwmLayerBasicGWRItem::OLSResults() const
+{
+    return mOLSVar;
 }
 
 QList<QPair<QList<GwmVariable>, double> > GwmLayerBasicGWRItem::modelSelModels() const

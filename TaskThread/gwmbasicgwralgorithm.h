@@ -35,18 +35,19 @@ public:
         double trQtQ = 0.0;
     };
 
-    struct OLS
+    struct OLSVar
     {
-         double R2 = 0.0;
-         double adjR2 = 0.0;
-         double FStatistic = 0.0;
-         double FPvalue = 0.0;
-    }
+         double RSD ;
+         double R2;
+         double adjR2;
+//         double FStatistic = 0.0;
+//         double FPvalue = 0.0;
+         QMap<QString,QList<double> > Coefficients;
+    };
 
+    OLSVar mOLSVar;
 
-    void CalOLS(const mat &x, const vec &y);
-
-    QMap<QString,QList<int>()> Coefficients;
+    OLSVar CalOLS(const mat &x, const vec &y);
 
     enum BandwidthSelectionCriterionType
     {
@@ -84,6 +85,8 @@ public:
 
     bool OLS() const;
     void setOLS(bool value);
+
+    OLSVar getOLSVar() const;
 
     bool hasFTest() const;
     void setHasFTest(bool value);
@@ -294,6 +297,11 @@ inline void GwmBasicGWRAlgorithm::setHasHatMatrix(bool value)
 inline bool GwmBasicGWRAlgorithm::OLS() const
 {
     return mOLS;
+}
+
+inline GwmBasicGWRAlgorithm::OLSVar GwmBasicGWRAlgorithm::getOLSVar() const
+{
+    return mOLSVar;
 }
 
 inline void GwmBasicGWRAlgorithm::setOLS(bool value)
