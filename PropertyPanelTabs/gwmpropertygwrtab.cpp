@@ -157,7 +157,9 @@ void GwmPropertyGWRTab::updateUI()
         ui->lblOLSrse->setText(QString("%1").arg(olsvar.RSD, 0, 'f', 6));
         ui->tbwOLSCoe->setRowCount(indepVars.size() + 1);
         ui->tbwOLSCoe->setColumnCount(3);
-        QStringList headers = QStringList() << tr("Name") << tr("Estimate") << tr("Std. Error");
+        ui->lblOLSAIC->setText(QString("%1").arg(olsvar.AIC, 0, 'f', 6));
+        ui->lblOLSAICc->setText(QString("%1").arg(olsvar.AICC, 0, 'f', 6));
+        QStringList headers = QStringList() << tr("Name") << tr("Estimate") << tr("Std. Error") << tr("t-value");
         ui->tbwOLSCoe->setHorizontalHeaderLabels(headers);
         for (uword r = 0; r < betas.n_cols; r++)
         {
@@ -165,7 +167,7 @@ void GwmPropertyGWRTab::updateUI()
             QTableWidgetItem* nameItem = new QTableWidgetItem(name);
             nameItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
             ui->tbwOLSCoe->setItem(r, 0, nameItem);
-            for (int c = 0; c < 2; c++)
+            for (int c = 0; c < 3; c++)
             {
                 QTableWidgetItem* quantileItem = new QTableWidgetItem(QString("%1").arg(olsvar.Coefficients[name][c], 0, 'f', 3));
                 quantileItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);

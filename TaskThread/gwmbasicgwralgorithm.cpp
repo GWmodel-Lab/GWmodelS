@@ -47,10 +47,11 @@ void GwmBasicGWRAlgorithm::setCanceled(bool canceled)
     return GwmTaskThread::setCanceled(canceled);
 }
 
+//OLS计算代码
 GwmBasicGWRAlgorithm::OLSVar GwmBasicGWRAlgorithm::CalOLS(const mat &x, const vec &y){
     QMap<QString,QList<int> > Coefficients;
-    int nVar = mX.n_cols;
-    int np = x.n_rows;
+    double nVar = mX.n_cols;
+    double np = x.n_rows;
     mat xt = x.t();
     mat betahat = inv(xt * x)*xt*y;
     vec yhat = x*betahat;
@@ -67,6 +68,11 @@ GwmBasicGWRAlgorithm::OLSVar GwmBasicGWRAlgorithm::CalOLS(const mat &x, const ve
     mat c = inv((xt * x));
     vec cdiag = diagvec(c);
     double unb = sqrt((sse/np-1-nVar));
+    double varRes = abs((sum((rs-rmean).t()*(rs-rmean)))/np);
+    double ll = -(np/2)*log(2*datum::pi)-(np/2)*log(varRes)-np/2;
+    double AIC = -2*ll + 2*(nVar+1);
+    double AICC = AIC+2*nVar*(nVar+1)/(np-nVar-1);
+    //结果赋予结构体
     QMap<QString,QList<double> > coeffs;
     for(int i = 0 ; i < nVar ; i++){
         QString variableName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i - 1].name;
@@ -78,7 +84,7 @@ GwmBasicGWRAlgorithm::OLSVar GwmBasicGWRAlgorithm::CalOLS(const mat &x, const ve
         coeff.append(tvalue);
         coeffs[variableName]=coeff;
     }
-    return {rsd,Rsquared,adjRsquared,coeffs};
+    return {rsd,Rsquared,adjRsquared,coeffs,AIC,AICC};
 }
 
 

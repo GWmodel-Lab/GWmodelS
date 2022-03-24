@@ -43,6 +43,8 @@ public:
 //         double FStatistic = 0.0;
 //         double FPvalue = 0.0;
          QMap<QString,QList<double> > Coefficients;
+         double AIC;
+         double AICC;
     };
 
     OLSVar mOLSVar;

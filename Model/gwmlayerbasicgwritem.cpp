@@ -121,6 +121,8 @@ bool GwmLayerBasicGWRItem::readXml(QDomNode &node)
                 mOLSVar.RSD = nodeOLSResult.attribute("rsd").toDouble();
                 mOLSVar.R2 = nodeOLSResult.attribute("R2").toDouble();
                 mOLSVar.adjR2 = nodeOLSResult.attribute("adjR2").toDouble();
+                mOLSVar.AIC = nodeOLSResult.attribute("AIC").toDouble();
+                mOLSVar.AICC = nodeOLSResult.attribute("AICC").toDouble();
                 QMap<QString,QList<double> > coeffcients;
                 QDomElement coeff = nodeOLSResult.firstChildElement("coeff");
                 while (!coeff.isNull())
@@ -353,6 +355,8 @@ bool GwmLayerBasicGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
             nodeOLSResult.setAttribute("rsd",mOLSVar.RSD);
             nodeOLSResult.setAttribute("R2",mOLSVar.R2);
             nodeOLSResult.setAttribute("adjR2",mOLSVar.adjR2);
+            nodeOLSResult.setAttribute("AIC",mOLSVar.AIC);
+            nodeOLSResult.setAttribute("AICC",mOLSVar.AICC);
             QMap<QString,QList<double> >::iterator iter = mOLSVar.Coefficients.begin();
             while(iter!=mOLSVar.Coefficients.end())
             {
