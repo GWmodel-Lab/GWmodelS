@@ -39,6 +39,8 @@ public:
 
     bool regressionPointGiven() const;
 
+    bool ols() const;
+
     GwmVariable depVar() const;
 
     QList<GwmVariable> indepVars() const;
@@ -51,6 +53,8 @@ public:
 
     GwmBandwidthWeight weight() const;
 
+    GwmBasicGWRAlgorithm::OLSVar OLSResults() const;
+
 protected:
     int mDataPointsSize;
     GwmVariable mDepVar;
@@ -61,12 +65,13 @@ protected:
     QList<QPair<QList<GwmVariable>, double> > mModelSelModels;
     QList<QPair<double, double> > mBandwidthSelScores;
     GwmBasicGWRAlgorithm::FTestResultPack mFTestResults;
-
+    GwmBasicGWRAlgorithm::OLSVar mOLSVar;
     bool isRegressionPointGiven;
     bool isModelOptimized;
     bool isBandwidthOptimized;
     bool hasHatmatrix;
     bool hasFTest;
+    bool hasols;
 };
 
 #endif // GWMLAYERBASICGWRITEM_H

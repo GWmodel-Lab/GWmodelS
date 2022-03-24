@@ -38,12 +38,55 @@ GwmBasicGWRAlgorithm::GwmBasicGWRAlgorithm() : GwmGeographicalWeightedRegression
 
 }
 
+
+
 void GwmBasicGWRAlgorithm::setCanceled(bool canceled)
 {
     mBandwidthSizeSelector.setCanceled(canceled);
     mSpatialWeight.distance()->setCanceled(canceled);
     return GwmTaskThread::setCanceled(canceled);
 }
+
+//OLS计算代码
+GwmBasicGWRAlgorithm::OLSVar GwmBasicGWRAlgorithm::CalOLS(const mat &x, const vec &y){
+    QMap<QString,QList<int> > Coefficients;
+    double nVar = mX.n_cols;
+    double np = x.n_rows;
+    mat xt = x.t();
+    mat betahat = inv(xt * x)*xt*y;
+    vec yhat = x*betahat;
+    double ymean = mean(y);
+    double sst = sum((y-ymean).t()*(y-ymean));
+    double ssr = sum((yhat-ymean).t()*(yhat-ymean));
+    double sse = sum((y-yhat).t()*(y-yhat));
+    double Rsquared = 1- sse/sst;
+    double adjRsquared = 1-(sse/(np-1-nVar))/(sst/(np-1));
+//    double Ft = (ssr/3)/(sse/100-2-1);
+    vec rs = y-yhat;
+    double rmean = mean(rs);
+    double rsd = sqrt(abs((sum((rs-rmean).t()*(rs-rmean)))/np));
+    mat c = inv((xt * x));
+    vec cdiag = diagvec(c);
+    double unb = sqrt((sse/np-1-nVar));
+    double varRes = abs((sum((rs-rmean).t()*(rs-rmean)))/np);
+    double ll = -(np/2)*log(2*datum::pi)-(np/2)*log(varRes)-np/2;
+    double AIC = -2*ll + 2*(nVar+1);
+    double AICC = AIC+2*nVar*(nVar+1)/(np-nVar-1);
+    //结果赋予结构体
+    QMap<QString,QList<double> > coeffs;
+    for(int i = 0 ; i < nVar ; i++){
+        QString variableName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i - 1].name;
+        QList<double> coeff;
+        coeff.append(betahat[i]);
+        double std = unb*sqrt(cdiag[i]);
+        coeff.append(std);
+        double tvalue = betahat[i]/std;
+        coeff.append(tvalue);
+        coeffs[variableName]=coeff;
+    }
+    return {rsd,Rsquared,adjRsquared,coeffs,AIC,AICC};
+}
+
 
 void GwmBasicGWRAlgorithm::run()
 {
@@ -80,6 +123,8 @@ void GwmBasicGWRAlgorithm::run()
         initXY(mX, mY, mDepVar, mIndepVars);
     }
 
+
+
     // 优选带宽    
     if (!checkCanceled() && !hasRegressionLayer() && mIsAutoselectBandwidth)
     {
@@ -109,6 +154,11 @@ void GwmBasicGWRAlgorithm::run()
     if (checkCanceled())
     {
         return;
+    }
+
+
+    if(mOLS&&!checkCanceled()){
+        mOLSVar = CalOLS(mX,mY);
     }
 
     // 解算模型
@@ -650,6 +700,8 @@ void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString 
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
     layerName += name;
+
+
 
     // 设置字段
     QgsFields fields;
@@ -1338,6 +1390,7 @@ bool GwmBasicGWRAlgorithm::isValid()
     {
         if (mRegressionLayer && mHasHatMatrix)
             return false;
+
 
         if (mRegressionLayer && mHasFTest)
             return false;

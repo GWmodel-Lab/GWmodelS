@@ -35,6 +35,22 @@ public:
         double trQtQ = 0.0;
     };
 
+    struct OLSVar
+    {
+         double RSD ;
+         double R2;
+         double adjR2;
+//         double FStatistic = 0.0;
+//         double FPvalue = 0.0;
+         QMap<QString,QList<double> > Coefficients;
+         double AIC;
+         double AICC;
+    };
+
+    OLSVar mOLSVar;
+
+    OLSVar CalOLS(const mat &x, const vec &y);
+
     enum BandwidthSelectionCriterionType
     {
         AIC,
@@ -68,6 +84,11 @@ public:
 
     bool hasHatMatrix() const;
     void setHasHatMatrix(bool value);
+
+    bool OLS() const;
+    void setOLS(bool value);
+
+    OLSVar getOLSVar() const;
 
     bool hasFTest() const;
     void setHasFTest(bool value);
@@ -148,7 +169,7 @@ protected:
         return (mSpatialWeight.distance()->type() == GwmDistance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
     }
 protected:
-
+    void OLS();
     void createResultLayer(CreateResultLayerData data,QString name = QStringLiteral("_GWR"));
 
 #ifdef ENABLE_CUDA
@@ -191,7 +212,6 @@ protected:
 #endif
 
     void fTest(FTestParameters params);
-
     double calcTrQtQSerial();
 #ifdef ENABLE_OpenMP
     double calcTrQtQOmp();
@@ -217,6 +237,7 @@ protected:
     bool mHasHatMatrix = true;
     bool mHasFTest = false;
     bool mHasPredict = false;
+    bool mOLS = true;
 
     vec mQDiag;
     mat mBetasSE;
@@ -273,6 +294,21 @@ inline bool GwmBasicGWRAlgorithm::hasHatMatrix() const
 inline void GwmBasicGWRAlgorithm::setHasHatMatrix(bool value)
 {
     mHasHatMatrix = value;
+}
+
+inline bool GwmBasicGWRAlgorithm::OLS() const
+{
+    return mOLS;
+}
+
+inline GwmBasicGWRAlgorithm::OLSVar GwmBasicGWRAlgorithm::getOLSVar() const
+{
+    return mOLSVar;
+}
+
+inline void GwmBasicGWRAlgorithm::setOLS(bool value)
+{
+    mOLS = value;
 }
 
 inline double GwmBasicGWRAlgorithm::indepVarSelectionThreshold() const

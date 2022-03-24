@@ -55,6 +55,7 @@ void GwmGeographicalWeightedRegressionAlgorithm::initPoints()
         d->setDataPoints(&mDataPoints);
         d->setFocusPoints(&mRegressionPoints);
     }
+
 }
 
 void GwmGeographicalWeightedRegressionAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
