@@ -40,8 +40,6 @@ public:
          double RSD ;
          double R2;
          double adjR2;
-//         double FStatistic = 0.0;
-//         double FPvalue = 0.0;
          QMap<QString,QList<double> > Coefficients;
          double AIC;
          double AICC;

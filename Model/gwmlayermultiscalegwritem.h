@@ -49,6 +49,10 @@ public:
 
     QList<GwmVariable> indepVars() const;
 
+    bool ols() const;
+
+    GwmBasicGWRAlgorithm::OLSVar OLSResults() const;
+
 private:
     int mDataPointsSize;
     GwmVariable mDepVar;
@@ -60,10 +64,11 @@ private:
     QList<bool> mPreditorCentered;
     QList<double> mBandwidthSelectThreshold;
     GwmMultiscaleGWRAlgorithm::BackFittingCriterionType mCriterionType;
-
+    GwmBasicGWRAlgorithm::OLSVar mOLSVar;
     GwmDiagnostic mDiagnostic;
     arma::mat mBetas;
-
+    bool hasFTest;
+    bool hasols;
     bool mHasHatmatrix;
 };
 

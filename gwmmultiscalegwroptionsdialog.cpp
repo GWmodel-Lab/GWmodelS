@@ -102,7 +102,8 @@ GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroup
     ui->mBwSizeAutomaticRadio->setChecked(true);
     ui->mCalcParallelNoneRadio->setChecked(true);
     ui->mDistTypeCRSRadio->setChecked(true);
-
+    //OLS按钮初始化
+    ui->cbxOLS->setChecked(true);
     connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
@@ -132,7 +133,7 @@ GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroup
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
-
+    connect(ui->cbxOLS,&QAbstractButton::toggle,this, &GwmMultiscaleGWROptionsDialog::updateFieldsAndEnable);
     updateFieldsAndEnable();
 }
 
@@ -729,6 +730,7 @@ void GwmMultiscaleGWROptionsDialog::updateFields()
     }
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
+    mTaskThread->setOLS(ui->cbxOLS->isChecked());
 }
 
 void GwmMultiscaleGWROptionsDialog::enableAccept()

@@ -87,6 +87,33 @@ void GwmPropertyMultiscaleGWRTab::updateUI()
         }
     }
 
+    if(mLayerItem->ols())
+    {
+        GwmBasicGWRAlgorithm::OLSVar olsvar = mLayerItem->OLSResults();
+        ui->lblR2_2->setText(QString("%1").arg(olsvar.R2, 0, 'f', 6));
+        ui->lbladjR2_2->setText(QString("%1").arg(olsvar.adjR2, 0, 'f', 6));
+        ui->lblOLSrse_2->setText(QString("%1").arg(olsvar.RSD, 0, 'f', 6));
+        ui->tbwOLSCoe->setRowCount(indepVars.size() + 1);
+        ui->tbwOLSCoe->setColumnCount(4);
+        ui->lblOLSAIC_2->setText(QString("%1").arg(olsvar.AIC, 0, 'f', 6));
+        ui->lblOLSAICc_2->setText(QString("%1").arg(olsvar.AICC, 0, 'f', 6));
+        QStringList headers = QStringList() << tr("Name") << tr("Estimate") << tr("Std. Error") << tr("t-value");
+        ui->tbwOLSCoe->setHorizontalHeaderLabels(headers);
+        for (uword r = 0; r < betas.n_cols; r++)
+        {
+            QString name = (r == 0) ? QStringLiteral("Intercept") : indepVars[r - 1].name;
+            QTableWidgetItem* nameItem = new QTableWidgetItem(name);
+            nameItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+            ui->tbwOLSCoe->setItem(r, 0, nameItem);
+            for (int c = 0; c < 3; c++)
+            {
+                QTableWidgetItem* quantileItem = new QTableWidgetItem(QString("%1").arg(olsvar.Coefficients[name][c], 0, 'f', 3));
+                quantileItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                quantileItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+                ui->tbwOLSCoe->setItem(r, c + 1, quantileItem);
+            }
+        }
+    }
 }
 
 bool GwmPropertyMultiscaleGWRTab::openSelectFile()//弹出选择文件对话框
@@ -143,6 +170,30 @@ void GwmPropertyMultiscaleGWRTab::on_btnSaveRes_clicked()
           {
               QTextStream out(&myfile);
 //              使用组件赋值
+              out << "*****************************************************" << endl;
+              out << "  Results of Global Regression"<<endl;
+              out << "*****************************************************" << endl;
+              out << "Coefficients:"<<endl;
+              for(int i = 0 ; i < 3 ; i++){
+                  out << ui->tbwOLSCoe->horizontalHeaderItem(i)->text();
+                  out <<  "\t";
+              }
+              out << "" <<endl;
+
+              for(int i = 0 ; i < ui->tbwOLSCoe->rowCount() ; i++){
+                  for (int j = 0 ; j < 3; j++){
+                       out << ui->tbwOLSCoe->item(i, j)->text();
+                       out << "\t";
+                  }
+                  out << "" << endl;
+              }
+              out << "  Residual standard error: ";out <<mLayerItem->OLSResults().RSD;out <<"on ";out << ui->lblNumberDataPoints->text();out <<  " degrees of freedom"<<endl;
+              out << "  Multiple R-squared: "; out <<mLayerItem->OLSResults().R2<<endl;
+              out << "  Adjusted R-squared: "; out <<mLayerItem->OLSResults().adjR2<<endl;
+              out << "" << endl;
+              out << "****************************************************" << endl;
+              out << "  Results of Geographically Weighted Regression "<<endl;
+              out << "***************************************************" << endl;
               out << "  Model Calibration Information"<<endl;
               out << "----------------------------------------------"<<endl;
               out << "Regression points:  "; out << ui->lblRegressionPoints->text() <<endl;
