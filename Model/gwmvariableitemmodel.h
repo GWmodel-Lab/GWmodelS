@@ -19,6 +19,7 @@ class GwmVariableItemModel : public QAbstractListModel
 public:
     explicit GwmVariableItemModel(QObject *parent = nullptr);
     explicit GwmVariableItemModel(QgsVectorLayer* layer, QObject *parent = nullptr);
+    explicit GwmVariableItemModel(GwmVariableItemModel* indepVarModelX, GwmVariableItemModel* indepVarModelY, QObject *parent = nullptr);
 
     // Header:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;

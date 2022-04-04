@@ -13,6 +13,7 @@ struct GwmParameterSpecifiedOption
 
     double bandwidthSize = 100.0;
     bool adaptive = true;
+
     GwmBandwidthWeight::KernelFunctionType kernel = GwmBandwidthWeight::KernelFunctionType::Gaussian;
     GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Null;
     GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType approach = GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC;
@@ -49,6 +50,7 @@ public:
     GwmParameterSpecifiedOption* item(const int row);
 
     void syncWithAttributes(const GwmVariableItemModel* attributeModel);
+    void mItemUnshift();
 
 private:
     QList<GwmParameterSpecifiedOption> mItems;

@@ -217,7 +217,7 @@ set(SOURCES
     gwmgwaverageoptionsdialog.cpp
     TaskThread/gwmgwaveragetaskthread.cpp
     gwmcorrelationdialog.cpp
-
+    TaskThread/gwmgwcorrelationtaskthread.cpp
 )
 
 set(HEADERS
@@ -339,6 +339,7 @@ set(HEADERS
     gwmgwaverageoptionsdialog.h
     TaskThread/gwmgwaveragetaskthread.h
     gwmcorrelationdialog.h
+    TaskThread/gwmgwcorrelationtaskthread.h
 )
 
 set(FORMS

@@ -232,9 +232,39 @@ void GwmApp::setupMenus()
 }
 
 void GwmApp::gwmcorrelation(){
-    gwmcorrelationdialog *messageBox = new gwmcorrelationdialog(this);
-    messageBox->setWindowTitle("相关系数");
-    messageBox->show();
+    GwmGWcorrelationTaskThread* gwcorrelationTaskThread = new GwmGWcorrelationTaskThread();
+    gwmcorrelationdialog* gwcorrelationOptionDialog = new gwmcorrelationdialog(mMapModel->rootChildren(), gwcorrelationTaskThread);
+    QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mMapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwcorrelationOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwcorrelationOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwcorrelationOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwcorrelationOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwcorrelationOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwcorrelationTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwcorrelationTaskThread->resultLayer();
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerGWSSItem* gwcorrelationItem = new GwmLayerGWSSItem(selectedItem, resultLayer0, gwcorrelationTaskThread);
+            mMapModel->appentItem(gwcorrelationItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwcorrelationItem));
+        }
+    }
+    delete gwcorrelationOptionDialog;
+    delete gwcorrelationTaskThread;
 }
 
 void GwmApp::aboutInformation()

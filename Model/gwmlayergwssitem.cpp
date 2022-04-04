@@ -33,6 +33,31 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
     }
     else
     {
+        //todo:修改回来
+//        mBandwidth = new GwmBandwidthWeight();
+    }
+}
+
+GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWcorrelationTaskThread* taskThread)
+    : GwmLayerVectorItem(parentItem, vector)
+{
+    if (taskThread)
+    {
+        mDataPointsSize = taskThread->dataPointsSize();
+        mVariables = taskThread->variables();
+        //todo:修改回来
+//        mBandwidth = taskThread->bandwidth();
+        mQuantile = taskThread->quantile();
+        mResultList = taskThread->resultlist();
+
+        if(mVariables.size() >= 2){
+            mCovmat = taskThread->covmat();
+            mCorrmat = taskThread->corrmat();
+            mSCorrmat = taskThread->scorrmat();
+        }
+    }
+    else
+    {
         mBandwidth = new GwmBandwidthWeight();
     }
 }

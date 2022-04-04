@@ -95,3 +95,8 @@ void GwmParameterSpecifiedOptionsModel::syncWithAttributes(const GwmVariableItem
     }
     endInsertRows();
 }
+
+void GwmParameterSpecifiedOptionsModel::mItemUnshift(){
+    //封装出队列的函数
+    mItems.takeFirst();
+}

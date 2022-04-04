@@ -28,7 +28,7 @@ private:
     Ui::GwmIndepVarSelectorWidget *ui;
     QgsVectorLayer* mLayer = nullptr;
     GwmVariableItemModel *mIndepVarModel = nullptr;
-    GwmVariableItemModel *mSelectedIndepVarModel = nullptr;
+
 
 public:
     void layerChanged(QgsVectorLayer* layer = nullptr);
@@ -37,6 +37,8 @@ public:
     void onDelIndepVarBtn();
     GwmVariableItemModel *indepVarModel() const;
     GwmVariableItemModel *selectedIndepVarModel() const;
+    void onIndepVarChanged(GwmVariableItemModel *mXSelectedIndepVarModel);
+    GwmVariableItemModel *mSelectedIndepVarModel = nullptr;
 
 private:
     bool isNumeric(QVariant::Type type);
