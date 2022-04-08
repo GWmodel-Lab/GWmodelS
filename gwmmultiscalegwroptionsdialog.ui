@@ -27,8 +27,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>799</width>
-        <height>913</height>
+        <width>877</width>
+        <height>892</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -954,6 +954,13 @@
             </property>
             <property name="checked">
              <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="cbxOLS">
+            <property name="text">
+             <string>OLS</string>
             </property>
            </widget>
           </item>

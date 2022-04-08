@@ -26,6 +26,8 @@ GwmLayerMultiscaleGWRItem::GwmLayerMultiscaleGWRItem(GwmLayerItem* parent, QgsVe
         mDiagnostic = taskThread->diagnostic();
         mBetas = mat(taskThread->betas());
         mHasHatmatrix = taskThread->hasHatMatrix();
+        hasols = taskThread->OLS();
+        mOLSVar = taskThread->getOLSVar();
     }
 }
 
@@ -114,6 +116,37 @@ bool GwmLayerMultiscaleGWRItem::readXml(QDomNode &node)
             }
             else return false;
         }
+
+        if(hasols)
+        {
+            QDomElement nodeOLSResult = analyse.firstChildElement("OLSResult");
+            if(!nodeOLSResult.isNull())
+            {
+                mOLSVar.RSD = nodeOLSResult.attribute("rsd").toDouble();
+                mOLSVar.R2 = nodeOLSResult.attribute("R2").toDouble();
+                mOLSVar.adjR2 = nodeOLSResult.attribute("adjR2").toDouble();
+                mOLSVar.AIC = nodeOLSResult.attribute("AIC").toDouble();
+                mOLSVar.AICC = nodeOLSResult.attribute("AICC").toDouble();
+                QMap<QString,QList<double> > coeffcients;
+                QDomElement coeff = nodeOLSResult.firstChildElement("coeff");
+                while (!coeff.isNull())
+                {
+                    if (coeff.hasAttribute("name") && coeff.hasAttribute("coeff") && coeff.hasAttribute("errorStd") )
+                    {
+                        QString cname = coeff.attribute("name");
+                        double ncoeff = coeff.attribute("coeff").toDouble();
+                        double error = coeff.attribute("errorStd").toDouble();
+                        QList<double> varcoeff;
+                        varcoeff.append(ncoeff);
+                        varcoeff.append(error);
+                        coeffcients[cname] = varcoeff;
+                    }
+                    coeff = coeff.nextSiblingElement("coeff");
+                }
+                mOLSVar.Coefficients = coeffcients;
+            }
+        }
+
 
         QDomElement nodeBandwidthList = analyse.firstChildElement("bandwidthList");
         if (mIndepVars.size() > 0 && !nodeBandwidthList.isNull())
@@ -228,6 +261,27 @@ bool GwmLayerMultiscaleGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
             nodeAnalyse.appendChild(nodeDiagnostic);
         }
 
+        if (hasols)
+        {
+            QDomElement nodeOLSResult = doc.createElement("OLSResult");
+            nodeOLSResult.setAttribute("rsd",mOLSVar.RSD);
+            nodeOLSResult.setAttribute("R2",mOLSVar.R2);
+            nodeOLSResult.setAttribute("adjR2",mOLSVar.adjR2);
+            nodeOLSResult.setAttribute("AIC",mOLSVar.AIC);
+            nodeOLSResult.setAttribute("AICC",mOLSVar.AICC);
+            QMap<QString,QList<double> >::iterator iter = mOLSVar.Coefficients.begin();
+            while(iter!=mOLSVar.Coefficients.end())
+            {
+                QDomElement nodeOLScoef = doc.createElement("coeff");
+                nodeOLScoef.setAttribute("name",iter.key());
+                nodeOLScoef.setAttribute("coeff",iter.value()[0]);
+                nodeOLScoef.setAttribute("errorStd",iter.value()[1]);
+                iter++;
+                nodeOLSResult.appendChild(nodeOLScoef);
+            }
+           nodeAnalyse.appendChild(nodeOLSResult);
+        }
+
         return  true;
     }
     else return false;
@@ -296,4 +350,14 @@ GwmVariable GwmLayerMultiscaleGWRItem::depVar() const
 QList<GwmVariable> GwmLayerMultiscaleGWRItem::indepVars() const
 {
     return mIndepVars;
+}
+
+bool GwmLayerMultiscaleGWRItem::ols() const
+{
+    return hasols;
+}
+
+GwmBasicGWRAlgorithm::OLSVar GwmLayerMultiscaleGWRItem::OLSResults() const
+{
+    return mOLSVar;
 }

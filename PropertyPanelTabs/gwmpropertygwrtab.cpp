@@ -156,7 +156,7 @@ void GwmPropertyGWRTab::updateUI()
         ui->lbladjR2->setText(QString("%1").arg(olsvar.adjR2, 0, 'f', 6));
         ui->lblOLSrse->setText(QString("%1").arg(olsvar.RSD, 0, 'f', 6));
         ui->tbwOLSCoe->setRowCount(indepVars.size() + 1);
-        ui->tbwOLSCoe->setColumnCount(3);
+        ui->tbwOLSCoe->setColumnCount(4);
         ui->lblOLSAIC->setText(QString("%1").arg(olsvar.AIC, 0, 'f', 6));
         ui->lblOLSAICc->setText(QString("%1").arg(olsvar.AICC, 0, 'f', 6));
         QStringList headers = QStringList() << tr("Name") << tr("Estimate") << tr("Std. Error") << tr("t-value");
@@ -294,7 +294,7 @@ void GwmPropertyGWRTab::on_btnSaveRes_clicked()
               out << "" << endl;
               out << "****************************************************" << endl;
               out << "  Results of Geographically Weighted Regression "<<endl;
-               out << "***************************************************" << endl;
+              out << "***************************************************" << endl;
               out << "  Model Calibration Information"<<endl;
               out << "----------------------------------------------"<<endl;
               out << "Kernel function:  "; out << ui->lblKernelFunction->text() <<endl;

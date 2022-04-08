@@ -5,6 +5,7 @@
 #include "gwmspatialmultiscalealgorithm.h"
 #include "iregressionanalysis.h"
 #include "iparallelable.h"
+#include "gwmbasicgwralgorithm.h"
 
 class GwmMultiscaleGWRAlgorithm : public GwmSpatialMultiscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable, public IOpenmpParallelable
 {
@@ -32,6 +33,11 @@ public:
         dCVR
     };
     static GwmEnumValueNameMapper<BackFittingCriterionType> BackFittingCriterionTypeNameMapper;
+
+    GwmBasicGWRAlgorithm::OLSVar mOLSVar;
+
+    GwmBasicGWRAlgorithm::OLSVar CalOLS(const mat &x, const vec &y);
+
 
     typedef double (GwmMultiscaleGWRAlgorithm::*BandwidthSizeCriterionFunction)(GwmBandwidthWeight*);
     typedef mat (GwmMultiscaleGWRAlgorithm::*RegressionAllFunction)(const arma::mat&, const arma::vec&);
@@ -64,6 +70,11 @@ public:
 public:
     void run() override;
 
+    bool mOLS = true;
+    bool OLS() const;
+    void setOLS(bool value);
+
+    GwmBasicGWRAlgorithm::OLSVar getOLSVar() const;
 
     QList<BandwidthInitilizeType> bandwidthInitilize() const;
     void setBandwidthInitilize(const QList<BandwidthInitilizeType> &bandwidthInitilize);
@@ -391,6 +402,20 @@ inline void GwmMultiscaleGWRAlgorithm::setOmpThreadNum(const int threadNum)
     mOmpThreadNum = threadNum;
 }
 
+inline bool GwmMultiscaleGWRAlgorithm::OLS() const
+{
+    return mOLS;
+}
+
+inline GwmBasicGWRAlgorithm::OLSVar GwmMultiscaleGWRAlgorithm::getOLSVar() const
+{
+    return mOLSVar;
+}
+
+inline void GwmMultiscaleGWRAlgorithm::setOLS(bool value)
+{
+    mOLS = value;
+}
 
 
 #endif // GWMMULTISCALEGWRTASKTHREAD_H

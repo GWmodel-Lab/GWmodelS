@@ -604,15 +604,11 @@ void GwmGWROptionsDialog::on_cbxHatmatrix_toggled(bool checked)
     if (checked)
     {
         ui->cbxFTest->setEnabled(true);  
-        ui->cbxOLS->setEnabled(true);
-        ui->cbxOLS->setChecked(true);
     }
     else
     {
         ui->cbxFTest->setChecked(false);
         ui->cbxFTest->setEnabled(false);
-        ui->cbxOLS->setChecked(false);
-        ui->cbxOLS->setEnabled(false);
     }
 }
 
@@ -627,7 +623,7 @@ void GwmGWROptionsDialog::on_cbkRegressionPoints_toggled(bool checked)
         ui->mVariableAutoSelectionCheck->setEnabled(false);
         ui->cbxHatmatrix->setEnabled(false);
         ui->cbxHatmatrix->setChecked(false);
-
+        ui->cbxOLS->setChecked(false);
     }
     else
     {
@@ -636,6 +632,8 @@ void GwmGWROptionsDialog::on_cbkRegressionPoints_toggled(bool checked)
     }
     ui->cbxHatmatrix->setEnabled(!checked);
     ui->cbxHatmatrix->setChecked(!checked);
+    ui->cbxOLS->setEnabled(!checked);
+    ui->cbxOLS->setChecked(!checked);
 }
 
 void GwmGWROptionsDialog::on_cbxOLS_clicked(bool checked)
