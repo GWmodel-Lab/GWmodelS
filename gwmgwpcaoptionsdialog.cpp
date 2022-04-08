@@ -505,6 +505,7 @@ void GwmGWPCAOptionsDialog::updateFields()
     mTaskThread->setK(ui->mKspinBox->value());
     mTaskThread->setScoresCal(ui->mScoresCheckBox->isChecked());
     mTaskThread->setRobust(ui->mRobustCheckBox->isChecked());
+    mTaskThread->setPlot(ui->mPlotCheckBox->isChecked());
 }
 
 void GwmGWPCAOptionsDialog::enableAccept()

@@ -1693,6 +1693,14 @@ void GwmApp::onGWPCABtnClicked()
             GwmLayerGWPCAItem * gwrItem = new GwmLayerGWPCAItem(selectedItem, resultLayer0, gwpcaTaskThread);
             mMapModel->appentItem(gwrItem, selectedIndex);
             onShowLayerProperty(mMapModel->indexFromItem(gwrItem));
+            if(gwpcaTaskThread->plotLayer()){
+                QgsVectorLayer* plotLayer = gwpcaTaskThread->plotLayer();
+                QgsVectorLayer* plotLayer0 = new QgsVectorLayer();
+                plotLayer0 = plotLayer->clone();
+                GwmLayerGWPCAItem * gwrItem0 = new GwmLayerGWPCAItem(selectedItem, plotLayer0, gwpcaTaskThread);
+                mMapModel->appentItem(gwrItem0, selectedIndex);
+                onShowLayerProperty(mMapModel->indexFromItem(gwrItem0));
+            }
         }
     }
     delete gwpcaOptionDialog;
@@ -1729,6 +1737,14 @@ void GwmApp::onRobustGWPCABtnClicked()
             QgsVectorLayer* resultLayer = gwpcaTaskThread->resultLayer();
             GwmLayerGWPCAItem * gwrItem = new GwmLayerGWPCAItem(selectedItem, resultLayer, gwpcaTaskThread);
             mMapModel->appentItem(gwrItem, selectedIndex);
+            if(gwpcaTaskThread->plotLayer()){
+                QgsVectorLayer* plotLayer = gwpcaTaskThread->plotLayer();
+                QgsVectorLayer* plotLayer0 = new QgsVectorLayer();
+                plotLayer0 = plotLayer->clone();
+                GwmLayerGWPCAItem * gwrItem0 = new GwmLayerGWPCAItem(selectedItem, plotLayer0, gwpcaTaskThread);
+                mMapModel->appentItem(gwrItem0, selectedIndex);
+                onShowLayerProperty(mMapModel->indexFromItem(gwrItem0));
+            }
         }
     }
 }

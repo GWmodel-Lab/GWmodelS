@@ -17,6 +17,7 @@ class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidt
     };
 
     typedef QList<QPair<QString, mat> > CreateResultLayerData;
+    typedef QList<QPair<QString, vec> > CreatePlotLayerData;
 
     typedef double (GwmGWPCATaskThread::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
 
@@ -86,6 +87,9 @@ public:  // IOpenmpParallelable interface
     bool Robust() const;
     void setRobust(bool robust);
 
+    bool getPlot() const;
+    void setPlot(bool plot);
+
     void setCanceled(bool canceled);
 
 private:
@@ -95,6 +99,7 @@ private:
     void wpca(const mat &x, const vec &wt, mat &V, vec &S);
     void rwpca(const mat &x, const vec &wt, mat &coeff, vec &latent, double nu, double nv);
     void createResultLayer(CreateResultLayerData data,QList<QString> winvar);
+    void createPlotLayer(CreatePlotLayerData data);
 
     mat pca(const mat& x, cube& loadings, mat& sdev, cube& scores)
     {
@@ -158,8 +163,12 @@ private:
 public:
     static int treeChildCount;
 
+private:
     //用户选择RobustGWPCA
     bool mRobust;
+
+    //用户选择GlyphPlot
+    bool mPlot;
 
 };
 

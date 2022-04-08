@@ -93,6 +93,14 @@ void GwmGWPCATaskThread::run()
             }
         };
         createResultLayer(resultLayerData,win_var_PC1);
+        //进行GlyphPlot
+        if(getPlot()){
+            CreatePlotLayerData plotLayerData = {};
+            for(int i = 0; i < mVariables.size(); i++){
+                plotLayerData += qMakePair(mVariables.at(i).name, mLoadings.slice(0).col(i));
+            }
+            createPlotLayer(plotLayerData);
+        }
         emit success();
         emit tick(100, 100);
     }
@@ -325,6 +333,81 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
     mResultLayer->commitChanges();
 }
 
+void GwmGWPCATaskThread::createPlotLayer(CreatePlotLayerData data)
+{
+    QgsVectorLayer* srcLayer = mDataLayer;
+    QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
+    QString layerName = srcLayer->name();
+
+    //避免图层名重复
+    if(treeChildCount > 0)
+    {
+        layerName += QStringLiteral("_GlyphPlot") + "(" + QString::number(treeChildCount) + ")";
+    } else
+    {
+        layerName += QStringLiteral("_GlyphPlot");
+    }
+    //节点记录标签
+    treeChildCount++ ;
+
+
+    if(!Robust()){
+        layerName += QStringLiteral("_GWPCA");
+    }else{
+        layerName += QStringLiteral("_RGWPCA");
+    }
+
+    mPlotLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
+    mPlotLayer->setCrs(srcLayer->crs());
+
+    // 设置字段
+    QgsFields fields;
+    for (QPair<QString, const mat&> item : data)
+    {
+        QString title = item.first;
+        const mat& value = item.second;
+        if (value.n_cols > 1)
+        {
+            for (int k = 0; k < value.n_cols; k++)
+            {
+                QString fieldName = title.arg(k+1);
+                fields.append(QgsField(fieldName, QVariant::Double, QStringLiteral("double")));
+            }
+        }
+        else
+        {
+            fields.append(QgsField(title, QVariant::Double, QStringLiteral("double")));
+        }
+    }
+    mPlotLayer->dataProvider()->addAttributes(fields.toList());
+    mPlotLayer->updateFields();
+
+    // 设置要素几何
+    mPlotLayer->startEditing();
+    QgsFeatureIterator iterator = srcLayer->getFeatures();
+    QgsFeature f;
+    for (int i = 0; iterator.nextFeature(f); i++)
+    {
+        QgsFeature feature(fields);
+        feature.setGeometry(f.geometry());
+
+        // 设置属性
+        int k = 0;
+        for (QPair<QString, const mat&> item : data)
+        {
+            for (uword d = 0; d < item.second.n_cols; d++)
+            {
+                feature.setAttribute(k, item.second(i, d));
+                k++;
+            }
+        }
+
+
+        mPlotLayer->addFeature(feature);
+    }
+    mPlotLayer->commitChanges();
+}
+
 double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *weight)
 {
     int n = mX.n_rows;
@@ -429,6 +512,17 @@ void GwmGWPCATaskThread::setRobust(bool robust)
 {
     mRobust=robust;
 }
+
+bool GwmGWPCATaskThread::getPlot() const
+{
+    return mPlot;
+}
+
+void GwmGWPCATaskThread::setPlot(bool plot)
+{
+    mPlot=plot;
+}
+
 mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings, mat &stddev, cube &scores)
 {
     int nDp = mDataPoints.n_rows, nVar = mVariables.size();
