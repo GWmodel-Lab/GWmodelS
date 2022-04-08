@@ -17,6 +17,23 @@ GwmVariableItemModel::GwmVariableItemModel(QgsVectorLayer *layer, QObject *paren
         mItems.append(variable);
     }
 }
+//创建一个新的构造函数，用于将两个自变量模型合成一个
+GwmVariableItemModel::GwmVariableItemModel(GwmVariableItemModel* indepVarModelX, GwmVariableItemModel* indepVarModelY, QObject *parent) : QAbstractListModel(parent)
+{
+    int count = 0;
+    for( int i = 0; i < indepVarModelX->rowCount(); i++){
+        for( int j = 0; j < indepVarModelY->rowCount(); j++){
+            if(indepVarModelX->item(i).name == indepVarModelY->item(j).name) continue;
+            GwmVariable variable;
+            variable.index = count;
+            variable.name = indepVarModelX->item(i).name + "*" + indepVarModelY->item(j).name;
+            variable.type = indepVarModelX->item(i).type;
+            variable.isNumeric = indepVarModelX->item(i).isNumeric;
+            mItems.append(variable);
+            count++;
+        }
+    }
+}
 
 QVariant GwmVariableItemModel::headerData(int section, Qt::Orientation orientation, int role) const
 {

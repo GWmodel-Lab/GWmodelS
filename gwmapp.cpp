@@ -90,6 +90,7 @@
 #include "gwmgwaverageoptionsdialog.h"
 
 #include "gwmprojcrssettingdialog.h"
+#include "gwmcorrelationdialog.h"
 
 static bool cmpByText_(QAction *a, QAction *b)
 {
@@ -192,7 +193,8 @@ void GwmApp::setupMenus()
     //以下信号为暂未实现的功能
     connect(ui->actionGW_Averages, &QAction::triggered, this, &GwmApp::onGWaverageBtnClicked);
     connect(ui->actionGW_Covariance, &QAction::triggered, this, &GwmApp::developingMessageBox);
-    connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::gwmcorrelation);
+    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionGlyph_Plot, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
@@ -227,7 +229,42 @@ void GwmApp::setupMenus()
 //        myMessageBox(message, title, 1);
 //    });
     connect(ui->actionDevelopment_Team, &QAction::triggered, this, &GwmApp::aboutDeveloperTeam);
+}
 
+void GwmApp::gwmcorrelation(){
+    GwmGWcorrelationTaskThread* gwcorrelationTaskThread = new GwmGWcorrelationTaskThread();
+    gwmcorrelationdialog* gwcorrelationOptionDialog = new gwmcorrelationdialog(mMapModel->rootChildren(), gwcorrelationTaskThread);
+    QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mMapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwcorrelationOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwcorrelationOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwcorrelationOptionDialog->exec() == QDialog::Accepted)
+    {
+        gwcorrelationOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gwcorrelationOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwcorrelationTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            QgsVectorLayer* resultLayer = gwcorrelationTaskThread->resultLayer();
+            QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+            resultLayer0 = resultLayer->clone();
+            GwmLayerGWSSItem* gwcorrelationItem = new GwmLayerGWSSItem(selectedItem, resultLayer0, gwcorrelationTaskThread);
+            mMapModel->appentItem(gwcorrelationItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwcorrelationItem));
+        }
+    }
+    delete gwcorrelationOptionDialog;
+    delete gwcorrelationTaskThread;
 }
 
 void GwmApp::aboutInformation()

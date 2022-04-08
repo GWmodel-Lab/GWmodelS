@@ -106,7 +106,46 @@ void GwmIndepVarSelectorWidget::onDepVarChanged(QString depVarName)
 //        }
         mSelectedIndepVarModel->clear();
     }
+}
 
+//添加监听变化函数
+void GwmIndepVarSelectorWidget::onIndepVarChanged(GwmVariableItemModel *mXSelectedIndepVarModel)
+{
+    if (mIndepVarModel)
+    {
+        mIndepVarModel->clear();
+    }
+    else{
+        mIndepVarModel = new GwmVariableItemModel(this);
+    }
+    QgsFields fields = mLayer->fields();
+    QList<QString> fieldNameList = fields.names();
+    for(QString fieldName : fieldNameList)
+    {
+        bool flag = false;
+        for(int i = 0 ; i < mXSelectedIndepVarModel->rowCount(); i++){
+//                for(int i = 0 ; i < 3; i++){
+            if (fieldName == mXSelectedIndepVarModel->item(i).name)
+            {
+                flag = true;
+                break;
+            }
+        }
+
+        if(!flag){
+            int index = fields.indexFromName(fieldName);
+            QgsField field = fields.at(index);
+            if (isNumeric(field.type()))
+            {
+                GwmVariable item = {index,fieldName,fields.field(index).type(),true};
+                mIndepVarModel->append(item);
+            }
+        }
+    }
+    if (mSelectedIndepVarModel)
+    {
+        mSelectedIndepVarModel->clear();
+    }
 }
 
 void GwmIndepVarSelectorWidget::onAddIndepVarBtn()

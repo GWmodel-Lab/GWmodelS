@@ -27,8 +27,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>803</width>
-        <height>917</height>
+        <width>799</width>
+        <height>913</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -443,7 +443,7 @@
                   <bool>false</bool>
                  </property>
                  <property name="currentIndex">
-                  <number>0</number>
+                  <number>1</number>
                  </property>
                  <widget class="QWidget" name="page_4">
                   <layout class="QHBoxLayout" name="horizontalLayout">
@@ -553,6 +553,9 @@
                </item>
                <item row="3" column="1" colspan="3">
                 <widget class="QComboBox" name="mBwKernelFunctionCombo">
+                 <property name="currentIndex">
+                  <number>2</number>
+                 </property>
                  <item>
                   <property name="text">
                    <string>Gaussion</string>
