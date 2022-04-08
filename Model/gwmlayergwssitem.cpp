@@ -33,8 +33,7 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
     }
     else
     {
-        //todo:修改回来
-//        mBandwidth = new GwmBandwidthWeight();
+        mBandwidth = new GwmBandwidthWeight();
     }
 }
 
@@ -43,22 +42,24 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
 {
     if (taskThread)
     {
+        this->setType(2);
         mDataPointsSize = taskThread->dataPointsSize();
         mVariables = taskThread->variables();
-        //todo:修改回来
-//        mBandwidth = taskThread->bandwidth();
-        mQuantile = taskThread->quantile();
-        mResultList = taskThread->resultlist();
-
-        if(mVariables.size() >= 2){
-            mCovmat = taskThread->covmat();
-            mCorrmat = taskThread->corrmat();
-            mSCorrmat = taskThread->scorrmat();
+        mVariablesY = taskThread->variablesY();
+        QList<GwmSpatialWeight> ssp = taskThread->spatialWeights();
+        for (const GwmSpatialWeight& sp : taskThread->spatialWeights())
+        {
+            GwmBandwidthWeight* pBw = static_cast<GwmBandwidthWeight*>(sp.weight()->clone());
+            GwmBandwidthWeight bw(pBw);
+            mBandwidthWeights.append(bw);
+            mDistaneTypes.append(sp.distance()->type());
         }
-    }
-    else
-    {
-        mBandwidth = new GwmBandwidthWeight();
+        mBandwidthInitilize = taskThread->bandwidthInitilize();
+        mBandwidthSelectionApproach = taskThread->bandwidthSelectionApproach();
+        mResultList = taskThread->resultlist();
+        mCovmat = taskThread->covmat();
+        mCorrmat = taskThread->corrmat();
+        mSCorrmat = taskThread->scorrmat();
     }
 }
 
@@ -67,6 +68,7 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
 {
     if (taskThread)
     {
+        this->setType(1);
         mDataPointsSize = taskThread->dataPointsSize();
         mVariables = taskThread->variables();
         mBandwidth = taskThread->bandwidth();
@@ -85,11 +87,6 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
             mQI = taskThread->qi();
         }
 
-        if(mVariables.size() >= 2){
-            mCovmat = taskThread->covmat();
-            mCorrmat = taskThread->corrmat();
-            mSCorrmat = taskThread->scorrmat();
-        }
     }
     else
     {

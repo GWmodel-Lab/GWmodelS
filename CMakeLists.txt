@@ -218,6 +218,8 @@ set(SOURCES
     TaskThread/gwmgwaveragetaskthread.cpp
     gwmcorrelationdialog.cpp
     TaskThread/gwmgwcorrelationtaskthread.cpp
+    PropertyPanelTabs/gwmpropertygwcorrelationstab.cpp
+    Model/gwmpropertygwcorrelationsparameterspecifieditemmodel.cpp
 )
 
 set(HEADERS
@@ -340,6 +342,8 @@ set(HEADERS
     TaskThread/gwmgwaveragetaskthread.h
     gwmcorrelationdialog.h
     TaskThread/gwmgwcorrelationtaskthread.h
+    PropertyPanelTabs/gwmpropertygwcorrelationstab.h
+    Model/gwmpropertygwcorrelationsparameterspecifieditemmodel.h
 )
 
 set(FORMS
@@ -409,6 +413,7 @@ set(FORMS
     gwmprojcrssettingdialog.ui
     gwmgwaverageoptionsdialog.ui
     gwmcorrelationdialog.ui
+    PropertyPanelTabs/gwmpropertygwcorrelationstab.ui
 )
 qt5_add_resources(GWMODEL_ICONS images/images.qrc)
 qt5_wrap_ui(FORMS_H ${FORMS})

@@ -21,7 +21,6 @@ public:
 
 public:
     GwmBandwidthSizeSelector();
-
     GwmBandwidthWeight *bandwidth() const;
     void setBandwidth(GwmBandwidthWeight *bandwidth);
 

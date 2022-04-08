@@ -63,7 +63,7 @@ public:
     bool bandwidthType();
     IParallelalbe::ParallelType parallelType();
     double bandwidthSize();
-    GwmGWcorrelationTaskThread::BandwidthSelectionCriterionType bandwidthSelectionApproach();
+    GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
     GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     GwmDistance::DistanceType distanceSourceType();

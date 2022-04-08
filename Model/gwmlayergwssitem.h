@@ -5,12 +5,15 @@
 #include "TaskThread/gwmgwsstaskthread.h"
 #include "TaskThread/gwmgwaveragetaskthread.h"
 #include "TaskThread/gwmgwcorrelationtaskthread.h"
+#include "TaskThread/gwmmultiscalegwralgorithm.h"
 
 class GwmLayerGWSSItem : public GwmLayerVectorItem
 {
 public:
     GwmLayerGWSSItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWSSTaskThread* taskThread = nullptr);
+    //average构造函数
     GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWaverageTaskThread* taskThread);
+    //correlation构造函数
     GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWcorrelationTaskThread* taskThread);
     ~GwmLayerGWSSItem();
 
@@ -41,9 +44,15 @@ public:
 
     GwmGWSSTaskThread::CreateResultLayerData resultlist() const{return mResultList;}
 
+
     QList<GwmVariable> variables() const
     {
         return mVariables;
+    }
+
+    QList<GwmVariable> variablesY() const
+    {
+        return mVariablesY;
     }
 
     GwmBandwidthWeight* bandwidth() const
@@ -51,14 +60,43 @@ public:
         return mBandwidth;
     }
 
+    //coreelationdai带宽部分
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> bandwidthSelectionApproach() const{
+        return mBandwidthSelectionApproach;
+    };
 
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> bandwidthInitilize() const{
+        return mBandwidthInitilize;
+    };
+
+    QList<GwmBandwidthWeight> bandwidthWeights() const{
+        return mBandwidthWeights;
+    };
+
+    QList<GwmDistance::DistanceType> distaneTypes() const{
+        return mDistaneTypes;
+    };
+
+    //设置类型
+    void setType(int t){
+        mType = t;
+    }
+
+    int getType(){
+        return mType;
+    }
 
 protected:
     int mDataPointsSize;
     QList<GwmVariable> mVariables;
+    QList<GwmVariable> mVariablesY;
     GwmBandwidthWeight* mBandwidth;
     bool mQuantile;
-
+    // correlation带宽信息
+    QList<GwmBandwidthWeight> mBandwidthWeights;
+    QList<GwmDistance::DistanceType> mDistaneTypes;
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
+    QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> mBandwidthInitilize;
 protected:
     mat mLocalMean;
     mat mStandardDev;
@@ -75,6 +113,8 @@ protected:
     mat mSCorrmat;
 
     GwmGWSSTaskThread::CreateResultLayerData mResultList;
+    //类别标识符 1为average，2为correlation
+    int mType = 0;
 };
 
 #endif // GWMLAYERGWSSITEM_H

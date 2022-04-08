@@ -7,9 +7,9 @@
 
 int GwmGWcorrelationTaskThread::treeChildCount = 0;
 
-GwmEnumValueNameMapper<GwmGWcorrelationTaskThread::BandwidthSelectionCriterionType> GwmGWcorrelationTaskThread::BandwidthSelectionCriterionTypeNameMapper = {
-    make_pair(GwmGWcorrelationTaskThread::BandwidthSelectionCriterionType::CV, tr("CV")),
-    make_pair(GwmGWcorrelationTaskThread::BandwidthSelectionCriterionType::AIC, tr("AIC"))
+GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmGWcorrelationTaskThread::BandwidthSelectionCriterionTypeNameMapper = {
+    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV, tr("CV")),
+    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC, tr("AIC"))
 };
 
 vec GwmGWcorrelationTaskThread::del(vec x, int rowcount){
@@ -41,13 +41,10 @@ bool GwmGWcorrelationTaskThread::isValid()
     if (mSpatialWeights.size() != nVar)
         return false;
 
-    if(mIsAutoselectBandwidth.size()!=nVar)
-        return false;
-
     for (int i = 0; i < nVar; i++)
     {
         GwmBandwidthWeight* bw = mSpatialWeights[i].weight<GwmBandwidthWeight>();
-        if (!mIsAutoselectBandwidth[i])
+        if (mBandwidthInitilize[i] == GwmMultiscaleGWRAlgorithm::Specified)
         {
             if (bw->adaptive())
             {
@@ -79,12 +76,13 @@ void GwmGWcorrelationTaskThread::run()
     int nVarsY = mY.n_cols;
 
     //带宽优选
-    for(uword i = 0 ; i<nVars&checkCanceled();i++)
+    for(uword i = 0 ; i<nVars&!checkCanceled();i++)
     {
-        if(mIsAutoselectBandwidth[i])
+        if(mBandwidthInitilize[i] == GwmMultiscaleGWRAlgorithm::Null)
         {
             mXi = mX.col(i/nVarsY);
-            mYi = mY.col(i%nVarsY);
+            mYi = mY.col((i+nVarsY)%nVarsY);
+            mBandwidthSelectCriterionFunction = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
             mBandwidthSelectionCurrentIndex = i;
             GwmBandwidthWeight* bw0 = bandwidth(i);
             bool adaptive = bw0->adaptive();
@@ -98,22 +96,8 @@ void GwmGWcorrelationTaskThread::run()
             }
         }
     }
-
     (this->*mCalFunciton)();
     CreateResultLayerData resultLayerData;
-    if(!checkCanceled())
-//    {
-//        resultLayerData.push_back(qMakePair(QString("LM"), mLocalMean));
-//        resultLayerData.push_back(qMakePair(QString("LSD"), mStandardDev));
-//        resultLayerData.push_back(qMakePair(QString("LVar"), mLVar));
-//        resultLayerData.push_back(qMakePair(QString("LSke"), mLocalSkewness));
-//        resultLayerData.push_back(qMakePair(QString("LCV"), mLCV));
-//    }
-//    if(mQuantile && !checkCanceled()){
-//        resultLayerData.push_back(qMakePair(QString("Median"), mLocalMedian));
-//        resultLayerData.push_back(qMakePair(QString("IQR"), mIQR));
-//        resultLayerData.push_back(qMakePair(QString("QI"), mQI));
-//    }
     if(!checkCanceled())
     {
         resultLayerData.push_back(qMakePair(QString("Cov"), mCovmat));
@@ -138,8 +122,8 @@ bool GwmGWcorrelationTaskThread::CalculateSerial(){
     int nVarX = mX.n_cols, nRp = mDataPoints.n_rows,nVarY = mY.n_cols;
     int nVar = nVarX * nVarY;
     emit tick(0,nRp);
-    int tag = 0;
-    for(int z = 0;z < nVar-1&!checkCanceled(); z++)
+    mat xy = join_rows(mX,mY);
+    for(int z = 0;z < nVar&!checkCanceled(); z++)
     {
         for(int i = 0; i < nRp & !checkCanceled(); i++)
         {
@@ -147,22 +131,20 @@ bool GwmGWcorrelationTaskThread::CalculateSerial(){
             double sumw = sum(w);
             vec Wi = w / sumw;
             int colx = z/nVarY;
-            int coly = z%nVarY;
-
-            mLocalMean.row(i) = trans(Wi) * mX;
-            mat centerized = mX.each_row() - mLocalMean.row(i);
+            int coly = (z+nVarY)%nVarY;
+            mLocalMean.row(i) = trans(Wi) * xy;
+            mat centerized = xy.each_row() - mLocalMean.row(i);
             mLVar.row(i) = Wi.t() * (centerized % centerized);
-
             double covjk = covwt(mX.col(colx), mY.col(coly), Wi);
             double sumW2 = sum(Wi % Wi);
             double covjj = mLVar(i, colx) / (1.0 - sumW2);
-            double covkk = mLVar(i, coly) / (1.0 - sumW2);
-            mCovmat(i,tag) = covjk;
-            mCorrmat(i,tag) = covjk / sqrt(covjj * covkk);
-            mSCorrmat(i,tag) = corwt(rankX.col(colx),rankY.col(coly),Wi);
-            tag++;
+            double covkk = mLVar(i, coly+nVarX) / (1.0 - sumW2);
+            mCovmat(i,z) = covjk;
+            mCorrmat(i,z) = covjk / sqrt(covjj * covkk);
+            mSCorrmat(i,z) = corwt(rankX.col(colx),rankY.col(coly),Wi);
             emit tick(i,nRp);
         }
+
     }
     return true;
 }
@@ -269,7 +251,6 @@ void GwmGWcorrelationTaskThread::initXY(mat& x,mat& y, const QList<GwmVariable>&
     int nDp = mDataLayer->featureCount(), nVarX = indepVarsX.size();
     int nRp = mDataPoints.n_rows;
     int nVarY = indepVarsY.size();
-//    int nRp = mDataPoints.n_rows;
     // Data layer and X,Y
     x = mat(nDp, nVarX, fill::zeros);
     y = mat(nDp, nVarY, fill::zeros);
@@ -306,8 +287,8 @@ void GwmGWcorrelationTaskThread::initXY(mat& x,mat& y, const QList<GwmVariable>&
 //        mQI = mat(nRp,nVar,fill::zeros);
 //    }
         int nCol = nVarX*nVarY;
-        mLocalMean = mat(nRp,nCol,fill::zeros);
-        mLVar = mat(nRp,nCol,fill::zeros);
+        mLocalMean = mat(nRp,nVarX+nVarY,fill::zeros);
+        mLVar = mat(nRp,nVarX+nVarY,fill::zeros);
         mCovmat   = mat(nRp, nCol, fill::zeros);
         mCorrmat  = mat(nRp, nCol, fill::zeros);
         mSCorrmat = mat(nRp, nCol, fill::zeros);
@@ -346,9 +327,9 @@ void GwmGWcorrelationTaskThread::createResultLayer(CreateResultLayerData data)
     {
         QString title = item.first;
         const mat& value = item.second; 
-        for(int i = 0 ; i <= nVars ; i++ )
+        for(int i = 0 ; i < nVars ; i++ )
         {
-            QString variableName = title + "_" + mVariables[i/nVarY].name + "." + mVariablesY[i%nVarY].name;
+            QString variableName = title + "_" + mVariables[i/nVarY].name + "." + mVariablesY[(i+nVarY)%nVarY].name;
             fields.append(QgsField(variableName, QVariant::Double, QStringLiteral("double")));
         }
     }
@@ -465,15 +446,20 @@ double GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarAICSerial(GwmBandwid
     else return DBL_MAX;
 }
 //带宽优选函数类型设置
-GwmGWcorrelationTaskThread::BandwidthSizeCriterionFunction GwmGWcorrelationTaskThread::bandwidthSizeCriterionVar(GwmGWcorrelationTaskThread::BandwidthSelectionCriterionType type)
+GwmGWcorrelationTaskThread::BandwidthSizeCriterionFunction GwmGWcorrelationTaskThread::bandwidthSizeCriterionVar(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType type)
 {
     switch (type)
     {
-        case BandwidthSelectionCriterionType::CV:
+        case GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV:
             return &GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarCVSerial;
             break;
-            case BandwidthSelectionCriterionType::AIC:
+        case GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC:
             return &GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarAICSerial;
             break;
     }
+}
+
+void GwmGWcorrelationTaskThread::setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights)
+{
+    GwmSpatialMultiscaleAlgorithm::setSpatialWeights(spatialWeights);
 }

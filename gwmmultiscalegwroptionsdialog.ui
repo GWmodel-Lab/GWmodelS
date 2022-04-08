@@ -553,6 +553,9 @@
                </item>
                <item row="3" column="1" colspan="3">
                 <widget class="QComboBox" name="mBwKernelFunctionCombo">
+                 <property name="currentIndex">
+                  <number>2</number>
+                 </property>
                  <item>
                   <property name="text">
                    <string>Gaussion</string>

@@ -265,7 +265,6 @@ void gwmcorrelationdialog::onAutomaticRadioToggled(bool checked)
         GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
         if (option)
         {
-            //todo1
             option->bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Null;
         }
     }
@@ -356,10 +355,10 @@ void gwmcorrelationdialog::onSpecifiedParameterCurrentChanged(const QModelIndex&
     {
         option->adaptive ? ui->mBwTypeAdaptiveRadio->setChecked(true) : ui->mBwTypeFixedRadio->setChecked(true);
         switch (option->bandwidthSeledType) {
-        case GwmGWcorrelationTaskThread::BandwidthInitilizeType::Null:
+        case GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Null:
             ui->mBwSizeAutomaticRadio->setChecked(true);
             break;
-        case GwmGWcorrelationTaskThread::BandwidthInitilizeType::Specified:
+        case GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Specified:
             ui->mBwSizeCustomizeRadio->setChecked(true);
             break;
         default:
@@ -474,7 +473,7 @@ void gwmcorrelationdialog::onCustomizeRaidoToggled(bool checked)
         if (option)
         {
             //todo
-            option->bandwidthSeledType = GwmMultiscaleGWRAlgorithm ::Specified;
+            option->bandwidthSeledType = GwmMultiscaleGWRAlgorithm::Specified;
         }
     }
 }
@@ -517,14 +516,14 @@ double gwmcorrelationdialog::bandwidthSize(){
     }
 }
 
-GwmGWcorrelationTaskThread::BandwidthSelectionCriterionType gwmcorrelationdialog::bandwidthSelectionApproach()
+GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType gwmcorrelationdialog::bandwidthSelectionApproach()
 {
     switch (ui->mBwSizeAutomaticApprochCombo->currentIndex())
     {
     case 0:
-        return GwmGWcorrelationTaskThread::BandwidthSelectionCriterionType::CV;
+        return GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV;
     default:
-        return GwmGWcorrelationTaskThread::BandwidthSelectionCriterionType::AIC;
+        return GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC;
     }
 }
 
@@ -614,9 +613,6 @@ void gwmcorrelationdialog::updateFieldsAndEnable()
         ui->mCheckMessage->setText(tr("Task thread is missing."));
     }
 }
-//void gwmcorrelationdialog::updateFields(){
-
-//}
 
 //将计算参数传给计算线程
 void gwmcorrelationdialog::updateFields()
@@ -648,7 +644,6 @@ void gwmcorrelationdialog::updateFields()
 
     // Parameter Specified 设置
     QList<GwmSpatialWeight> spatialWeights;
-    //todo:这里使用了GwmMultiscaleGWRAlgorithm
     QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> initilize;
     QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> approach;
     QList<double> threshold;
@@ -685,7 +680,10 @@ void gwmcorrelationdialog::updateFields()
         spatialWeights.append(sw);
     }
     mTaskThread->setSpatialWeights(spatialWeights);
-    mTaskThread->mIsAutoselectBandwidth = adaptive;
+    mTaskThread->setBandwidthInitilize(initilize);
+    mTaskThread->setBandwidthSelectionApproach(approach);
+
+
 //     并行设置
     if (ui->mCalcParallelNoneRadio->isChecked())
     {

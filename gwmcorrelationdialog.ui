@@ -155,11 +155,9 @@
            </property>
            <item row="4" column="1" colspan="3">
             <widget class="QComboBox" name="mBwKernelFunctionCombo">
-             <item>
-              <property name="text">
-               <string>Bisquare</string>
-              </property>
-             </item>
+             <property name="currentIndex">
+              <number>2</number>
+             </property>
              <item>
               <property name="text">
                <string>Gaussion</string>
@@ -168,6 +166,11 @@
              <item>
               <property name="text">
                <string>Exponential</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Bisquare</string>
               </property>
              </item>
              <item>
