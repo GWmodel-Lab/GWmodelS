@@ -99,7 +99,7 @@ private:
     void wpca(const mat &x, const vec &wt, mat &V, vec &S);
     void rwpca(const mat &x, const vec &wt, mat &coeff, vec &latent, double nu, double nv);
     void createResultLayer(CreateResultLayerData data,QList<QString> winvar);
-    void createPlotLayer(CreatePlotLayerData data);
+    void createPlotLayer(CreatePlotLayerData data, QList<QString> varpc);
 
     mat pca(const mat& x, cube& loadings, mat& sdev, cube& scores)
     {

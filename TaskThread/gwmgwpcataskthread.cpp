@@ -6,6 +6,9 @@
 #include <omp.h>
 #endif
 #include <armadillo>
+#include<math.h>
+#include <qgsmaptool.h>
+#include <QtDebug>
 
 int GwmGWPCATaskThread::treeChildCount = 0;
 
@@ -96,10 +99,21 @@ void GwmGWPCATaskThread::run()
         //进行GlyphPlot
         if(getPlot()){
             CreatePlotLayerData plotLayerData = {};
-            for(int i = 0; i < mVariables.size(); i++){
-                plotLayerData += qMakePair(mVariables.at(i).name, mLoadings.slice(0).col(i));
+//            for(int i = 0; i < mVariables.size(); i++){
+//                plotLayerData += qMakePair(mVariables.at(i).name, mLoadings.slice(0).col(i));
+//            }
+            vec vecLoadings(mDataPoints.n_rows * mVariables.size());
+            QList<QString> var_pc;
+            int v = 0;
+            for(int i = 0; i < mDataPoints.n_rows; i++){
+                for(int j=0; j < mVariables.size(); j++ ){
+                    vecLoadings(v) = mLoadings.slice(0)(i,j);
+                    var_pc.append(mVariables.at(j).name);
+                    v++;
+                }
             }
-            createPlotLayer(plotLayerData);
+            plotLayerData += qMakePair(QStringLiteral("loadings"),vecLoadings);
+            createPlotLayer(plotLayerData, var_pc);
         }
         emit success();
         emit tick(100, 100);
@@ -333,7 +347,7 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
     mResultLayer->commitChanges();
 }
 
-void GwmGWPCATaskThread::createPlotLayer(CreatePlotLayerData data)
+void GwmGWPCATaskThread::createPlotLayer(CreatePlotLayerData data, QList<QString> varpc)
 {
     QgsVectorLayer* srcLayer = mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
@@ -357,55 +371,87 @@ void GwmGWPCATaskThread::createPlotLayer(CreatePlotLayerData data)
         layerName += QStringLiteral("_RGWPCA");
     }
 
-    mPlotLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
+    mPlotLayer = new QgsVectorLayer(QgsWkbTypes::displayString(QgsWkbTypes::LineString), layerName, QStringLiteral("memory"));
     mPlotLayer->setCrs(srcLayer->crs());
 
     // 设置字段
     QgsFields fields;
-    for (QPair<QString, const mat&> item : data)
-    {
-        QString title = item.first;
-        const mat& value = item.second;
-        if (value.n_cols > 1)
-        {
-            for (int k = 0; k < value.n_cols; k++)
-            {
-                QString fieldName = title.arg(k+1);
-                fields.append(QgsField(fieldName, QVariant::Double, QStringLiteral("double")));
-            }
-        }
-        else
-        {
-            fields.append(QgsField(title, QVariant::Double, QStringLiteral("double")));
-        }
-    }
+//    for (QPair<QString, const mat&> item : data)
+//    {
+//        QString title = item.first;
+//        const mat& value = item.second;
+//        if (value.n_cols > 1)
+//        {
+//            for (int k = 0; k < value.n_cols; k++)
+//            {
+//                QString fieldName = title.arg(k+1);
+//                fields.append(QgsField(fieldName, QVariant::Double, QStringLiteral("double")));
+//            }
+//        }
+//        else
+//        {
+//            fields.append(QgsField(title, QVariant::Double, QStringLiteral("double")));
+//        }
+//    }
+    fields.append(QgsField(QStringLiteral("loadings"), QVariant::Double, QStringLiteral("double")));
+    fields.append(QgsField(QStringLiteral("var_name"),QVariant::String,QStringLiteral("varchar"),255));
     mPlotLayer->dataProvider()->addAttributes(fields.toList());
     mPlotLayer->updateFields();
-
     // 设置要素几何
     mPlotLayer->startEditing();
     QgsFeatureIterator iterator = srcLayer->getFeatures();
     QgsFeature f;
-    for (int i = 0; iterator.nextFeature(f); i++)
+    double PI = 3.1415926535898;
+    int k = 0;
+    for (int i = 0; i<mVariables.size() * mDataPoints.n_rows; i++)
     {
-        QgsFeature feature(fields);
-        feature.setGeometry(f.geometry());
-
+//        QgsFeature feature(fields);
+        QgsFeature lineFeature(fields);
+//        std::cout<<i<<" x:"<<f.geometry().asPoint().x()<<" y:"<<f.geometry().asPoint().y()<<std::endl;
+//        feature.setGeometry(f.geometry());
+        if(i%4==0){
+            k=0;
+            iterator.nextFeature(f);
+         }
+        //确定线要素的起点坐标
+        QgsPointXY sttPoint=f.geometry().asPoint();
         // 设置属性
-        int k = 0;
-        for (QPair<QString, const mat&> item : data)
+
+        double angle = 2.0 * PI / mVariables.size();
+//        for (QPair<QString, const mat&> item : data)
+//        {
+//            for (uword d = 0; d < item.second.n_cols; d++)
+//            {
+//                feature.setAttribute(k, item.second(i, d));
+//                k++;
+//            }
+//        }
+
+        for (QPair<QString, const vec&> item : data)
         {
             for (uword d = 0; d < item.second.n_cols; d++)
             {
-                feature.setAttribute(k, item.second(i, d));
-                k++;
+                //确定线要素的终点坐标
+                double x = sttPoint.x()+fabs(item.second(i, d)) * cos(k * angle)*10;
+                double y = sttPoint.y()+fabs(item.second(i, d)) * sin(k * angle)*10;
+//                std::cout<<fabs(item.second(i, d)) * cos(k * angle)<< "x: "<<x<<" y: "<<y<<std::endl;
+                QVector<QgsPointXY> lineData ={};
+                lineData+= sttPoint;
+                lineData+= QgsPointXY(x,y);
+//                std::cout<<"x: "<<x<<" y: "<<y<<std::endl;
+                lineFeature.setGeometry(QgsGeometry::fromPolylineXY(lineData));
+                lineFeature.setAttribute(0, item.second(i, d));
             }
         }
 
+        k++;
+        lineFeature.setAttribute("var_name",varpc[i]);
 
-        mPlotLayer->addFeature(feature);
+//        mPlotLayer->addFeature(feature);
+        mPlotLayer->addFeature(lineFeature);
     }
     mPlotLayer->commitChanges();
+    qWarning("test %s",(QgsWkbTypes::displayString(mPlotLayer->wkbType())));
 }
 
 double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *weight)
