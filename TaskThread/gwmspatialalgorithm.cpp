@@ -19,3 +19,8 @@ QgsVectorLayer *GwmSpatialAlgorithm::resultLayer() const
 {
     return mResultLayer;
 }
+
+QgsVectorLayer *GwmSpatialAlgorithm::plotLayer() const
+{
+    return mPlotLayer;
+}

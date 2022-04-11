@@ -18,12 +18,15 @@ public:  // 构造与属性
 
     QgsVectorLayer *resultLayer() const;
 
+    QgsVectorLayer *plotLayer() const;
+
 public:  // 方法
     virtual bool isValid() = 0;
 
 protected:  // 成员
     QgsVectorLayer* mDataLayer = nullptr;
     QgsVectorLayer* mResultLayer = nullptr;
+    QgsVectorLayer* mPlotLayer = nullptr;
 };
 
 #endif // GWMSPATIALALGORITHM_H

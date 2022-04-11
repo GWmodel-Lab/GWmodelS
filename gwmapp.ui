@@ -31,7 +31,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>23</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -75,7 +75,6 @@
      <string>GWSS</string>
     </property>
     <addaction name="actionGW_Averages"/>
-    <addaction name="actionGW_Covariance"/>
     <addaction name="actionGW_Correlations"/>
    </widget>
    <widget class="QMenu" name="menuGWPCA">
@@ -85,17 +84,6 @@
     <addaction name="actionBasic_GWPCA"/>
     <addaction name="actionRobust_GWPCA"/>
     <addaction name="separator"/>
-    <addaction name="actionGlyph_Plot"/>
-   </widget>
-   <widget class="QMenu" name="menuSWIM">
-    <property name="title">
-     <string>SWIM</string>
-    </property>
-    <addaction name="actionFlow_data"/>
-    <addaction name="actionFlow_distance"/>
-    <addaction name="action_CsvToDat"/>
-    <addaction name="actionSWIM"/>
-    <addaction name="actionFlow_Visualization"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -110,7 +98,6 @@
    <addaction name="menuGWR"/>
    <addaction name="menuGWSS"/>
    <addaction name="menuGWPCA"/>
-   <addaction name="menuSWIM"/>
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
