@@ -83,6 +83,7 @@ GwmGWPCAOptionsDialog::GwmGWPCAOptionsDialog(QList<GwmLayerGroupItem*> originIte
     ui->mBwSizeAutomaticRadio->setChecked(true);
     ui->mCalcParallelNoneRadio->setChecked(true);
     ui->mDistTypeCRSRadio->setChecked(true);
+    ui->mZscoreCheckBox->setChecked(true);
 
     //connect(ui->cbxHatmatrix, &QAbstractButton::toggled, this, &GwmGWPCAOptionsDialog::on_cbxHatmatrix_toggled);
 

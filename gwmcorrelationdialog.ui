@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>771</width>
+    <width>847</width>
     <height>951</height>
    </rect>
   </property>
@@ -30,7 +30,7 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>753</width>
+        <width>829</width>
         <height>933</height>
        </rect>
       </property>
@@ -70,7 +70,7 @@
           </size>
          </property>
          <property name="title">
-          <string>Independent Variables</string>
+          <string>Variables Selection</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
