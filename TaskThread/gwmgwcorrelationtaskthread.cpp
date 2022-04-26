@@ -310,10 +310,10 @@ void GwmGWcorrelationTaskThread::createResultLayer(CreateResultLayerData data)
     //避免图层名重复
     if(treeChildCount > 0)
     {
-        layerName += QStringLiteral("_GWCorrelation") + "(" + QString::number(treeChildCount) + ")";
+        layerName += QStringLiteral("_GWCorrelations") + "(" + QString::number(treeChildCount) + ")";
     } else
     {
-        layerName += QStringLiteral("_GWCorrelation");
+        layerName += QStringLiteral("_GWCorrelations");
     }
     //节点记录标签
     treeChildCount++ ;

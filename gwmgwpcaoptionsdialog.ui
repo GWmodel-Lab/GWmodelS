@@ -27,8 +27,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>605</width>
-        <height>775</height>
+        <width>609</width>
+        <height>779</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -57,9 +57,16 @@
          <property name="title">
           <string>Variables Selection</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1">
+         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,0">
           <item>
            <widget class="GwmIndepVarSelectorWidget" name="mIndepVarSelector" native="true"/>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="mZscoreCheckBox">
+            <property name="text">
+             <string>variables z_score normalization</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
