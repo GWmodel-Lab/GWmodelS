@@ -192,14 +192,14 @@ void GwmApp::setupMenus()
     connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::onRobustGWPCABtnClicked);
     //以下信号为暂未实现的功能
     connect(ui->actionGW_Averages, &QAction::triggered, this, &GwmApp::onGWaverageBtnClicked);
-    connect(ui->actionGW_Covariance, &QAction::triggered, this, &GwmApp::developingMessageBox);
+//    connect(ui->actionGW_Covariance, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::gwmcorrelation);
-    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::developingMessageBox);
-    connect(ui->actionGlyph_Plot, &QAction::triggered, this, &GwmApp::developingMessageBox);
-    connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::developingMessageBox);
-    connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
-    connect(ui->actionSWIM, &QAction::triggered, this, &GwmApp::developingMessageBox);
-    connect(ui->actionFlow_Visualization, &QAction::triggered, this, &GwmApp::developingMessageBox);
+//    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::developingMessageBox);
+//    connect(ui->actionGlyph_Plot, &QAction::triggered, this, &GwmApp::developingMessageBox);
+//    connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::developingMessageBox);
+//    connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
+//    connect(ui->actionSWIM, &QAction::triggered, this, &GwmApp::developingMessageBox);
+//    connect(ui->actionFlow_Visualization, &QAction::triggered, this, &GwmApp::developingMessageBox);
     //about信号槽连接
 //    connect(ui->actionInformation, &QAction::triggered, this, [&]()
 //    {

@@ -128,7 +128,7 @@ public:  // GwmSpatialAlgorithm interface
     bool isValid() override;
 
 public:     // GwmTaskThread interface
-    QString name() const override { return tr("GWSS"); };
+    QString name() const override { return tr("GWCorrelations"); };
 
 
 public:     // GwmSpatialMultiscaleAlgorithm interface

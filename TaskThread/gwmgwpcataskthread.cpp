@@ -34,7 +34,12 @@ void GwmGWPCATaskThread::run()
         //
         emit message(QString(tr("Setting X and Y.")));
         initXY(mX,mVariables);
-    }
+
+        if(zscore()){
+            emit message(QString(tr("Zscore normalizaiton...")));
+            variableZscore(mX);
+        }
+    }   
     //选带宽
     //这里判断是否选带宽
     if(mIsAutoselectBandwidth && !checkCanceled())
@@ -189,6 +194,16 @@ void GwmGWPCATaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
     }
 }
 
+void GwmGWPCATaskThread::variableZscore(mat& x)
+{
+    mat xmean = mean(x);
+    mat xstd = stddev(x);
+    for (int k = 0; k < x.n_cols; k++)
+    {
+        x.col(k) = (x.col(k) - xmean(k))/xstd(k);
+    }
+}
+
 void GwmGWPCATaskThread::wpca(const mat &x, const vec &wt, mat &V, vec &S)
 {
     //首先完成中心化
@@ -280,20 +295,22 @@ void GwmGWPCATaskThread::createResultLayer(CreateResultLayerData data, QList<QSt
     //避免图层名重复
     if(treeChildCount > 0)
     {
-        layerName += QStringLiteral("_GWPCA") + "(" + QString::number(treeChildCount) + ")";
+        if(!Robust()) layerName += QStringLiteral("_GWPCA") + "(" + QString::number(treeChildCount) + ")";
+        else if(Robust()) layerName += QStringLiteral("_RGWPCA") + "(" + QString::number(treeChildCount) + ")";
     } else
     {
-        layerName += QStringLiteral("_GWPCA");
+        if(!Robust()) layerName += QStringLiteral("_GWPCA");
+        else if(Robust()) layerName += QStringLiteral("_RGWPCA");
     }
     //节点记录标签
     treeChildCount++ ;
 
 
-    if(!Robust()){
-        layerName += QStringLiteral("_GWPCA");
-    }else{
-        layerName += QStringLiteral("_RGWPCA");
-    }
+//    if(!Robust()){
+//        layerName += QStringLiteral("_GWPCA");
+//    }else{
+//        layerName += QStringLiteral("_RGWPCA");
+//    }
 
     mResultLayer = new QgsVectorLayer(layerFileName, layerName, QStringLiteral("memory"));
     mResultLayer->setCrs(srcLayer->crs());
@@ -539,6 +556,16 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
     return score;
 }
 #endif
+bool GwmGWPCATaskThread::zscore() const
+{
+    return mZscore;
+}
+
+void GwmGWPCATaskThread::setZscore(bool zscore)
+{
+    mZscore = zscore;
+}
+
 bool GwmGWPCATaskThread::scoresCal() const
 {
     return mScoresCal;

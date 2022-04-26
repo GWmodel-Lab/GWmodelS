@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>627</width>
-    <height>629</height>
+    <width>654</width>
+    <height>659</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,8 +27,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>609</width>
-        <height>611</height>
+        <width>636</width>
+        <height>641</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -55,7 +55,7 @@
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
-          <string>Independent Variables</string>
+          <string>Variables Selection</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1">
           <item>

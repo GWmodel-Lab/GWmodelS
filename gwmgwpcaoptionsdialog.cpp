@@ -83,6 +83,7 @@ GwmGWPCAOptionsDialog::GwmGWPCAOptionsDialog(QList<GwmLayerGroupItem*> originIte
     ui->mBwSizeAutomaticRadio->setChecked(true);
     ui->mCalcParallelNoneRadio->setChecked(true);
     ui->mDistTypeCRSRadio->setChecked(true);
+    ui->mZscoreCheckBox->setChecked(true);
 
     //connect(ui->cbxHatmatrix, &QAbstractButton::toggled, this, &GwmGWPCAOptionsDialog::on_cbxHatmatrix_toggled);
 
@@ -119,6 +120,7 @@ GwmGWPCAOptionsDialog::GwmGWPCAOptionsDialog(QList<GwmLayerGroupItem*> originIte
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
     //connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
     //connect(ui->cbxFTest, &QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mZscoreCheckBox,&QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
     connect(ui->mScoresCheckBox,&QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
     connect(ui->mRobustCheckBox,&QAbstractButton::toggle, this, &GwmGWPCAOptionsDialog::updateFieldsAndEnable);
 
@@ -503,6 +505,7 @@ void GwmGWPCAOptionsDialog::updateFields()
     //mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
     //mTaskThread->setHasFTest(ui->cbxFTest->isChecked());
     mTaskThread->setK(ui->mKspinBox->value());
+    mTaskThread->setZscore(ui->mZscoreCheckBox->isChecked());
     mTaskThread->setScoresCal(ui->mScoresCheckBox->isChecked());
     mTaskThread->setRobust(ui->mRobustCheckBox->isChecked());
     mTaskThread->setPlot(ui->mPlotCheckBox->isChecked());

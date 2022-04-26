@@ -80,6 +80,8 @@ public:  // IOpenmpParallelable interface
     void setThreadNum(const int threadNum){};
     //void setOmpThreadNum(const int threadNum){};
 
+    bool zscore() const;
+    void setZscore(bool zscore);
 
     bool scoresCal() const;
     void setScoresCal(bool scoresCal);
@@ -95,6 +97,7 @@ public:  // IOpenmpParallelable interface
 private:
     void initPoints();
     void initXY(mat& x, const QList<GwmVariable>& indepVars);
+    void variableZscore(mat& x);
     //void wpca(const mat &x, const vec &wt, double nu, double nv, mat &V, vec &S);
     void wpca(const mat &x, const vec &wt, mat &V, vec &S);
     void rwpca(const mat &x, const vec &wt, mat &coeff, vec &latent, double nu, double nv);
@@ -156,6 +159,8 @@ private:
     cube mLoadings;
     cube mScores;
 
+    //用户选择是否Z-score标准化
+    bool mZscore;
     //用户选择是否计算scores
     bool mScoresCal;
 
