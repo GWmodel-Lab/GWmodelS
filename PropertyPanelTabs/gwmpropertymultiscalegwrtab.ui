@@ -47,9 +47,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-570</y>
-        <width>414</width>
-        <height>1162</height>
+        <y>-488</y>
+        <width>403</width>
+        <height>1101</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -65,6 +65,34 @@
              <string>Diagnostic Information</string>
             </property>
             <layout class="QFormLayout" name="formLayout_4">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_21">
+               <property name="text">
+                <string>AIC:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="lblOLSAIC_2">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_20">
+               <property name="text">
+                <string>AICc:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="lblOLSAICc_2">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
              <item row="2" column="0">
               <widget class="QLabel" name="label_15">
                <property name="text">
@@ -102,34 +130,6 @@
              </item>
              <item row="4" column="1">
               <widget class="QLabel" name="lbladjR2_2">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_20">
-               <property name="text">
-                <string>AICc:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="lblOLSAICc_2">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_21">
-               <property name="text">
-                <string>AIC:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="lblOLSAIC_2">
                <property name="text">
                 <string/>
                </property>
@@ -301,57 +301,85 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
+             <item row="3" column="0">
               <widget class="QLabel" name="label_8">
                <property name="text">
                 <string>AICc:</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
+             <item row="3" column="1">
               <widget class="QLabel" name="lblAICc">
                <property name="text">
                 <string/>
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
+             <item row="4" column="0">
               <widget class="QLabel" name="label_9">
                <property name="text">
                 <string>Residual sum of squares:</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
+             <item row="4" column="1">
               <widget class="QLabel" name="lblRSS">
                <property name="text">
                 <string/>
                </property>
               </widget>
              </item>
-             <item row="3" column="0">
+             <item row="5" column="0">
               <widget class="QLabel" name="label_10">
                <property name="text">
                 <string>R-square value:</string>
                </property>
               </widget>
              </item>
-             <item row="3" column="1">
+             <item row="5" column="1">
               <widget class="QLabel" name="lblRSquare">
                <property name="text">
                 <string/>
                </property>
               </widget>
              </item>
-             <item row="4" column="0">
+             <item row="6" column="0">
               <widget class="QLabel" name="label_11">
                <property name="text">
                 <string>Adjusted R-square value:</string>
                </property>
               </widget>
              </item>
-             <item row="4" column="1">
+             <item row="6" column="1">
               <widget class="QLabel" name="lblRSquareAdjusted">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>Effective number of parameters:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="lblENP">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_3">
+               <property name="text">
+                <string>Effective degrees of freedom:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="lblEDF">
                <property name="text">
                 <string/>
                </property>

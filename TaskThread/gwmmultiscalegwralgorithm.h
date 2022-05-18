@@ -231,6 +231,7 @@ private:
     vec mY;
     mat mBetas;
     mat mBetasSE;
+    mat mBetasTV;
 
     mat mS0;
     cube mSArray;
