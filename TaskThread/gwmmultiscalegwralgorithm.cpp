@@ -37,6 +37,7 @@ GwmDiagnostic GwmMultiscaleGWRAlgorithm::CalcDiagnostic(const mat &x, const vec 
 
     double trS = trace(S0);
     double trStS = trace(S0.t() * S0);
+    double enp = 2 * trS - trStS;
     double edf = nDp - 2 * trS + trStS;
     double AICc = nDp * log(sigmaHat21) + nDp * log(2 * M_PI) + nDp * ((nDp + trS) / (nDp - 2 - trS));
     double adjustRsquare = 1 - (1 - Rsquare) * (nDp - 1) / (edf - 1);
@@ -45,6 +46,7 @@ GwmDiagnostic GwmMultiscaleGWRAlgorithm::CalcDiagnostic(const mat &x, const vec 
     GwmDiagnostic diagnostic;
     diagnostic.RSS = RSSg;
     diagnostic.AICc = AICc;
+    diagnostic.ENP = enp;
     diagnostic.EDF = edf;
     diagnostic.RSquareAdjust = adjustRsquare;
     diagnostic.RSquare = Rsquare;
@@ -187,10 +189,13 @@ void GwmMultiscaleGWRAlgorithm::run()
         mDiagnostic = CalcDiagnostic(mX, mY, mS0, mRSS0);
         vec yhat = fitted(mX, mBetas);
         vec residual = mY - yhat;
+        mBetasTV = mBetas / mBetasSE;
         createResultLayer({
             qMakePair(QString("%1"), mBetas),
             qMakePair(QString("yhat"), yhat),
-            qMakePair(QString("residual"), residual)
+            qMakePair(QString("residual"), residual),
+            qMakePair(QString("%1_SE"),mBetasSE),
+            qMakePair(QString("%1_TV"),mBetasTV)
         });
     }
     else

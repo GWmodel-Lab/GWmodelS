@@ -60,6 +60,8 @@ void GwmPropertyMultiscaleGWRTab::updateUI()
         ui->lblRSS->setText(QString("%1").arg(diagnostic.RSS, 0, 'f', 6));
         ui->lblRSquare->setText(QString("%1").arg(diagnostic.RSquare, 0, 'f', 6));
         ui->lblRSquareAdjusted->setText(QString("%1").arg(diagnostic.RSquareAdjust, 0, 'f', 6));
+        ui->lblEDF->setText(QString("%1").arg(diagnostic.EDF, 0, 'f', 6));
+        ui->lblENP->setText(QString("%1").arg(diagnostic.ENP, 0, 'f', 6));
     }
 
     // 计算四分位数
