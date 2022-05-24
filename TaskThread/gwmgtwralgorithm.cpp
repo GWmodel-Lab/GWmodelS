@@ -95,6 +95,7 @@ void GwmGTWRAlgorithm::run()
             qMakePair(QString("y"), mY),
             qMakePair(QString("yhat"), yhat),
             qMakePair(QString("residual"), res),
+            qMakePair(QString("time_stamp"),mDataTimeStamp),
             qMakePair(QString("Stud_residual"), stu_res),
             qMakePair(QString("%1_SE"), mBetasSE),
             qMakePair(QString("%1_TV"), betasTV),
@@ -115,7 +116,8 @@ void GwmGTWRAlgorithm::run()
                     qMakePair(QString(mDepVar.name), mRegressionLayerY),
                     qMakePair(QString("%1"), mBetas),
                     qMakePair(QString("yhat"), yhat),
-                    qMakePair(QString("residual"), residual)
+                    qMakePair(QString("residual"), residual),
+                    qMakePair(QString("time_stamp"),mRegTimeStamp)
                 };
             }
             else
