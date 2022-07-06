@@ -1,7 +1,7 @@
 ![输入图片说明](https://images.gitee.com/uploads/images/2021/1013/130725_b767e9b8_9858094.png "GWmodelS.png")    
 GWmodelS    
 
-Version:BETA
+Version:1.0.3
 
 Leading scientist:
 Binbin Lu (Wuhan University), Guanpeng Dong (Henan University)
