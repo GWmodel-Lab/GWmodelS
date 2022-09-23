@@ -125,7 +125,7 @@ bool GwmGWcorrelationTaskThread::CalculateSerial(){
     mat xy = join_rows(mX,mY);
     for(int z = 0;z < nVar&!checkCanceled(); z++)
     {
-        for(int i = 0; i < nRp & !checkCanceled(); i++)
+        for(int i = 0; i < nRp && !checkCanceled(); i++)
         {
             vec w = mSpatialWeights[z].weightVector(i);
             double sumw = sum(w);
@@ -163,7 +163,7 @@ bool GwmGWcorrelationTaskThread::CalculateOmp(){
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int z = 0;z < nVar-1; z++)
     {
-        for(int i = 0; i < nRp & !checkCanceled(); i++)
+        for(int i = 0; i < nRp && !checkCanceled(); i++)
         {
             vec w = mSpatialWeights[z].weightVector(i);
             double sumw = sum(w);
@@ -390,7 +390,7 @@ double GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarCVSerial(GwmBandwidt
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -420,7 +420,7 @@ double GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarAICSerial(GwmBandwid
     uword nDp = mDataPoints.n_rows;
     mat betas(1, nDp, fill::zeros);
     vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);

@@ -61,7 +61,7 @@ void GwmRobustGWRAlgorithm::run()
         vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
         vec dyhat2 = (mY - yhat) % (mY - yhat);
         vec localR2 = vec(nDp, fill::zeros);
-        for (uword i = 0; i < nDp & !checkCanceled(); i++)
+        for (uword i = 0; i < nDp && !checkCanceled(); i++)
         {
             vec w = mSpatialWeight.weightVector(i);
             double tss = sum(dybar2 % w);
@@ -147,7 +147,7 @@ vec GwmRobustGWRAlgorithm::filtWeight(vec residual, double mse)
     vec r = abs(residual / sqrt(mse));
     vec wvect(r.size(), fill::ones);
     //数组赋值
-    for(int i=0;i<r.size() & !checkCanceled();i++)
+    for(int i=0;i<r.size() && !checkCanceled();i++)
     {
         if(r[i]<=2)
         {
@@ -278,7 +278,7 @@ mat GwmRobustGWRAlgorithm::robustGWRCaliFirst(const mat &x, const vec &y, mat &b
     vec WVect(nDp,fill::zeros);
 
     //生成W.vect
-    for(int i=0;i<studentizedResidual.size() & !checkCanceled();i++){
+    for(int i=0;i<studentizedResidual.size() && !checkCanceled();i++){
         if(fabs(studentizedResidual[i])>3){
             WVect(i)=0;
         }else{
@@ -333,7 +333,7 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y,
     shat = vec(2, fill::zeros);
     qDiag = vec(nDp, fill::zeros);
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec w = mSpatialWeight.weightVector(i) % mWeightMask;
         mat xtw = trans(x.each_col() % w);

@@ -10,311 +10,311 @@ using namespace arma;
 //coords must be a matrix with 2 columns
 mat coordinateRotate(const mat& coords, double theta)
 {
-	int n = coords.n_rows;
-	mat rotated_coords(n, 2);
-	rotated_coords.col(0) = coords.col(0) * cos(theta) - coords.col(1) * sin(theta);
-	rotated_coords.col(1) = coords.col(0) * sin(theta) + coords.col(1) * cos(theta);
-	return rotated_coords;
+    int n = coords.n_rows;
+    mat rotated_coords(n, 2);
+    rotated_coords.col(0) = coords.col(0) * cos(theta) - coords.col(1) * sin(theta);
+    rotated_coords.col(1) = coords.col(0) * sin(theta) + coords.col(1) * cos(theta);
+    return rotated_coords;
 }
 
 //Eudclidean distance matrix
 mat euDistMat(const mat& in_locs, const mat& out_locs)
 {
-	int n_in = in_locs.n_rows;
-	int n_out = out_locs.n_rows;
-	mat eu_dist(n_in, n_out);
-	int i = 0, j = 0;
-	for (i = 0; i < n_in; i++)
-	{
-		for (j = 0; j < n_out; j++)
-		{
-		  eu_dist(i,j) = sum(pow(in_locs.row(i) - out_locs.row(j),2));
-		}
-	}
-	return sqrt(eu_dist);
+    int n_in = in_locs.n_rows;
+    int n_out = out_locs.n_rows;
+    mat eu_dist(n_in, n_out);
+    int i = 0, j = 0;
+    for (i = 0; i < n_in; i++)
+    {
+        for (j = 0; j < n_out; j++)
+        {
+          eu_dist(i,j) = sum(pow(in_locs.row(i) - out_locs.row(j),2));
+        }
+    }
+    return sqrt(eu_dist);
 }
 //symmetrical distance matrix
 mat euDistSmat(const mat& in_locs)
 {
-	int n = in_locs.n_rows;
-	mat eu_dist(n, n);
-	for (int k = 0; k < n * n; k++)
-	{
-		int i = k / n, j = k % n;
-		eu_dist(i, j) = sum(pow(in_locs.row(i) - in_locs.row(j), 2));
-		eu_dist(j, i) = eu_dist(i, j);
-	}
-	return sqrt(eu_dist);
+    int n = in_locs.n_rows;
+    mat eu_dist(n, n);
+    for (int k = 0; k < n * n; k++)
+    {
+        int i = k / n, j = k % n;
+        eu_dist(i, j) = sum(pow(in_locs.row(i) - in_locs.row(j), 2));
+        eu_dist(j, i) = eu_dist(i, j);
+    }
+    return sqrt(eu_dist);
 }
 
 vec euDistVec(const mat& in_locs, const vec& out_loc)
 {
-	int n_in = in_locs.n_rows;
-	vec eu_dist(n_in);
-	for (int i = 0; i < n_in; i++)
-	{
-		eu_dist(i) = sum(pow(in_locs.row(i) - trans(out_loc), 2));
-	}
-	return sqrt(eu_dist);
-	// mat v_span(n_in, 1, fill::ones);
-	// mat m_diff = in_locs - v_span * trans(out_loc);
-	// return sqrt(m_diff % m_diff * mSum);
+    int n_in = in_locs.n_rows;
+    vec eu_dist(n_in);
+    for (int i = 0; i < n_in; i++)
+    {
+        eu_dist(i) = sum(pow(in_locs.row(i) - trans(out_loc), 2));
+    }
+    return sqrt(eu_dist);
+    // mat v_span(n_in, 1, fill::ones);
+    // mat m_diff = in_locs - v_span * trans(out_loc);
+    // return sqrt(m_diff % m_diff * mSum);
 }
 
 //Manhattan distance matrix
 mat mdDistMat(const mat& in_locs, const mat& out_locs)
 {
-	int n_in = in_locs.n_rows;
-	int n_out = out_locs.n_rows;
-	mat md_dist(n_in, n_out);
-	for (int i = 0; i < n_in; i++)
-	{
-		for (int j = 0; j < n_out; j++)
-		{
-			md_dist(i, j) = sum(abs(in_locs.row(i) - out_locs.row(j)));
-		}
-	}
-	return md_dist;
+    int n_in = in_locs.n_rows;
+    int n_out = out_locs.n_rows;
+    mat md_dist(n_in, n_out);
+    for (int i = 0; i < n_in; i++)
+    {
+        for (int j = 0; j < n_out; j++)
+        {
+            md_dist(i, j) = sum(abs(in_locs.row(i) - out_locs.row(j)));
+        }
+    }
+    return md_dist;
 }
 
 //symmetrical distance matrix
 mat mdDistSmat(const mat& in_locs)
 {
-	int n = in_locs.n_rows;
-	mat md_dist(n, n);
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = i; j < n; j++)
-		{
-			md_dist(i, j) = sum(abs(in_locs.row(i) - in_locs.row(j)));
-			md_dist(j, i) = md_dist(i, j);
-		}
-	}
-	return md_dist;
+    int n = in_locs.n_rows;
+    mat md_dist(n, n);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i; j < n; j++)
+        {
+            md_dist(i, j) = sum(abs(in_locs.row(i) - in_locs.row(j)));
+            md_dist(j, i) = md_dist(i, j);
+        }
+    }
+    return md_dist;
 }
 vec mdDistVec(const mat& in_locs, const vec& out_loc)
 {
-	int n_in = in_locs.n_rows;
-	vec md_dist(n_in);
-	for (int i = 0; i < n_in; i++)
-	{
-		md_dist(i) = sum(abs(in_locs.row(i) - trans(out_loc)));
-	}
-	return md_dist;
+    int n_in = in_locs.n_rows;
+    vec md_dist(n_in);
+    for (int i = 0; i < n_in; i++)
+    {
+        md_dist(i) = sum(abs(in_locs.row(i) - trans(out_loc)));
+    }
+    return md_dist;
 }
 
 //Chebyshev distance matrix
 mat cdDistMat(const mat& in_locs, const mat& out_locs)
 {
-	int n_in = in_locs.n_rows;
-	int n_out = out_locs.n_rows;
-	mat cd_dist(n_in, n_out);
-	for (int i = 0; i < n_in; i++)
-	{
-		for (int j = i; j < n_out; j++)
-		{
-			cd_dist(i, j) = max(abs(in_locs.row(i) - out_locs.row(j)));
-			cd_dist(j, i) = cd_dist(i, j);
-		}
-	}
-	return cd_dist;
+    int n_in = in_locs.n_rows;
+    int n_out = out_locs.n_rows;
+    mat cd_dist(n_in, n_out);
+    for (int i = 0; i < n_in; i++)
+    {
+        for (int j = i; j < n_out; j++)
+        {
+            cd_dist(i, j) = max(abs(in_locs.row(i) - out_locs.row(j)));
+            cd_dist(j, i) = cd_dist(i, j);
+        }
+    }
+    return cd_dist;
 }
 
 //symmetrical distance matrix
 mat cdDistSmat(const mat& in_locs)
 {
-	int n = in_locs.n_rows;
-	mat cd_dist(n, n);
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = i; j < n; j++)
-		{
-			cd_dist(i, j) = max(abs(in_locs.row(i) - in_locs.row(j)));
-			cd_dist(j, i) = cd_dist(i, j);
-		}
-	}
-	return cd_dist;
+    int n = in_locs.n_rows;
+    mat cd_dist(n, n);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i; j < n; j++)
+        {
+            cd_dist(i, j) = max(abs(in_locs.row(i) - in_locs.row(j)));
+            cd_dist(j, i) = cd_dist(i, j);
+        }
+    }
+    return cd_dist;
 }
 vec cdDistVec(const mat& in_locs, const vec& out_loc)
 {
-	int n_in = in_locs.n_rows;
-	vec cd_dist(n_in);
-	for (int i = 0; i < n_in; i++)
-	{
-		cd_dist(i) = max(abs(in_locs.row(i) - trans(out_loc)));
-	}
-	return cd_dist;
+    int n_in = in_locs.n_rows;
+    vec cd_dist(n_in);
+    for (int i = 0; i < n_in; i++)
+    {
+        cd_dist(i) = max(abs(in_locs.row(i) - trans(out_loc)));
+    }
+    return cd_dist;
 }
 
 //Minkowski distance matrix
 mat mkDistMat(const mat& in_locs, const mat& out_locs, double p)
 {
-	int n_in = in_locs.n_rows;
-	int n_out = out_locs.n_rows;
-	mat mk_dist(n_in, n_out);
-	for (int i = 0; i < n_in; i++)
-	{
-		for (int j = 0; j < n_out; j++)
-		{
-			mk_dist(i, j) = pow(sum(pow(abs(in_locs.row(i) - out_locs.row(j)), p)), 1.0 / p);
-		}
-	}
-	return mk_dist;
+    int n_in = in_locs.n_rows;
+    int n_out = out_locs.n_rows;
+    mat mk_dist(n_in, n_out);
+    for (int i = 0; i < n_in; i++)
+    {
+        for (int j = 0; j < n_out; j++)
+        {
+            mk_dist(i, j) = pow(sum(pow(abs(in_locs.row(i) - out_locs.row(j)), p)), 1.0 / p);
+        }
+    }
+    return mk_dist;
 }
 //sqrt(sum(pow(in_locs.row(i) - trans(out_loc),2)))
 //symmetrical distance matrix
 mat mkDistSmat(const mat& in_locs, double p)
 {
-	int n = in_locs.n_rows;
-	mat mk_dist(n, n);
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = i; j < n; j++)
-		{
-			mk_dist(i, j) = pow(sum(pow(abs(in_locs.row(i) - in_locs.row(j)), p)), 1.0 / p);
-			mk_dist(j, i) = mk_dist(i, j);
-		}
-	}
-	return mk_dist;
+    int n = in_locs.n_rows;
+    mat mk_dist(n, n);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i; j < n; j++)
+        {
+            mk_dist(i, j) = pow(sum(pow(abs(in_locs.row(i) - in_locs.row(j)), p)), 1.0 / p);
+            mk_dist(j, i) = mk_dist(i, j);
+        }
+    }
+    return mk_dist;
 }
 
 vec mkDistVec(const mat& in_locs, const vec& out_loc, double p)
 {
-	int n_in = in_locs.n_rows;
-	vec mk_dist(n_in);
-	for (int i = 0; i < n_in; i++)
-	{
-		mk_dist(i) = pow(sum(pow(abs(in_locs.row(i) - trans(out_loc)), p)), 1.0 / p);
-	}
-	return mk_dist;
+    int n_in = in_locs.n_rows;
+    vec mk_dist(n_in);
+    for (int i = 0; i < n_in; i++)
+    {
+        mk_dist(i) = pow(sum(pow(abs(in_locs.row(i) - trans(out_loc)), p)), 1.0 / p);
+    }
+    return mk_dist;
 }
 //Weight matrix
 //Bisuqare weight
 vec bisqWtVec(const vec& distv, double bw)
 {
-	int n = distv.n_elem;
-	vec wtv;
-	wtv.zeros(n);
+    int n = distv.n_elem;
+    vec wtv;
+    wtv.zeros(n);
 // #pragma omp parallel for num_threads(omp_get_num_procs() - 1)
-	for (int i = 0; i < n; i++)
-	{
-		if (distv(i) <= bw)
-			wtv(i) = pow(1 - pow(distv(i) / bw, 2), 2);
-	}
-	return wtv;
+    for (int i = 0; i < n; i++)
+    {
+        if (distv(i) <= bw)
+            wtv(i) = pow(1 - pow(distv(i) / bw, 2), 2);
+    }
+    return wtv;
 }
 //Calculated by column, the length of bw must be the same the number of columns of distm
 mat bisqWtMat(const mat& distm, const vec& bw)
 {
-	int m = distm.n_cols;
-	int n = distm.n_rows;
-	mat wtm;
-	wtm.zeros(n, m);
+    int m = distm.n_cols;
+    int n = distm.n_rows;
+    mat wtm;
+    wtm.zeros(n, m);
 // #pragma omp parallel for num_threads(omp_get_num_procs() - 1)
-	for (int k = 0; k < m * n; k++)
-	{
-		int i = k / n, j = k % n;
-		if (distm(j, i) <= bw(i))
-			wtm(j, i) = (1 - distm(j, i) / bw(i) * distm(j, i) / bw(i)) * (1 - distm(j, i) / bw(i) * distm(j, i) / bw(i));
-	}
-	return wtm;
+    for (int k = 0; k < m * n; k++)
+    {
+        int i = k / n, j = k % n;
+        if (distm(j, i) <= bw(i))
+            wtm(j, i) = (1 - distm(j, i) / bw(i) * distm(j, i) / bw(i)) * (1 - distm(j, i) / bw(i) * distm(j, i) / bw(i));
+    }
+    return wtm;
 }
 
 //Gaussian weight
 vec gaussWtVec(const vec& distv, double bw)
 {
-	int n = distv.n_elem;
-	vec wtv;
-	wtv.zeros(n);
+    int n = distv.n_elem;
+    vec wtv;
+    wtv.zeros(n);
 // #pragma omp parallel for num_threads(omp_get_num_procs() - 1)
-	for (int i = 0; i < n; i++)
-	{
-		wtv(i) = exp(pow(distv(i), 2) / ((-2) * pow(bw, 2)));
-	}
-	return wtv;
+    for (int i = 0; i < n; i++)
+    {
+        wtv(i) = exp(pow(distv(i), 2) / ((-2) * pow(bw, 2)));
+    }
+    return wtv;
 }
 mat gaussWtMat(const mat& distm, const vec& bw)
 {
-	int m = distm.n_cols;
-	int n = distm.n_rows;
-	mat wtm;
-	wtm.zeros(n, m);
-	for (int i = 0; i < m; i++)
-	{
-		for (int j = 0; j < n; j++)
-		{
-			wtm(j, i) = exp(pow(distm(j, i), 2) / ((-2) * pow(bw(i), 2)));
-		}
-	}
-	return wtm;
+    int m = distm.n_cols;
+    int n = distm.n_rows;
+    mat wtm;
+    wtm.zeros(n, m);
+    for (int i = 0; i < m; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            wtm(j, i) = exp(pow(distm(j, i), 2) / ((-2) * pow(bw(i), 2)));
+        }
+    }
+    return wtm;
 }
 
 //Tricube weight
 vec triWtVec(const vec& distv, double bw)
 {
-	int n = distv.n_elem;
-	vec wtv;
-	wtv.zeros(n);
-	for (int i = 0; i < n; i++)
-	{
-		if (distv(i) <= bw)
-			wtv(i) = pow(1 - pow(distv(i), 3) / pow(bw, 3), 3);
-	}
-	return wtv;
+    int n = distv.n_elem;
+    vec wtv;
+    wtv.zeros(n);
+    for (int i = 0; i < n; i++)
+    {
+        if (distv(i) <= bw)
+            wtv(i) = pow(1 - pow(distv(i), 3) / pow(bw, 3), 3);
+    }
+    return wtv;
 }
 mat triWtMatt(const mat& distm, const vec& bw)
 {
-	int m = distm.n_cols;
-	int n = distm.n_rows;
-	mat wtm;
-	wtm.zeros(n, m);
-	for (int i = 0; i < m; i++)
-	{
-		for (int j = 0; j < n; j++)
-		{
-			if (distm(j, i) <= bw(i))
-				wtm(j, i) = pow(1 - pow(distm(j, i), 3) / pow(bw(i), 3), 3);
-		}
-	}
-	return wtm;
+    int m = distm.n_cols;
+    int n = distm.n_rows;
+    mat wtm;
+    wtm.zeros(n, m);
+    for (int i = 0; i < m; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            if (distm(j, i) <= bw(i))
+                wtm(j, i) = pow(1 - pow(distm(j, i), 3) / pow(bw(i), 3), 3);
+        }
+    }
+    return wtm;
 }
 //exponential kernel weight
 vec expWtVec(const vec& distv, double bw)
 {
-	int n = distv.n_elem;
-	vec wtv;
-	wtv.zeros(n);
-	for (int i = 0; i < n; i++)
-	{
-		wtv(i) = exp(-distv(i) / bw);
-	}
-	return wtv;
+    int n = distv.n_elem;
+    vec wtv;
+    wtv.zeros(n);
+    for (int i = 0; i < n; i++)
+    {
+        wtv(i) = exp(-distv(i) / bw);
+    }
+    return wtv;
 }
 mat expWtMat(const mat& distm, const vec& bw)
 {
-	int m = distm.n_cols;
-	int n = distm.n_rows;
-	mat wtm;
-	wtm.zeros(n, m);
-	for (int i = 0; i < m; i++)
-	{
-		for (int j = 0; j < n; j++)
-		{
-			wtm(j, i) = exp(-distm(j, i) / bw(i));
-		}
-	}
-	return wtm;
+    int m = distm.n_cols;
+    int n = distm.n_rows;
+    mat wtm;
+    wtm.zeros(n, m);
+    for (int i = 0; i < m; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            wtm(j, i) = exp(-distm(j, i) / bw(i));
+        }
+    }
+    return wtm;
 }
 //GWR clalibration
 vec gwReg(const mat& x, const vec &y, const vec &w, int focus)
 {
     QMap<RegressionResult, mat> result;
-	mat wspan(1, x.n_cols, fill::ones);
-	mat xtw = trans(x % (w * wspan));
-	mat xtwx = xtw * x;
+    mat wspan(1, x.n_cols, fill::ones);
+    mat xtw = trans(x % (w * wspan));
+    mat xtwx = xtw * x;
     mat xtwy = xtw * y;
-	mat xtwx_inv = inv(xtwx);
-	vec beta = xtwx_inv * xtwy;
+    mat xtwx_inv = inv(xtwx);
+    vec beta = xtwx_inv * xtwy;
     return beta;
 }
 
@@ -335,67 +335,67 @@ vec gwRegHatmatrix(const mat &x, const vec &y, const vec &w, int focus, mat& ci,
 
 vec trhat2(const mat& S)
 {
-	int n_obs = S.n_rows;
-	double htr = 0.0;
-	double htr2 = 0.0;
-	vec result(2);
-	for (int i = 0; i < n_obs; i++)
-	{
-		htr += S(i, i);
-		htr2 += sum(S.row(i) % S.row(i));
-	}
-	result(0) = htr;
-	result(1) = htr2;
-	return result;
+    int n_obs = S.n_rows;
+    double htr = 0.0;
+    double htr2 = 0.0;
+    vec result(2);
+    for (int i = 0; i < n_obs; i++)
+    {
+        htr += S(i, i);
+        htr2 += sum(S.row(i) % S.row(i));
+    }
+    result(0) = htr;
+    result(1) = htr2;
+    return result;
 }
 // Fited values
 
 vec fitted(const mat& X, const mat& beta)
 {
-	vec fitted = sum(beta % X, 1);
-	return fitted;
+    vec fitted = sum(beta % X, 1);
+    return fitted;
 }
 
 // Residuals
 
 vec ehat(const vec& y, const mat& X, const mat& beta)
 {
-	vec fitted = sum(beta % X, 1);
-	return y - fitted;
+    vec fitted = sum(beta % X, 1);
+    return y - fitted;
 }
 
 // Residual sum-of squares
 double rss(const vec& y, const mat& X, const mat& beta)
 {
-	vec r = ehat(y, X, beta);
-	return sum(r % r);
+    vec r = ehat(y, X, beta);
+    return sum(r % r);
 }
 
 vec gwrDiag(const vec& y, const mat& x, const mat& beta, const vec& s_hat)
 {
-	double ss = rss(y, x, beta);
-	// vec s_hat = trhat2(S);
-	int n = x.n_rows;
-	// vec result(9);
-	vec result(7);
-	double AIC = n * log(ss / n) + n * log(2 * datum::pi) + n + s_hat(0);																//AIC
-	double AICc = n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + s_hat(0)) / (n - 2 - s_hat(0))); //AICc
-	double edf = n - 2 * s_hat(0) + s_hat(1);																														//edf
-	double enp = 2 * s_hat(0) - s_hat(1);																																// enp
-    double yss = sum((y - mean(y)) % (y - mean(y)));																															//yss.g
-	double r2 = 1 - ss / yss;
-	double r2_adj = 1 - (1 - r2) * (n - 1) / (edf - 1);
-	result(0) = AIC;
-	result(1) = AICc;
-	result(2) = edf;
-	result(3) = enp;
-	result(4) = ss;
-	result(5) = r2;
-	result(6) = r2_adj;
-	// result(7) = s_hat(0);
-	// result(8) = s_hat(1);
-	return result;
-	//return 2*enp + 2*n*log(ss/n) + 2*enp*(enp+1)/(n - enp - 1);
+    double ss = rss(y, x, beta);
+    // vec s_hat = trhat2(S);
+    int n = x.n_rows;
+    // vec result(9);
+    vec result(7);
+    double AIC = n * log(ss / n) + n * log(2 * datum::pi) + n + s_hat(0);                                                                //AIC
+    double AICc = n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + s_hat(0)) / (n - 2 - s_hat(0))); //AICc
+    double edf = n - 2 * s_hat(0) + s_hat(1);                                                                                                                        //edf
+    double enp = 2 * s_hat(0) - s_hat(1);                                                                                                                                // enp
+    double yss = sum((y - mean(y)) % (y - mean(y)));                                                                                                                            //yss.g
+    double r2 = 1 - ss / yss;
+    double r2_adj = 1 - (1 - r2) * (n - 1) / (edf - 1);
+    result(0) = AIC;
+    result(1) = AICc;
+    result(2) = edf;
+    result(3) = enp;
+    result(4) = ss;
+    result(5) = r2;
+    result(6) = r2_adj;
+    // result(7) = s_hat(0);
+    // result(8) = s_hat(1);
+    return result;
+    //return 2*enp + 2*n*log(ss/n) + 2*enp*(enp+1)/(n - enp - 1);
 }
 
 // return the AICc - nice tool to give to 'optimise' to find 'best' bandwidth
@@ -427,7 +427,7 @@ vec AICcRss(const vec& y, const mat& x, const mat& beta, const vec& s_hat)
 //Caculate the i row of
 mat CiMat(const mat& x, const vec &w)
 {
-	return inv(trans(x) * diagmat(w) * x) * trans(x) * diagmat(w);
+    return inv(trans(x) * diagmat(w) * x) * trans(x) * diagmat(w);
 }
 
 double spGcdist(double lon1, double lon2, double lat1, double lat2) {

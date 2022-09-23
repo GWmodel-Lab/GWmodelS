@@ -177,7 +177,7 @@ void GwmBasicGWRAlgorithm::run()
         vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
         vec dyhat2 = (mY - yhat) % (mY - yhat);
         vec localR2 = vec(nDp, fill::zeros);
-        for (uword i = 0; i < nDp & !checkCanceled(); i++)
+        for (uword i = 0; i < nDp && !checkCanceled(); i++)
         {
             vec w = mSpatialWeight.weightVector(i);
             double tss = sum(dybar2 % w);
@@ -307,7 +307,7 @@ double GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial(const QList<GwmVaria
     uword nDp = x.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec w(nDp, fill::ones);
         mat xtw = trans(x.each_col() % w);
@@ -446,7 +446,7 @@ mat GwmBasicGWRAlgorithm::regressionSerial(const mat &x, const vec &y)
     emit message("Regression ...");
     uword nRp = mRegressionPoints.n_rows, nVar = x.n_cols;
     mat betas(nVar, nRp, fill::zeros);
-    for (uword i = 0; i < nRp & !checkCanceled(); i++)
+    for (uword i = 0; i < nRp && !checkCanceled(); i++)
     {
         vec w = mSpatialWeight.weightVector(i);
         mat xtw = trans(x.each_col() % w);
@@ -549,7 +549,7 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, 
     qDiag = vec(nDp, fill::zeros);
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     bool flag = true;
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec w = mSpatialWeight.weightVector(i);
         mat xtw = trans(x.each_col() % w);
@@ -756,7 +756,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight*
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -906,7 +906,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -1085,14 +1085,14 @@ void GwmBasicGWRAlgorithm::fTest(GwmBasicGWRAlgorithm::FTestParameters params)
     if(!checkCanceled())
     {
         vec vk2(nVar, fill::zeros);
-        for (int i = 0; i < nVar & !checkCanceled(); i++)
+        for (int i = 0; i < nVar && !checkCanceled(); i++)
         {
             vec betasi = mBetas.col(i);
             vec betasJndp = vec(nDp, fill::ones) * (sum(betasi) * 1.0 / nDp);
             vk2(i) = (1.0 / nDp) * det(trans(betasi - betasJndp) * betasi);
         }
 
-        for (int i = 0; i < nVar & !checkCanceled(); i++)
+        for (int i = 0; i < nVar && !checkCanceled(); i++)
         {
             vec diagB = (this->*mCalcDiagBFunction)(i);
             if (!checkCanceled())
@@ -1148,7 +1148,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQSerial()
     emit message(tr("Calculating the trace of matrix Q..."));
     emit tick(0, nDp);
     mat wspan(1, nVar, fill::ones);
-    for (arma::uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (arma::uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec wi = mSpatialWeight.weightVector(i);
         mat xtwi = trans(mX % (wi * wspan));
@@ -1160,7 +1160,7 @@ double GwmBasicGWRAlgorithm::calcTrQtQSerial()
             pi(i) += 1.0;
             double qi = sum(pi % pi);
             trQtQ += qi * qi;
-            for (arma::uword j = i + 1; j < nDp & !checkCanceled(); j++)
+            for (arma::uword j = i + 1; j < nDp && !checkCanceled(); j++)
             {
                 vec wj = mSpatialWeight.weightVector(j);
                 mat xtwj = trans(mX % (wj * wspan));
@@ -1273,7 +1273,7 @@ vec GwmBasicGWRAlgorithm::calcDiagBSerial(int i)
     vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
     mat ek = eye(nVar, nVar);
     mat wspan(1, nVar, fill::ones);
-    for (arma::uword j = 0; j < nDp & !checkCanceled(); j++)
+    for (arma::uword j = 0; j < nDp && !checkCanceled(); j++)
     {
         vec w = mSpatialWeight.weightVector(j);
         mat xtw = trans(mX % (w * wspan));
@@ -1285,7 +1285,7 @@ vec GwmBasicGWRAlgorithm::calcDiagBSerial(int i)
             return { DBL_MAX, DBL_MAX };
         }
     }
-    for (arma::uword k = 0; k < nDp & !checkCanceled(); k++)
+    for (arma::uword k = 0; k < nDp && !checkCanceled(); k++)
     {
         vec w = mSpatialWeight.weightVector(k);
         mat xtw = trans(mX % (w * wspan));

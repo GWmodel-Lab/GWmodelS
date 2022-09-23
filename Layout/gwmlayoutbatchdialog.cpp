@@ -33,21 +33,21 @@
 #include "Layout/gwmlayoutbatchunifylayerpopupdialog.h"
 
 GwmLayoutBatchDialog::GwmLayoutBatchDialog(QWidget *parent)
-	: QDialog(parent)
+    : QDialog(parent)
 {
-	ui = new Ui::GwmLayoutBatchDialog();
-	ui->setupUi(this);
+    ui = new Ui::GwmLayoutBatchDialog();
+    ui->setupUi(this);
 
-	mLayoutModel = new QgsLayoutManagerModel(QgsProject::instance()->layoutManager(), this);
-	mLayoutProxyModel = new QgsLayoutManagerProxyModel(ui->lsvLayout);
-	mLayoutProxyModel->setSourceModel(mLayoutModel);
-	ui->lsvLayout->setModel(mLayoutProxyModel);
+    mLayoutModel = new QgsLayoutManagerModel(QgsProject::instance()->layoutManager(), this);
+    mLayoutProxyModel = new QgsLayoutManagerProxyModel(ui->lsvLayout);
+    mLayoutProxyModel->setSourceModel(mLayoutModel);
+    ui->lsvLayout->setModel(mLayoutProxyModel);
     connect(ui->lsvLayout->selectionModel(), &QItemSelectionModel::currentChanged, this, &GwmLayoutBatchDialog::onLayoutSelectionModelCurrentChanged);
 
     mLayerModel = new GwmLayoutBatchLayerListModel(GwmApp::Instance()->mapModel(), this);
-	ui->lsvLayer->setModel(mLayerModel);
-	mLayerSelectionModel = new QItemSelectionModel(mLayerModel);
-	ui->lsvLayer->setSelectionModel(mLayerSelectionModel);
+    ui->lsvLayer->setModel(mLayerModel);
+    mLayerSelectionModel = new QItemSelectionModel(mLayerModel);
+    ui->lsvLayer->setSelectionModel(mLayerSelectionModel);
     connect(mLayerSelectionModel, &QItemSelectionModel::currentChanged, this, &GwmLayoutBatchDialog::onLayerSelectionModelCurrentChanged);
     connect(mLayerModel, &QAbstractItemModel::dataChanged, this, &GwmLayoutBatchDialog::onLayerModelDataChanged);
 
@@ -236,72 +236,72 @@ void GwmLayoutBatchDialog::on_btnExportRaster_clicked()
 bool GwmLayoutBatchDialog::getRasterExportSettings(QgsLayout* layout, QgsLayoutExporter::ImageExportSettings &settings, QSize &imageSize, QVector<double> scales)
 {
     QSizeF maxPageSize;
-	bool hasUniformPageSizes = false;
-	double dpi = 300;
-	bool cropToContents = false;
-	int marginTop = 0;
-	int marginRight = 0;
-	int marginBottom = 0;
-	int marginLeft = 0;
-	bool antialias = true;
+    bool hasUniformPageSizes = false;
+    double dpi = 300;
+    bool cropToContents = false;
+    int marginTop = 0;
+    int marginRight = 0;
+    int marginBottom = 0;
+    int marginLeft = 0;
+    bool antialias = true;
 
-	// Image size
-	if (layout)
-	{
-		settings.flags = layout->renderContext().flags();
+    // Image size
+    if (layout)
+    {
+        settings.flags = layout->renderContext().flags();
 
-		maxPageSize = layout->pageCollection()->maximumPageSize();
-		hasUniformPageSizes = layout->pageCollection()->hasUniformPageSizes();
-		dpi = layout->renderContext().dpi();
+        maxPageSize = layout->pageCollection()->maximumPageSize();
+        hasUniformPageSizes = layout->pageCollection()->hasUniformPageSizes();
+        dpi = layout->renderContext().dpi();
 
-		//get some defaults from the composition
-		cropToContents = layout->customProperty(QStringLiteral("imageCropToContents"), false).toBool();
-		marginTop = layout->customProperty(QStringLiteral("imageCropMarginTop"), 0).toInt();
-		marginRight = layout->customProperty(QStringLiteral("imageCropMarginRight"), 0).toInt();
-		marginBottom = layout->customProperty(QStringLiteral("imageCropMarginBottom"), 0).toInt();
-		marginLeft = layout->customProperty(QStringLiteral("imageCropMarginLeft"), 0).toInt();
-		antialias = layout->customProperty(QStringLiteral("imageAntialias"), true).toBool();
-	}
+        //get some defaults from the composition
+        cropToContents = layout->customProperty(QStringLiteral("imageCropToContents"), false).toBool();
+        marginTop = layout->customProperty(QStringLiteral("imageCropMarginTop"), 0).toInt();
+        marginRight = layout->customProperty(QStringLiteral("imageCropMarginRight"), 0).toInt();
+        marginBottom = layout->customProperty(QStringLiteral("imageCropMarginBottom"), 0).toInt();
+        marginLeft = layout->customProperty(QStringLiteral("imageCropMarginLeft"), 0).toInt();
+        antialias = layout->customProperty(QStringLiteral("imageAntialias"), true).toBool();
+    }
 
-	QgsLayoutImageExportOptionsDialog imageDlg(this);
-	imageDlg.setImageSize(maxPageSize);
-	imageDlg.setResolution(dpi);
-	imageDlg.setCropToContents(cropToContents);
-	imageDlg.setCropMargins(marginTop, marginRight, marginBottom, marginLeft);
-	if (layout)
-		imageDlg.setGenerateWorldFile(layout->customProperty(QStringLiteral("exportWorldFile"), false).toBool());
-	imageDlg.setAntialiasing(antialias);
+    QgsLayoutImageExportOptionsDialog imageDlg(this);
+    imageDlg.setImageSize(maxPageSize);
+    imageDlg.setResolution(dpi);
+    imageDlg.setCropToContents(cropToContents);
+    imageDlg.setCropMargins(marginTop, marginRight, marginBottom, marginLeft);
+    if (layout)
+        imageDlg.setGenerateWorldFile(layout->customProperty(QStringLiteral("exportWorldFile"), false).toBool());
+    imageDlg.setAntialiasing(antialias);
 
-	if (!imageDlg.exec())
-		return false;
+    if (!imageDlg.exec())
+        return false;
 
-	imageSize = QSize(imageDlg.imageWidth(), imageDlg.imageHeight());
-	cropToContents = imageDlg.cropToContents();
-	imageDlg.getCropMargins(marginTop, marginRight, marginBottom, marginLeft);
-	if (layout)
-	{
-		layout->setCustomProperty(QStringLiteral("imageCropToContents"), cropToContents);
-		layout->setCustomProperty(QStringLiteral("imageCropMarginTop"), marginTop);
-		layout->setCustomProperty(QStringLiteral("imageCropMarginRight"), marginRight);
-		layout->setCustomProperty(QStringLiteral("imageCropMarginBottom"), marginBottom);
-		layout->setCustomProperty(QStringLiteral("imageCropMarginLeft"), marginLeft);
-		layout->setCustomProperty(QStringLiteral("imageAntialias"), imageDlg.antialiasing());
-	}
+    imageSize = QSize(imageDlg.imageWidth(), imageDlg.imageHeight());
+    cropToContents = imageDlg.cropToContents();
+    imageDlg.getCropMargins(marginTop, marginRight, marginBottom, marginLeft);
+    if (layout)
+    {
+        layout->setCustomProperty(QStringLiteral("imageCropToContents"), cropToContents);
+        layout->setCustomProperty(QStringLiteral("imageCropMarginTop"), marginTop);
+        layout->setCustomProperty(QStringLiteral("imageCropMarginRight"), marginRight);
+        layout->setCustomProperty(QStringLiteral("imageCropMarginBottom"), marginBottom);
+        layout->setCustomProperty(QStringLiteral("imageCropMarginLeft"), marginLeft);
+        layout->setCustomProperty(QStringLiteral("imageAntialias"), imageDlg.antialiasing());
+    }
 
-	settings.cropToContents = cropToContents;
-	settings.cropMargins = QgsMargins(marginLeft, marginTop, marginRight, marginBottom);
-	settings.dpi = imageDlg.resolution();
-	if (hasUniformPageSizes)
-	{
-		settings.imageSize = imageSize;
-	}
-	settings.generateWorldFile = imageDlg.generateWorldFile();
-	settings.predefinedMapScales = scales;
-	settings.flags |= QgsLayoutRenderContext::FlagUseAdvancedEffects;
-	if (imageDlg.antialiasing())
-		settings.flags |= QgsLayoutRenderContext::FlagAntialiasing;
-	else
-		settings.flags &= ~QgsLayoutRenderContext::FlagAntialiasing;
+    settings.cropToContents = cropToContents;
+    settings.cropMargins = QgsMargins(marginLeft, marginTop, marginRight, marginBottom);
+    settings.dpi = imageDlg.resolution();
+    if (hasUniformPageSizes)
+    {
+        settings.imageSize = imageSize;
+    }
+    settings.generateWorldFile = imageDlg.generateWorldFile();
+    settings.predefinedMapScales = scales;
+    settings.flags |= QgsLayoutRenderContext::FlagUseAdvancedEffects;
+    if (imageDlg.antialiasing())
+        settings.flags |= QgsLayoutRenderContext::FlagAntialiasing;
+    else
+        settings.flags &= ~QgsLayoutRenderContext::FlagAntialiasing;
 
     return true;
 }
@@ -309,25 +309,25 @@ bool GwmLayoutBatchDialog::getRasterExportSettings(QgsLayout* layout, QgsLayoutE
 QVector<double> GwmLayoutBatchDialog::predefinedScales(QgsMasterLayoutInterface* mMasterLayout) const
 {
     QgsProject *project = mMasterLayout->layoutProject();
-	// first look at project's scales
-	QVector< double > projectMapScales = project->viewSettings()->mapScales();
-	bool hasProjectScales(project->viewSettings()->useProjectScales());
-	if (!hasProjectScales || projectMapScales.isEmpty())
-	{
-		// default to global map tool scales
-		QgsSettings settings;
-		QString scalesStr(settings.value(QStringLiteral("Map/scales"), Qgis::defaultProjectScales()).toString());
-		const QStringList scales = scalesStr.split(',');
+    // first look at project's scales
+    QVector< double > projectMapScales = project->viewSettings()->mapScales();
+    bool hasProjectScales(project->viewSettings()->useProjectScales());
+    if (!hasProjectScales || projectMapScales.isEmpty())
+    {
+        // default to global map tool scales
+        QgsSettings settings;
+        QString scalesStr(settings.value(QStringLiteral("Map/scales"), Qgis::defaultProjectScales()).toString());
+        const QStringList scales = scalesStr.split(',');
 
-		for (const QString &scale : scales)
-		{
-			QStringList parts(scale.split(':'));
-			if (parts.size() == 2)
-			{
-				projectMapScales.push_back(parts[1].toDouble());
-			}
-		}
-	}
+        for (const QString &scale : scales)
+        {
+            QStringList parts(scale.split(':'));
+            if (parts.size() == 2)
+            {
+                projectMapScales.push_back(parts[1].toDouble());
+            }
+        }
+    }
     return projectMapScales;
 }
 
@@ -614,70 +614,70 @@ void GwmLayoutBatchDialog::on_txtFileAddFieldNamePlace_clicked()
 bool GwmLayoutBatchDialog::checkBeforeExport(QgsLayout *layout)
 {
     if (layout)
-	{
-		QgsLayoutValidityCheckContext context(layout);
-		return QgsValidityCheckResultsWidget::runChecks(QgsAbstractValidityCheck::TypeLayoutCheck, &context, tr("Checking Layout"),
-			tr("The layout generated the following warnings. Please review and address these before proceeding with the layout export."), this);
-	}
-	else
-	{
-		return true;
+    {
+        QgsLayoutValidityCheckContext context(layout);
+        return QgsValidityCheckResultsWidget::runChecks(QgsAbstractValidityCheck::TypeLayoutCheck, &context, tr("Checking Layout"),
+            tr("The layout generated the following warnings. Please review and address these before proceeding with the layout export."), this);
+    }
+    else
+    {
+        return true;
     }
 }
 
 bool GwmLayoutBatchDialog::containsWmsLayers(QgsLayout *layout)
 {
     QList< QgsLayoutItemMap *> maps;
-	layout->layoutItems(maps);
+    layout->layoutItems(maps);
 
-	for (QgsLayoutItemMap *map : qgis::as_const(maps))
-	{
-		if (map->containsWmsLayer())
-			return true;
-	}
+    for (QgsLayoutItemMap *map : qgis::as_const(maps))
+    {
+        if (map->containsWmsLayer())
+            return true;
+    }
     return false;
 }
 
 bool GwmLayoutBatchDialog::showFileSizeWarning(QgsLayout *layout)
 {
     // Image size
-	double oneInchInLayoutUnits = layout->convertToLayoutUnits(QgsLayoutMeasurement(1, QgsUnitTypes::LayoutInches));
-	QSizeF maxPageSize = layout->pageCollection()->maximumPageSize();
-	int width = static_cast<int>(layout->renderContext().dpi() * maxPageSize.width() / oneInchInLayoutUnits);
-	int height = static_cast<int>(layout->renderContext().dpi() * maxPageSize.height() / oneInchInLayoutUnits);
-	int memuse = width * height * 3 / 1000000;  // pixmap + image
-	QgsDebugMsg(QStringLiteral("Image %1x%2").arg(width).arg(height));
-	QgsDebugMsg(QStringLiteral("memuse = %1").arg(memuse));
+    double oneInchInLayoutUnits = layout->convertToLayoutUnits(QgsLayoutMeasurement(1, QgsUnitTypes::LayoutInches));
+    QSizeF maxPageSize = layout->pageCollection()->maximumPageSize();
+    int width = static_cast<int>(layout->renderContext().dpi() * maxPageSize.width() / oneInchInLayoutUnits);
+    int height = static_cast<int>(layout->renderContext().dpi() * maxPageSize.height() / oneInchInLayoutUnits);
+    int memuse = width * height * 3 / 1000000;  // pixmap + image
+    QgsDebugMsg(QStringLiteral("Image %1x%2").arg(width).arg(height));
+    QgsDebugMsg(QStringLiteral("memuse = %1").arg(memuse));
 
-	if (memuse > 400)   // about 4500x4500
-	{
-		int answer = QMessageBox::warning(this, tr("Export Layout"),
-			tr("To create an image of %1x%2 requires about %3 MB of memory. Proceed?")
-			.arg(width).arg(height).arg(memuse),
-			QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Ok);
+    if (memuse > 400)   // about 4500x4500
+    {
+        int answer = QMessageBox::warning(this, tr("Export Layout"),
+            tr("To create an image of %1x%2 requires about %3 MB of memory. Proceed?")
+            .arg(width).arg(height).arg(memuse),
+            QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Ok);
 
-		raise();
-		if (answer == QMessageBox::Cancel)
-			return false;
-	}
+        raise();
+        if (answer == QMessageBox::Cancel)
+            return false;
+    }
     return true;
 }
 
 void GwmLayoutBatchDialog::showWmsPrintingWarning()
 {
     QgsSettings settings;
-	bool displayWMSWarning = settings.value(QStringLiteral("/UI/displayComposerWMSWarning"), true).toBool();
-	if (displayWMSWarning)
-	{
-		QgsMessageViewer *m = new QgsMessageViewer(this);
-		m->setWindowTitle(tr("Project Contains WMS Layers"));
-		m->setMessage(tr("Some WMS servers (e.g. UMN mapserver) have a limit for the WIDTH and HEIGHT parameter. Printing layers from such servers may exceed this limit. If this is the case, the WMS layer will not be printed"), QgsMessageOutput::MessageText);
-		m->setCheckBoxText(tr("Don't show this message again"));
-		m->setCheckBoxState(Qt::Unchecked);
-		m->setCheckBoxVisible(true);
-		m->setCheckBoxQgsSettingsLabel(QStringLiteral("/UI/displayComposerWMSWarning"));
-		m->exec(); //deleted on close
-	}
+    bool displayWMSWarning = settings.value(QStringLiteral("/UI/displayComposerWMSWarning"), true).toBool();
+    if (displayWMSWarning)
+    {
+        QgsMessageViewer *m = new QgsMessageViewer(this);
+        m->setWindowTitle(tr("Project Contains WMS Layers"));
+        m->setMessage(tr("Some WMS servers (e.g. UMN mapserver) have a limit for the WIDTH and HEIGHT parameter. Printing layers from such servers may exceed this limit. If this is the case, the WMS layer will not be printed"), QgsMessageOutput::MessageText);
+        m->setCheckBoxText(tr("Don't show this message again"));
+        m->setCheckBoxState(Qt::Unchecked);
+        m->setCheckBoxVisible(true);
+        m->setCheckBoxQgsSettingsLabel(QStringLiteral("/UI/displayComposerWMSWarning"));
+        m->exec(); //deleted on close
+    }
 }
 
 void GwmLayoutBatchDialog::on_btnUnifyLayer_clicked()

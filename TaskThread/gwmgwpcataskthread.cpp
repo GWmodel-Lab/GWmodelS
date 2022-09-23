@@ -83,7 +83,7 @@ void GwmGWPCATaskThread::run()
     // 取RW矩阵每一行最大的列的索引
     QList<QString> win_var_PC1;
     uvec iWinVar = index_max(mLoadings.slice(0), 1);
-    for(int i = 0; i < mDataPoints.n_rows & !checkCanceled(); i++)
+    for(int i = 0; i < mDataPoints.n_rows && !checkCanceled(); i++)
     {
         win_var_PC1.append(mVariables.at(iWinVar(i)).name);
     }
@@ -478,7 +478,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
     double score = 0;
     //主循环开始
     //主循环
-    for (int i = 0; i < n & !checkCanceled(); i++)
+    for (int i = 0; i < n && !checkCanceled(); i++)
     {
         vec distvi = mSpatialWeight.distance()->distance(i);
         vec wt = weight->weight(distvi);
@@ -604,7 +604,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings
     // 初始化矩阵
     loadings = cube(nDp, nVar, mK, fill::zeros);
     scores = cube(nDp, mK, nDp, fill::zeros);
-    for(int i=0;i<nDp & !checkCanceled();i++)
+    for(int i=0;i<nDp && !checkCanceled();i++)
     {
         //vec distvi = mSpatialWeight.distance()->distance(i);
         vec wt = mSpatialWeight.weightVector(i);
@@ -630,14 +630,14 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial(const mat &x, cube &loadings
         mLatestWt = newWt;
         d_all.col(i) = d;
         //计算loadings
-        for(int j = 0; j < mK & !checkCanceled(); j++)
+        for(int j = 0; j < mK && !checkCanceled(); j++)
         {
             loadings.slice(j).row(i) = trans(V.col(j));
         }
         //计算scores
         //如果点数大于4096不保存scores
         mat scorei(nDp, mK, fill::zeros);
-        for(int j = 0; j < mK & !checkCanceled(); j++)
+        for(int j = 0; j < mK && !checkCanceled(); j++)
         {
             mat score = newX.each_row() % trans(V.col(j));
             scorei.col(j) = sum(score, 1);
@@ -746,7 +746,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat 
     // 初始化矩阵
     loadings = cube(nDp, nVar, mK, fill::zeros);
     //scores = cube(nDp, mK, nDp, fill::zeros);
-    for(int i=0;i<nDp & !checkCanceled();i++)
+    for(int i=0;i<nDp && !checkCanceled();i++)
     {
         //vec distvi = mSpatialWeight.distance()->distance(i);
         vec wt = mSpatialWeight.weightVector(i);
@@ -772,7 +772,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevSerial(const mat &x, cube &loadings, mat 
         mLatestWt = newWt;
         d_all.col(i) = d;
         //计算loadings
-        for(int j = 0; j < mK & !checkCanceled(); j++)
+        for(int j = 0; j < mK && !checkCanceled(); j++)
         {
             loadings.slice(j).row(i) = trans(V.col(j));
         }

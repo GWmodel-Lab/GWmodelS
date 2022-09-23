@@ -82,7 +82,7 @@ bool GwmGWaverageTaskThread::CalculateSerial(){
     rankX.each_col([&](vec x) { x = rank(x); });
     int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
     emit tick(0,nRp);
-    for(int i = 0; i < nRp & !checkCanceled(); i++){
+    for(int i = 0; i < nRp && !checkCanceled(); i++){
 //        vec d = mSpatialWeight.distance()->distance(i);
         vec w = mSpatialWeight.weightVector(i);
         double sumw = sum(w);
@@ -91,7 +91,7 @@ bool GwmGWaverageTaskThread::CalculateSerial(){
         if(mQuantile && !checkCanceled()){
 //            mat cor = cor(mX);
             mat quant = mat(3,nVar);
-            for(int j = 0; j < nVar & !checkCanceled(); j++){
+            for(int j = 0; j < nVar && !checkCanceled(); j++){
                 quant.col(j) = findq(mX.col(j), Wi);
             }
             mLocalMedian.row(i) = quant.row(1);
@@ -104,8 +104,8 @@ bool GwmGWaverageTaskThread::CalculateSerial(){
         mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
         if(nVar >= 2 && !checkCanceled()){
             int tag = 0;
-            for(int j = 0; j < nVar-1 & !checkCanceled(); j++){
-                for(int k = j+1; k < nVar & !checkCanceled(); k++){
+            for(int j = 0; j < nVar-1 && !checkCanceled(); j++){
+                for(int k = j+1; k < nVar && !checkCanceled(); k++){
                     double covjk = covwt(mX.col(j), mX.col(k), Wi);
                     double sumW2 = sum(Wi % Wi);
                     double covjj = mLVar(i, j) / (1.0 - sumW2);
@@ -141,7 +141,7 @@ bool GwmGWaverageTaskThread::CalculateOmp(){
             if(mQuantile && !checkCanceled()){
     //            mat cor = cor(mX);
                 mat quant = mat(3,nVar);
-                for(int j = 0; j < nVar & !checkCanceled(); j++){
+                for(int j = 0; j < nVar && !checkCanceled(); j++){
                     quant.col(j) = findq(mX.col(j), Wi);
                 }
                 mLocalMedian.row(i) = quant.row(1);
@@ -154,8 +154,8 @@ bool GwmGWaverageTaskThread::CalculateOmp(){
             mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
             if(nVar >= 2 && !checkCanceled()){
                 int tag = 0;
-                for(int j = 0; j < nVar-1 & !checkCanceled(); j++){
-                    for(int k = j+1; k < nVar & !checkCanceled(); k++){
+                for(int j = 0; j < nVar-1 && !checkCanceled(); j++){
+                    for(int k = j+1; k < nVar && !checkCanceled(); k++){
                         double covjk = covwt(mX.col(j), mX.col(k), Wi);
                         double sumW2 = sum(Wi % Wi);
                         double covjj = mLVar(i, j) / (1.0 - sumW2);

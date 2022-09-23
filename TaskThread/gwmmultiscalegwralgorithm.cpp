@@ -118,7 +118,7 @@ void GwmMultiscaleGWRAlgorithm::run()
     // ********************************
     mX0 = mX;
     mY0 = mY;
-    for (uword i = 1; i < nVar & !checkCanceled(); i++)
+    for (uword i = 1; i < nVar && !checkCanceled(); i++)
     {
         if (mPreditorCentered[i])
         {
@@ -130,7 +130,7 @@ void GwmMultiscaleGWRAlgorithm::run()
     // Intialize the bandwidth
     // ***********************
     mYi = mY;
-    for (uword i = 0; i < nVar & !checkCanceled(); i++)
+    for (uword i = 0; i < nVar && !checkCanceled(); i++)
     {
         if (mBandwidthInitilize[i] == BandwidthInitilizeType::Null)
         {
@@ -221,9 +221,9 @@ mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
     if (mHasHatMatrix && !checkCanceled())
     {
         mat idm(nVar, nVar, fill::eye);
-        for (uword i = 0; i < nVar & !checkCanceled(); ++i)
+        for (uword i = 0; i < nVar && !checkCanceled(); ++i)
         {
-            for (uword j = 0; j < nDp & !checkCanceled(); ++j)
+            for (uword j = 0; j < nDp && !checkCanceled(); ++j)
             {
                 mSArray.slice(i).row(j) = x(j, i) * (idm.row(i) * mC.slice(j));
             }
@@ -238,10 +238,10 @@ mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
     vec resid = y - fitted(x, betas);
     double RSS0 = sum(resid % resid), RSS1 = DBL_MAX;
     double criterion = DBL_MAX;
-    for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold & !checkCanceled(); iteration++)
+    for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold && !checkCanceled(); iteration++)
     {
         emit tick(iteration - 1, mMaxIteration);
-        for (uword i = 0; i < nVar & !checkCanceled(); i++)
+        for (uword i = 0; i < nVar && !checkCanceled(); i++)
         {
             QString varName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i-1].name;
             vec fi = betas.col(i) % x.col(i);
@@ -502,7 +502,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
     if (mHasHatMatrix && !checkCanceled())
     {
         mat betasSE(nVar, nDp, fill::zeros);
-        for (int i = 0; i < nDp & !checkCanceled(); i++)
+        for (int i = 0; i < nDp && !checkCanceled(); i++)
         {
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
@@ -525,7 +525,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
     }
     else
     {
-        for (int i = 0; i < nDp & !checkCanceled(); i++)
+        for (int i = 0; i < nDp && !checkCanceled(); i++)
         {
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
@@ -607,7 +607,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, c
     {
         mat ci, si;
         S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
-        for (int i = 0; i < nDp & !checkCanceled(); i++)
+        for (int i = 0; i < nDp && !checkCanceled(); i++)
         {
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
@@ -627,7 +627,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, c
     }
     else
     {
-        for (int i = 0; i < nDp & !checkCanceled(); i++)
+        for (int i = 0; i < nDp && !checkCanceled(); i++)
         {
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
@@ -704,7 +704,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial(GwmBandwidt
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec d = mInitSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -781,7 +781,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial(GwmBandwid
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec d = mInitSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -864,7 +864,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial(GwmBandwidt
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -943,7 +943,7 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial(GwmBandwid
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(1, nDp, fill::zeros);
     vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);

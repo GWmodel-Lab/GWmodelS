@@ -281,7 +281,7 @@ void QgsLayoutManagerDialog::mAddButton_clicked()
     if ( layout )
     {
       layout->setName( title );
-	  GwmApp::Instance()->openLayoutDesignerDialog( layout.get() );
+      GwmApp::Instance()->openLayoutDesignerDialog( layout.get() );
       QgsProject::instance()->layoutManager()->addLayout( layout.release() );
     }
   }
@@ -501,7 +501,7 @@ void QgsLayoutManagerDialog::itemDoubleClicked( const QModelIndex &index )
 {
   if ( QgsMasterLayoutInterface *l = mModel->layoutFromIndex( mProxyModel->mapToSource( index ) ) )
   {
-	  GwmApp::Instance()->openLayoutDesignerDialog( l );
+      GwmApp::Instance()->openLayoutDesignerDialog( l );
   }
 }
 
