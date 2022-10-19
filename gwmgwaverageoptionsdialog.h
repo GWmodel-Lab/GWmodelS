@@ -6,7 +6,7 @@
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
 #include "Model/gwmvariableitemmodel.h"
-#include "TaskThread/gwmgwaverageTaskThread.h"
+#include "TaskThread/gwmgwaveragetaskthread.h"
 #include "TaskThread/iparallelable.h"
 #include "SpatialWeight/gwmdistance.h"
 
