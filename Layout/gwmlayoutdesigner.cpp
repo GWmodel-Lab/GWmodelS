@@ -48,6 +48,7 @@
 #include <qgslayoutpdfexportoptionsdialog.h>
 #include <qgsvaliditycheckcontext.h>
 #include <qgsvaliditycheckresultswidget.h>
+#include <qgstextrenderer.h>
 
 #include "gwmapp.h"
 //#include "Layout/qgslayoutmanagerdialog.h"
@@ -1009,12 +1010,12 @@ bool GwmLayoutDesigner::containsWmsLayers() const
     QList< QgsLayoutItemMap *> maps;
     mLayout->layoutItems(maps);
 
-    for (QgsLayoutItemMap *map : qgis::as_const(maps))
-    {
-        if (map->containsWmsLayer())
-            return true;
-    }
-    return false;
+	for (QgsLayoutItemMap *map : std::as_const(maps))
+	{
+		if (map->containsWmsLayer())
+			return true;
+	}
+	return false;
 }
 
 bool GwmLayoutDesigner::requiresRasterization() const
@@ -1022,12 +1023,12 @@ bool GwmLayoutDesigner::requiresRasterization() const
     QList< QgsLayoutItem *> items;
     mLayout->layoutItems(items);
 
-    for (QgsLayoutItem *currentItem : qgis::as_const(items))
-    {
-        if (currentItem->requiresRasterization())
-            return true;
-    }
-    return false;
+	for (QgsLayoutItem *currentItem : std::as_const(items))
+	{
+		if (currentItem->requiresRasterization())
+			return true;
+	}
+	return false;
 }
 
 void GwmLayoutDesigner::showWmsPrintingWarning()
@@ -1243,37 +1244,37 @@ bool GwmLayoutDesigner::getRasterExportSettings(QgsLayoutExporter::ImageExportSe
 
 bool GwmLayoutDesigner::getPdfExportSettings(QgsLayoutExporter::PdfExportSettings & settings)
 {
-    QgsRenderContext::TextRenderFormat prevTextRenderFormat = mMasterLayout->layoutProject()->labelingEngineSettings().defaultTextRenderFormat();
-    bool forceVector = false;
-    bool appendGeoreference = true;
-    bool includeMetadata = true;
-    bool disableRasterTiles = false;
-    bool simplify = true;
-    bool geoPdf = false;
-    bool useOgcBestPracticeFormat = false;
-    bool exportGeoPdfFeatures = true;
-    QStringList exportThemes;
-    if (mLayout)
-    {
-        settings.flags = mLayout->renderContext().flags();
-        forceVector = mLayout->customProperty(QStringLiteral("forceVector"), 0).toBool();
-        appendGeoreference = mLayout->customProperty(QStringLiteral("pdfAppendGeoreference"), 1).toBool();
-        includeMetadata = mLayout->customProperty(QStringLiteral("pdfIncludeMetadata"), 1).toBool();
-        disableRasterTiles = mLayout->customProperty(QStringLiteral("pdfDisableRasterTiles"), 0).toBool();
-        simplify = mLayout->customProperty(QStringLiteral("pdfSimplify"), 1).toBool();
-        geoPdf = mLayout->customProperty(QStringLiteral("pdfCreateGeoPdf"), 0).toBool();
-        useOgcBestPracticeFormat = mLayout->customProperty(QStringLiteral("pdfOgcBestPracticeFormat"), 0).toBool();
-        exportGeoPdfFeatures = mLayout->customProperty(QStringLiteral("pdfExportGeoPdfFeatures"), 1).toBool();
-        const QString themes = mLayout->customProperty(QStringLiteral("pdfExportThemes")).toString();
-        if (!themes.isEmpty())
-            exportThemes = themes.split(QStringLiteral("~~~"));
-        const int prevLayoutSettingLabelsAsOutlines = mLayout->customProperty(QStringLiteral("pdfTextFormat"), -1).toInt();
-        if (prevLayoutSettingLabelsAsOutlines >= 0)
-        {
-            // previous layout setting takes default over project setting
-            prevTextRenderFormat = static_cast<QgsRenderContext::TextRenderFormat>(prevLayoutSettingLabelsAsOutlines);
-        }
-    }
+	Qgis::TextRenderFormat prevTextRenderFormat = mMasterLayout->layoutProject()->labelingEngineSettings().defaultTextRenderFormat();
+	bool forceVector = false;
+	bool appendGeoreference = true;
+	bool includeMetadata = true;
+	bool disableRasterTiles = false;
+	bool simplify = true;
+	bool geoPdf = false;
+	bool useOgcBestPracticeFormat = false;
+	bool exportGeoPdfFeatures = true;
+	QStringList exportThemes;
+	if (mLayout)
+	{
+		settings.flags = mLayout->renderContext().flags();
+		forceVector = mLayout->customProperty(QStringLiteral("forceVector"), 0).toBool();
+		appendGeoreference = mLayout->customProperty(QStringLiteral("pdfAppendGeoreference"), 1).toBool();
+		includeMetadata = mLayout->customProperty(QStringLiteral("pdfIncludeMetadata"), 1).toBool();
+		disableRasterTiles = mLayout->customProperty(QStringLiteral("pdfDisableRasterTiles"), 0).toBool();
+		simplify = mLayout->customProperty(QStringLiteral("pdfSimplify"), 1).toBool();
+		geoPdf = mLayout->customProperty(QStringLiteral("pdfCreateGeoPdf"), 0).toBool();
+		useOgcBestPracticeFormat = mLayout->customProperty(QStringLiteral("pdfOgcBestPracticeFormat"), 0).toBool();
+		exportGeoPdfFeatures = mLayout->customProperty(QStringLiteral("pdfExportGeoPdfFeatures"), 1).toBool();
+		const QString themes = mLayout->customProperty(QStringLiteral("pdfExportThemes")).toString();
+		if (!themes.isEmpty())
+			exportThemes = themes.split(QStringLiteral("~~~"));
+		const int prevLayoutSettingLabelsAsOutlines = mLayout->customProperty(QStringLiteral("pdfTextFormat"), -1).toInt();
+		if (prevLayoutSettingLabelsAsOutlines >= 0)
+		{
+			// previous layout setting takes default over project setting
+			prevTextRenderFormat = static_cast<Qgis::TextRenderFormat>(prevLayoutSettingLabelsAsOutlines);
+		}
+	}
 
     // open options dialog
     QgsLayoutPdfExportOptionsDialog dialog(this);
@@ -1293,14 +1294,14 @@ bool GwmLayoutDesigner::getPdfExportSettings(QgsLayoutExporter::PdfExportSetting
     if (dialog.exec() != QDialog::Accepted)
         return false;
 
-    appendGeoreference = dialog.georeferencingEnabled();
-    includeMetadata = dialog.metadataEnabled();
-    forceVector = dialog.forceVector();
-    disableRasterTiles = dialog.rasterTilingDisabled();
-    simplify = dialog.geometriesSimplified();
-    QgsRenderContext::TextRenderFormat textRenderFormat = dialog.textRenderFormat();
-    geoPdf = dialog.exportGeoPdf();
-    useOgcBestPracticeFormat = dialog.useOgcBestPracticeFormat();
+	appendGeoreference = dialog.georeferencingEnabled();
+	includeMetadata = dialog.metadataEnabled();
+	forceVector = dialog.forceVector();
+	disableRasterTiles = dialog.rasterTilingDisabled();
+	simplify = dialog.geometriesSimplified();
+	Qgis::TextRenderFormat textRenderFormat = dialog.textRenderFormat();
+	geoPdf = dialog.exportGeoPdf();
+	useOgcBestPracticeFormat = dialog.useOgcBestPracticeFormat();
 //	exportGeoPdfFeatures = dialog.exportGeoPdfFeatures();
     exportThemes = dialog.exportThemes();
 
@@ -1341,44 +1342,44 @@ bool GwmLayoutDesigner::getPdfExportSettings(QgsLayoutExporter::PdfExportSetting
 
 bool GwmLayoutDesigner::getSvgExportSettings(QgsLayoutExporter::SvgExportSettings & settings)
 {
-    bool groupLayers = false;
-    QgsRenderContext::TextRenderFormat prevTextRenderFormat = mMasterLayout->layoutProject()->labelingEngineSettings().defaultTextRenderFormat();
-    bool clipToContent = false;
-    double marginTop = 0.0;
-    double marginRight = 0.0;
-    double marginBottom = 0.0;
-    double marginLeft = 0.0;
-    bool forceVector = false;
-    bool layersAsGroup = false;
-    bool cropToContents = false;
-    double topMargin = 0.0;
-    double rightMargin = 0.0;
-    double bottomMargin = 0.0;
-    double leftMargin = 0.0;
-    bool includeMetadata = true;
-    bool disableRasterTiles = false;
-    bool simplify = true;
-    if (mLayout)
-    {
-        settings.flags = mLayout->renderContext().flags();
+	bool groupLayers = false;
+	Qgis::TextRenderFormat prevTextRenderFormat = mMasterLayout->layoutProject()->labelingEngineSettings().defaultTextRenderFormat();
+	bool clipToContent = false;
+	double marginTop = 0.0;
+	double marginRight = 0.0;
+	double marginBottom = 0.0;
+	double marginLeft = 0.0;
+	bool forceVector = false;
+	bool layersAsGroup = false;
+	bool cropToContents = false;
+	double topMargin = 0.0;
+	double rightMargin = 0.0;
+	double bottomMargin = 0.0;
+	double leftMargin = 0.0;
+	bool includeMetadata = true;
+	bool disableRasterTiles = false;
+	bool simplify = true;
+	if (mLayout)
+	{
+		settings.flags = mLayout->renderContext().flags();
 
-        forceVector = mLayout->customProperty(QStringLiteral("forceVector"), false).toBool();
-        layersAsGroup = mLayout->customProperty(QStringLiteral("svgGroupLayers"), false).toBool();
-        cropToContents = mLayout->customProperty(QStringLiteral("svgCropToContents"), false).toBool();
-        topMargin = mLayout->customProperty(QStringLiteral("svgCropMarginTop"), 0).toInt();
-        rightMargin = mLayout->customProperty(QStringLiteral("svgCropMarginRight"), 0).toInt();
-        bottomMargin = mLayout->customProperty(QStringLiteral("svgCropMarginBottom"), 0).toInt();
-        leftMargin = mLayout->customProperty(QStringLiteral("svgCropMarginLeft"), 0).toInt();
-        includeMetadata = mLayout->customProperty(QStringLiteral("svgIncludeMetadata"), 1).toBool();
-        disableRasterTiles = mLayout->customProperty(QStringLiteral("svgDisableRasterTiles"), 0).toBool();
-        simplify = mLayout->customProperty(QStringLiteral("svgSimplify"), 1).toBool();
-        const int prevLayoutSettingLabelsAsOutlines = mLayout->customProperty(QStringLiteral("svgTextFormat"), -1).toInt();
-        if (prevLayoutSettingLabelsAsOutlines >= 0)
-        {
-            // previous layout setting takes default over project setting
-            prevTextRenderFormat = static_cast<QgsRenderContext::TextRenderFormat>(prevLayoutSettingLabelsAsOutlines);
-        }
-    }
+		forceVector = mLayout->customProperty(QStringLiteral("forceVector"), false).toBool();
+		layersAsGroup = mLayout->customProperty(QStringLiteral("svgGroupLayers"), false).toBool();
+		cropToContents = mLayout->customProperty(QStringLiteral("svgCropToContents"), false).toBool();
+		topMargin = mLayout->customProperty(QStringLiteral("svgCropMarginTop"), 0).toInt();
+		rightMargin = mLayout->customProperty(QStringLiteral("svgCropMarginRight"), 0).toInt();
+		bottomMargin = mLayout->customProperty(QStringLiteral("svgCropMarginBottom"), 0).toInt();
+		leftMargin = mLayout->customProperty(QStringLiteral("svgCropMarginLeft"), 0).toInt();
+		includeMetadata = mLayout->customProperty(QStringLiteral("svgIncludeMetadata"), 1).toBool();
+		disableRasterTiles = mLayout->customProperty(QStringLiteral("svgDisableRasterTiles"), 0).toBool();
+		simplify = mLayout->customProperty(QStringLiteral("svgSimplify"), 1).toBool();
+		const int prevLayoutSettingLabelsAsOutlines = mLayout->customProperty(QStringLiteral("svgTextFormat"), -1).toInt();
+		if (prevLayoutSettingLabelsAsOutlines >= 0)
+		{
+			// previous layout setting takes default over project setting
+			prevTextRenderFormat = static_cast<Qgis::TextRenderFormat>(prevLayoutSettingLabelsAsOutlines);
+		}
+	}
 
     // open options dialog
     QDialog dialog(this);
@@ -1391,35 +1392,35 @@ bool GwmLayoutDesigner::getSvgExportSettings(QgsLayoutExporter::SvgExportSetting
     }
     );
 
-    options.mTextRenderFormatComboBox->addItem(tr("Always Export Text as Paths (Recommended)"), QgsRenderContext::TextFormatAlwaysOutlines);
-    options.mTextRenderFormatComboBox->addItem(tr("Always Export Text as Text Objects"), QgsRenderContext::TextFormatAlwaysText);
+	options.mTextRenderFormatComboBox->addItem(tr("Always Export Text as Paths (Recommended)"), (int)Qgis::TextRenderFormat::AlwaysOutlines);
+	options.mTextRenderFormatComboBox->addItem(tr("Always Export Text as Text Objects"), (int)Qgis::TextRenderFormat::AlwaysText);
 
-    options.mTextRenderFormatComboBox->setCurrentIndex(options.mTextRenderFormatComboBox->findData(prevTextRenderFormat));
-    options.chkMapLayersAsGroup->setChecked(layersAsGroup);
-    options.mClipToContentGroupBox->setChecked(cropToContents);
-    options.mForceVectorCheckBox->setChecked(forceVector);
-    options.mTopMarginSpinBox->setValue(topMargin);
-    options.mRightMarginSpinBox->setValue(rightMargin);
-    options.mBottomMarginSpinBox->setValue(bottomMargin);
-    options.mLeftMarginSpinBox->setValue(leftMargin);
-    options.mIncludeMetadataCheckbox->setChecked(includeMetadata);
-    options.mDisableRasterTilingCheckBox->setChecked(disableRasterTiles);
-    options.mSimplifyGeometriesCheckbox->setChecked(simplify);
+	options.mTextRenderFormatComboBox->setCurrentIndex(options.mTextRenderFormatComboBox->findData((int)prevTextRenderFormat));
+	options.chkMapLayersAsGroup->setChecked(layersAsGroup);
+	options.mClipToContentGroupBox->setChecked(cropToContents);
+	options.mForceVectorCheckBox->setChecked(forceVector);
+	options.mTopMarginSpinBox->setValue(topMargin);
+	options.mRightMarginSpinBox->setValue(rightMargin);
+	options.mBottomMarginSpinBox->setValue(bottomMargin);
+	options.mLeftMarginSpinBox->setValue(leftMargin);
+	options.mIncludeMetadataCheckbox->setChecked(includeMetadata);
+	options.mDisableRasterTilingCheckBox->setChecked(disableRasterTiles);
+	options.mSimplifyGeometriesCheckbox->setChecked(simplify);
 
     if (dialog.exec() != QDialog::Accepted)
         return false;
 
-    groupLayers = options.chkMapLayersAsGroup->isChecked();
-    clipToContent = options.mClipToContentGroupBox->isChecked();
-    marginTop = options.mTopMarginSpinBox->value();
-    marginRight = options.mRightMarginSpinBox->value();
-    marginBottom = options.mBottomMarginSpinBox->value();
-    marginLeft = options.mLeftMarginSpinBox->value();
-    includeMetadata = options.mIncludeMetadataCheckbox->isChecked();
-    forceVector = options.mForceVectorCheckBox->isChecked();
-    disableRasterTiles = options.mDisableRasterTilingCheckBox->isChecked();
-    simplify = options.mSimplifyGeometriesCheckbox->isChecked();
-    QgsRenderContext::TextRenderFormat textRenderFormat = static_cast<QgsRenderContext::TextRenderFormat>(options.mTextRenderFormatComboBox->currentData().toInt());
+	groupLayers = options.chkMapLayersAsGroup->isChecked();
+	clipToContent = options.mClipToContentGroupBox->isChecked();
+	marginTop = options.mTopMarginSpinBox->value();
+	marginRight = options.mRightMarginSpinBox->value();
+	marginBottom = options.mBottomMarginSpinBox->value();
+	marginLeft = options.mLeftMarginSpinBox->value();
+	includeMetadata = options.mIncludeMetadataCheckbox->isChecked();
+	forceVector = options.mForceVectorCheckBox->isChecked();
+	disableRasterTiles = options.mDisableRasterTilingCheckBox->isChecked();
+	simplify = options.mSimplifyGeometriesCheckbox->isChecked();
+	Qgis::TextRenderFormat textRenderFormat = static_cast<Qgis::TextRenderFormat>(options.mTextRenderFormatComboBox->currentData().toInt());
 
     if (mLayout)
     {
@@ -1459,11 +1460,11 @@ bool GwmLayoutDesigner::containsAdvancedEffects() const
     QList< QgsLayoutItem *> items;
     mLayout->layoutItems(items);
 
-    for (QgsLayoutItem *currentItem : qgis::as_const(items))
-    {
-        if (currentItem->containsAdvancedEffects())
-            return true;
-    }
+	for (QgsLayoutItem *currentItem : std::as_const(items))
+	{
+		if (currentItem->containsAdvancedEffects())
+			return true;
+	}
     return false;
 }
 
@@ -2301,10 +2302,10 @@ void GwmLayoutDesigner::printReport()
         printSettings.rasterizeWholeImage = mLayout->customProperty(QStringLiteral("rasterize"), false).toBool();
     printSettings.predefinedMapScales = predefinedScales();
 
-    QString error;
-    std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-    std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Printing maps��"), tr("Abort"), 0, 0, this);
-    progressDialog->setWindowTitle(tr("Printing Report"));
+	QString error;
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Printing maps��"), tr("Abort"), 0, 0, this);
+	progressDialog->setWindowTitle(tr("Printing Report"));
 
     QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Printing ��%1��").arg(mMasterLayout->name()));
 
@@ -2433,10 +2434,10 @@ void GwmLayoutDesigner::exportReportToRaster()
     mView->setPaintingEnabled(false);
     QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
 
-    QString error;
-    std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-    std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering report��"), tr("Abort"), 0, 0, this);
-    progressDialog->setWindowTitle(tr("Exporting Report"));
+	QString error;
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering report��"), tr("Abort"), 0, 0, this);
+	progressDialog->setWindowTitle(tr("Exporting Report"));
 
     QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ��%1��").arg(mMasterLayout->name()));
 
@@ -2549,10 +2550,10 @@ void GwmLayoutDesigner::exportReportToSvg()
     mView->setPaintingEnabled(false);
     QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
 
-    QString error;
-    std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-    std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering maps��"), tr("Abort"), 0, 0, this);
-    progressDialog->setWindowTitle(tr("Exporting Report"));
+	QString error;
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering maps��"), tr("Abort"), 0, 0, this);
+	progressDialog->setWindowTitle(tr("Exporting Report"));
 
     QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ��%1��").arg(mMasterLayout->name()));
 
@@ -2684,10 +2685,10 @@ void GwmLayoutDesigner::exportReportToPdf()
 
     pdfSettings.rasterizeWholeImage = rasterize;
 
-    QString error;
-    std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-    std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering maps��"), tr("Abort"), 0, 0, this);
-    progressDialog->setWindowTitle(tr("Exporting Report"));
+	QString error;
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering maps��"), tr("Abort"), 0, 0, this);
+	progressDialog->setWindowTitle(tr("Exporting Report"));
 
     QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ��%1��").arg(mMasterLayout->name()));
 
@@ -2811,10 +2812,10 @@ void GwmLayoutDesigner::printAtlas()
     printSettings.rasterizeWholeImage = mLayout->customProperty(QStringLiteral("rasterize"), false).toBool();
     printSettings.predefinedMapScales = predefinedScales();
 
-    QString error;
-    std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-    std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Printing maps��"), tr("Abort"), 0, 100, this);
-    progressDialog->setWindowTitle(tr("Printing Atlas"));
+	QString error;
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Printing maps��"), tr("Abort"), 0, 100, this);
+	progressDialog->setWindowTitle(tr("Printing Atlas"));
 
     QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Printing ��%1��").arg(mMasterLayout->name()));
 
@@ -2993,10 +2994,10 @@ void GwmLayoutDesigner::exportAtlasToRaster()
     mView->setPaintingEnabled(false);
     QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
 
-    QString error;
-    std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-    std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering maps��"), tr("Abort"), 0, 100, this);
-    progressDialog->setWindowTitle(tr("Exporting Atlas"));
+	QString error;
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering maps��"), tr("Abort"), 0, 100, this);
+	progressDialog->setWindowTitle(tr("Exporting Atlas"));
 
     QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ��%1��").arg(mMasterLayout->name()));
 
@@ -3148,10 +3149,10 @@ void GwmLayoutDesigner::exportAtlasToSvg()
     mView->setPaintingEnabled(false);
     QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
 
-    QString error;
-    std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-    std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering maps��"), tr("Abort"), 0, 100, this);
-    progressDialog->setWindowTitle(tr("Exporting Atlas"));
+	QString error;
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering maps��"), tr("Abort"), 0, 100, this);
+	progressDialog->setWindowTitle(tr("Exporting Atlas"));
 
     QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ��%1��").arg(mMasterLayout->name()));
 
@@ -3360,9 +3361,9 @@ void GwmLayoutDesigner::exportAtlasToPdf()
     QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
     pdfSettings.rasterizeWholeImage = mLayout->customProperty(QStringLiteral("rasterize"), false).toBool();
 
-    QString error;
-    std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-    std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering maps��"), tr("Abort"), 0, 100, this);
+	QString error;
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering maps��"), tr("Abort"), 0, 100, this);
 
     QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ��%1��").arg(mMasterLayout->name()));
 
@@ -3907,8 +3908,8 @@ QgsLayoutAtlas * GwmLayoutDesigner::atlas()
 
 QPrinter* GwmLayoutDesigner::printer()
 {
-    if (!mPrinter)
-        mPrinter = qgis::make_unique<QPrinter>();
+	if (!mPrinter)
+		mPrinter = std::make_unique<QPrinter>();
 
     return mPrinter.get();
 }

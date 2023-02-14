@@ -90,7 +90,7 @@ class QgsDelimitedTextProvider final: public QgsVectorDataProvider
     QString storageType() const override;
     QgsFeatureIterator getFeatures( const QgsFeatureRequest &request ) const override;
     QgsWkbTypes::Type wkbType() const override;
-    long featureCount() const override;
+    long long featureCount() const override;
     QgsFields fields() const override;
     QgsVectorDataProvider::Capabilities capabilities() const override;
     bool createSpatialIndex() override;
@@ -240,8 +240,8 @@ class QgsDelimitedTextProviderMetadata final: public QgsProviderMetadata
   public:
     QgsDelimitedTextProviderMetadata();
     QgsDataProvider *createProvider( const QString &uri, const QgsDataProvider::ProviderOptions &options, QgsDataProvider::ReadFlags flags = QgsDataProvider::ReadFlags() ) override;
-    QVariantMap decodeUri( const QString &uri ) override;
-    QString encodeUri( const QVariantMap &parts ) override;
+    QVariantMap decodeUri( const QString &uri ) const override;
+    QString encodeUri( const QVariantMap &parts ) const override;
 };
 
 #endif

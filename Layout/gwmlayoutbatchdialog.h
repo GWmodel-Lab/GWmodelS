@@ -2,6 +2,7 @@
 
 #include <QDialog>
 #include <QAbstractItemModel>
+#include <QFileInfo>
 #include <qgslayoutexporter.h>
 
 namespace Ui { class GwmLayoutBatchDialog; };

@@ -30,7 +30,7 @@
 //
 
 #include "ui_qgsfeaturefilterwidget.h"
-
+#include <QTimer>
 #include "qgsattributeform.h"
 
 class QgsVectorLayer;

@@ -2,6 +2,7 @@
 #define GWMMULTISCALEGWROPTIONSDIALOG_H
 
 #include <QDialog>
+#include <QItemSelectionModel>
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
 #include "TaskThread/gwmmultiscalegwralgorithm.h"
