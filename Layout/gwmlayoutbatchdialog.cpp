@@ -630,7 +630,7 @@ bool GwmLayoutBatchDialog::containsWmsLayers(QgsLayout *layout)
     QList< QgsLayoutItemMap *> maps;
 	layout->layoutItems(maps);
 
-	for (QgsLayoutItemMap *map : qgis::as_const(maps))
+	for (QgsLayoutItemMap *map : std::as_const(maps))
 	{
 		if (map->containsWmsLayer())
 			return true;

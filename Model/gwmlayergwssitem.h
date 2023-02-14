@@ -12,9 +12,9 @@ class GwmLayerGWSSItem : public GwmLayerVectorItem
 public:
     GwmLayerGWSSItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWSSTaskThread* taskThread = nullptr);
     //average构造函数
-    GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWaverageTaskThread* taskThread);
+    GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWaverageTaskThread* taskThread);
     //correlation构造函数
-    GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWcorrelationTaskThread* taskThread);
+    GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWcorrelationTaskThread* taskThread);
     ~GwmLayerGWSSItem();
 
     virtual int childNumber() override;

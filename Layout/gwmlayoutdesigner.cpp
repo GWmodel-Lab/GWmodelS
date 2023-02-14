@@ -48,6 +48,7 @@
 #include <qgslayoutpdfexportoptionsdialog.h>
 #include <qgsvaliditycheckcontext.h>
 #include <qgsvaliditycheckresultswidget.h>
+#include <qgstextrenderer.h>
 
 #include "gwmapp.h"
 //#include "Layout/qgslayoutmanagerdialog.h"
@@ -235,7 +236,7 @@ void GwmLayoutDesigner::initializeRegistry()
 	sInitializedRegistry = true;
 	auto createPageWidget = ([](QgsLayoutItem * item)->QgsLayoutItemBaseWidget *
 	{
-		std::unique_ptr< QgsLayoutPagePropertiesWidget > newWidget = qgis::make_unique< QgsLayoutPagePropertiesWidget >(nullptr, item);
+		std::unique_ptr< QgsLayoutPagePropertiesWidget > newWidget = std::make_unique< QgsLayoutPagePropertiesWidget >(nullptr, item);
 		return newWidget.release();
 	});
 
@@ -1009,7 +1010,7 @@ bool GwmLayoutDesigner::containsWmsLayers() const
 	QList< QgsLayoutItemMap *> maps;
 	mLayout->layoutItems(maps);
 
-	for (QgsLayoutItemMap *map : qgis::as_const(maps))
+	for (QgsLayoutItemMap *map : std::as_const(maps))
 	{
 		if (map->containsWmsLayer())
 			return true;
@@ -1022,7 +1023,7 @@ bool GwmLayoutDesigner::requiresRasterization() const
 	QList< QgsLayoutItem *> items;
 	mLayout->layoutItems(items);
 
-	for (QgsLayoutItem *currentItem : qgis::as_const(items))
+	for (QgsLayoutItem *currentItem : std::as_const(items))
 	{
 		if (currentItem->requiresRasterization())
 			return true;
@@ -1243,7 +1244,7 @@ bool GwmLayoutDesigner::getRasterExportSettings(QgsLayoutExporter::ImageExportSe
 
 bool GwmLayoutDesigner::getPdfExportSettings(QgsLayoutExporter::PdfExportSettings & settings)
 {
-	QgsRenderContext::TextRenderFormat prevTextRenderFormat = mMasterLayout->layoutProject()->labelingEngineSettings().defaultTextRenderFormat();
+	Qgis::TextRenderFormat prevTextRenderFormat = mMasterLayout->layoutProject()->labelingEngineSettings().defaultTextRenderFormat();
 	bool forceVector = false;
 	bool appendGeoreference = true;
 	bool includeMetadata = true;
@@ -1271,7 +1272,7 @@ bool GwmLayoutDesigner::getPdfExportSettings(QgsLayoutExporter::PdfExportSetting
 		if (prevLayoutSettingLabelsAsOutlines >= 0)
 		{
 			// previous layout setting takes default over project setting
-			prevTextRenderFormat = static_cast<QgsRenderContext::TextRenderFormat>(prevLayoutSettingLabelsAsOutlines);
+			prevTextRenderFormat = static_cast<Qgis::TextRenderFormat>(prevLayoutSettingLabelsAsOutlines);
 		}
 	}
 
@@ -1298,7 +1299,7 @@ bool GwmLayoutDesigner::getPdfExportSettings(QgsLayoutExporter::PdfExportSetting
 	forceVector = dialog.forceVector();
 	disableRasterTiles = dialog.rasterTilingDisabled();
 	simplify = dialog.geometriesSimplified();
-	QgsRenderContext::TextRenderFormat textRenderFormat = dialog.textRenderFormat();
+	Qgis::TextRenderFormat textRenderFormat = dialog.textRenderFormat();
 	geoPdf = dialog.exportGeoPdf();
 	useOgcBestPracticeFormat = dialog.useOgcBestPracticeFormat();
 //	exportGeoPdfFeatures = dialog.exportGeoPdfFeatures();
@@ -1342,7 +1343,7 @@ bool GwmLayoutDesigner::getPdfExportSettings(QgsLayoutExporter::PdfExportSetting
 bool GwmLayoutDesigner::getSvgExportSettings(QgsLayoutExporter::SvgExportSettings & settings)
 {
 	bool groupLayers = false;
-	QgsRenderContext::TextRenderFormat prevTextRenderFormat = mMasterLayout->layoutProject()->labelingEngineSettings().defaultTextRenderFormat();
+	Qgis::TextRenderFormat prevTextRenderFormat = mMasterLayout->layoutProject()->labelingEngineSettings().defaultTextRenderFormat();
 	bool clipToContent = false;
 	double marginTop = 0.0;
 	double marginRight = 0.0;
@@ -1376,7 +1377,7 @@ bool GwmLayoutDesigner::getSvgExportSettings(QgsLayoutExporter::SvgExportSetting
 		if (prevLayoutSettingLabelsAsOutlines >= 0)
 		{
 			// previous layout setting takes default over project setting
-			prevTextRenderFormat = static_cast<QgsRenderContext::TextRenderFormat>(prevLayoutSettingLabelsAsOutlines);
+			prevTextRenderFormat = static_cast<Qgis::TextRenderFormat>(prevLayoutSettingLabelsAsOutlines);
 		}
 	}
 
@@ -1391,10 +1392,10 @@ bool GwmLayoutDesigner::getSvgExportSettings(QgsLayoutExporter::SvgExportSetting
 	}
 	);
 
-	options.mTextRenderFormatComboBox->addItem(tr("Always Export Text as Paths (Recommended)"), QgsRenderContext::TextFormatAlwaysOutlines);
-	options.mTextRenderFormatComboBox->addItem(tr("Always Export Text as Text Objects"), QgsRenderContext::TextFormatAlwaysText);
+	options.mTextRenderFormatComboBox->addItem(tr("Always Export Text as Paths (Recommended)"), (int)Qgis::TextRenderFormat::AlwaysOutlines);
+	options.mTextRenderFormatComboBox->addItem(tr("Always Export Text as Text Objects"), (int)Qgis::TextRenderFormat::AlwaysText);
 
-	options.mTextRenderFormatComboBox->setCurrentIndex(options.mTextRenderFormatComboBox->findData(prevTextRenderFormat));
+	options.mTextRenderFormatComboBox->setCurrentIndex(options.mTextRenderFormatComboBox->findData((int)prevTextRenderFormat));
 	options.chkMapLayersAsGroup->setChecked(layersAsGroup);
 	options.mClipToContentGroupBox->setChecked(cropToContents);
 	options.mForceVectorCheckBox->setChecked(forceVector);
@@ -1419,7 +1420,7 @@ bool GwmLayoutDesigner::getSvgExportSettings(QgsLayoutExporter::SvgExportSetting
 	forceVector = options.mForceVectorCheckBox->isChecked();
 	disableRasterTiles = options.mDisableRasterTilingCheckBox->isChecked();
 	simplify = options.mSimplifyGeometriesCheckbox->isChecked();
-	QgsRenderContext::TextRenderFormat textRenderFormat = static_cast<QgsRenderContext::TextRenderFormat>(options.mTextRenderFormatComboBox->currentData().toInt());
+	Qgis::TextRenderFormat textRenderFormat = static_cast<Qgis::TextRenderFormat>(options.mTextRenderFormatComboBox->currentData().toInt());
 
 	if (mLayout)
 	{
@@ -1459,7 +1460,7 @@ bool GwmLayoutDesigner::containsAdvancedEffects() const
 	QList< QgsLayoutItem *> items;
 	mLayout->layoutItems(items);
 
-	for (QgsLayoutItem *currentItem : qgis::as_const(items))
+	for (QgsLayoutItem *currentItem : std::as_const(items))
 	{
 		if (currentItem->containsAdvancedEffects())
 			return true;
@@ -1708,7 +1709,7 @@ void GwmLayoutDesigner::renameLayout()
 
 void GwmLayoutDesigner::deleteLayout()
 {
-	if (QMessageBox::question(this, tr("Delete Layout"), tr("Are you sure you want to delete the layout ¡°%1¡±?").arg(masterLayout()->name()),
+	if (QMessageBox::question(this, tr("Delete Layout"), tr("Are you sure you want to delete the layout ï¿½ï¿½%1ï¿½ï¿½?").arg(masterLayout()->name()),
 		QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes)
 		return;
 
@@ -1877,7 +1878,7 @@ void GwmLayoutDesigner::print()
 	printSettings.rasterizeWholeImage = mLayout->customProperty(QStringLiteral("rasterize"), false).toBool();
 	printSettings.predefinedMapScales = predefinedScales();
 
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Printing ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Printing ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 	QgsApplication::taskManager()->addTask(proxyTask);
 
 	// force a refresh, to e.g. update data defined properties, tables, etc
@@ -1993,7 +1994,7 @@ void GwmLayoutDesigner::exportToRaster()
 
 	mView->setPaintingEnabled(false);
 	QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 	QgsApplication::taskManager()->addTask(proxyTask);
 
 	// force a refresh, to e.g. update data defined properties, tables, etc
@@ -2031,7 +2032,7 @@ void GwmLayoutDesigner::exportToRaster()
 		case QgsLayoutExporter::MemoryError:
 			cursorOverride.release();
 			QMessageBox::warning(this, tr("Image Export Error"),
-				tr("Trying to create image %1 (%2¡Á%3 @ %4dpi ) "
+				tr("Trying to create image %1 (%2ï¿½ï¿½%3 @ %4dpi ) "
 					"resulted in a memory overflow.\n\n"
 					"Please try a lower resolution or a smaller paper size.")
 				.arg(QDir::toNativeSeparators(exporter.errorFile())).arg(imageSize.width()).arg(imageSize.height()).arg(settings.dpi),
@@ -2105,7 +2106,7 @@ void GwmLayoutDesigner::exportToPdf()
 	mView->setPaintingEnabled(false);
 	QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
 
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 	QgsApplication::taskManager()->addTask(proxyTask);
 
 	pdfSettings.rasterizeWholeImage = mLayout->customProperty(QStringLiteral("rasterize"), false).toBool();
@@ -2218,7 +2219,7 @@ void GwmLayoutDesigner::exportToSvg()
 	mView->setPaintingEnabled(false);
 	QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
 
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 	QgsApplication::taskManager()->addTask(proxyTask);
 
 	// force a refresh, to e.g. update data defined properties, tables, etc
@@ -2302,11 +2303,11 @@ void GwmLayoutDesigner::printReport()
 	printSettings.predefinedMapScales = predefinedScales();
 
 	QString error;
-	std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-	std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Printing maps¡­"), tr("Abort"), 0, 0, this);
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Printing mapsï¿½ï¿½"), tr("Abort"), 0, 0, this);
 	progressDialog->setWindowTitle(tr("Printing Report"));
 
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Printing ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Printing ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 
 	connect(feedback.get(), &QgsFeedback::progressChanged, this, [&](double)
 	{
@@ -2434,11 +2435,11 @@ void GwmLayoutDesigner::exportReportToRaster()
 	QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
 
 	QString error;
-	std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-	std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering report¡­"), tr("Abort"), 0, 0, this);
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering reportï¿½ï¿½"), tr("Abort"), 0, 0, this);
 	progressDialog->setWindowTitle(tr("Exporting Report"));
 
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 
 	connect(feedback.get(), &QgsFeedback::progressChanged, this, [&](double)
 	{
@@ -2501,7 +2502,7 @@ void GwmLayoutDesigner::exportReportToRaster()
 
 		case QgsLayoutExporter::MemoryError:
 			QMessageBox::warning(this, tr("Export Report as Image"),
-				tr("Trying to create image of %2¡Á%3 @ %4dpi "
+				tr("Trying to create image of %2ï¿½ï¿½%3 @ %4dpi "
 					"resulted in a memory overflow.\n\n"
 					"Please try a lower resolution or a smaller paper size.")
 				.arg(imageSize.width()).arg(imageSize.height()).arg(settings.dpi),
@@ -2550,11 +2551,11 @@ void GwmLayoutDesigner::exportReportToSvg()
 	QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
 
 	QString error;
-	std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-	std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering maps¡­"), tr("Abort"), 0, 0, this);
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering mapsï¿½ï¿½"), tr("Abort"), 0, 0, this);
 	progressDialog->setWindowTitle(tr("Exporting Report"));
 
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 
 	connect(feedback.get(), &QgsFeedback::progressChanged, this, [&](double)
 	{
@@ -2685,11 +2686,11 @@ void GwmLayoutDesigner::exportReportToPdf()
 	pdfSettings.rasterizeWholeImage = rasterize;
 
 	QString error;
-	std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-	std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering maps¡­"), tr("Abort"), 0, 0, this);
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering mapsï¿½ï¿½"), tr("Abort"), 0, 0, this);
 	progressDialog->setWindowTitle(tr("Exporting Report"));
 
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 
 	connect(feedback.get(), &QgsFeedback::progressChanged, this, [&](double)
 	{
@@ -2812,11 +2813,11 @@ void GwmLayoutDesigner::printAtlas()
 	printSettings.predefinedMapScales = predefinedScales();
 
 	QString error;
-	std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-	std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Printing maps¡­"), tr("Abort"), 0, 100, this);
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Printing mapsï¿½ï¿½"), tr("Abort"), 0, 100, this);
 	progressDialog->setWindowTitle(tr("Printing Atlas"));
 
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Printing ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Printing ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 
 	connect(feedback.get(), &QgsFeedback::progressChanged, this, [&](double progress)
 	{
@@ -2994,11 +2995,11 @@ void GwmLayoutDesigner::exportAtlasToRaster()
 	QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
 
 	QString error;
-	std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-	std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering maps¡­"), tr("Abort"), 0, 100, this);
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering mapsï¿½ï¿½"), tr("Abort"), 0, 100, this);
 	progressDialog->setWindowTitle(tr("Exporting Atlas"));
 
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 
 	connect(feedback.get(), &QgsFeedback::progressChanged, this, [&](double progress)
 	{
@@ -3062,7 +3063,7 @@ void GwmLayoutDesigner::exportAtlasToRaster()
 
 		case QgsLayoutExporter::MemoryError:
 			QMessageBox::warning(this, tr("Export Atlas as Image"),
-				tr("Trying to create image of %2¡Á%3 @ %4dpi "
+				tr("Trying to create image of %2ï¿½ï¿½%3 @ %4dpi "
 					"resulted in a memory overflow.\n\n"
 					"Please try a lower resolution or a smaller paper size.")
 				.arg(imageSize.width()).arg(imageSize.height()).arg(settings.dpi),
@@ -3149,11 +3150,11 @@ void GwmLayoutDesigner::exportAtlasToSvg()
 	QgsTemporaryCursorOverride cursorOverride(Qt::BusyCursor);
 
 	QString error;
-	std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-	std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering maps¡­"), tr("Abort"), 0, 100, this);
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering mapsï¿½ï¿½"), tr("Abort"), 0, 100, this);
 	progressDialog->setWindowTitle(tr("Exporting Atlas"));
 
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 
 	connect(feedback.get(), &QgsFeedback::progressChanged, this, [&](double progress)
 	{
@@ -3361,10 +3362,10 @@ void GwmLayoutDesigner::exportAtlasToPdf()
 	pdfSettings.rasterizeWholeImage = mLayout->customProperty(QStringLiteral("rasterize"), false).toBool();
 
 	QString error;
-	std::unique_ptr< QgsFeedback > feedback = qgis::make_unique< QgsFeedback >();
-	std::unique_ptr< QProgressDialog > progressDialog = qgis::make_unique< QProgressDialog >(tr("Rendering maps¡­"), tr("Abort"), 0, 100, this);
+	std::unique_ptr< QgsFeedback > feedback = std::make_unique< QgsFeedback >();
+	std::unique_ptr< QProgressDialog > progressDialog = std::make_unique< QProgressDialog >(tr("Rendering mapsï¿½ï¿½"), tr("Abort"), 0, 100, this);
 
-	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ¡°%1¡±").arg(mMasterLayout->name()));
+	QgsProxyProgressTask *proxyTask = new QgsProxyProgressTask(tr("Exporting ï¿½ï¿½%1ï¿½ï¿½").arg(mMasterLayout->name()));
 
 	progressDialog->setWindowTitle(tr("Exporting Atlas"));
 	connect(feedback.get(), &QgsFeedback::progressChanged, this, [&](double progress)
@@ -3870,27 +3871,27 @@ void GwmLayoutDesigner::updateActionNames(QgsMasterLayoutInterface::Type type)
 	switch (type)
 	{
 		case QgsMasterLayoutInterface::PrintLayout:
-			mActionDuplicateLayout->setText(tr("&Duplicate Layout¡­"));
+			mActionDuplicateLayout->setText(tr("&Duplicate Layoutï¿½ï¿½"));
 			mActionDuplicateLayout->setToolTip(tr("Duplicate layout"));
 			mActionDuplicateLayout->setIcon(QgsApplication::getThemeIcon(QStringLiteral("mActionDuplicateLayout.svg")));
-			mActionRemoveLayout->setText(tr("Delete Layout¡­"));
+			mActionRemoveLayout->setText(tr("Delete Layoutï¿½ï¿½"));
 			mActionRemoveLayout->setToolTip(tr("Delete layout"));
-			mActionRenameLayout->setText(tr("Rename Layout¡­"));
+			mActionRenameLayout->setText(tr("Rename Layoutï¿½ï¿½"));
 			mActionRenameLayout->setToolTip(tr("Rename layout"));
-			mActionNewLayout->setText(tr("New Layout¡­"));
+			mActionNewLayout->setText(tr("New Layoutï¿½ï¿½"));
 			mActionNewLayout->setToolTip(tr("New layout"));
 			mActionNewLayout->setIcon(QgsApplication::getThemeIcon(QStringLiteral("mActionNewLayout.svg")));
 			break;
 
 		case QgsMasterLayoutInterface::Report:
-			mActionDuplicateLayout->setText(tr("&Duplicate Report¡­"));
+			mActionDuplicateLayout->setText(tr("&Duplicate Reportï¿½ï¿½"));
 			mActionDuplicateLayout->setToolTip(tr("Duplicate report"));
 			mActionDuplicateLayout->setIcon(QgsApplication::getThemeIcon(QStringLiteral("mActionDuplicateLayout.svg")));
-			mActionRemoveLayout->setText(tr("Delete Report¡­"));
+			mActionRemoveLayout->setText(tr("Delete Reportï¿½ï¿½"));
 			mActionRemoveLayout->setToolTip(tr("Delete report"));
-			mActionRenameLayout->setText(tr("Rename Report¡­"));
+			mActionRenameLayout->setText(tr("Rename Reportï¿½ï¿½"));
 			mActionRenameLayout->setToolTip(tr("Rename report"));
-			mActionNewLayout->setText(tr("New Report¡­"));
+			mActionNewLayout->setText(tr("New Reportï¿½ï¿½"));
 			mActionNewLayout->setToolTip(tr("New report"));
 			mActionNewLayout->setIcon(QgsApplication::getThemeIcon(QStringLiteral("mActionNewReport.svg")));
 			break;
@@ -3908,7 +3909,7 @@ QgsLayoutAtlas * GwmLayoutDesigner::atlas()
 QPrinter* GwmLayoutDesigner::printer()
 {
 	if (!mPrinter)
-		mPrinter = qgis::make_unique<QPrinter>();
+		mPrinter = std::make_unique<QPrinter>();
 
 	return mPrinter.get();
 }

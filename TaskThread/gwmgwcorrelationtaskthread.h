@@ -84,7 +84,6 @@ public:
     typedef QList<QPair<QString, mat> > CreateResultLayerData;
 
     typedef bool (GwmGWcorrelationTaskThread::*CalFunction)();
-    typedef double (GwmGWcorrelationTaskThread::*BandwidthSizeCriterionFunction)(GwmBandwidthWeight*);
 
     static GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> BandwidthSelectionCriterionTypeNameMapper;
 

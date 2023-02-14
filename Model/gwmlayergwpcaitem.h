@@ -4,6 +4,7 @@
 #include "prefix.h"
 
 #include <QObject>
+#include <QFileInfo>
 #include <qgsvectorlayer.h>
 #include <armadillo>
 #include "gwmlayervectoritem.h"

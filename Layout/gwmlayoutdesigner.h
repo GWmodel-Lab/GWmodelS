@@ -101,6 +101,7 @@ public:		// QgsLayoutDesignerInterface interface
 	void showRulers(bool visible);
 	void showItemOptions(QgsLayoutItem *item, bool bringPanelToFront = true);
     void setAtlasFeature( const QgsFeature &feature );
+	QgsLayoutDesignerInterface::ExportResults *lastExportResults() {}
 
 public:
 	void activate();
@@ -411,6 +412,10 @@ public:
     {
         mDesigner->setAtlasFeature(feature);
     }
+	virtual QgsLayoutDesignerInterface::ExportResults *lastExportResults() const
+	{
+		mDesigner->lastExportResults();
+	}
 
 private:
     GwmLayoutDesigner* mDesigner;
