@@ -1,7 +1,7 @@
-![输入图片说明](https://images.gitee.com/uploads/images/2021/1013/130725_b767e9b8_9858094.png "GWmodelS.png")    
+
 GWmodelS    
 
-Version:1.0.3
+Version:1.0.4
 
 Leading scientist:
 Binbin Lu (Wuhan University), Guanpeng Dong (Henan University)
@@ -12,6 +12,10 @@ GWmodel Lab team including Yigong Hu, Tongyao Zhang, Linyi Zhang, Liuqi Liao, Zu
 Geographical Data Science Team including Yong Liu, Dongyang Yang, Hang Zhang, Wenkai Gao, Xiangbiao Wang, Zhipeng Zhang, Mingyang Liu
 
 GWmodelS is originally developed from an R package, namely GWmodel (https://CRAN.R-project.org/package=GWmodel) by Binbin Lu, Paul Harris, Martin Charlton, Chris Brunsdon, Tomoki Nakaya, Daisuke Murakami
+
+Citation:
+Lu, B., Y. Hu, D. Yang, Y. Liu, L. Liao, Z. Yin, T. Xia, Z. Dong, P. Harris, C. Brunsdon, L. Comber and G. Dong (2023). "GWmodelS: A software for geographically weighted models." SoftwareX 21: 101291.
+Lu, B. and G. Dong (2022). GWmodelS: A High-Performance Computing Framework for Geographically Weighted Models. Spatial Data and Intelligence, Cham, Springer Nature Switzerland.
 
 Meanwhile, we would like to pay tribute to Dr. Martin Charlton, the main developer of early versions of GWR software.
 
