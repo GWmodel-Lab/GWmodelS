@@ -3,6 +3,8 @@ GWmodelS
 
 Version:1.0.4
 
+[Click to download](https://github.com/GWmodel-Lab/GWmodelS/releases/tag/GWmodelS-Installer-V1.0.4)
+
 Leading scientist:
 Binbin Lu (Wuhan University), Guanpeng Dong (Henan University)
 
