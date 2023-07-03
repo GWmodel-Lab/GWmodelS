@@ -189,46 +189,46 @@ void GwmPropertyGGWRTab::on_btnSaveRes_clicked()
           {
               QTextStream out(&myfile);
 //              使用组件赋值
-              out << "  Model Calibration Information"<<endl;
-              out << "----------------------------------------------"<<endl;
-              out << "Kernel function:  "; out << ui->lblKernelFunction->text() <<endl;
-              out << "Bandwidth Type:   "; out << ui->lblBandwidthType->text() <<endl;
-              out << "BandWidth: "; out << ui->lblBandwidthSize->text() << endl;
-              out << "Regression points:  "; out << ui->lblRegressionPoints->text() <<endl;
-              out << "Distance metric:   "; out << ui->lblDistanceMetric->text() <<endl;
-              out << "Used family:   "; out << ui->lblFamily->text() <<endl;
-              out << "" << endl;
-              out << "**********************************************" << endl;
-              out << "" << endl;
+              out << "  Model Calibration Information"<< Qt::endl;
+              out << "----------------------------------------------"<< Qt::endl;
+              out << "Kernel function:  "; out << ui->lblKernelFunction->text() << Qt::endl;
+              out << "Bandwidth Type:   "; out << ui->lblBandwidthType->text() << Qt::endl;
+              out << "BandWidth: "; out << ui->lblBandwidthSize->text() << Qt::endl;
+              out << "Regression points:  "; out << ui->lblRegressionPoints->text() << Qt::endl;
+              out << "Distance metric:   "; out << ui->lblDistanceMetric->text() << Qt::endl;
+              out << "Used family:   "; out << ui->lblFamily->text() << Qt::endl;
+              out << "" << Qt::endl;
+              out << "**********************************************" << Qt::endl;
+              out << "" << Qt::endl;
 
-              out << "  GLM Result"<<endl;
-              out << "----------------------------------------------"<<endl;
-              out << "Null deviance: "; out << ui->lblNullDev->text() << endl;
-              out << "AIC:  "; out << ui->lblGLMAIC->text() <<endl;
-              out << "AICc:   "; out << ui->lblGLMAICc->text() <<endl;
-              out << "Preudo R-square value: "; out << ui->lblGLMRSS->text() << endl;
-              out << "" <<endl;
-              out << "**********************************************" << endl;
-              out << "" << endl;
+              out << "  GLM Result"<< Qt::endl;
+              out << "----------------------------------------------"<< Qt::endl;
+              out << "Null deviance: "; out << ui->lblNullDev->text() << Qt::endl;
+              out << "AIC:  "; out << ui->lblGLMAIC->text() << Qt::endl;
+              out << "AICc:   "; out << ui->lblGLMAICc->text() << Qt::endl;
+              out << "Preudo R-square value: "; out << ui->lblGLMRSS->text() << Qt::endl;
+              out << "" << Qt::endl;
+              out << "**********************************************" << Qt::endl;
+              out << "" << Qt::endl;
 
-              out << " GGWR Diagnostic Information"<<endl;
-              out << "----------------------------------------------"<<endl;
-              out << "Number of data points: "; out << ui->lblNumberDataPoints->text() << endl;
-              out << "GW Deviance:  "; out << ui->lblGwDev->text() <<endl;
-              out << "AIC: "; out << ui->lblAIC->text() << endl;
-              out << "AICc:  "; out << ui->lblAICc->text() <<endl;
-              out << "Preudo R-square value:  "; out << ui->lblRSS->text() <<endl;
-              out << "" <<endl;
-              out << "**********************************************" << endl;
-              out << "" << endl;
+              out << " GGWR Diagnostic Information"<< Qt::endl;
+              out << "----------------------------------------------"<< Qt::endl;
+              out << "Number of data points: "; out << ui->lblNumberDataPoints->text() << Qt::endl;
+              out << "GW Deviance:  "; out << ui->lblGwDev->text() << Qt::endl;
+              out << "AIC: "; out << ui->lblAIC->text() << Qt::endl;
+              out << "AICc:  "; out << ui->lblAICc->text() << Qt::endl;
+              out << "Preudo R-square value:  "; out << ui->lblRSS->text() << Qt::endl;
+              out << "" << Qt::endl;
+              out << "**********************************************" << Qt::endl;
+              out << "" << Qt::endl;
 
-              out << "  Summary of GGWR Coefficient Estimates"<<endl;
-              out << "----------------------------------------------"<<endl;
+              out << "  Summary of GGWR Coefficient Estimates"<< Qt::endl;
+              out << "----------------------------------------------"<< Qt::endl;
               for(int i = 0 ; i < 6 ; i++){
                   out << ui->tbwCoefficient->horizontalHeaderItem(i)->text();
                   out << (i == 0 ? "\t\t" : "\t");
               }
-              out << "" <<endl;
+              out << "" << Qt::endl;
 
               for(int i = 0 ; i < ui->tbwCoefficient->rowCount() ; i++){
                   for (int j = 0 ; j < 6; j++){
@@ -236,12 +236,12 @@ void GwmPropertyGGWRTab::on_btnSaveRes_clicked()
 
                        out << ((j == 0 && i != 0) ? "\t\t" : "\t");
                   }
-                  out << "" << endl;
+                  out << "" << Qt::endl;
               }
-              out << "" <<endl;
-              out << "**********************************************" << endl;
-              out << "" << endl;
-              out << "GWmodel Lab\t"; out << "http://gwmodel.whu.edu.cn/"<<endl;
+              out << "" << Qt::endl;
+              out << "**********************************************" << Qt::endl;
+              out << "" << Qt::endl;
+              out << "GWmodel Lab\t"; out << "http://gwmodel.whu.edu.cn/"<< Qt::endl;
               out << "Contact us\t"; out << "binbinlu@whu.edu.cn";
               myfile.close();
           }

@@ -974,18 +974,18 @@ QVector<double> GwmLayoutDesigner::predefinedScales() const
 
 void GwmLayoutDesigner::setPrinterPageOrientation(QgsLayoutItemPage::Orientation orientation)
 {
-    if (!mSetPageOrientation)
-    {
-        switch (orientation)
-        {
-            case QgsLayoutItemPage::Landscape:
-                printer()->setOrientation(QPrinter::Landscape);
-                break;
+	if (!mSetPageOrientation)
+	{
+		switch (orientation)
+		{
+			case QgsLayoutItemPage::Landscape:
+				printer()->setPageOrientation(QPageLayout::Landscape);
+				break;
 
-            case QgsLayoutItemPage::Portrait:
-                printer()->setOrientation(QPrinter::Portrait);
-                break;
-        }
+			case QgsLayoutItemPage::Portrait:
+				printer()->setPageOrientation(QPageLayout::Portrait);
+				break;
+		}
 
         mSetPageOrientation = true;
     }

@@ -150,6 +150,7 @@ arma::mat GwmGTWRAlgorithm::regression(const arma::mat &x, const arma::vec &y)
             return regressionHatmatrixSerial(x, y, mBetasSE, mSHat, mQDiag);
         else return regressionSerial(x, y);
     }
+    else return mat();
 }
 
 void GwmGTWRAlgorithm::initPoints()

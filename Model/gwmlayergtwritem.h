@@ -18,7 +18,7 @@ public:
 
     virtual int childNumber() override;
 
-    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::GTWR; }
+    inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::GTWR; }
 
     virtual bool readXml(QDomNode &node) override;
     virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;

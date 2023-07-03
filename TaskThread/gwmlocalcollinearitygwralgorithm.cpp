@@ -497,7 +497,8 @@ void GwmLocalCollinearityGWRAlgorithm::setParallelType(const IParallelalbe::Para
     if(type & parallelAbility())
     {
         mParallelType = type;
-        switch(type){
+        switch(type)
+        {
         case IParallelalbe::ParallelType::SerialOnly:
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
@@ -508,6 +509,10 @@ void GwmLocalCollinearityGWRAlgorithm::setParallelType(const IParallelalbe::Para
             mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionOmp;
             break;
 #endif
+        default:
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
+            break;
         }
     }
 }

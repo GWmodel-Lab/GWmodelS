@@ -109,7 +109,7 @@ public:
     bool hasPredict() const;
     void setHasPredict(bool hasPredict);
 
-    void setCanceled(bool canceled);
+    void setCanceled(bool canceled) override;
 
 protected:  // QThread interface
     void run() override;
@@ -124,7 +124,7 @@ public:  // GwmSpatialAlgorithm interface
 
 
 public:     // GwmGeographicalWeightedRegressionAlgorithm
-    virtual void initPoints();
+    virtual void initPoints() override;
     virtual void initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars) override;
 
 

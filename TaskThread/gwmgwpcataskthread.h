@@ -28,9 +28,13 @@ public:
     GwmGWPCATaskThread();
 
 public:
-    QList<GwmVariable> variables() const{return QList<GwmVariable>();};
-    void setVariables(const QList<GwmVariable> &variables);
-    void setVariables(const QList<GwmVariable> &&variables){
+    QList<GwmVariable> variables() const override 
+    {
+        return QList<GwmVariable>();
+    };
+    void setVariables(const QList<GwmVariable> &variables) override;
+    void setVariables(const QList<GwmVariable> &&variables)
+    {
         mVariables = variables;
     };
 
@@ -39,7 +43,8 @@ public:
     BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 
-    void setOmpThreadNum(const int threadNum){
+    void setOmpThreadNum(const int threadNum) override
+    {
         mOmpThreadNum = threadNum;
     };
 
@@ -72,9 +77,9 @@ public:     // GwmSpatialMonoscaleAlgorithm interface
 
 
 public:  // IParallelalbe interface
-    int parallelAbility() const;;
-    virtual ParallelType parallelType() const;;
-    virtual void setParallelType(const ParallelType& type);
+    int parallelAbility() const override;
+    virtual ParallelType parallelType() const override;
+    virtual void setParallelType(const ParallelType& type) override;
 
 public:  // IOpenmpParallelable interface
     void setThreadNum(const int threadNum){};
@@ -92,7 +97,7 @@ public:  // IOpenmpParallelable interface
     bool getPlot() const;
     void setPlot(bool plot);
 
-    void setCanceled(bool canceled);
+    void setCanceled(bool canceled) override;
 
 private:
     void initPoints();
@@ -128,7 +133,7 @@ private:
 #ifdef ENABLE_OpenMP
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
 #endif
-    double criterion(GwmBandwidthWeight *weight)
+    double criterion(GwmBandwidthWeight *weight) override
     {
         return (this->*mBandwidthSelectCriterionFunction)(weight);
     }

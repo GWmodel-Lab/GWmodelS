@@ -104,8 +104,8 @@ protected:  // QThread interface
     void run() override;
 
 public:  // IMultivariableAnalysis interface
-    QList<GwmVariable> variables() const;
-    void setVariables(const QList<GwmVariable> &variables);
+    QList<GwmVariable> variables() const  override;
+    void setVariables(const QList<GwmVariable> &variables)  override;
     void setVariables(const QList<GwmVariable> &&variables);
 
     QList<GwmVariable> variablesY() const{
@@ -131,7 +131,7 @@ public:     // GwmTaskThread interface
 
 
 public:     // GwmSpatialMultiscaleAlgorithm interface
-    virtual void setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights);
+    virtual void setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights) override;
 
 public:     // IBandwidthSizeSelectable interface
     double criterion(GwmBandwidthWeight* bandwidthWeight) override
