@@ -261,7 +261,7 @@ void GwmScalableGWRAlgorithm::findDataPointNeighbours()
     }
     umat nnIndex(nBw, nDp, fill::zeros);
     mat nnDists(nBw, nDp, fill::zeros);
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec d = mDpSpatialWeight.distance()->distance(i);
         uvec i_sorted = sort_index(d);
@@ -291,7 +291,7 @@ mat GwmScalableGWRAlgorithm::findNeighbours(const GwmSpatialWeight &spatialWeigh
     uword nBw = bandwidth->bandwidth() < nDp ? bandwidth->bandwidth() : nDp;
     umat index(nBw, nRp, fill::zeros);
     mat dists(nBw, nRp, fill::zeros);
-    for (uword i = 0; i < nRp & !checkCanceled(); i++)
+    for (uword i = 0; i < nRp && !checkCanceled(); i++)
     {
         vec d = spatialWeight.distance()->distance(i);
         uvec i_sorted = sort_index(d);
@@ -382,21 +382,21 @@ void GwmScalableGWRAlgorithm::prepare()
     mMy0 = mat((mPolynomial + 1)*k, n, fill::zeros);
     mat spanXnei(1, mPolynomial + 1, fill::ones);
     mat spanXtG(1, k, fill::ones);
-    for (int i = 0; i < n & !checkCanceled(); i++) {
+    for (int i = 0; i < n && !checkCanceled(); i++) {
         mat G(mPolynomial + 1, knn, fill::ones);
-        for (int p = 0; p < mPolynomial & !checkCanceled(); p++) {
+        for (int p = 0; p < mPolynomial && !checkCanceled(); p++) {
             G.row(p + 1) = pow(G0.row(i), pow(2.0, mPolynomial/2.0)/pow(2.0, p + 1));
         }
         G = trans(G);
         mat xnei = x.rows(mDpNNIndex.row(i));
         vec ynei = y.rows(mDpNNIndex.row(i));
-        for (int k1 = 0; k1 < k & !checkCanceled(); k1++) {
+        for (int k1 = 0; k1 < k && !checkCanceled(); k1++) {
             mat XtG = xnei.col(k1) * spanXnei % G;
             mat XtG2 = xnei.col(k1) * spanXnei % G % G;
-            for (int p = 0; p < (mPolynomial + 1) & !checkCanceled(); p++) {
+            for (int p = 0; p < (mPolynomial + 1) && !checkCanceled(); p++) {
                 mat XtGX = XtG.col(p) * spanXtG % xnei;
                 mat XtG2X = XtG2.col(p) * spanXtG % xnei;
-                for (int k2 = 0; k2 < k & !checkCanceled(); k2++) {
+                for (int k2 = 0; k2 < k && !checkCanceled(); k2++) {
                     int xindex = (k1 * (mPolynomial + 1) + p) * k + k2;
                     mMx0(xindex, i) = sum(XtGX.col(k2));
                     mMxx0(xindex, i) = sum(XtG2X.col(k2));
@@ -437,22 +437,22 @@ mat GwmScalableGWRAlgorithm::regressionSerial(const arma::mat &x, const arma::ve
     mMy0 = mat((mPolynomial + 1)*nVar, nRp, fill::zeros);
     mat spanXnei(1, mPolynomial + 1, fill::ones);
     mat spanXtG(1, nVar, fill::ones);
-    for (arma::uword i = 0; i < nRp & !checkCanceled(); i++)
+    for (arma::uword i = 0; i < nRp && !checkCanceled(); i++)
     {
         mat G(mPolynomial + 1, nBw, fill::ones);
-        for (int p = 0; p < mPolynomial & !checkCanceled(); p++) {
+        for (int p = 0; p < mPolynomial && !checkCanceled(); p++) {
             G.row(p + 1) = pow(G0.row(i), pow(2.0, mPolynomial/2.0)/pow(2.0, p + 1));
         }
         G = trans(G);
         mat xnei = x.rows(rpNNIndex.row(i));
         vec ynei = y.rows(rpNNIndex.row(i));
-        for (arma::uword k1 = 0; k1 < nVar & !checkCanceled(); k1++) {
+        for (arma::uword k1 = 0; k1 < nVar && !checkCanceled(); k1++) {
             mat XtG = xnei.col(k1) * spanXnei % G;
             mat XtG2 = xnei.col(k1) * spanXnei % G % G;
-            for (int p = 0; p < (mPolynomial + 1) & !checkCanceled(); p++) {
+            for (int p = 0; p < (mPolynomial + 1) && !checkCanceled(); p++) {
                 mat XtGX = XtG.col(p) * spanXtG % xnei;
                 mat XtG2X = XtG2.col(p) * spanXtG % xnei;
-                for (arma::uword k2 = 0; k2 < nVar & !checkCanceled(); k2++) {
+                for (arma::uword k2 = 0; k2 < nVar && !checkCanceled(); k2++) {
                     int xindex = (k1 * (mPolynomial + 1) + p) * nVar + k2;
                     mMx0(xindex, i) = sum(XtGX.col(k2));
                     mMxx0(xindex, i) = sum(XtG2X.col(k2));
@@ -468,14 +468,14 @@ mat GwmScalableGWRAlgorithm::regressionSerial(const arma::mat &x, const arma::ve
     int poly1 = mPolynomial + 1;
     double b = mScale, a = mPenalty;
     vec R0 = vec(poly1, fill::ones) * b;
-    for (int p = 1; p < poly1 & !checkCanceled(); p++) {
+    for (int p = 1; p < poly1 && !checkCanceled(); p++) {
         R0(p) = pow(b, p + 1);
     }
     R0 = R0 / sum(R0);
     vec Rx(nVar*nVar*poly1, fill::zeros), Ry(nVar*poly1, fill::zeros);
-    for (int p = 0; p < poly1 & !checkCanceled(); p++) {
-        for (uword k2 = 0; k2 < nVar & !checkCanceled(); k2++) {
-            for (uword k1 = 0; k1 < nVar & !checkCanceled(); k1++) {
+    for (int p = 0; p < poly1 && !checkCanceled(); p++) {
+        for (uword k2 = 0; k2 < nVar && !checkCanceled(); k2++) {
+            for (uword k1 = 0; k1 < nVar && !checkCanceled(); k1++) {
                 uword xindex = k1*poly1*nVar + p*nVar + k2;
                 Rx(xindex) = R0(p);
             }
@@ -487,12 +487,12 @@ mat GwmScalableGWRAlgorithm::regressionSerial(const arma::mat &x, const arma::ve
     mat Mx2 = 2 * a * Mx + ((Rx % Rx) * mat(1, nRp, fill::ones) % mMx0);
 
     mat betas(nVar, nRp, fill::zeros);
-    for (uword i = 0; i < nRp & !checkCanceled(); i++) {
+    for (uword i = 0; i < nRp && !checkCanceled(); i++) {
         mat sumMx(nVar, nVar, fill::zeros), sumMx2(nVar, nVar, fill::zeros);
         vec sumMy(nVar, fill::zeros);
-        for (uword k2 = 0; k2 < nVar & !checkCanceled(); k2++) {
-            for (int p = 0; p < poly1 & !checkCanceled(); p++) {
-                for (uword k1 = 0; k1 < nVar & !checkCanceled(); k1++) {
+        for (uword k2 = 0; k2 < nVar && !checkCanceled(); k2++) {
+            for (int p = 0; p < poly1 && !checkCanceled(); p++) {
+                for (uword k1 = 0; k1 < nVar && !checkCanceled(); k1++) {
                     int xindex = k1*poly1*nVar + p*nVar + k2;
                     sumMx(k1, k2) += Mx(xindex, i);
                     sumMx2(k1, k2) += Mx2(xindex, i);
@@ -542,21 +542,21 @@ arma::mat GwmScalableGWRAlgorithm::regressionHatmatrixSerial(const arma::mat &x,
     mMy0 = mat((mPolynomial + 1)*k, n, fill::zeros);
     mat spanXnei(1, mPolynomial + 1, fill::ones);
     mat spanXtG(1, k, fill::ones);
-    for (int i = 0; i < n & !checkCanceled(); i++) {
+    for (int i = 0; i < n && !checkCanceled(); i++) {
         mat G(mPolynomial + 1, bw, fill::ones);
-        for (int p = 0; p < mPolynomial & !checkCanceled(); p++) {
+        for (int p = 0; p < mPolynomial && !checkCanceled(); p++) {
             G.row(p + 1) = pow(mG0.row(i), pow(2.0, mPolynomial/2.0)/pow(2.0, p + 1));
         }
         G = trans(G);
         mat xnei = x.rows(dpNNIndex.row(i));
         vec ynei = y.rows(dpNNIndex.row(i));
-        for (int k1 = 0; k1 < k & !checkCanceled(); k1++) {
+        for (int k1 = 0; k1 < k && !checkCanceled(); k1++) {
             mat XtG = xnei.col(k1) * spanXnei % G;
             mat XtG2 = xnei.col(k1) * spanXnei % G % G;
-            for (int p = 0; p < (mPolynomial + 1) & !checkCanceled(); p++) {
+            for (int p = 0; p < (mPolynomial + 1) && !checkCanceled(); p++) {
                 mat XtGX = XtG.col(p) * spanXtG % xnei;
                 mat XtG2X = XtG2.col(p) * spanXtG % xnei;
-                for (int k2 = 0; k2 < k & !checkCanceled(); k2++) {
+                for (int k2 = 0; k2 < k && !checkCanceled(); k2++) {
                     int xindex = (k1 * (mPolynomial + 1) + p) * k + k2;
                     mMx0(xindex, i) = sum(XtGX.col(k2));
                     mMxx0(xindex, i) = sum(XtG2X.col(k2));
@@ -570,14 +570,14 @@ arma::mat GwmScalableGWRAlgorithm::regressionHatmatrixSerial(const arma::mat &x,
     }
 
     vec R0 = vec(poly1, fill::ones) * b;
-    for (int p = 1; p < poly1 & !checkCanceled(); p++) {
+    for (int p = 1; p < poly1 && !checkCanceled(); p++) {
         R0(p) = pow(b, p + 1);
     }
     R0 = R0 / sum(R0);
     vec Rx(k*k*poly1, fill::zeros), Ry(k*poly1, fill::zeros);
-    for (int p = 0; p < poly1 & !checkCanceled(); p++) {
-        for (int k2 = 0; k2 < k & !checkCanceled(); k2++) {
-            for (int k1 = 0; k1 < k & !checkCanceled(); k1++) {
+    for (int p = 0; p < poly1 && !checkCanceled(); p++) {
+        for (int k2 = 0; k2 < k && !checkCanceled(); k2++) {
+            for (int k1 = 0; k1 < k && !checkCanceled(); k1++) {
                 int xindex = k1*poly1*k + p*k + k2;
                 Rx(xindex) = R0(p);
             }
@@ -590,12 +590,12 @@ arma::mat GwmScalableGWRAlgorithm::regressionHatmatrixSerial(const arma::mat &x,
 
     mat bse(k, n, fill::zeros);
     double trS = 0.0, trStS = 0.0;
-    for (int i = 0; i < n & !checkCanceled(); i++) {
+    for (int i = 0; i < n && !checkCanceled(); i++) {
         mat sumMx(k, k, fill::zeros), sumMx2(k, k, fill::zeros);
         vec sumMy(k, fill::zeros);
-        for (int k2 = 0; k2 < k & !checkCanceled(); k2++) {
-            for (int p = 0; p < poly1 & !checkCanceled(); p++) {
-                for (int k1 = 0; k1 < k & !checkCanceled(); k1++) {
+        for (int k2 = 0; k2 < k && !checkCanceled(); k2++) {
+            for (int p = 0; p < poly1 && !checkCanceled(); p++) {
+                for (int k1 = 0; k1 < k && !checkCanceled(); k1++) {
                     int xindex = k1*poly1*k + p*k + k2;
                     sumMx(k1, k2) += Mx(xindex, i);
                     sumMx2(k1, k2) += Mx2(xindex, i);

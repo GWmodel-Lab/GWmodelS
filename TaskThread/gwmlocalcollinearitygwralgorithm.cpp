@@ -249,7 +249,7 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandw
         mXnot1.col(i) = mX.col(i+1);
     }
     //主循环
-    for (int i = 0; i < n & !checkCanceled(); i++)
+    for (int i = 0; i < n && !checkCanceled(); i++)
     {
         vec distvi = mSpatialWeight.distance()->distance(i);
         vec wgt = weight->weight(distvi);
@@ -387,7 +387,7 @@ mat GwmLocalCollinearityGWRAlgorithm::regressionSerial(const mat &x, const vec &
     vec localcn(mDataPoints.n_rows,fill::zeros);
     vec locallambda(mDataPoints.n_rows,fill::zeros);
     vec hatrow(mDataPoints.n_rows,fill::zeros);
-    for(int i=0;i<mDataPoints.n_rows & !checkCanceled();i++)
+    for(int i=0;i<mDataPoints.n_rows && !checkCanceled();i++)
     {
         vec wi = mSpatialWeight.weightVector(i);
         //计算xw

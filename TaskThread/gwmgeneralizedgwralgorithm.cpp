@@ -101,7 +101,7 @@ void GwmGeneralizedGWRAlgorithm::run()
         mWtMat2 = mat(nRp,nDp,fill::zeros);
     }
     if(mRegressionLayer && !checkCanceled()){
-        for(int i = 0; i < nRp & !checkCanceled(); i++){
+        for(int i = 0; i < nRp && !checkCanceled(); i++){
             vec weight = mSpatialWeight.weightVector(i);
             mWtMat2.col(i) = weight;
             emit tick(i, nRp);
@@ -112,14 +112,14 @@ void GwmGeneralizedGWRAlgorithm::run()
             d->setDataPoints(&mDataPoints);
             d->setFocusPoints(&mDataPoints);
         }
-        for(int i = 0; i < nDp & !checkCanceled(); i++){
+        for(int i = 0; i < nDp && !checkCanceled(); i++){
             vec weight = mSpatialWeight.weightVector(i);
             mWtMat1.col(i) = weight;
             emit tick(i, nDp);
         }
     }
     else{
-        for(int i = 0; i < nRp & !checkCanceled(); i++){
+        for(int i = 0; i < nRp && !checkCanceled(); i++){
             vec weight = mSpatialWeight.weightVector(i);
             mWtMat2.col(i) = weight;
             emit tick(i, nRp);
@@ -183,7 +183,7 @@ void GwmGeneralizedGWRAlgorithm::run()
             double gwDev = sum(Dev);
             vec residual2 = res % res;
             double rss = sum(residual2);
-            for(int i = 0; i < nDp & !checkCanceled(); i++){
+            for(int i = 0; i < nDp && !checkCanceled(); i++){
                 mBetasSE.col(i) = sqrt(mBetasSE.col(i));
     //            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
             }
@@ -256,7 +256,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonSerial(const mat &x, const vec 
 
     mat mu = (this->*mCalWtFunction)(x,y,mWtMat1);
     mGwDev = 0.0;
-    for(int i = 0; i < nDp & !checkCanceled(); i++){
+    for(int i = 0; i < nDp && !checkCanceled(); i++){
         if(y[i] != 0){
             mGwDev = mGwDev +  2*(y[i]*(log(y[i]/mu[i])-1)+mu[i]);
         }
@@ -270,7 +270,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonSerial(const mat &x, const vec 
     bool isStoreS = (nDp <= 8192);
     mat ci, s_ri, S(isStoreS ? nDp : 1, nDp, fill::zeros);
     if(mHasHatMatrix && !checkCanceled()){
-        for(int i = 0; i < nDp & !checkCanceled(); i++){
+        for(int i = 0; i < nDp && !checkCanceled(); i++){
             try{
                 vec wi = mWtMat2.col(i);
                 vec gwsi = gwRegHatmatrix(x, myAdj, wi % mWt2, i, ci, s_ri);
@@ -278,7 +278,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonSerial(const mat &x, const vec 
                 mat invwt2 = 1.0 / mWt2;
                 S.row(isStoreS ? i : 0) = s_ri;
                 mat temp = mat(ci.n_rows,ci.n_cols);
-                for(int j = 0; j < ci.n_rows & !checkCanceled(); j++){
+                for(int j = 0; j < ci.n_rows && !checkCanceled(); j++){
                     temp.row(j) = ci.row(j) % trans(invwt2);
                 }
                 mBetasSE.col(i) = diag(temp * trans(ci));
@@ -299,7 +299,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonSerial(const mat &x, const vec 
         }
     }
     else{
-        for(int i = 0; i < nRp & !checkCanceled(); i++){
+        for(int i = 0; i < nRp && !checkCanceled(); i++){
             try{
                 vec wi = mWtMat2.col(i);
                 vec gwsi = gwReg(x, myAdj, wi * mWt2, i);
@@ -324,7 +324,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
     mat mu = (this->*mCalWtFunction)(x,y,mWtMat1);
 
     mGwDev = 0.0;
-    for(int i = 0; i < nDp & !checkCanceled(); i++){
+    for(int i = 0; i < nDp && !checkCanceled(); i++){
         if(y[i] != 0){
             mGwDev = mGwDev +  2*(y[i]*(log(y[i]/mu[i])-1)+mu[i]);
         }
@@ -353,7 +353,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
                     mat invwt2 = 1.0 / mWt2;
                     S.row(isStoreS ? i : 0) = s_ri;
                     mat temp = mat(ci.n_rows,ci.n_cols);
-                    for(int j = 0; j < ci.n_rows & !checkCanceled(); j++){
+                    for(int j = 0; j < ci.n_rows && !checkCanceled(); j++){
                         temp.row(j) = ci.row(j) % trans(invwt2);
                     }
                     mBetasSE.col(i) = diag(temp * trans(ci));
@@ -429,7 +429,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialOmp(const mat &x, const vec &y
                     mat invwt2 = 1.0 / mWt2;
                     S.row(isStoreS ? i : 0) = s_ri;
                     mat temp = mat(ci.n_rows,ci.n_cols);
-                    for(int j = 0; j < ci.n_rows & !checkCanceled(); j++){
+                    for(int j = 0; j < ci.n_rows && !checkCanceled(); j++){
                         temp.row(j) = ci.row(j) % trans(invwt2);
                     }
                     mBetasSE.col(i) = diag(temp * trans(ci));
@@ -486,7 +486,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialSerial(const mat &x, const vec
     mat s_ri, S(isStoreS ? nDp : 1, nDp, fill::zeros);
 //    mat S = mat(uword(0), uword(0));
     if(mHasHatMatrix && !checkCanceled()){
-        for(int i = 0; i < nDp & !checkCanceled(); i++){
+        for(int i = 0; i < nDp && !checkCanceled(); i++){
             try {
                 vec wi = mWtMat1.col(i);
                 vec gwsi = gwRegHatmatrix(x, myAdj, wi % mWt2, i, ci, s_ri);
@@ -494,7 +494,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialSerial(const mat &x, const vec
                 mat invwt2 = 1.0 / mWt2;
                 S.row(isStoreS ? i : 0) = s_ri;
                 mat temp = mat(ci.n_rows,ci.n_cols);
-                for(int j = 0; j < ci.n_rows & !checkCanceled(); j++){
+                for(int j = 0; j < ci.n_rows && !checkCanceled(); j++){
                     temp.row(j) = ci.row(j) % trans(invwt2);
                 }
                 mBetasSE.col(i) = diag(temp * trans(ci));
@@ -510,7 +510,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialSerial(const mat &x, const vec
 
     }
     else{
-        for(int i = 0; i < nRp & !checkCanceled(); i++){
+        for(int i = 0; i < nRp && !checkCanceled(); i++){
             try {
                 vec wi = mWtMat2.col(i);
                 vec gwsi = gwReg(x, myAdj, wi * mWt2, i);
@@ -531,7 +531,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial(GwmBandwid
     int n = mDataPoints.n_rows;
     vec cv = vec(n);
     mat wt = mat(n,n);
-    for (int i = 0; i < n & !checkCanceled(); i++)
+    for (int i = 0; i < n && !checkCanceled(); i++)
     {
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -541,7 +541,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial(GwmBandwid
             emit tick(mBandwidthSizeSelector.counter*10 + i * 5 / n, 100);
     }
     if (!checkCanceled()) (this->*mCalWtFunction)(mX,mY,wt);
-    for (int i = 0; i < n & !checkCanceled(); i++){
+    for (int i = 0; i < n && !checkCanceled(); i++){
         mat wi = wt.col(i) % mWt2;
         vec gwsi = gwReg(mX, myAdj, wi, i);
         mat yhatnoi = mX.row(i) * gwsi;
@@ -630,7 +630,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwi
     vec cv = vec(n);
     mat S = mat(n,n);
     mat wt = mat(n,n);    
-    for (int i = 0; i < n & !checkCanceled(); i++)
+    for (int i = 0; i < n && !checkCanceled(); i++)
     {
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -640,7 +640,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwi
     }
     if(!checkCanceled()) (this->*mCalWtFunction)(mX,mY,wt);
     vec trS = vec(1,fill::zeros);
-    for (int i = 0; i < n & !checkCanceled(); i++){
+    for (int i = 0; i < n && !checkCanceled(); i++){
         vec wi = wt.col(i) % mWt2;
         mat Ci = CiMat(mX,wi);
         S.row(i) = mX.row(i) * Ci;
@@ -747,7 +747,7 @@ mat GwmGeneralizedGWRAlgorithm::PoissonWtSerial(const mat &x, const vec &y, mat 
 
     while(!checkCanceled()){
         myAdj = nu + (y - mu)/mu;
-        for (int i = 0; i < dpn & !checkCanceled(); i++)
+        for (int i = 0; i < dpn && !checkCanceled(); i++)
         {
             vec wi = wt.col(i);
             vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
@@ -784,7 +784,7 @@ mat GwmGeneralizedGWRAlgorithm::PoissonWtOmp(const mat &x, const vec &y, mat wt)
     mLLik = 0;
     while(!checkCanceled()){
         myAdj = nu + (y - mu)/mu;
-        for (int i = 0; i < dpn & !checkCanceled(); i++)
+        for (int i = 0; i < dpn && !checkCanceled(); i++)
         {
             vec wi = wt.col(i);
             vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
@@ -824,7 +824,7 @@ mat GwmGeneralizedGWRAlgorithm::BinomialWtSerial(const mat &x, const vec &y, mat
     while(!checkCanceled()){
         //计算公式有调整
         myAdj = nu + (y - mu)/(mu % (1 - mu));
-        for (int i = 0; i < dpn & !checkCanceled(); i++)
+        for (int i = 0; i < dpn && !checkCanceled(); i++)
         {
             vec wi = wt.col(i);
             vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
@@ -862,7 +862,7 @@ mat GwmGeneralizedGWRAlgorithm::BinomialWtOmp(const mat &x, const vec &y, mat wt
     while(!checkCanceled()){
         //计算公式有调整
         myAdj = nu + (y - mu)/(mu % (1 - mu));
-        for (int i = 0; i < dpn & !checkCanceled(); i++)
+        for (int i = 0; i < dpn && !checkCanceled(); i++)
         {
             vec wi = wt.col(i);
             vec gwsi = gwReg(x, myAdj, wi % mWt2, i);

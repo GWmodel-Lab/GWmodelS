@@ -83,7 +83,7 @@ void GwmGTWRAlgorithm::run()
         vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
         vec dyhat2 = (mY - yhat) % (mY - yhat);
         vec localR2 = vec(nDp, fill::zeros);
-        for (uword i = 0; i < nDp & !checkCanceled(); i++)
+        for (uword i = 0; i < nDp && !checkCanceled(); i++)
         {
             vec w = mSTWeight.weightVector(i);
             double tss = sum(dybar2 % w);
@@ -233,7 +233,7 @@ mat GwmGTWRAlgorithm::regressionSerial(const mat &x, const vec &y)
     emit message("Regression ...");
     uword nRp = mRegressionPoints.n_rows, nVar = x.n_cols;
     mat betas(nVar, nRp, fill::zeros);
-    for (uword i = 0; i < nRp & !checkCanceled(); i++)
+    for (uword i = 0; i < nRp && !checkCanceled(); i++)
     {
         vec w = mSTWeight.weightVector(i);
         mat xtw = trans(x.each_col() % w);
@@ -290,7 +290,7 @@ mat GwmGTWRAlgorithm::regressionHatmatrixSerial(const mat &x, const vec &y, mat 
     betasSE = mat(nVar, nDp, fill::zeros);
     shat = vec(2, fill::zeros);
     qDiag = vec(nDp, fill::zeros);
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec w = mSTWeight.weightVector(i);
         mat xtw = trans(x.each_col() % w);
@@ -369,7 +369,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *band
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec d = mSTWeight.distanceVector(i);
         vec w = bandwidthWeight->weight(d);
@@ -463,7 +463,7 @@ double GwmGTWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight *ban
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec d = mSTWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
