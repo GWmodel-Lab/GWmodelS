@@ -7,9 +7,10 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
 {
     if (taskThread)
     {
-        mDataPointsSize = taskThread->dataPointsSize();
-        mVariables = taskThread->variables();
-        mBandwidth = taskThread->bandwidth();
+        auto taskMeta = taskThread->meta();
+        mDataPointsSize = taskMeta.layer->featureCount();
+        mVariables = taskMeta.variables;
+        mBandwidth = new GwmBandwidthWeight(taskMeta.weightBandwidthSize, taskMeta.weightBandwidthAdaptive, GwmBandwidthWeight::KernelFunctionType(taskMeta.weightBandwidthKernel));
         mQuantile = taskThread->quantile();
         mResultList = taskThread->resultlist();
 

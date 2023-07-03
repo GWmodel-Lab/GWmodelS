@@ -3,13 +3,15 @@
 
 #include <QObject>
 
+#include <armadillo>
+#include <gwmodel.h>
+
 #include "TaskThread/gwmspatialmonoscalealgorithm.h"
 #include "TaskThread/imultivariableanalysis.h"
 #include "TaskThread/iparallelable.h"
-
-#include "SpatialWeight/gwmbandwidthweight.h"
-
 #include "TaskThread/gwmbandwidthsizeselector.h"
+
+#include "Model/gwmalgorithmmetagwss.h"
 
 class GwmGWSSTaskThread;
 //typedef double (GwmGWSSTaskThread::*pfGwmCVApproach)(const mat& , GwmBandwidthWeight*);
@@ -20,202 +22,64 @@ class GwmGWSSTaskThread : public GwmSpatialMonoscaleAlgorithm, public IMultivari
     Q_OBJECT
 
 public:
-    static double covwt(const mat &x1, const mat &x2, const vec &w){
-    //    vec wi = w/sum(w);
-    //    double center1 = sum(x1 % wi);
-    //    double center2 = sum(x2 % wi);
-    //    vec n1 = sqrt(wi) % (x1 - center1);
-    //    vec n2 = sqrt(wi) % (x2 - center2);
-    //    double res = sum(n1 % n2) / (1 - sum(square(wi)));
-    //    return res;
-        return sum((sqrt(w) % (x1 - sum(x1 % w))) % (sqrt(w) % (x2 - sum(x2 % w)))) / (1 - sum(w % w));
-    }
-
-    static double corwt(const mat &x1, const mat &x2, const vec &w)
-    {
-        return covwt(x1,x2,w)/sqrt(covwt(x1,x1,w)*covwt(x2,x2,w));
-    }
-
-    static vec del(vec x,int rowcount);
-
-    static vec rank(vec x)
-    {
-        vec n = linspace(0,x.n_rows-1,x.n_rows);
-        vec res = n(sort_index(x));
-        return n(sort_index(res));
-    }
-
-public:
-    enum GwmCVType{
-        mean,
-        median
-    };
-
-    typedef double (GwmGWSSTaskThread::*CVFunction)(const mat& ,GwmBandwidthWeight*);
     typedef QList<QPair<QString, mat> > CreateResultLayerData;
 
-    typedef bool (GwmGWSSTaskThread::*CalFunction)();
-
-protected:
-    static vec findq(const mat& x, const vec& w);
-
-    bool CalculateSerial();
-#ifdef ENABLE_OpenMP
-    bool CalculateOmp();
-#endif
 public:
     GwmGWSSTaskThread();
 
-    bool quantile() const;
-    void setQuantile(bool quantile);
+    GwmGWSSTaskThread(const GwmAlgorithmMetaGWSS& meta);
 
-protected:  // QThread interface
-    void run() override;
+    GwmAlgorithmMetaGWSS meta() const { return mMeta; }
 
-public:  // IMultivariableAnalysis interface
-    QList<GwmVariable> variables() const override;
-    void setVariables(const QList<GwmVariable> &variables) override;
-    void setVariables(const QList<GwmVariable> &&variables);
+    bool quantile() const { return mAlgorithm.quantile(); }
 
-public:  // IParallelalbe interface
-    int parallelAbility() const override;
-    virtual ParallelType parallelType() const override;
-    virtual void setParallelType(const ParallelType& type) override;
+    QList<GwmVariable> variables() const override { return mVariables; }
+    void setVariables(const QList<GwmVariable>& variables) override { mVariables = variables; }
 
-public:  // IOpenmpParallelable interface
-    void setOmpThreadNum(const int threadNum) override;
+    int parallelAbility() const override { return mAlgorithm.parallelAbility(); }
+    ParallelType parallelType() const override { return ParallelType(mAlgorithm.parallelType()); }
+    void setParallelType(const ParallelType& type) override { mAlgorithm.setParallelType(gwm::ParallelType(type)); }
+    void setOmpThreadNum(const int threadNum) override { mAlgorithm.setOmpThreadNum(threadNum); }
 
-public:  // GwmSpatialAlgorithm interface
-    bool isValid() override;
-
-public:     // GwmTaskThread interface
     QString name() const override { return tr("GWSS"); };
 
-public:
-    mat mDataPoints;
-    GwmBandwidthWeight* bandwidth() const;
-    void setBandwidth(GwmBandwidthWeight* bandwidth);
+    mat localmean() const{return mAlgorithm.localMean();}
+    mat standarddev() const{return mAlgorithm.localSDev();}
+    mat localskewness() const{return mAlgorithm.localSkewness();}
+    mat lcv() const{return mAlgorithm.localCV();}
+    mat lvar() const{return mAlgorithm.localVar();}
 
+    mat localmedian() const{return mAlgorithm.localMedian();}
+    mat iqr() const{return mAlgorithm.iqr();}
+    mat qi() const{return mAlgorithm.qi();}
 
-    mat localmean() const{return mLocalMean;}
-    mat standarddev() const{return mStandardDev;}
-    mat localskewness() const{return mLocalSkewness;}
-    mat lcv() const{return mLCV;}
-    mat lvar() const{return mLVar;}
+    mat covmat() const{return mAlgorithm.localCov();}
+    mat corrmat() const{return mAlgorithm.localCorr();}
+    mat scorrmat() const{return mAlgorithm.localSCorr();}
 
-    mat localmedian() const{return mLocalMedian;}
-    mat iqr() const{return mIQR;}
-    mat qi() const{return mQI;}
+    bool isValid() override { return mAlgorithm.isValid(); }
 
-    mat covmat() const{return mCovmat;}
-    mat corrmat() const{return mCorrmat;}
-    mat scorrmat() const{return mSCorrmat;}
-
-    CreateResultLayerData resultlist() const{return mResultList;}
-
-    int dataPointsSize() const
-    {
-        return mDataPoints.n_rows;
-    }
+    CreateResultLayerData resultlist() const { return mResultList; }
+    
+protected:  // QThread interface
+    void run() override;
 protected:
-    void initPoints();
-    void initXY(mat& x, const QList<GwmVariable>& indepVars);
+    mat initPoints(QgsVectorLayer* layer);
+    mat initXY(QgsVectorLayer* layer, const QList<GwmVariable>& indepVars);
 
 protected:  // GwmSpatialMonoscaleAlgorithm interface
     void createResultLayer(CreateResultLayerData data);
 
-private:
+protected:
+    GwmAlgorithmMetaGWSS mMeta;
+    gwm::GWSS mAlgorithm;
+    QgsVectorLayer* mLayer = nullptr;
     QList<GwmVariable> mVariables;
-    bool mQuantile = false;
-
-protected:
-//    mat mDataPoints;
-
-//    GwmBandwidthWeight* mBandwidth;
-
-    CalFunction mCalFunciton;
-
-    mat mX;
-
-    IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
-    int mOmpThreadNum = 8;
-
-protected:
-    mat mLocalMean;
-    mat mStandardDev;
-    mat mLocalSkewness;
-    mat mLCV;
-    mat mLVar;
-
-    mat mLocalMedian;
-    mat mIQR;
-    mat mQI;
-
-    mat mCovmat;
-    mat mCorrmat;
-    mat mSCorrmat;
-
     CreateResultLayerData mResultList;
 
 public:
     static int treeChildCount;
 
 };
-
-
-
-inline bool GwmGWSSTaskThread::quantile() const
-{
-    return mQuantile;
-}
-
-inline void GwmGWSSTaskThread::setQuantile(bool quantile)
-{
-    mQuantile = quantile;
-}
-
-inline QList<GwmVariable> GwmGWSSTaskThread::variables() const{
-    return mVariables;
-}
-
-inline void GwmGWSSTaskThread::setVariables(const QList<GwmVariable> &variables)
-{
-    mVariables = variables;
-}
-
-inline void GwmGWSSTaskThread::setVariables(const QList<GwmVariable> &&variables)
-{
-    mVariables = variables;
-}
-
-inline GwmBandwidthWeight *GwmGWSSTaskThread::bandwidth() const
-{
-    return static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
-}
-
-inline void GwmGWSSTaskThread::setBandwidth(GwmBandwidthWeight *bandwidth)
-{
-    mSpatialWeight.setWeight(bandwidth);
-}
-
-inline int GwmGWSSTaskThread::parallelAbility() const
-{
-    return IParallelalbe::SerialOnly
-        #ifdef ENABLE_OpenMP
-            | IParallelalbe::OpenMP
-        #endif
-            ;
-}
-
-inline IParallelalbe::ParallelType GwmGWSSTaskThread::parallelType() const
-{
-    return mParallelType;
-}
-
-inline void GwmGWSSTaskThread::setOmpThreadNum(const int threadNum)
-{
-    mOmpThreadNum = threadNum;
-}
-
 
 #endif // GWMGWSSTASKTHREAD_H

@@ -14,6 +14,14 @@
         "chrono": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "qobject": "cpp",
+        "new": "cpp",
+        "exception": "cpp",
+        "__config": "cpp",
+        "__split_buffer": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "vector": "cpp"
     }
 }

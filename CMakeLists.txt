@@ -146,6 +146,7 @@ set(SOURCES
     Model/gwmlayersymbolitem.cpp
     Model/gwmlayervectoritem.cpp
     Model/gwmvariableitemmodel.cpp
+    Model/gwmalgorithmmetagwss.cpp
     PropertyPanelTabs/gwmpropertycollinearitygwrtab.cpp
     PropertyPanelTabs/gwmpropertyggwrtab.cpp
     Model/gwmparameterspecifiedoptionsmodel.cpp
@@ -264,6 +265,7 @@ set(HEADERS
     Model/gwmlayersymbolitem.h
     Model/gwmlayervectoritem.h
     Model/gwmvariableitemmodel.h
+    Model/gwmalgorithmmetagwss.h
     PropertyPanelTabs/gwmpropertycollinearitygwrtab.h
     PropertyPanelTabs/gwmpropertyggwrtab.h
     Model/gwmparameterspecifiedoptionsmodel.h
