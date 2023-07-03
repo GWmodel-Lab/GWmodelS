@@ -2,5 +2,15 @@
     "cmake.configureArgs": [
         "-DCMAKE_PREFIX_PATH=/Users/yigong/miniconda3/envs/qgis",
         "-DQGIS_MAC_PATH=/Users/yigong/miniconda3/envs/qgis"
-    ]
+    ],
+    "files.associations": {
+        "*.cu": "cpp",
+        "*.qs": "javascript",
+        "*.rmd": "markdown",
+        "*.Rmd": "rmd",
+        "Makevars": "makefile",
+        "ostream": "cpp",
+        "variant": "cpp",
+        "chrono": "cpp"
+    }
 }
