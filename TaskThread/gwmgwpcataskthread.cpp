@@ -468,7 +468,7 @@ void GwmGWPCATaskThread::createPlotLayer(CreatePlotLayerData data, QList<QString
         mPlotLayer->addFeature(lineFeature);
     }
     mPlotLayer->commitChanges();
-    qWarning("test %s",(QgsWkbTypes::displayString(mPlotLayer->wkbType())));
+    qWarning("test %s", (QgsWkbTypes::displayString(mPlotLayer->wkbType())).toStdString().data());
 }
 
 double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *weight)
