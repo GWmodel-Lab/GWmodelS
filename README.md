@@ -1,6 +1,6 @@
 # GWmodelS
 
-![icon](https://github.com/GWmodel-Lab/GWmodelS/blob/GWmodelS-Page/icons/GWmodelS.ico "Icon")  
+![icon](./icons/GWmodelS.ico "Icon")  
 Version:1.0.4
 
 [Click to download](https://github.com/GWmodel-Lab/GWmodelS/releases/tag/GWmodelS-Installer-V1.0.4)
