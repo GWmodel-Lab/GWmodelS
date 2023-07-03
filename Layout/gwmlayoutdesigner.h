@@ -101,7 +101,7 @@ public:		// QgsLayoutDesignerInterface interface
 	void showRulers(bool visible);
 	void showItemOptions(QgsLayoutItem *item, bool bringPanelToFront = true);
     void setAtlasFeature( const QgsFeature &feature );
-	QgsLayoutDesignerInterface::ExportResults *lastExportResults() {}
+	QgsLayoutDesignerInterface::ExportResults *lastExportResults() { return mLastExportResults; }
 
 public:
 	void activate();
@@ -288,6 +288,8 @@ private:
 	QLabel *mStatusCursorYLabel = nullptr;
 	QLabel *mStatusCursorPageLabel = nullptr;
 	QProgressBar *mStatusProgressBar = nullptr;
+
+	QgsLayoutDesignerInterface::ExportResults *mLastExportResults = nullptr;
 };
 
 
@@ -412,9 +414,9 @@ public:
     {
         mDesigner->setAtlasFeature(feature);
     }
-	virtual QgsLayoutDesignerInterface::ExportResults *lastExportResults() const
+	virtual QgsLayoutDesignerInterface::ExportResults *lastExportResults() const override
 	{
-		mDesigner->lastExportResults();
+		return mDesigner->lastExportResults();
 	}
 
 private:

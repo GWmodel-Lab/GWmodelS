@@ -173,23 +173,23 @@ void GwmPropertyGWPCATab::on_btnSaveRes_clicked()
           {
               QTextStream out(&myfile);
 //              使用组件赋值
-              out << "  Model Calibration Information"<<endl;
-              out << "----------------------------------------------"<<endl;
-              out << "Kernel function:  "; out << ui->lblKernelFunction->text() <<endl;
-              out << "Bandwidth Type:   "; out << ui->lblBandwidthType->text() <<endl;
-              out << "BandWidth: "; out << ui->lblBandwidthSize->text() << endl;
-              out << "Distance metric:   "; out << ui->lblDistanceMetric->text() <<endl;
-              out << "Principle components:  "; out << ui->lblPCCount->text() <<endl;
-              out << "" << endl;
-              out << "**********************************************" << endl;
-              out << "" << endl;
-              out << "  Local variance"<<endl;
-              out << "----------------------------------------------"<<endl;
+              out << "  Model Calibration Information"<< Qt::endl;
+              out << "----------------------------------------------"<< Qt::endl;
+              out << "Kernel function:  "; out << ui->lblKernelFunction->text() << Qt::endl;
+              out << "Bandwidth Type:   "; out << ui->lblBandwidthType->text() << Qt::endl;
+              out << "BandWidth: "; out << ui->lblBandwidthSize->text() << Qt::endl;
+              out << "Distance metric:   "; out << ui->lblDistanceMetric->text() << Qt::endl;
+              out << "Principle components:  "; out << ui->lblPCCount->text() << Qt::endl;
+              out << "" << Qt::endl;
+              out << "**********************************************" << Qt::endl;
+              out << "" << Qt::endl;
+              out << "  Local variance"<< Qt::endl;
+              out << "----------------------------------------------"<< Qt::endl;
               for(int i = 0 ; i < 6 ; i++){
                   out << ui->tbwLocalvariance->horizontalHeaderItem(i)->text();
                   out << "\t";
               }
-              out << "" <<endl;
+              out << "" << Qt::endl;
 
               for(int i = 0 ; i < ui->tbwLocalvariance->rowCount() ; i++){
                   for (int j = 0 ; j < 6; j++){
@@ -197,18 +197,18 @@ void GwmPropertyGWPCATab::on_btnSaveRes_clicked()
 
                        out << "\t";
                   }
-                  out << "" << endl;
+                  out << "" << Qt::endl;
               }
-              out << "" <<endl;
-              out << "**********************************************" << endl;
-              out << "" << endl;
-              out << "  Local Proportion of Variance"<<endl;
-              out << "----------------------------------------------"<<endl;
+              out << "" << Qt::endl;
+              out << "**********************************************" << Qt::endl;
+              out << "" << Qt::endl;
+              out << "  Local Proportion of Variance"<< Qt::endl;
+              out << "----------------------------------------------"<< Qt::endl;
               for(int i = 0 ; i < 6 ; i++){
                   out << ui->tbwProp->horizontalHeaderItem(i)->text();
                   out << (i == 0 ? "\t\t" : "\t");
               }
-              out << "" <<endl;
+              out << "" << Qt::endl;
 
               for(int i = 0 ; i < ui->tbwProp->rowCount() ; i++){
                   for (int j = 0 ; j < 6; j++){
@@ -216,12 +216,12 @@ void GwmPropertyGWPCATab::on_btnSaveRes_clicked()
 
                        out << ((j == 0 && i == ui->tbwProp->rowCount() - 1) ? "\t" : "\t\t");
                   }
-                  out << "" << endl;
+                  out << "" << Qt::endl;
               }
-              out << "" <<endl;
-              out << "**********************************************" << endl;
-              out << "" << endl;
-              out << "GWmodel Lab\t"; out << "http://gwmodel.whu.edu.cn/"<<endl;
+              out << "" << Qt::endl;
+              out << "**********************************************" << Qt::endl;
+              out << "" << Qt::endl;
+              out << "GWmodel Lab\t"; out << "http://gwmodel.whu.edu.cn/"<< Qt::endl;
               out << "Contact us\t"; out << "binbinlu@whu.edu.cn";
               myfile.close();
           }

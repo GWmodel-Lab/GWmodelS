@@ -928,7 +928,7 @@ void GwmApp::onExportLayerAsCsv(const QModelIndex &index)
                 QgsVectorFileWriter::SaveVectorOptions& options = *(new QgsVectorFileWriter::SaveVectorOptions());
                 if(saveAsCSVDlg->isAddXY()){
                     QStringList layerOptions;
-                    if(layerItem->layer()->geometryType() == QgsWkbTypes::Type::Point){
+                    if(layerItem->layer()->geometryType() == QgsWkbTypes::GeometryType::PointGeometry){
                         layerOptions << QStringLiteral( "%1=%2" ).arg( "GEOMETRY", "AS_XY" );
                     }
                     else{

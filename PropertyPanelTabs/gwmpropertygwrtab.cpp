@@ -271,60 +271,60 @@ void GwmPropertyGWRTab::on_btnSaveRes_clicked()
           {
               QTextStream out(&myfile);
 //              使用组件赋值
-              out << "*****************************************************" << endl;
-              out << "  Results of Global Regression"<<endl;
-              out << "*****************************************************" << endl;
-              out << "Coefficients:"<<endl;
+              out << "*****************************************************" << Qt::endl;
+              out << "  Results of Global Regression"<< Qt::endl;
+              out << "*****************************************************" << Qt::endl;
+              out << "Coefficients:"<< Qt::endl;
               for(int i = 0 ; i < 3 ; i++){
                   out << ui->tbwOLSCoe->horizontalHeaderItem(i)->text();
                   out <<  "\t";
               }
-              out << "" <<endl;
+              out << "" << Qt::endl;
 
               for(int i = 0 ; i < ui->tbwOLSCoe->rowCount() ; i++){
                   for (int j = 0 ; j < 3; j++){
                        out << ui->tbwOLSCoe->item(i, j)->text();
                        out << "\t";
                   }
-                  out << "" << endl;
+                  out << "" << Qt::endl;
               }
-              out << "  Residual standard error: ";out <<mLayerItem->OLSResults().RSD;out <<"on ";out << ui->lblNumberDataPoints->text();out <<  " degrees of freedom"<<endl;
-              out << "  Multiple R-squared: "; out <<mLayerItem->OLSResults().R2<<endl;
-              out << "  Adjusted R-squared: "; out <<mLayerItem->OLSResults().adjR2<<endl;
-              out << "" << endl;
-              out << "****************************************************" << endl;
-              out << "  Results of Geographically Weighted Regression "<<endl;
-              out << "***************************************************" << endl;
-              out << "  Model Calibration Information"<<endl;
-              out << "----------------------------------------------"<<endl;
-              out << "Kernel function:  "; out << ui->lblKernelFunction->text() <<endl;
-              out << "Bandwidth Type:   "; out << ui->lblBandwidthType->text() <<endl;
-              out << "BandWidth: "; out << ui->lblBandwidthSize->text() << endl;
-              out << "Regression points:  "; out << ui->lblRegressionPoints->text() <<endl;
-              out << "Distance metric:   "; out << ui->lblDistanceMetric->text() <<endl;
-              out << "" << endl;
-              out << "***************************************************" << endl;
-              out << "" << endl;
-              out << "  Diagnostic Information"<<endl;
-              out << "----------------------------------------------"<<endl;
-              out << "Number of data points: "; out << ui->lblNumberDataPoints->text() << endl;
-              out << "Effective number of parameters:  "; out << ui->lblENP->text() <<endl;
-              out << "Effective degrees of freedom:   "; out << ui->lblEDF->text() <<endl;
-              out << "AIC: "; out << ui->lblAIC->text() << endl;
-              out << "AICc:  "; out << ui->lblAICc->text() <<endl;
-              out << "Residual sum of squares:   "; out << ui->lblRSS->text() <<endl;
-              out << "R-square value:  "; out << ui->lblRSquare->text() <<endl;
-              out << "Adjusted R-square value:   "; out << ui->lblRSquareAdjusted->text() <<endl;
-              out << "" <<endl;
-              out << "***************************************************" << endl;
-              out << "" << endl;
-              out << "  Summary of GWR Coefficient Estimates"<<endl;
-              out << "----------------------------------------------"<<endl;
+              out << "  Residual standard error: ";out <<mLayerItem->OLSResults().RSD;out <<"on ";out << ui->lblNumberDataPoints->text();out <<  " degrees of freedom"<< Qt::endl;
+              out << "  Multiple R-squared: "; out <<mLayerItem->OLSResults().R2<< Qt::endl;
+              out << "  Adjusted R-squared: "; out <<mLayerItem->OLSResults().adjR2<< Qt::endl;
+              out << "" << Qt::endl;
+              out << "****************************************************" << Qt::endl;
+              out << "  Results of Geographically Weighted Regression "<< Qt::endl;
+              out << "***************************************************" << Qt::endl;
+              out << "  Model Calibration Information"<< Qt::endl;
+              out << "----------------------------------------------"<< Qt::endl;
+              out << "Kernel function:  "; out << ui->lblKernelFunction->text() << Qt::endl;
+              out << "Bandwidth Type:   "; out << ui->lblBandwidthType->text() << Qt::endl;
+              out << "BandWidth: "; out << ui->lblBandwidthSize->text() << Qt::endl;
+              out << "Regression points:  "; out << ui->lblRegressionPoints->text() << Qt::endl;
+              out << "Distance metric:   "; out << ui->lblDistanceMetric->text() << Qt::endl;
+              out << "" << Qt::endl;
+              out << "***************************************************" << Qt::endl;
+              out << "" << Qt::endl;
+              out << "  Diagnostic Information"<< Qt::endl;
+              out << "----------------------------------------------"<< Qt::endl;
+              out << "Number of data points: "; out << ui->lblNumberDataPoints->text() << Qt::endl;
+              out << "Effective number of parameters:  "; out << ui->lblENP->text() << Qt::endl;
+              out << "Effective degrees of freedom:   "; out << ui->lblEDF->text() << Qt::endl;
+              out << "AIC: "; out << ui->lblAIC->text() << Qt::endl;
+              out << "AICc:  "; out << ui->lblAICc->text() << Qt::endl;
+              out << "Residual sum of squares:   "; out << ui->lblRSS->text() << Qt::endl;
+              out << "R-square value:  "; out << ui->lblRSquare->text() << Qt::endl;
+              out << "Adjusted R-square value:   "; out << ui->lblRSquareAdjusted->text() << Qt::endl;
+              out << "" << Qt::endl;
+              out << "***************************************************" << Qt::endl;
+              out << "" << Qt::endl;
+              out << "  Summary of GWR Coefficient Estimates"<< Qt::endl;
+              out << "----------------------------------------------"<< Qt::endl;
               for(int i = 0 ; i < 6 ; i++){
                   out << ui->tbwCoefficient->horizontalHeaderItem(i)->text();
                   out << (i == 0 ? "\t\t" : "\t");
               }
-              out << "" <<endl;
+              out << "" << Qt::endl;
 
               for(int i = 0 ; i < ui->tbwCoefficient->rowCount() ; i++){
                   for (int j = 0 ; j < 6; j++){
@@ -332,12 +332,12 @@ void GwmPropertyGWRTab::on_btnSaveRes_clicked()
 
                        out << ((j == 0 && i != 0) ? "\t\t" : "\t");
                   }
-                  out << "" << endl;
+                  out << "" << Qt::endl;
               }
-              out << "" <<endl;
-              out << "**********************************************" << endl;
-              out << "" << endl;
-              out << "GWmodel Lab\t"; out << "http://gwmodel.whu.edu.cn/"<<endl;
+              out << "" << Qt::endl;
+              out << "**********************************************" << Qt::endl;
+              out << "" << Qt::endl;
+              out << "GWmodel Lab\t"; out << "http://gwmodel.whu.edu.cn/"<< Qt::endl;
               out << "Contact us\t"; out << "binbinlu@whu.edu.cn";
               myfile.close();
           }

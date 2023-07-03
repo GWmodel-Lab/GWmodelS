@@ -157,6 +157,8 @@ bool GwmLayerGWPCAItem::writeXml(QDomNode &node, QDomDocument &doc)
             }
             nodeAnalyse.appendChild(nodeBandwidthCriterion);
         }
+
+        return true;
     }
     else return false;
 }

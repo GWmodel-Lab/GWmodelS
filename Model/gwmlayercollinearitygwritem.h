@@ -19,7 +19,7 @@ public:
 
     virtual int childNumber() override;
 
-    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::CollinearityGWR; }
+    inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::CollinearityGWR; }
 
     virtual bool readXml(QDomNode &node) override;
     virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;

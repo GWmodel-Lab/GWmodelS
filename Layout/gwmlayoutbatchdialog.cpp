@@ -580,7 +580,7 @@ void GwmLayoutBatchDialog::toggleWidgets(bool started)
 void GwmLayoutBatchDialog::on_btnSelectDirectory_clicked()
 {
     QFileDialog dlg(this, tr("Select a Folder"));
-    dlg.setFileMode(QFileDialog::FileMode::DirectoryOnly);
+    dlg.setOption(QFileDialog::Option::ShowDirsOnly, true);
     if (dlg.exec())
     {
         auto pathList = dlg.selectedFiles();

@@ -18,7 +18,7 @@ class GwmLayerGWPCAItem : public GwmLayerVectorItem
 public:
     explicit GwmLayerGWPCAItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWPCATaskThread* taskThread = nullptr);
 
-    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::GWPCA; }
+    inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::GWPCA; }
 
     virtual bool readXml(QDomNode &node) override;
     virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;

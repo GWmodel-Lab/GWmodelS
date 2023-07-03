@@ -979,11 +979,11 @@ void GwmLayoutDesigner::setPrinterPageOrientation(QgsLayoutItemPage::Orientation
 		switch (orientation)
 		{
 			case QgsLayoutItemPage::Landscape:
-				printer()->setOrientation(QPrinter::Landscape);
+				printer()->setPageOrientation(QPageLayout::Landscape);
 				break;
 
 			case QgsLayoutItemPage::Portrait:
-				printer()->setOrientation(QPrinter::Portrait);
+				printer()->setPageOrientation(QPageLayout::Portrait);
 				break;
 		}
 
