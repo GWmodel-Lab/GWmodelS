@@ -11,6 +11,9 @@
         "Makevars": "makefile",
         "ostream": "cpp",
         "variant": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "typeindex": "cpp",
+        "typeinfo": "cpp",
+        "string": "cpp"
     }
 }

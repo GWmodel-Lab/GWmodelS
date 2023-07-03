@@ -91,6 +91,8 @@ if(NOT GSL_FOUND)
 endif(NOT GSL_FOUND)
 include_directories(${GSL_INCLUDE_DIRS})
 
+find_package(GWmodel REQUIRED)
+include_directories(${GWmodel_INCLUDE_DIR})
 
 if(NOT APPLE)
     set (ENABLE_CUDA FALSE CACHE BOOL "Determines whether CUDA support should be built")
@@ -488,6 +490,7 @@ target_link_libraries(GWmodelS
     ${QGIS_GUI_LIBRARY}
     ${QGIS_CORE_LIBRARY}
     ${ADDITIONAL_LIBRARIES}
+    ${GWmodel_LIBRARIES}
 )
 
 if(ENABLE_CUDA)
