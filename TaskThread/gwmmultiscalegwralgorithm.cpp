@@ -187,7 +187,7 @@ void GwmMultiscaleGWRAlgorithm::run()
     if (mHasHatMatrix && !checkCanceled())
     {
         mDiagnostic = CalcDiagnostic(mX, mY, mS0, mRSS0);
-        vec yhat = fitted(mX, mBetas);
+        vec yhat = Fitted(mX, mBetas);
         vec residual = mY - yhat;
         mBetasTV = mBetas / mBetasSE;
         createResultLayer({
@@ -235,7 +235,7 @@ mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
     // ***********************************************************
     emit message(QString("-------- Select the Optimum Bandwidths for each Independent Varialbe --------"));
     uvec bwChangeNo(nVar, fill::zeros);
-    vec resid = y - fitted(x, betas);
+    vec resid = y - Fitted(x, betas);
     double RSS0 = sum(resid % resid), RSS1 = DBL_MAX;
     double criterion = DBL_MAX;
     for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold && !checkCanceled(); iteration++)
