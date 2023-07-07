@@ -31,7 +31,7 @@ public:
         dCVR
     };
 
-    // typedef double (GwmGWcorrelationTaskThread::*BandwidthSizeCriterionFunction)(GwmBandwidthWeight*);
+    typedef double (GwmGWcorrelationTaskThread::*BandwidthSizeCriterionFunction)(GwmBandwidthWeight*);
 //    typedef mat (GwmGWcorrelationTaskThread::*RegressionAllFunction)(const arma::mat&, const arma::vec&);
 //    typedef vec (GwmGWcorrelationTaskThread::*RegressionVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
 //    typedef QPair<QString, const mat> CreateResultLayerDataItem;

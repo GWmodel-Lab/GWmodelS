@@ -289,8 +289,8 @@ bool GwmGGWRTaskThread::gwrPoisson(){
             double R2 = 1 - gwDev/(nulldev);  // pseudo.R2 <- 1 - gw.dev/null.dev
             vec vDiags(4);
 //            int n = mX.n_rows;
-//            double edf = n - 2 * mSHat(0) + mSHat(1);                                                                                                                        //edf
-//            double enp = 2 * mSHat(0) - mSHat(1);                                                                                                                                // enp
+//            double edf = n - 2 * mSHat(0) + mSHat(1);  //edf
+//            double enp = 2 * mSHat(0) - mSHat(1);  // enp
 //            double r2_adj = 1 - (1 - R2) * (n - 1) / (edf - 1);
             vDiags(0) = AIC;
             vDiags(1) = AICc;
@@ -435,8 +435,8 @@ bool GwmGGWRTaskThread::gwrBinomial(){
             double R2 = 1 - gwDev/(nulldev);  // pseudo.R2 <- 1 - gw.dev/null.dev
             vec vDiags(4);
 //            int n = mX.n_rows;
-//            double edf = n - 2 * mSHat(0) + mSHat(1);                                                                                                                        //edf
-//            double enp = 2 * mSHat(0) - mSHat(1);                                                                                                                                // enp
+//            double edf = n - 2 * mSHat(0) + mSHat(1);  //edf
+//            double enp = 2 * mSHat(0) - mSHat(1);  // enp
 //            double r2_adj = 1 - (1 - R2) * (n - 1) / (edf - 1);
             vDiags(0) = AIC;
             vDiags(1) = AICc;

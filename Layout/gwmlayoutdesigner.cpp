@@ -547,7 +547,7 @@ void GwmLayoutDesigner::setupToolbars()
 
     //connect(mActionOptions, &QAction::triggered, this, [=]
     //{
-    //    GwmApp::Instance()->showOptionsDialog(this, QStringLiteral("mOptionsPageComposer"));
+    //	GwmApp::Instance()->showOptionsDialog(this, QStringLiteral("mOptionsPageComposer"));
     //});
 
     connect(mActionSaveAsTemplate, &QAction::triggered, this, &GwmLayoutDesigner::saveAsTemplate);
@@ -1287,7 +1287,7 @@ bool GwmLayoutDesigner::getPdfExportSettings(QgsLayoutExporter::PdfExportSetting
     dialog.setGeometriesSimplified(simplify);
     dialog.setExportGeoPdf(geoPdf);
     dialog.setUseOgcBestPracticeFormat(useOgcBestPracticeFormat);
-//    dialog.setExportGeoPdfFeatures(exportGeoPdfFeatures);
+//	dialog.setExportGeoPdfFeatures(exportGeoPdfFeatures);
     dialog.setExportThemes(exportThemes);
 
     if (dialog.exec() != QDialog::Accepted)
@@ -1301,7 +1301,7 @@ bool GwmLayoutDesigner::getPdfExportSettings(QgsLayoutExporter::PdfExportSetting
     QgsRenderContext::TextRenderFormat textRenderFormat = dialog.textRenderFormat();
     geoPdf = dialog.exportGeoPdf();
     useOgcBestPracticeFormat = dialog.useOgcBestPracticeFormat();
-//    exportGeoPdfFeatures = dialog.exportGeoPdfFeatures();
+//	exportGeoPdfFeatures = dialog.exportGeoPdfFeatures();
     exportThemes = dialog.exportThemes();
 
     if (mLayout)
@@ -3846,7 +3846,7 @@ void GwmLayoutDesigner::createAtlasWidget()
 
     //connect(atlas, &QgsLayoutAtlas::messagePushed, mStatusBar, [=](const QString & message)
     //{
-    //    mStatusBar->showMessage(message);
+    //	mStatusBar->showMessage(message);
     //});
     //connect(atlas, &QgsLayoutAtlas::toggled, this, &GwmLayoutDesigner::toggleAtlasControls);
     //connect(atlas, &QgsLayoutAtlas::toggled, this, &GwmLayoutDesigner::refreshLayout);

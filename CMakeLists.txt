@@ -98,11 +98,6 @@ if(NOT APPLE)
     endif(ENABLE_CUDA)    
 endif(NOT APPLE)
 
-if(MSVC)
-    add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
-    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
-endif()
-
 
 add_definitions(-D M_PI=3.14159265358979323846 -D M_PI_2=1.57079632679489661923)
 if(NOT WIN32)
