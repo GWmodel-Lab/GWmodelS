@@ -1,4 +1,4 @@
-    #ifndef GWMGWSSTASKTHREAD_H
+#ifndef GWMGWSSTASKTHREAD_H
 #define GWMGWSSTASKTHREAD_H
 
 #include <QObject>

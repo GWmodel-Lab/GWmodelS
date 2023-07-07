@@ -62,16 +62,16 @@ public:
 
 public:
 
-    void print(std::string message, gwm::ITelegram::LogLevel level, std::string fun_name, std::string file_name);
+    void print(std::string message, gwm::ITelegram::LogLevel level, std::string fun_name, std::string file_name) override;
 
-    void progress(std::size_t current, std::size_t total)
+    void progress(std::size_t current, std::size_t total, std::string fun_name, std::string file_name) override
     {
         mTask->progress(current, total); 
     }
 
-    void progress(double percent) { mTask->progress(percent); }
+    void progress(double percent, std::string fun_name, std::string file_name) override { mTask->progress(percent); }
 
-    bool stop() { return mTask->checkCanceled(); }
+    bool stop() override { return mTask->checkCanceled(); }
 
 private:
     const GwmTaskThread* mTask = nullptr;

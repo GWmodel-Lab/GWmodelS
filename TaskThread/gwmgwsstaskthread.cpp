@@ -75,7 +75,7 @@ void GwmGWSSTaskThread::run()
     if (checkCanceled()) return;
     try
     {
-        mAlgorithm.setTelegram(new GwmTaskThreadTelegram(this));
+        mAlgorithm.setTelegram(make_unique<GwmTaskThreadTelegram>(this));
         mAlgorithm.run();
         if(!checkCanceled())
         {
