@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR)
 
-find_package(Qt5 COMPONENTS Core Gui Xml PrintSupport Svg Network REQUIRED)
-
 find_package(GDAL REQUIRED)
 if(NOT GDAL_FOUND)
     message(FATAL_ERROR "GDAL Not Found!")
@@ -35,8 +33,13 @@ include_directories(${QGIS_INCLUDE_DIR} ${QGIS_UI_INCLUDE_DIR})
 find_package(HDF5)
 if(HDF5_FOUND)
     include_directories(${HDF5_INCLUDE_DIRS})
+    set(ADDITIONAL_HDF5_LIBRARIES
+        ${HDF5_LIBRARIES}
+        ${HDF5_HL_LIBRARIES}
+    )
+else(HDF5_FOUND)
+    set(ADDITIONAL_HDF5_LIBRARIES "")
 endif(HDF5_FOUND)
-
 
 find_package(Qwt REQUIRED)
 if(NOT QWT_FOUND)
@@ -415,32 +418,16 @@ set(FORMS
     gwmcorrelationdialog.ui
     PropertyPanelTabs/gwmpropertygwcorrelationstab.ui
 )
-qt5_add_resources(GWMODEL_ICONS images/images.qrc)
 qt5_wrap_ui(FORMS_H ${FORMS})
 
 if(WIN32)
-    set(QT_USEQTMAIN TRUE)
-    set(app_WINRC app_win32.rc)
-    set_property(SOURCE app_win32.rc APPEND PROPERTY OBJECT_DEPENDS ${PROJECT_SOURCE_DIR}/icons/GWmodelS.ico)
     add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS})
 endif(WIN32)
 
 if(UNIX AND NOT CYGWIN)
     if(APPLE)
-        set(QT_USEQTMAIN TRUE)
-        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-        set(MACOSX_BUNDLE_GUI_IDENTIFIER ${IDENTIFIER})
-        set(MACOSX_BUNDLE_BUNDLE_NAME GWmodelS)
-        set(MACOSX_BUNDLE_COPYRIGHT ${COPYRIGHT})
-        set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${spectral_VERSION})
-        set(MACOSX_BUNDLE_BUNDLE_VERSION ${spectral_VERSION})
-        set(ICON_NAME "GWmodelS.icns")
-        set(app_MACICON ${PROJECT_SOURCE_DIR}/icons/${ICON_NAME})
-        set(MACOSX_BUNDLE_ICON_FILE ${ICON_NAME})
-        set_source_files_properties(${app_MACICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
         add_executable(GWmodelS MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${FORMS_H} ${app_MACICON} ${GWMODEL_ICONS})
-        set_target_properties(GWmodelS PROPERTIES FRAMEWORK TRUE MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/macOS/Info.plist.in)
+        set_target_properties(GWmodelS PROPERTIES FRAMEWORK TRUE MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/macOS/Info.plist.in)
     else(APPLE)
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -no-pie")
         add_executable(GWmodelS ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS})
@@ -451,14 +438,6 @@ endif(UNIX AND NOT CYGWIN)
 if(CYGWIN)
     message(FATAL_ERROR "Not support Cygwin currently!")
 endif(CYGWIN)
-
-if(HDF5_FOUND)
-    set(ADDITIONAL_LIBRARIES
-        ${HDF5_LIBRARIES}
-        ${HDF5_HL_LIBRARIES}
-    )
-endif(HDF5_FOUND)
-
 
 target_link_libraries(GWmodelS 
     PRIVATE 
