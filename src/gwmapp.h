@@ -19,7 +19,7 @@
 #include "Layout/gwmlayoutdesigner.h"
 #include "gwmproject.h"
 
-#include "symbolwindow/gwmsymbolwindow.h"
+#include "SymbolWindow/gwmsymbolwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
