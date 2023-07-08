@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.8.0 FATAL_ERROR)
-project(GWmodelS LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR)
+project(GWmodelS LANGUAGES CXX VERSION 1.1.0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
