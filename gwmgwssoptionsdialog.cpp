@@ -13,11 +13,10 @@
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
 
-GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGWSSTaskThread* thread,QWidget *parent) :
+GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemList, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmGWSSOptionsDialog),
-    mMapLayerList(originItemList),
-    mTaskThread(thread)
+    mMapLayerList(originItemList)
 {
     ui->setupUi(this);
 
@@ -272,10 +271,10 @@ double GwmGWSSOptionsDialog::bandwidthSize(){
 }
 
 
-GwmBandwidthWeight::KernelFunctionType GwmGWSSOptionsDialog::bandwidthKernelFunction()
+gwm::BandwidthWeight::KernelFunctionType GwmGWSSOptionsDialog::bandwidthKernelFunction()
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
-    return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
+    return gwm::BandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
 QVariant GwmGWSSOptionsDialog::parallelParameters()
@@ -294,22 +293,10 @@ QVariant GwmGWSSOptionsDialog::parallelParameters()
     }
 }
 
-void GwmGWSSOptionsDialog::setTaskThread(GwmGWSSTaskThread *taskThread)
-{
-    mTaskThread = taskThread;
-}
-
 void GwmGWSSOptionsDialog::updateFieldsAndEnable()
 {
-    if (this->mTaskThread)
-    {
-        this->updateFields();
-        this->enableAccept();
-    }
-    else
-    {
-        ui->mCheckMessage->setText(tr("Task thread is missing."));
-    }
+    this->updateFields();
+    this->enableAccept();
 }
 
 void GwmGWSSOptionsDialog::updateFields()
@@ -319,7 +306,7 @@ void GwmGWSSOptionsDialog::updateFields()
     if (ui->mLayerComboBox->currentIndex() > -1)
     {
         dataLayer = mSelectedLayer->originChild()->layer();
-        mTaskThread->setDataLayer(dataLayer);
+        mAlgorithmMeta.layer = dataLayer;
     }
     else
     {
@@ -332,61 +319,61 @@ void GwmGWSSOptionsDialog::updateFields()
     {
         if (selectedIndepVarModel->rowCount() > 0)
         {
-            mTaskThread->setVariables(selectedIndepVarModel->attributeItemList());
+            mAlgorithmMeta.variables = selectedIndepVarModel->attributeItemList();
         }
     }
 
-    GwmSpatialWeight spatialWeight;
-    GwmBandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
-    mTaskThread->setBandwidth(new GwmBandwidthWeight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction()));
-    spatialWeight.setWeight(weight);
+    mAlgorithmMeta.weightType = gwm::Weight::BandwidthWeight;
+    mAlgorithmMeta.weightBandwidthSize = bandwidthSize();
+    mAlgorithmMeta.weightBandwidthAdaptive = bandwidthType();
+    mAlgorithmMeta.weightBandwidthKernel = bandwidthKernelFunction();
+
     // 距离设置
-    int featureCount = dataLayer->featureCount();
     if (ui->mDistTypeDmatRadio->isChecked())
     {
+        mAlgorithmMeta.distanceType = gwm::Distance::DistanceType::DMatDistance;
         QString filename = ui->mDistMatrixFileNameEdit->text();
-        GwmDMatDistance distance(featureCount, filename);
-        spatialWeight.setDistance(distance);
+        mAlgorithmMeta.distanceDmatFilename = filename.toStdString();
     }
     else if (ui->mDistTypeMinkowskiRadio->isChecked())
     {
-        double theta = ui->mThetaValue->value();
-        double p = ui->mPValue->value();
-        GwmMinkwoskiDistance distance(featureCount, p, theta);
-        spatialWeight.setDistance(distance);
+        mAlgorithmMeta.distanceType = gwm::Distance::DistanceType::MinkwoskiDistance;
+        mAlgorithmMeta.distanceMinkowskiTheta = ui->mThetaValue->value();
+        mAlgorithmMeta.distanceMinkowskiPower = ui->mPValue->value();
     }
     else
     {
-        GwmCRSDistance distance(featureCount, dataLayer->crs().isGeographic());
-        spatialWeight.setDistance(distance);
+        mAlgorithmMeta.distanceType = gwm::Distance::DistanceType::CRSDistance;
+        mAlgorithmMeta.distanceCrsGeographic = dataLayer->crs().isGeographic();
     }
-    mTaskThread->setSpatialWeight(spatialWeight);
 
-    mTaskThread->setQuantile(ui->mQuantileCheckBox->isChecked());
     // 并行设置
     if (ui->mCalcParallelNoneRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+        mAlgorithmMeta.parallelType = gwm::ParallelType::SerialOnly;
     }
     else if (ui->mCalcParallelMultithreadRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::OpenMP);
-        mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
+        mAlgorithmMeta.parallelType = gwm::ParallelType::OpenMP;
+        mAlgorithmMeta.parallelOmpThreads = ui->mThreadNum->value();
     }
     else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::CUDA);
+        mAlgorithmMeta.parallelType = gwm::ParallelType::SerialOnly;
     }
     else
     {
-        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+        mAlgorithmMeta.parallelType = gwm::ParallelType::SerialOnly;
     }
+
+    mAlgorithmMeta.quantile = ui->mQuantileCheckBox->isChecked();
 
 }
 
 void GwmGWSSOptionsDialog::enableAccept()
 {
-    if (mTaskThread->isValid())
+    QString error;
+    if (mAlgorithmMeta.validate(error))
     {
         ui->mCheckMessage->setText(tr("Valid."));
         ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Ok);
@@ -394,7 +381,7 @@ void GwmGWSSOptionsDialog::enableAccept()
     }
     else
     {
-        ui->mCheckMessage->setText("Invalid.");
+        ui->mCheckMessage->setText(QString("Invalid: %1").arg(error));
         ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Cancel);
     }
 }

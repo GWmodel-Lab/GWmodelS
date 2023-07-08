@@ -1,234 +1,136 @@
 #include "gwmgwsstaskthread.h"
 #include "gwmgwsstaskthread.h"
+#include <exception>
+#include <gwmodel.h>
 #include "SpatialWeight/gwmcrsdistance.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
 
-int GwmGWSSTaskThread::treeChildCount = 0;
+using namespace std;
+using namespace gwm;
 
-vec GwmGWSSTaskThread::del(vec x, int rowcount){
-    vec res;
-    if(rowcount == 0)
-        res = x.rows(rowcount+1,x.n_rows-1);
-    else if(rowcount == x.n_rows-1)
-        res = x.rows(0,x.n_rows-2);
-    else
-        res = join_cols(x.rows(0,rowcount - 1),x.rows(rowcount+1,x.n_rows-1));
-    return res;
-}
+int GwmGWSSTaskThread::treeChildCount = 0;
 
 GwmGWSSTaskThread::GwmGWSSTaskThread() : GwmSpatialMonoscaleAlgorithm()
 {
 
 }
 
-bool GwmGWSSTaskThread::isValid()
+GwmGWSSTaskThread::GwmGWSSTaskThread(const GwmAlgorithmMetaGWSS& meta) : mMeta(meta)
 {
-    if (mDataLayer == nullptr)
-        return false;
+    // Check parameter
+    QString metaError;
+    if (!meta.validate(metaError))
+    {
+        throw std::bad_alloc();
+    }
 
-    if (mVariables.size() < 1)
-        return false;
+    mLayer = meta.layer;
+    mVariables = meta.variables;
 
-    if (static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight())->bandwidth() == 0)
-        return false;
-
-    return true;
+    // Spatial Weight
+    BandwidthWeight weight(meta.weightBandwidthSize, meta.weightBandwidthAdaptive, meta.weightBandwidthKernel);
+    Distance* distance;
+    switch (meta.distanceType)
+    {
+    case Distance::DistanceType::CRSDistance:
+        distance = new CRSDistance(meta.distanceCrsGeographic);
+        break;
+    case Distance::DistanceType::MinkwoskiDistance:
+        distance = new MinkwoskiDistance(meta.distanceMinkowskiPower, meta.distanceMinkowskiTheta);
+        break;
+    default:
+        distance = new CRSDistance(false);
+        break;
+    }
+    SpatialWeight spatialWeight(&weight, distance);
+    mAlgorithm.setSpatialWeight(spatialWeight);
+    // Parallel
+    mAlgorithm.setParallelType(meta.parallelType);
+    switch (meta.parallelType)
+    {
+    case gwm::ParallelType::OpenMP:
+        mAlgorithm.setOmpThreadNum(meta.parallelOmpThreads);
+        break;
+    default:
+        break;
+    }
+    // Others
+    mAlgorithm.setQuantile(meta.quantile);
+    delete distance;
 }
 
 void GwmGWSSTaskThread::run()
 {
-    if(!checkCanceled())
+    emit tick(0, 0);
+    if (!checkCanceled())
     {
-        // 点位初始化
-        initPoints();
-        // 初始化
-        initXY(mX, mVariables);
+        emit message(tr("Extracting data and coordinates."));
+        mAlgorithm.setCoords(initPoints(mLayer));
+        mAlgorithm.setVariables(initXY(mLayer, mVariables));
     }
-    int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
-    (this->*mCalFunciton)();
-    CreateResultLayerData resultLayerData;
-    if(!checkCanceled())
-    {
-        resultLayerData.push_back(qMakePair(QString("LM"), mLocalMean));
-        resultLayerData.push_back(qMakePair(QString("LSD"), mStandardDev));
-        resultLayerData.push_back(qMakePair(QString("LVar"), mLVar));
-        resultLayerData.push_back(qMakePair(QString("LSke"), mLocalSkewness));
-        resultLayerData.push_back(qMakePair(QString("LCV"), mLCV));
-    }
-    if(mQuantile && !checkCanceled()){
-        resultLayerData.push_back(qMakePair(QString("Median"), mLocalMedian));
-        resultLayerData.push_back(qMakePair(QString("IQR"), mIQR));
-        resultLayerData.push_back(qMakePair(QString("QI"), mQI));
-    }
-    if(nVar >= 2 && !checkCanceled()){
-        resultLayerData.push_back(qMakePair(QString("Cov"), mCovmat));
-        resultLayerData.push_back(qMakePair(QString("Corr"), mCorrmat));
-        resultLayerData.push_back(qMakePair(QString("Spearman_rho"), mSCorrmat));
-    }
-    if(!checkCanceled())
-    {
-        mResultList = resultLayerData;
-        createResultLayer(resultLayerData);
-        emit success();
-        emit tick(100, 100);
-    }
-    if(checkCanceled()) return;
-}
 
-bool GwmGWSSTaskThread::CalculateSerial(){
-    mat rankX = mX;
-    rankX.each_col([&](vec x) { x = rank(x); });
-    int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
-    emit tick(0,nRp);
-    for(int i = 0; i < nRp && !checkCanceled(); i++){
-//        vec d = mSpatialWeight.distance()->distance(i);
-        vec w = mSpatialWeight.weightVector(i);
-        double sumw = sum(w);
-        vec Wi = w / sumw;
-        mLocalMean.row(i) = trans(Wi) * mX;
-        if(mQuantile && !checkCanceled()){
-//            mat cor = cor(mX);
-            mat quant = mat(3,nVar);
-            for(int j = 0; j < nVar && !checkCanceled(); j++){
-                quant.col(j) = findq(mX.col(j), Wi);
-            }
-            mLocalMedian.row(i) = quant.row(1);
-            mIQR.row(i) = quant.row(2) - quant.row(0);
-            mQI.row(i) = (2 * quant.row(1) - quant.row(2) - quant.row(0))/mIQR.row(i);
-        }
-        mat centerized = mX.each_row() - mLocalMean.row(i);
-        mLVar.row(i) = Wi.t() * (centerized % centerized);
-        mStandardDev.row(i) = sqrt(mLVar.row(i));
-        mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
-        if(nVar >= 2 && !checkCanceled()){
-            int tag = 0;
-            for(int j = 0; j < nVar-1 && !checkCanceled(); j++){
-                for(int k = j+1; k < nVar && !checkCanceled(); k++){
-                    double covjk = covwt(mX.col(j), mX.col(k), Wi);
-                    double sumW2 = sum(Wi % Wi);
-                    double covjj = mLVar(i, j) / (1.0 - sumW2);
-                    double covkk = mLVar(i, k) / (1.0 - sumW2);
-                    mCovmat(i,tag) = covjk;
-                    mCorrmat(i,tag) = covjk / sqrt(covjj * covkk);
-                    mSCorrmat(i,tag) = corwt(rankX.col(j),rankX.col(k),Wi);
-                    tag++;
-                }
-            }
-        }
-        emit tick(i,nRp);
-    }
-    mLCV = mStandardDev / mLocalMean;
-    return true;
-}
-#ifdef ENABLE_OpenMP
-bool GwmGWSSTaskThread::CalculateOmp(){
-    mat rankX = mX;
-    rankX.each_col([&](vec x) { x = rank(x); });
-    int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
-    emit tick(0,nRp);
-    int current = 0;
-#pragma omp parallel for num_threads(mOmpThreadNum)
-    for(int i = 0; i < nRp; i++){
-//        vec d = mSpatialWeight.distance()->distance(i);
+    // Run algorithm;
+    if (checkCanceled()) return;
+    try
+    {
+        mAlgorithm.setTelegram(make_unique<GwmTaskThreadTelegram>(this));
+        mAlgorithm.run();
         if(!checkCanceled())
         {
-            vec w = mSpatialWeight.weightVector(i);
-            double sumw = sum(w);
-            vec Wi = w / sumw;
-            mLocalMean.row(i) = Wi.t() * mX;
-            if(mQuantile && !checkCanceled()){
-    //            mat cor = cor(mX);
-                mat quant = mat(3,nVar);
-                for(int j = 0; j < nVar && !checkCanceled(); j++){
-                    quant.col(j) = findq(mX.col(j), Wi);
-                }
-                mLocalMedian.row(i) = quant.row(1);
-                mIQR.row(i) = quant.row(2) - quant.row(0);
-                mQI.row(i) = (2 * quant.row(1) - quant.row(2) - quant.row(0))/mIQR.row(i);
-            }
-            mat centerized = mX.each_row() - mLocalMean.row(i);
-            mLVar.row(i) = Wi.t() * (centerized % centerized);
-            mStandardDev.row(i) = sqrt(mLVar.row(i));
-            mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
-            if(nVar >= 2 && !checkCanceled()){
-                int tag = 0;
-                for(int j = 0; j < nVar-1 && !checkCanceled(); j++){
-                    for(int k = j+1; k < nVar && !checkCanceled(); k++){
-                        double covjk = covwt(mX.col(j), mX.col(k), Wi);
-                        double sumW2 = sum(Wi % Wi);
-                        double covjj = mLVar(i, j) / (1.0 - sumW2);
-                        double covkk = mLVar(i, k) / (1.0 - sumW2);
-                        mCovmat(i,tag) = covjk;
-                        mCorrmat(i,tag) = covjk / sqrt(covjj * covkk);
-                        mSCorrmat(i,tag) = corwt(rankX.col(j),rankX.col(k),Wi);
-                        tag++;
-                    }
-                }
-            }
-            emit tick(current++,nRp);
+            mResultList.push_back(qMakePair(QString("LM"), localmean()));
+            mResultList.push_back(qMakePair(QString("LSD"), standarddev()));
+            mResultList.push_back(qMakePair(QString("LVar"), lvar()));
+            mResultList.push_back(qMakePair(QString("LSke"), localskewness()));
+            mResultList.push_back(qMakePair(QString("LCV"), lcv()));
         }
-    }
-    mLCV = mStandardDev / mLocalMean;
-    return true;
-}
-#endif
-vec GwmGWSSTaskThread::findq(const mat &x, const vec &w)
-{
-    int lw = w.n_rows;
-    int lp = 3;
-    vec q = vec(lp,fill::zeros);
-    vec xo = sort(x);
-    vec wo = w(sort_index(x));
-    vec Cum = cumsum(wo);
-    int cond = lw - 1;
-    for(int j = 0; j < lp; j++){
-        double k = 0.25 * (j + 1);
-        for(int i = 0; i < lw; i++){
-            if(Cum(i) > k){
-                cond = i - 1;
-                break;
-            }
-        }
-        if(cond < 0)
+        if(mAlgorithm.quantile())
         {
-            cond = 0;
+            mResultList.push_back(qMakePair(QString("Median"), localmedian()));
+            mResultList.push_back(qMakePair(QString("IQR"), iqr()));
+            mResultList.push_back(qMakePair(QString("QI"), qi()));
         }
-        q.row(j) = xo[cond];
-        cond = lw - 1;
+        if(mAlgorithm.variables().n_cols >= 2)
+        {
+            mResultList.push_back(qMakePair(QString("Cov"), covmat()));
+            mResultList.push_back(qMakePair(QString("Corr"), corrmat()));
+            mResultList.push_back(qMakePair(QString("Spearman_rho"), scorrmat()));
+        }
+        if(!checkCanceled())
+        {
+            createResultLayer(mResultList);
+            emit success();
+            emit tick(100, 100);
+        }
     }
-    return q;
+    catch(const std::exception& e)
+    {
+        emit error(QString(e.what()));
+    }
 }
 
-void GwmGWSSTaskThread::initPoints()
+mat GwmGWSSTaskThread::initPoints(QgsVectorLayer* layer)
 {
-    int nDp = mDataLayer->featureCount();
-    mDataPoints = mat(nDp, 2, fill::zeros);
-    QgsFeatureIterator iterator = mDataLayer->getFeatures();
+    int nDp = layer->featureCount();
+    mat points(nDp, 2, fill::zeros);
+    QgsFeatureIterator iterator = layer->getFeatures();
     QgsFeature f;
     for (int i = 0; iterator.nextFeature(f); i++)
     {
         QgsPointXY centroPoint = f.geometry().centroid().asPoint();
-        mDataPoints(i, 0) = centroPoint.x();
-        mDataPoints(i, 1) = centroPoint.y();
+        points(i, 0) = centroPoint.x();
+        points(i, 1) = centroPoint.y();
     }
-
-    if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
-    {
-        GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
-        d->setDataPoints(&mDataPoints);
-        d->setFocusPoints(&mDataPoints);
-    }
+    return points;
 }
 
-void GwmGWSSTaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
+mat GwmGWSSTaskThread::initXY(QgsVectorLayer* layer, const QList<GwmVariable> &indepVars)
 {
-    int nDp = mDataLayer->featureCount(), nVar = indepVars.size();
-    int nRp = mDataPoints.n_rows;
+    int nDp = layer->featureCount(), nVar = indepVars.size();
     // Data layer and X,Y
-    x = mat(nDp, nVar, fill::zeros);
-    QgsFeatureIterator iterator = mDataLayer->getFeatures();
+    mat x(nDp, nVar, fill::zeros);
+    QgsFeatureIterator iterator = layer->getFeatures();
     QgsFeature f;
     bool ok = false;
     for (int i = 0; iterator.nextFeature(f); i++)
@@ -240,31 +142,14 @@ void GwmGWSSTaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
             else emit error(tr("variable value cannot convert to a number. Set to 0."));
         }
     }
-
-    mLocalMean = mat(nRp,nVar,fill::zeros);
-    mStandardDev = mat(nRp,nVar,fill::zeros);
-    mLocalSkewness = mat(nRp,nVar,fill::zeros);
-    mLCV = mat(nRp,nVar,fill::zeros);
-    mLVar = mat(nRp,nVar,fill::zeros);
-    if(mQuantile){
-        mLocalMedian = mat(nRp,nVar,fill::zeros);
-        mIQR = mat(nRp,nVar,fill::zeros);
-        mQI = mat(nRp,nVar,fill::zeros);
-    }
-
-    if(nVar > 1){
-        int nCol = (nVar+1)*nVar/2 - nVar;
-        mCovmat   = mat(nRp, nCol, fill::zeros);
-        mCorrmat  = mat(nRp, nCol, fill::zeros);
-        mSCorrmat = mat(nRp, nCol, fill::zeros);
-    }
+    return x;
 }
 
 
 
 void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
 {
-    QgsVectorLayer* srcLayer =  mDataLayer;
+    QgsVectorLayer* srcLayer = mLayer;
     int nVar = mVariables.size();
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
@@ -337,26 +222,4 @@ void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
     }
     mResultLayer->commitChanges();
 
-}
-
-void GwmGWSSTaskThread::setParallelType(const IParallelalbe::ParallelType &type)
-{
-    if (type & parallelAbility())
-    {
-        mParallelType = type;
-        switch (type) {
-        case IParallelalbe::ParallelType::SerialOnly:
-//            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
-            mCalFunciton = &GwmGWSSTaskThread::CalculateSerial;
-            break;
-#ifdef ENABLE_OpenMP
-        case IParallelalbe::ParallelType::OpenMP:
-            mCalFunciton = &GwmGWSSTaskThread::CalculateOmp;
-            break;
-#endif
-        default:
-            mCalFunciton = &GwmGWSSTaskThread::CalculateSerial;
-            break;
-        }
-    }
 }

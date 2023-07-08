@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "Model/gwmlayergroupitem.h"
+#include "Model/gwmalgorithmmetagwss.h"
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
 #include "Model/gwmvariableitemmodel.h"
@@ -19,16 +20,18 @@ class GwmGWSSOptionsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGWSSTaskThread* thread,QWidget *parent = nullptr);
+    explicit GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemList, QWidget *parent = nullptr);
     ~GwmGWSSOptionsDialog();
+
+    GwmAlgorithmMetaGWSS meta() const { return mAlgorithmMeta; }
 
 private:
     Ui::GwmGWSSOptionsDialog *ui;
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
-    GwmGWSSTaskThread* mTaskThread = nullptr;
     bool isNumeric(QVariant::Type type);
     GwmBandwidthWeight* mBandwidth;
+    GwmAlgorithmMetaGWSS mAlgorithmMeta;
 
 public slots:
     void layerChanged(const int index);
@@ -51,23 +54,17 @@ public:
     bool bandwidthType();
     IParallelalbe::ParallelType approachType();
     double bandwidthSize();
-//    GwmGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
-//    QString bandWidthUnit();
-    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
+    gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     GwmDistance::DistanceType distanceSourceType();
     QVariant distanceSourceParameters();
     QVariant parallelParameters();
 
-    void setTaskThread(GwmGWSSTaskThread* taskThread);
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
-
-
-
 };
 
 #endif // GWMGWSSOPTIONSDIALOG_H

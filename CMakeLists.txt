@@ -91,6 +91,8 @@ if(NOT GSL_FOUND)
 endif(NOT GSL_FOUND)
 include_directories(${GSL_INCLUDE_DIRS})
 
+find_package(GWmodel REQUIRED)
+include_directories(${GWmodel_INCLUDE_DIRS})
 
 if(NOT APPLE)
     set (ENABLE_CUDA FALSE CACHE BOOL "Determines whether CUDA support should be built")
@@ -144,6 +146,7 @@ set(SOURCES
     Model/gwmlayersymbolitem.cpp
     Model/gwmlayervectoritem.cpp
     Model/gwmvariableitemmodel.cpp
+    Model/gwmalgorithmmetagwss.cpp
     PropertyPanelTabs/gwmpropertycollinearitygwrtab.cpp
     PropertyPanelTabs/gwmpropertyggwrtab.cpp
     Model/gwmparameterspecifiedoptionsmodel.cpp
@@ -262,6 +265,7 @@ set(HEADERS
     Model/gwmlayersymbolitem.h
     Model/gwmlayervectoritem.h
     Model/gwmvariableitemmodel.h
+    Model/gwmalgorithmmetagwss.h
     PropertyPanelTabs/gwmpropertycollinearitygwrtab.h
     PropertyPanelTabs/gwmpropertyggwrtab.h
     Model/gwmparameterspecifiedoptionsmodel.h
@@ -488,6 +492,7 @@ target_link_libraries(GWmodelS
     ${QGIS_GUI_LIBRARY}
     ${QGIS_CORE_LIBRARY}
     ${ADDITIONAL_LIBRARIES}
+    ${GWmodel_LIBRARIES}
 )
 
 if(ENABLE_CUDA)

@@ -1340,8 +1340,7 @@ void GwmApp::onGWRNewBtnClicked()
 
 void GwmApp::onGWSSBtnClicked()
 {
-    GwmGWSSTaskThread* gwssTaskThread = new GwmGWSSTaskThread();
-    GwmGWSSOptionsDialog* gwssOptionDialog = new GwmGWSSOptionsDialog(mMapModel->rootChildren(), gwssTaskThread);
+    GwmGWSSOptionsDialog* gwssOptionDialog = new GwmGWSSOptionsDialog(mMapModel->rootChildren(), this);
     QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
     {
@@ -1357,6 +1356,7 @@ void GwmApp::onGWSSBtnClicked()
     }
     if (gwssOptionDialog->exec() == QDialog::Accepted)
     {
+        GwmGWSSTaskThread* gwssTaskThread = new GwmGWSSTaskThread(gwssOptionDialog->meta());
         gwssOptionDialog->updateFields();
         GwmLayerGroupItem* selectedItem = gwssOptionDialog->selectedLayer();
         const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
@@ -1372,7 +1372,6 @@ void GwmApp::onGWSSBtnClicked()
         }
     }
     delete gwssOptionDialog;
-    delete gwssTaskThread;
 }
 
 void GwmApp::onGWaverageBtnClicked()
