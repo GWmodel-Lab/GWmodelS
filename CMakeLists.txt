@@ -7,7 +7,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 # set(CMAKE_AUTORCC ON)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt5 COMPONENTS Core Gui Xml PrintSupport Svg Network REQUIRED)
@@ -41,6 +41,12 @@ if(NOT QGIS_FOUND)
     message(FATAL_ERROR "QGIS Not Found!")
 endif(NOT QGIS_FOUND)
 include_directories(${QGIS_INCLUDE_DIR} ${QGIS_UI_INCLUDE_DIR})
+
+find_package(HDF5)
+if(HDF5_FOUND)
+    include_directories(${HDF5_INCLUDE_DIRS})
+endif(HDF5_FOUND)
+
 
 find_package(Qwt REQUIRED)
 if(NOT QWT_FOUND)
@@ -452,6 +458,13 @@ if(CYGWIN)
     message(FATAL_ERROR "Not support Cygwin currently!")
 endif(CYGWIN)
 
+if(HDF5_FOUND)
+    set(ADDITIONAL_LIBRARIES
+        ${HDF5_LIBRARIES}
+        ${HDF5_HL_LIBRARIES}
+    )
+endif(HDF5_FOUND)
+
 
 target_link_libraries(GWmodelS 
     PRIVATE 
@@ -474,6 +487,7 @@ target_link_libraries(GWmodelS
     ${QWT_LIBRARY}
     ${QGIS_GUI_LIBRARY}
     ${QGIS_CORE_LIBRARY}
+    ${ADDITIONAL_LIBRARIES}
 )
 
 if(ENABLE_CUDA)

@@ -355,14 +355,14 @@ double GwmScalableGWRAlgorithm::optimize(const mat &Mx0, const mat &My0, double&
             b_tilde = gsl_vector_get(minizer->x, 0);
             alpha = gsl_vector_get(minizer->x, 1);
             cv = minizer->fval;
-            emit message(QString().sprintf("Scalable GWR optimizing: b.tilde=%.3lf alpha=%.3lf (CV: %.3lf)", b_tilde, alpha, cv));
+            emit message(QString().asprintf("Scalable GWR optimizing: b.tilde=%.3lf alpha=%.3lf (CV: %.3lf)", b_tilde, alpha, cv));
             if(iter<100) emit tick(iter, 100);
         }
         while (status == GSL_CONTINUE && iter < mMaxIter && !checkCanceled());
         b_tilde = gsl_vector_get(minizer->x, 0);
         alpha = gsl_vector_get(minizer->x, 1);
         cv = minizer->fval;
-        emit message(QString().sprintf("Scalable GWR optimizing: b.tilde=%.3lf alpha=%.3lf (CV: %.3lf)", b_tilde, alpha, cv));
+        emit message(QString().asprintf("Scalable GWR optimizing: b.tilde=%.3lf alpha=%.3lf (CV: %.3lf)", b_tilde, alpha, cv));
     }
     gsl_vector_free(target);
     gsl_vector_free(step);
@@ -683,7 +683,7 @@ void GwmScalableGWRAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar, 
     }
 }
 
-void GwmScalableGWRAlgorithm::createResultLayer(initializer_list<CreateResultLayerDataItem> data)
+void GwmScalableGWRAlgorithm::createResultLayer(std::initializer_list<CreateResultLayerDataItem> data)
 {
     QgsVectorLayer* srcLayer = hasRegressionLayer() ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");

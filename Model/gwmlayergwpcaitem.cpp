@@ -1,6 +1,8 @@
 #include "gwmlayergwpcaitem.h"
 #include "gwmlayergroupitem.h"
 
+#include <QDir>
+
 GwmLayerGWPCAItem::GwmLayerGWPCAItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmGWPCATaskThread *taskThread)
     : GwmLayerVectorItem(parent, vector)
 {
@@ -112,16 +114,16 @@ bool GwmLayerGWPCAItem::writeXml(QDomNode &node, QDomDocument &doc)
         {
             bool flag = true;
 
-            QFileInfo fileDResult(layerFileInfo.path(), QString("%1_dResult.bin").arg(mLayer->name()));
+            QFileInfo fileDResult(layerFileInfo.dir(), QString("%1_dResult.bin").arg(mLayer->name()));
             flag = flag && mDResult1.save(fileDResult.filePath().toStdString());
 
-            QFileInfo fileLocalPV(layerFileInfo.path(), QString("%1_localPV.bin").arg(mLayer->name()));
+            QFileInfo fileLocalPV(layerFileInfo.dir(), QString("%1_localPV.bin").arg(mLayer->name()));
             flag = flag && mLocalPV.save(fileLocalPV.filePath().toStdString());
 
-            QFileInfo fileLoadings(layerFileInfo.path(), QString("%1_loadings.bin").arg(mLayer->name()));
+            QFileInfo fileLoadings(layerFileInfo.dir(), QString("%1_loadings.bin").arg(mLayer->name()));
             flag = flag && mLoadings.save(fileLoadings.filePath().toStdString());
 
-            QFileInfo fileVariance(layerFileInfo.path(), QString("%1_variance.bin").arg(mLayer->name()));
+            QFileInfo fileVariance(layerFileInfo.dir(), QString("%1_variance.bin").arg(mLayer->name()));
             flag = flag && mVariance.save(fileVariance.filePath().toStdString());
 
             if (flag)
@@ -155,6 +157,8 @@ bool GwmLayerGWPCAItem::writeXml(QDomNode &node, QDomDocument &doc)
             }
             nodeAnalyse.appendChild(nodeBandwidthCriterion);
         }
+
+        return true;
     }
     else return false;
 }

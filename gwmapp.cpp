@@ -548,7 +548,7 @@ GwmLayoutDesigner * GwmApp::createNewReport(QString title)
         title = QgsProject::instance()->layoutManager()->generateUniqueTitle(QgsMasterLayoutInterface::Report);
     }
     //create new report
-    std::unique_ptr< QgsReport > report = qgis::make_unique< QgsReport >(QgsProject::instance());
+    std::unique_ptr< QgsReport > report = std::make_unique< QgsReport >(QgsProject::instance());
     report->setName(title);
     QgsMasterLayoutInterface *layout = report.get();
     QgsProject::instance()->layoutManager()->addLayout(report.release());
@@ -928,7 +928,7 @@ void GwmApp::onExportLayerAsCsv(const QModelIndex &index)
                 QgsVectorFileWriter::SaveVectorOptions& options = *(new QgsVectorFileWriter::SaveVectorOptions());
                 if(saveAsCSVDlg->isAddXY()){
                     QStringList layerOptions;
-                    if(layerItem->layer()->geometryType() == QgsWkbTypes::Type::Point){
+                    if(layerItem->layer()->geometryType() == QgsWkbTypes::GeometryType::PointGeometry){
                         layerOptions << QStringLiteral( "%1=%2" ).arg( "GEOMETRY", "AS_XY" );
                     }
                     else{
@@ -1031,9 +1031,17 @@ bool GwmApp::askUserForDatumTransfrom(const QgsCoordinateReferenceSystem &source
     return QgsDatumTransformDialog::run( sourceCrs, destinationCrs, this, mMapCanvas, title );
 }
 
-void GwmApp::onMapSelectionChanged(QgsVectorLayer *layer)
+void GwmApp::onMapSelectionChanged(QgsMapLayer *mapLayer)
 {
-    qDebug() << "[MainWindow]" << "Map Selection Changed: (layer " << layer->name() << ")";
+    qDebug() << "[MainWindow]" << "Map Selection Changed: (layer " << mapLayer->name() << ")";
+    
+    if (mapLayer->type() != QgsMapLayerType::VectorLayer)
+    {
+        return;
+    }
+
+    QgsVectorLayer* layer = static_cast<QgsVectorLayer*>(mapLayer);
+
     // 移除旧的橡皮条
     QList<QgsRubberBand*> rubbers0 = mMapLayerRubberDict[layer];
     if (rubbers0.size() > 0)
@@ -1045,7 +1053,7 @@ void GwmApp::onMapSelectionChanged(QgsVectorLayer *layer)
     }
     rubbers0.clear();
 
-     //添加新的橡皮条
+    //添加新的橡皮条
     QgsFeatureList selectedFeatures = layer->selectedFeatures();
     for (QgsFeature feature : selectedFeatures)
     {

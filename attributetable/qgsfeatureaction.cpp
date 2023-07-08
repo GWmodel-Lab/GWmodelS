@@ -30,9 +30,13 @@
 #include "qgsactionmanager.h"
 #include "qgsaction.h"
 #include "qgsvectorlayerutils.h"
-#include "qgssettings.h"
+#include "qgssettingsregistrycore.h"
 
 #include <QPushButton>
+
+typedef QHash<QgsVectorLayer *, QgsAttributeMap> CachedAttributesHash;
+Q_GLOBAL_STATIC( CachedAttributesHash, sLastUsedValues )
+
 
 QgsFeatureAction::QgsFeatureAction( const QString &name, QgsFeature &f, QgsVectorLayer *layer, QUuid actionId, int defaultAttr, QObject *parent )
   : QAction( name, parent )
@@ -61,16 +65,22 @@ QgsAttributeDialog *QgsFeatureAction::newDialog( bool cloneFeature )
   myDa.setEllipsoid( QgsProject::instance()->ellipsoid() );
 
   context.setDistanceArea( myDa );
-//  context.setVectorLayerTools( QgisApp::instance()->vectorLayerTools() );
-//  context.setMapCanvas( QgisApp::instance()->mapCanvas() );
-//  context.setCadDockWidget( QgisApp::instance()->cadDockWidget() );
   context.setFormMode( QgsAttributeEditorContext::StandaloneDialog );
 
   QgsAttributeDialog *dialog = new QgsAttributeDialog( mLayer, f, cloneFeature, parentWidget(), true, context );
+
+  // Skip this code on windows, because the Qt::Tool flag prevents the maximize button to be shown
+#ifndef Q_OS_WIN
   dialog->setWindowFlags( dialog->windowFlags() | Qt::Tool );
+#else
+  dialog->setWindowFlags( dialog->windowFlags() | Qt::CustomizeWindowHint | Qt::WindowMaximizeButtonHint );
+  if ( ! dialog->parent() )
+    dialog->setWindowFlag( Qt::WindowStaysOnTopHint );
+#endif
+
   dialog->setObjectName( QStringLiteral( "featureactiondlg:%1:%2" ).arg( mLayer->id() ).arg( f->id() ) );
 
-  QList<QgsAction> actions = mLayer->actions()->actions( QStringLiteral( "Feature" ) );
+  const QList<QgsAction> actions = mLayer->actions()->actions( QStringLiteral( "Feature" ) );
   if ( !actions.isEmpty() )
   {
     dialog->setContextMenuPolicy( Qt::ActionsContextMenu );
@@ -79,8 +89,7 @@ QgsAttributeDialog *QgsFeatureAction::newDialog( bool cloneFeature )
     a->setEnabled( false );
     dialog->addAction( a );
 
-    const auto constActions = actions;
-    for ( const QgsAction &action : constActions )
+    for ( const QgsAction &action : actions )
     {
       if ( !action.runable() )
         continue;
@@ -98,7 +107,6 @@ QgsAttributeDialog *QgsFeatureAction::newDialog( bool cloneFeature )
         connect( pb, &QAbstractButton::clicked, a, &QgsFeatureAction::execute );
     }
   }
-
   return dialog;
 }
 
@@ -107,7 +115,7 @@ bool QgsFeatureAction::viewFeatureForm( QgsHighlight *h )
   if ( !mLayer || !mFeature )
     return false;
 
-  QString name( QStringLiteral( "featureactiondlg:%1:%2" ).arg( mLayer->id() ).arg( mFeature->id() ) );
+  const QString name( QStringLiteral( "featureactiondlg:%1:%2" ).arg( mLayer->id() ).arg( mFeature->id() ) );
 
   //QgsAttributeDialog *dialog = QgisApp::instance()->findChild<QgsAttributeDialog *>( name );
 //  if ( dialog )
@@ -139,13 +147,13 @@ bool QgsFeatureAction::editFeature( bool showModal )
     if ( !mFeature->isValid() )
       dialog->setMode( QgsAttributeEditorContext::AddFeatureMode );
 
-    int rv = dialog->exec();
+    const int rv = dialog->exec();
     mFeature->setAttributes( dialog->feature()->attributes() );
     return rv;
   }
   else
   {
-    QString name( QStringLiteral( "featureactiondlg:%1:%2" ).arg( mLayer->id() ).arg( mFeature->id() ) );
+    const QString name( QStringLiteral( "featureactiondlg:%1:%2" ).arg( mLayer->id() ).arg( mFeature->id() ) );
 
 //    QgsAttributeDialog *dialog = QgisApp::instance()->findChild<QgsAttributeDialog *>( name );
 //    if ( dialog )
@@ -167,16 +175,15 @@ bool QgsFeatureAction::editFeature( bool showModal )
   return true;
 }
 
-bool QgsFeatureAction::addFeature( const QgsAttributeMap &defaultAttributes, bool showModal, QgsExpressionContextScope *scope SIP_TRANSFER )
+bool QgsFeatureAction::addFeature( const QgsAttributeMap &defaultAttributes, bool showModal, QgsExpressionContextScope *scope SIP_TRANSFER, bool hideParent )
 {
   if ( !mLayer || !mLayer->isEditable() )
     return false;
 
-  QgsSettings settings;
-  bool reuseLastValues = settings.value( QStringLiteral( "qgis/digitizing/reuseLastValues" ), false ).toBool();
-  QgsDebugMsg( QStringLiteral( "reuseLastValues: %1" ).arg( reuseLastValues ) );
+  const bool reuseAllLastValues = QgsSettingsRegistryCore::settingsDigitizingReuseLastValues.value();
+  QgsDebugMsgLevel( QStringLiteral( "reuseAllLastValues: %1" ).arg( reuseAllLastValues ), 2 );
 
-  QgsFields fields = mLayer->fields();
+  const QgsFields fields = mLayer->fields();
   QgsAttributeMap initialAttributeValues;
 
   for ( int idx = 0; idx < fields.count(); ++idx )
@@ -185,9 +192,12 @@ bool QgsFeatureAction::addFeature( const QgsAttributeMap &defaultAttributes, boo
     {
       initialAttributeValues.insert( idx, defaultAttributes.value( idx ) );
     }
-    else if ( reuseLastValues && sLastUsedValues.contains( mLayer ) && sLastUsedValues[ mLayer ].contains( idx ) )
+    else if ( ( reuseAllLastValues || mLayer->editFormConfig().reuseLastValue( idx ) ) && sLastUsedValues()->contains( mLayer ) && ( *sLastUsedValues() )[ mLayer ].contains( idx ) )
     {
-      initialAttributeValues.insert( idx, sLastUsedValues[ mLayer ][idx] );
+      // Only set initial attribute value if it's different from the default clause or we may trigger
+      // unique constraint checks for no reason, see https://github.com/qgis/QGIS/issues/42909
+      if ( mLayer->dataProvider() && mLayer->dataProvider()->defaultValueClause( idx ) != ( *sLastUsedValues() )[ mLayer ][idx] )
+        initialAttributeValues.insert( idx, ( *sLastUsedValues() )[ mLayer ][idx] );
     }
   }
 
@@ -197,13 +207,13 @@ bool QgsFeatureAction::addFeature( const QgsAttributeMap &defaultAttributes, boo
   if ( scope )
     context.appendScope( scope );
 
-  QgsFeature newFeature = QgsVectorLayerUtils::createFeature( mLayer, mFeature->geometry(), initialAttributeValues,
-                          &context );
+  const QgsFeature newFeature = QgsVectorLayerUtils::createFeature( mLayer, mFeature->geometry(), initialAttributeValues,
+                                &context );
   *mFeature = newFeature;
 
   //show the dialog to enter attribute values
   //only show if enabled in settings
-  bool isDisabledAttributeValuesDlg = settings.value( QStringLiteral( "qgis/digitizing/disable_enter_attribute_values_dialog" ), false ).toBool();
+  bool isDisabledAttributeValuesDlg = QgsSettingsRegistryCore::settingsDigitizingDisableEnterAttributeValuesDialog.value();
 
   // override application-wide setting if layer is non-spatial -- BECAUSE it's bad UX if
   // it appears that nothing happens when you click the add row button for a non-spatial layer. Unlike
@@ -256,6 +266,8 @@ bool QgsFeatureAction::addFeature( const QgsAttributeMap &defaultAttributes, boo
     dialog->setAttribute( Qt::WA_DeleteOnClose );
     dialog->setMode( QgsAttributeEditorContext::AddFeatureMode );
     dialog->setEditCommandMessage( text() );
+    if ( scope )
+      dialog->setExtraContextScope( new QgsExpressionContextScope( *scope ) );
 
     connect( dialog->attributeForm(), &QgsAttributeForm::featureSaved, this, &QgsFeatureAction::onFeatureSaved );
 
@@ -264,6 +276,12 @@ bool QgsFeatureAction::addFeature( const QgsAttributeMap &defaultAttributes, boo
       setParent( dialog ); // keep dialog until the dialog is closed and destructed
       connect( dialog, &QgsAttributeDialog::finished, this, &QgsFeatureAction::addFeatureFinished );
       dialog->show();
+
+      if ( hideParent )
+      {
+        connect( this, &QgsFeatureAction::addFeatureFinished, this, &QgsFeatureAction::unhideParentWidget );
+        hideParentWidget();
+      }
       mFeature = nullptr;
       return true;
     }
@@ -293,24 +311,44 @@ void QgsFeatureAction::onFeatureSaved( const QgsFeature &feature )
 
   mFeatureSaved = true;
 
-  QgsSettings settings;
-  bool reuseLastValues = settings.value( QStringLiteral( "qgis/digitizing/reuseLastValues" ), false ).toBool();
-  QgsDebugMsg( QStringLiteral( "reuseLastValues: %1" ).arg( reuseLastValues ) );
+  const QgsSettings settings;
 
-  if ( reuseLastValues )
+  const QgsFields fields = mLayer->fields();
+  for ( int idx = 0; idx < fields.count(); ++idx )
   {
-    QgsFields fields = mLayer->fields();
-    for ( int idx = 0; idx < fields.count(); ++idx )
+    const QgsAttributes newValues = feature.attributes();
+    QgsAttributeMap origValues = ( *sLastUsedValues() )[ mLayer ];
+    if ( origValues[idx] != newValues.at( idx ) )
     {
-      QgsAttributes newValues = feature.attributes();
-      QgsAttributeMap origValues = sLastUsedValues[ mLayer ];
-      if ( origValues[idx] != newValues.at( idx ) )
-      {
-        QgsDebugMsg( QStringLiteral( "saving %1 for %2" ).arg( sLastUsedValues[ mLayer ][idx].toString() ).arg( idx ) );
-        sLastUsedValues[ mLayer ][idx] = newValues.at( idx );
-      }
+      QgsDebugMsgLevel( QStringLiteral( "Saving %1 for %2" ).arg( ( *sLastUsedValues() )[ mLayer ][idx].toString() ).arg( idx ), 2 );
+      ( *sLastUsedValues() )[ mLayer ][idx] = newValues.at( idx );
     }
   }
 }
 
-QHash<QgsVectorLayer *, QgsAttributeMap> QgsFeatureAction::sLastUsedValues;
+void QgsFeatureAction::hideParentWidget()
+{
+  QWidget *dialog = parentWidget();
+  if ( dialog )
+  {
+    QWidget *triggerWidget = dialog->parentWidget();
+    if ( triggerWidget && triggerWidget->window()->objectName() != QLatin1String( "QgisApp" ) )
+      triggerWidget->window()->setVisible( false );
+  }
+}
+
+void QgsFeatureAction::unhideParentWidget()
+{
+  QWidget *dialog = parentWidget();
+  if ( dialog )
+  {
+    QWidget *triggerWidget = dialog->parentWidget();
+    if ( triggerWidget )
+      triggerWidget->window()->setVisible( true );
+  }
+}
+
+QgsFeature QgsFeatureAction::feature() const
+{
+  return mFeature ? *mFeature : QgsFeature();
+}

@@ -233,6 +233,8 @@ bool GwmLayerGWSSItem::readXml(QDomNode &node)
             }
             mResultList = resultLayerData;
         }
+
+        return true;
     }
     else return false;
 }
@@ -262,6 +264,8 @@ bool GwmLayerGWSSItem::writeXml(QDomNode &node, QDomDocument &doc)
         nodeBandwidth.setAttribute("bandwidth", mBandwidth->bandwidth());
         nodeBandwidth.setAttribute("adaptive", mBandwidth->adaptive());
         nodeAnalyse.appendChild(nodeBandwidth);
+
+        return true;
     }
     else return false;
 }

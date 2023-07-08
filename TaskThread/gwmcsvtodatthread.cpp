@@ -68,21 +68,21 @@ void GwmCsvToDatThread::run()
             if (datFile.open(QFile::QIODevice::WriteOnly))
             {
                 unsigned long long basePos = 2 * sizeof (int);
-                QByteArray byte;
-//                byte.resize(basePos);
+                QByteArray bytes;
+//                bytes.resize(basePos);
                 int metaData[2] = {mRowCount, mColCount};
-//                memcpy(byte.data(), metaData, basePos);
+//                memcpy(bytes.data(), metaData, basePos);
                 datFile.write((char*)metaData, basePos);
                 QStringList lines;
                 QTextStream fin(&csvFile);
                 for (int c = 0; c < mColCount; c++)
                 {
-                    byte.resize(mRowCount * sizeof (double));
-                    memset(byte.data(), 0, mRowCount * sizeof (double));
-                    datFile.write(byte);
+                    bytes.resize(mRowCount * sizeof (double));
+                    memset(bytes.data(), 0, mRowCount * sizeof (double));
+                    datFile.write(bytes);
                 }
                 int r = 0, c = 0;
-                byte.resize(sizeof (double));
+                bytes.resize(sizeof (double));
                 while (!fin.atEnd())
                 {
                     c = 0;
@@ -91,8 +91,8 @@ void GwmCsvToDatThread::run()
                     {
                         datFile.seek(basePos + (c * mRowCount + r) * sizeof (double));
                         double data = line.toDouble();
-                        memcpy(byte.data(), &data, sizeof (double));
-                        datFile.write(byte);
+                        memcpy(bytes.data(), &data, sizeof (double));
+                        datFile.write(bytes);
                         c++;
                     }
                     progress++;

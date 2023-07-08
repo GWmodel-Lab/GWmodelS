@@ -8,8 +8,8 @@
 int GwmGWcorrelationTaskThread::treeChildCount = 0;
 
 GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmGWcorrelationTaskThread::BandwidthSelectionCriterionTypeNameMapper = {
-    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV, tr("CV")),
-    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC, tr("AIC"))
+    std::make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV, tr("CV")),
+    std::make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC, tr("AIC"))
 };
 
 vec GwmGWcorrelationTaskThread::del(vec x, int rowcount){
@@ -76,7 +76,7 @@ void GwmGWcorrelationTaskThread::run()
     int nVarsY = mY.n_cols;
 
     //带宽优选
-    for(uword i = 0 ; i<nVars&!checkCanceled();i++)
+    for(uword i = 0 ; i<nVars && !checkCanceled();i++)
     {
         if(mBandwidthInitilize[i] == GwmMultiscaleGWRAlgorithm::Null)
         {
@@ -123,7 +123,7 @@ bool GwmGWcorrelationTaskThread::CalculateSerial(){
     int nVar = nVarX * nVarY;
     emit tick(0,nRp);
     mat xy = join_rows(mX,mY);
-    for(int z = 0;z < nVar&!checkCanceled(); z++)
+    for(int z = 0;z < nVar && !checkCanceled(); z++)
     {
         for(int i = 0; i < nRp && !checkCanceled(); i++)
         {

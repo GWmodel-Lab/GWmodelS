@@ -123,7 +123,7 @@ public:     // GwmSpatialAlgorithm interface
 
 
 public:     // GwmSpatialMultiscaleAlgorithm interface
-    virtual void setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights);
+    virtual void setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights) override;
 
 
 public:     // IBandwidthSizeSelectable interface
@@ -156,7 +156,7 @@ public:     // IParallelalbe interface
 public:     // IOpenmpParallelable interface
     void setOmpThreadNum(const int threadNum) override;
 
-    void setCanceled(bool canceled);
+    void setCanceled(bool canceled) override;
 
 protected:
     void initPoints();
@@ -196,7 +196,7 @@ protected:
     double mBandwidthSizeCriterionVarAICOmp(GwmBandwidthWeight* bandwidthWeight);
 #endif
 
-    void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
+    void createResultLayer(std::initializer_list<CreateResultLayerDataItem> data);
 
 protected:
     GwmBandwidthSizeSelector selector;

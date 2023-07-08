@@ -20,8 +20,8 @@
 #include "qgsfeatureiterator.h"
 #include "qgsfeature.h"
 #include "qgsexpressioncontext.h"
-
 #include "qgsdelimitedtextprovider.h"
+#include "qgscoordinatetransform.h"
 
 class QgsDelimitedTextFeatureSource final: public QgsAbstractFeatureSource
 {

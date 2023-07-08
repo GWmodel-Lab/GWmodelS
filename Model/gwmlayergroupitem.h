@@ -45,7 +45,7 @@ public:
     inline QList<GwmLayerVectorItem *> analyseChildren() const { return mAnalyseChildren; }
     inline void setAnalyseChildren(const QList<GwmLayerVectorItem *> &analyseChildren);
 
-    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::Group; }
+    inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::Group; }
 
 private:
     GwmLayerOriginItem* mOriginChild;

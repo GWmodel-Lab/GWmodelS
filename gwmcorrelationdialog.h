@@ -2,6 +2,7 @@
 #define GWMCORRELATIONDIALOG_H
 
 #include <QDialog>
+#include <QItemSelectionModel>
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
 #include "TaskThread/gwmgwcorrelationtaskthread.h"

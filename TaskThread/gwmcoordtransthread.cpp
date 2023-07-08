@@ -55,7 +55,7 @@ void GwmCoordTransThread::run()
 
         if(this->cancelFlag == 0){
             QgsGeometry g = f.geometry();
-            if(g.transform(myTransform) == 0)
+            if(g.transform(myTransform) == Qgis::GeometryOperationResult::Success)
             {
                 f.setGeometry(g);
                 newLayerDataProvider->addFeature(f);

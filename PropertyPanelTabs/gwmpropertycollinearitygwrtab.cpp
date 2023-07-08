@@ -222,35 +222,35 @@ void GwmPropertyCollinearityGWRTab::on_btnSaveRes_clicked()
       if (myfile.open(QFile::WriteOnly|QFile::Text))//注意WriteOnly是往文本中写入的时候用，ReadOnly是在读文本中内容的时候用，Truncate表示将原来文件中的内容清空
       {
           QTextStream out(&myfile);
-          out << "  Model Calibration Information"<<endl;
-          out << "----------------------------------------------"<<endl;
-          out << "Kernel function:  "; out << ui->lblKernelFunction->text() <<endl;
-          out << "Bandwidth Type:   "; out << ui->lblBandwidthType->text() <<endl;
-          out << "BandWidth: "; out << ui->lblBandwidthSize->text() << endl;
-          out << "Distance metric:   "; out << ui->lblDistanceMetric->text() <<endl;
-          out << "Lambda: "; out << ui->lblLambda->text() << endl;
-          out << "The threshold:   "; out << ui->lblMcnThresh->text() <<endl;
-          out << "" << endl;
-          out << "**********************************************" << endl;
-          out << "" << endl;
-          out << "  Diagnostic Information"<<endl;
-          out << "----------------------------------------------"<<endl;
-          out << "Number of data points: "; out << ui->lblNumberDataPoints->text() << endl;
-          out << "Effective number of parameters:  "; out << ui->lblENP->text() <<endl;
-          out << "Effective degrees of freedom:   "; out << ui->lblEDF->text() <<endl;
-          out << "AIC: "; out << ui->lblAIC->text() << endl;
-          out << "AICc:  "; out << ui->lblAICc->text() <<endl;
-          out << "Residual sum of squares:   "; out << ui->lblRSS->text() <<endl;
-          out << "" <<endl;
-          out << "**********************************************" << endl;
-          out << "" << endl;
-          out << "  Summary of GWR Coefficient Estimates"<<endl;
-          out << "----------------------------------------------"<<endl;
+          out << "  Model Calibration Information"<< Qt::endl;
+          out << "----------------------------------------------"<< Qt::endl;
+          out << "Kernel function:  "; out << ui->lblKernelFunction->text() << Qt::endl;
+          out << "Bandwidth Type:   "; out << ui->lblBandwidthType->text() << Qt::endl;
+          out << "BandWidth: "; out << ui->lblBandwidthSize->text() << Qt::endl;
+          out << "Distance metric:   "; out << ui->lblDistanceMetric->text() << Qt::endl;
+          out << "Lambda: "; out << ui->lblLambda->text() << Qt::endl;
+          out << "The threshold:   "; out << ui->lblMcnThresh->text() << Qt::endl;
+          out << "" << Qt::endl;
+          out << "**********************************************" << Qt::endl;
+          out << "" << Qt::endl;
+          out << "  Diagnostic Information"<< Qt::endl;
+          out << "----------------------------------------------"<< Qt::endl;
+          out << "Number of data points: "; out << ui->lblNumberDataPoints->text() << Qt::endl;
+          out << "Effective number of parameters:  "; out << ui->lblENP->text() << Qt::endl;
+          out << "Effective degrees of freedom:   "; out << ui->lblEDF->text() << Qt::endl;
+          out << "AIC: "; out << ui->lblAIC->text() << Qt::endl;
+          out << "AICc:  "; out << ui->lblAICc->text() << Qt::endl;
+          out << "Residual sum of squares:   "; out << ui->lblRSS->text() << Qt::endl;
+          out << "" << Qt::endl;
+          out << "**********************************************" << Qt::endl;
+          out << "" << Qt::endl;
+          out << "  Summary of GWR Coefficient Estimates"<< Qt::endl;
+          out << "----------------------------------------------"<< Qt::endl;
           for(int i = 0 ; i < 6 ; i++){
               out << ui->tbwCoefficient->horizontalHeaderItem(i)->text();
               out << (i == 0 ? "\t\t" : "\t");
           }
-          out << "" <<endl;
+          out << "" << Qt::endl;
 
           for(int i = 0 ; i < ui->tbwCoefficient->rowCount() ; i++){
               for (int j = 0 ; j < 6; j++){
@@ -258,12 +258,12 @@ void GwmPropertyCollinearityGWRTab::on_btnSaveRes_clicked()
 
                    out << ((j == 0 && i != 0) ? "\t\t" : "\t");
               }
-              out << "" << endl;
+              out << "" << Qt::endl;
           }
-          out << "" <<endl;
-          out << "**********************************************" << endl;
-          out << "" << endl;
-          out << "GWmodel Lab\t"; out << "http://gwmodel.whu.edu.cn/"<<endl;
+          out << "" << Qt::endl;
+          out << "**********************************************" << Qt::endl;
+          out << "" << Qt::endl;
+          out << "GWmodel Lab\t"; out << "http://gwmodel.whu.edu.cn/"<< Qt::endl;
           out << "Contact us\t"; out << "binbinlu@whu.edu.cn";
           myfile.close();
       }

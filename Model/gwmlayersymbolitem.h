@@ -14,13 +14,13 @@ public:
     GwmLayerSymbolItem(GwmLayerVectorItem* parentItem = nullptr, QIcon symbol = QIcon(), QString label = QStringLiteral(""));
 
 public:
-    virtual QString text();
-    virtual QVariant data(int col, int role);
+    virtual QString text() override;
+    virtual QVariant data(int col, int role) override;
     inline virtual Qt::ItemFlags flags() override;
 
     virtual GwmLayerItem * child(int row) override;
-    virtual int childCount();
-    virtual int childNumber();
+    virtual int childCount() override;
+    virtual int childNumber() override;
 
     virtual bool insertChildren(int position, int count) override;
     virtual bool removeChildren(int position, int count) override;
@@ -36,7 +36,7 @@ public:
     inline QString label() const;
     inline void setLabel(const QString &label);
 
-    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::Symbol; }
+    inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::Symbol; }
 
 private:
     QIcon mSymbol;

@@ -69,7 +69,7 @@ public:
 public:
     bool isValid() override;
 
-    double criterion(GwmBandwidthWeight *weight)
+    double criterion(GwmBandwidthWeight *weight) override
     {
         return (this->*mBandwidthSelectCriterionFunction)(weight);
     };
@@ -84,16 +84,16 @@ protected:
 
     void createResultLayer(CreateResultLayerData data);
 public:
-    int parallelAbility() const;
-    ParallelType parallelType() const;
+    int parallelAbility() const override;
+    ParallelType parallelType() const override;
 
-    void setParallelType(const ParallelType &type);
+    void setParallelType(const ParallelType &type) override;
 
     // IOpenmpParallelable interface
 public:
-    void setOmpThreadNum(const int threadNum);
+    void setOmpThreadNum(const int threadNum) override;
 
-    void setCanceled(bool canceled);
+    void setCanceled(bool canceled) override;
 private:
     double mLambda;
 

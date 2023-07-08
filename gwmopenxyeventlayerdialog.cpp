@@ -5,6 +5,7 @@
 #include <QPushButton>
 #include <QDialogButtonBox>
 #include <QMessageBox>
+#include <QUrlQuery>
 #include <qgsvectordataprovider.h>
 #include <qgsproviderregistry.h>
 #include <DelimitedText/qgsdelimitedtextprovider.h>
@@ -14,7 +15,7 @@ const int MAX_SAMPLE_LENGTH = 200;
 GwmOpenXYEventLayerDialog::GwmOpenXYEventLayerDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GwmOpenXYEventLayerDialog),
-    mFile(qgis::make_unique<QgsDelimitedTextFile>())
+    mFile(std::make_unique<QgsDelimitedTextFile>())
 {
     ui->setupUi(this);
     mCRSSelector = new QgsProjectionSelectionWidget(this);

@@ -17,6 +17,8 @@
 
 #include "qgsdelimitedtextprovider.h"
 
+#include <memory>
+
 #include <QtGlobal>
 #include <QFile>
 #include <QFileInfo>
@@ -73,7 +75,7 @@ QgsDelimitedTextProvider::QgsDelimitedTextProvider( const QString &uri, const Pr
   QgsDebugMsg( "Delimited text file uri is " + uri );
 
   const QUrl url = QUrl::fromEncoded( uri.toLatin1() );
-  mFile = qgis::make_unique< QgsDelimitedTextFile >();
+  mFile = std::make_unique< QgsDelimitedTextFile >();
   mFile->setFromUrl( url );
 
   QString subset;
@@ -264,7 +266,7 @@ void QgsDelimitedTextProvider::resetIndexes() const
 
   mSubsetIndex.clear();
   if ( mBuildSpatialIndex && mGeomRep != GeomNone )
-    mSpatialIndex = qgis::make_unique< QgsSpatialIndex >();
+    mSpatialIndex = std::make_unique< QgsSpatialIndex >();
 }
 
 bool QgsDelimitedTextProvider::createSpatialIndex()
@@ -1043,7 +1045,7 @@ bool QgsDelimitedTextProvider::setSubsetString( const QString &subset, bool upda
   if ( ! nonNullSubset.isEmpty() )
   {
 
-    expression = qgis::make_unique< QgsExpression >( nonNullSubset );
+    expression = std::make_unique< QgsExpression >( nonNullSubset );
     QString error;
     if ( expression->hasParserError() )
     {
@@ -1162,7 +1164,7 @@ QgsWkbTypes::Type QgsDelimitedTextProvider::wkbType() const
   return mWkbType;
 }
 
-long QgsDelimitedTextProvider::featureCount() const
+long long QgsDelimitedTextProvider::featureCount() const
 {
   if ( mRescanRequired )
     const_cast<QgsDelimitedTextProvider *>( this )->rescanFile();
@@ -1200,14 +1202,14 @@ QString  QgsDelimitedTextProvider::description() const
   return TEXT_PROVIDER_DESCRIPTION;
 }
 
-QVariantMap QgsDelimitedTextProviderMetadata::decodeUri( const QString &uri )
+QVariantMap QgsDelimitedTextProviderMetadata::decodeUri( const QString &uri ) const
 {
   QVariantMap components;
   components.insert( QStringLiteral( "path" ), QUrl( uri ).toLocalFile() );
   return components;
 }
 
-QString QgsDelimitedTextProviderMetadata::encodeUri( const QVariantMap &parts )
+QString QgsDelimitedTextProviderMetadata::encodeUri( const QVariantMap &parts ) const
 {
   return QStringLiteral( "file://%1" ).arg( parts.value( QStringLiteral( "path" ) ).toString() );
 }

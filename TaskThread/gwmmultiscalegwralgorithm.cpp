@@ -11,19 +11,19 @@ using namespace std;
 int GwmMultiscaleGWRAlgorithm::treeChildCount = 0;
 
 GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> GwmMultiscaleGWRAlgorithm::BandwidthInitilizeTypeNameMapper = {
-    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Null, tr("Not initilized, not specified")),
-    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Initial, tr("Initilized")),
-    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Specified, tr("Specified"))
+    std::make_pair(GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Null, tr("Not initilized, not specified")),
+    std::make_pair(GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Initial, tr("Initilized")),
+    std::make_pair(GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType::Specified, tr("Specified"))
 };
 
 GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionTypeNameMapper = {
-    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV, tr("CV")),
-    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC, tr("AIC"))
+    std::make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV, tr("CV")),
+    std::make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC, tr("AIC"))
 };
 
 GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BackFittingCriterionType> GwmMultiscaleGWRAlgorithm::BackFittingCriterionTypeNameMapper = {
-    make_pair(GwmMultiscaleGWRAlgorithm::BackFittingCriterionType::CVR, tr("CVR")),
-    make_pair(GwmMultiscaleGWRAlgorithm::BackFittingCriterionType::dCVR, tr("dCVR"))
+    std::make_pair(GwmMultiscaleGWRAlgorithm::BackFittingCriterionType::CVR, tr("CVR")),
+    std::make_pair(GwmMultiscaleGWRAlgorithm::BackFittingCriterionType::dCVR, tr("dCVR"))
 };
 
 GwmDiagnostic GwmMultiscaleGWRAlgorithm::CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS)
@@ -425,7 +425,7 @@ void GwmMultiscaleGWRAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar
     }
 }
 
-void GwmMultiscaleGWRAlgorithm::createResultLayer(initializer_list<CreateResultLayerDataItem> data)
+void GwmMultiscaleGWRAlgorithm::createResultLayer(std::initializer_list<CreateResultLayerDataItem> data)
 {
     emit message("Creating result layer...");
     QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
@@ -517,7 +517,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
                 mat si = x.row(i) * ci;
                 mS0.row(i) = si;
                 mC.slice(i) = ci;
-            } catch (exception e) {
+            } catch (std::exception e) {
                 emit error(e.what());
             }
         }
@@ -535,7 +535,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllSerial(const mat& x, const vec& y)
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
-            } catch (exception e) {
+            } catch (std::exception e) {
                 emit error(e.what());
             }
         }
@@ -568,7 +568,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllOmp(const mat &x, const vec &y)
                     mat si = x.row(i) * ci;
                     mS0.row(i) = si;
                     mC.slice(i) = ci;
-                } catch (exception e) {
+                } catch (std::exception e) {
                     emit error(e.what());
                 }
             }
@@ -590,7 +590,7 @@ mat GwmMultiscaleGWRAlgorithm::regressionAllOmp(const mat &x, const vec &y)
                 {
                     mat xtwx_inv = inv_sympd(xtwx);
                     betas.col(i) = xtwx_inv * xtwy;
-                } catch (exception e) {
+                } catch (std::exception e) {
                     emit error(e.what());
                 }
             }
@@ -620,7 +620,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, c
                 mat ci = xtwx_inv * xtw;
                 mat si = x(i) * ci;
                 S.row(i) = si;
-            } catch (exception e) {
+            } catch (std::exception e) {
                 emit error(e.what());
             }
         }
@@ -637,7 +637,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarSerial(const vec &x, const vec &y, c
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
-            } catch (exception e) {
+            } catch (std::exception e) {
                 emit error(e.what());
             }
         }
@@ -669,7 +669,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarOmp(const vec &x, const vec &y, cons
                     mat ci = xtwx_inv * xtw;
                     mat si = x(i) * ci;
                     S.row(i) = si;
-                } catch (exception e) {
+                } catch (std::exception e) {
                     emit error(e.what());
                 }
             }
@@ -690,7 +690,7 @@ vec GwmMultiscaleGWRAlgorithm::regressionVarOmp(const vec &x, const vec &y, cons
                 {
                     mat xtwx_inv = inv_sympd(xtwx);
                     betas.col(i) = xtwx_inv * xtwy;
-                } catch (exception e) {
+                } catch (std::exception e) {
                     emit error(e.what());
                 }
             }

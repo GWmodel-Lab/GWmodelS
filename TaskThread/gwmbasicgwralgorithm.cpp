@@ -458,7 +458,7 @@ mat GwmBasicGWRAlgorithm::regressionSerial(const mat &x, const vec &y)
             betas.col(i) = xtwx_inv * xtwy;
             emit tick(i, nRp);
         }
-        catch (exception e)
+        catch (std::exception e)
         {
             emit error(e.what());
         }
@@ -487,7 +487,7 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
             }
-            catch (exception e)
+            catch (std::exception e)
             {
                 emit error(e.what());
             }

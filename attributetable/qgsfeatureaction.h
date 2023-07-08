@@ -23,7 +23,7 @@
 #include <QPair>
 #include <QAction>
 #include <QUuid>
-//#include "qgis_app.h"
+// #include "qgis_app.h"
 
 class QgsIdentifyResultsDialog;
 class QgsVectorLayer;
@@ -36,7 +36,7 @@ class QgsFeatureAction : public QAction
     Q_OBJECT
 
   public:
-    QgsFeatureAction( const QString &name, QgsFeature &f, QgsVectorLayer *vl, QUuid actionId = QString(), int defaultAttr = -1, QObject *parent = nullptr );
+    QgsFeatureAction( const QString &name, QgsFeature &f, QgsVectorLayer *vl, QUuid actionId = QUuid(), int defaultAttr = -1, QObject *parent = nullptr );
 
   public slots:
     void execute();
@@ -49,17 +49,25 @@ class QgsFeatureAction : public QAction
      * and override with values in defaultAttributes if provided.
      *
      * \param defaultAttributes  Provide some default attributes here if desired.
+     * \param scope              Scope of the expression
+     * \param showModal          If the used dialog should be modal or not
+     * \param hideParent         If the parent widget should be hidden, when the used dialog is opened
      *
-     * \returns true if feature was added if showModal is true. If showModal is false, returns true in every case
+     * \returns TRUE if feature was added if showModal is true. If showModal is FALSE, returns TRUE in every case
      */
-    bool addFeature( const QgsAttributeMap &defaultAttributes = QgsAttributeMap(), bool showModal = true, QgsExpressionContextScope *scope = nullptr );
+    bool addFeature( const QgsAttributeMap &defaultAttributes = QgsAttributeMap(), bool showModal = true, QgsExpressionContextScope *scope = nullptr, bool hideParent = false );
 
     /**
      * Sets whether to force suppression of the attribute form popup after creating a new feature.
-     * If \a force is true, then regardless of any user settings, form settings, etc, the attribute
+     * If \a force is TRUE, then regardless of any user settings, form settings, etc, the attribute
      * form will ALWAYS be suppressed.
      */
     void setForceSuppressFormPopup( bool force );
+
+    /**
+     * Returns the added feature or invalid feature in case addFeature() was not successful.
+     */
+    QgsFeature feature() const;
 
   signals:
 
@@ -74,6 +82,8 @@ class QgsFeatureAction : public QAction
 
   private slots:
     void onFeatureSaved( const QgsFeature &feature );
+    void unhideParentWidget();
+    void hideParentWidget();
 
   private:
     QgsAttributeDialog *newDialog( bool cloneFeature );
@@ -87,7 +97,6 @@ class QgsFeatureAction : public QAction
 
     bool mForceSuppressFormPopup = false;
 
-    static QHash<QgsVectorLayer *, QgsAttributeMap> sLastUsedValues;
 };
 
 #endif

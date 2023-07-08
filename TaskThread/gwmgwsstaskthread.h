@@ -73,8 +73,8 @@ protected:  // QThread interface
     void run() override;
 
 public:  // IMultivariableAnalysis interface
-    QList<GwmVariable> variables() const;
-    void setVariables(const QList<GwmVariable> &variables);
+    QList<GwmVariable> variables() const override;
+    void setVariables(const QList<GwmVariable> &variables) override;
     void setVariables(const QList<GwmVariable> &&variables);
 
 public:  // IParallelalbe interface

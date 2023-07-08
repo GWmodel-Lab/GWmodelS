@@ -75,7 +75,7 @@ public:
     inline SymbolType symbolType() const;
     inline void setSymbolType(const SymbolType &symbolType);
 
-    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::Vector; }
+    inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::Vector; }
 
     QString provider() const;
     void setProvider(const QString &provider);

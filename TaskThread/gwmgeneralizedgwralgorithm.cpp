@@ -19,10 +19,10 @@ GwmEnumValueNameMapper<GwmGeneralizedGWRAlgorithm::Family> GwmGeneralizedGWRAlgo
 };
 
 QMap<QString, double> GwmGeneralizedGWRAlgorithm::TolUnitDict = {
-    make_pair(QString("e -3"), 0.001),
-    make_pair(QString("e -5"), 0.00001),
-    make_pair(QString("e -7"), 0.0000001),
-    make_pair(QString("e -10"), 0.0000000001)
+    std::make_pair(QString("e -3"), 0.001),
+    std::make_pair(QString("e -5"), 0.00001),
+    std::make_pair(QString("e -7"), 0.0000001),
+    std::make_pair(QString("e -10"), 0.0000000001)
 };
 
 
@@ -291,7 +291,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonSerial(const mat &x, const vec 
 
                 emit tick(i, nDp);
             }
-            catch (exception e) {
+            catch (std::exception e) {
                 isAllCorrect = false;
                 emit error(e.what());
             }
@@ -306,7 +306,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonSerial(const mat &x, const vec 
                 betas.col(i) = gwsi;
                 emit tick(i,nRp);
             }
-            catch (exception e) {
+            catch (std::exception e) {
                 isAllCorrect = false;
                 emit error(e.what());
             }
@@ -366,7 +366,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
 
                     emit tick(current++, nDp);
                 }
-                catch (exception e) {
+                catch (std::exception e) {
                     isAllCorrect = false;
                     emit error(e.what());
                 }
@@ -386,7 +386,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
                     betas.col(i) = gwsi;
                     emit tick(current++, nRp);
                 }
-                catch (exception e) {
+                catch (std::exception e) {
                     isAllCorrect = false;
                     emit error(e.what());
                 }
@@ -437,7 +437,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialOmp(const mat &x, const vec &y
                     shat(thread,1) += det(s_ri * trans(s_ri));
                     emit tick(current++, nDp);
                 }
-                catch (exception e) {
+                catch (std::exception e) {
                     isAllCorrect = false;
                     emit error(e.what());
                 }
@@ -457,7 +457,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialOmp(const mat &x, const vec &y
                     mBetas.col(i) = gwsi;
                     emit tick(current++, nRp);
                 }
-                catch (exception e) {
+                catch (std::exception e) {
                     isAllCorrect = false;
                     emit error(e.what());
                 }
@@ -502,7 +502,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialSerial(const mat &x, const vec
                 mShat(1) += det(s_ri * trans(s_ri));
                 emit tick(i, nDp);
             }
-            catch (exception e) {
+            catch (std::exception e) {
                 isAllCorrect = false;
                 emit error(e.what());
             }
@@ -517,7 +517,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialSerial(const mat &x, const vec
                 mBetas.col(i) = gwsi;
                 emit tick(i, nRp);
             }
-            catch (exception e) {
+            catch (std::exception e) {
                 isAllCorrect = false;
                 emit error(e.what());
             }

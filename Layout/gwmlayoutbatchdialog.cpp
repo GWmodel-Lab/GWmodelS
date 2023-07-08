@@ -580,7 +580,7 @@ void GwmLayoutBatchDialog::toggleWidgets(bool started)
 void GwmLayoutBatchDialog::on_btnSelectDirectory_clicked()
 {
     QFileDialog dlg(this, tr("Select a Folder"));
-    dlg.setFileMode(QFileDialog::FileMode::DirectoryOnly);
+    dlg.setOption(QFileDialog::Option::ShowDirsOnly, true);
     if (dlg.exec())
     {
         auto pathList = dlg.selectedFiles();
@@ -630,7 +630,7 @@ bool GwmLayoutBatchDialog::containsWmsLayers(QgsLayout *layout)
     QList< QgsLayoutItemMap *> maps;
     layout->layoutItems(maps);
 
-    for (QgsLayoutItemMap *map : qgis::as_const(maps))
+    for (QgsLayoutItemMap *map : std::as_const(maps))
     {
         if (map->containsWmsLayer())
             return true;

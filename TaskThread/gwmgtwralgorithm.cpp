@@ -150,6 +150,7 @@ arma::mat GwmGTWRAlgorithm::regression(const arma::mat &x, const arma::vec &y)
             return regressionHatmatrixSerial(x, y, mBetasSE, mSHat, mQDiag);
         else return regressionSerial(x, y);
     }
+    else return mat();
 }
 
 void GwmGTWRAlgorithm::initPoints()
@@ -245,7 +246,7 @@ mat GwmGTWRAlgorithm::regressionSerial(const mat &x, const vec &y)
             betas.col(i) = xtwx_inv * xtwy;
             emit tick(i, nRp);
         }
-        catch (exception e)
+        catch (std::exception e)
         {
             emit error(e.what());
         }
@@ -273,7 +274,7 @@ mat GwmGTWRAlgorithm::regressionOmp(const mat &x, const vec &y)
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
             }
-            catch (exception e)
+            catch (std::exception e)
             {
                 emit error(e.what());
             }

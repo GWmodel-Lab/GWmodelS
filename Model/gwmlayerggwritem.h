@@ -10,7 +10,7 @@ class GwmLayerGGWRItem : public GwmLayerBasicGWRItem
 public:
     GwmLayerGGWRItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGeneralizedGWRAlgorithm* taskThread = nullptr);
 
-    inline virtual GwmLayerItemType itemType() { return GwmLayerItemType::GeneralizedGWR; }
+    inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::GeneralizedGWR; }
 
     virtual bool readXml(QDomNode &node) override;
     virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;

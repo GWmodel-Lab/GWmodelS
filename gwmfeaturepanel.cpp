@@ -7,7 +7,7 @@
 #include "QMimeData"
 #include "QDrag"
 #include "QHeaderView"
-#include <qgsproject.h>"
+#include <qgsproject.h>
 
 GwmFeaturePanel::GwmFeaturePanel(QWidget *parent)
     : QTreeView(parent)
