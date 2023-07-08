@@ -92,7 +92,7 @@ endif(NOT GSL_FOUND)
 include_directories(${GSL_INCLUDE_DIRS})
 
 find_package(GWmodel REQUIRED)
-include_directories(${GWmodel_INCLUDE_DIR})
+include_directories(${GWMODEL_INCLUDE_DIR})
 
 if(NOT APPLE)
     set (ENABLE_CUDA FALSE CACHE BOOL "Determines whether CUDA support should be built")

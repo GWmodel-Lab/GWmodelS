@@ -8,16 +8,16 @@
 #
 # The following variables will be defined:
 #
-# ``GWmodel_FOUND`` True if GWmodel found on the local system
+# ``GWMODEL_FOUND`` True if GWmodel found on the local system
 #
-# ``GWmodel_INCLUDE_DIR`` Location of GWmodel header files
+# ``GWMODEL_INCLUDE_DIR`` Location of GWmodel header files
 #
-# ``GWmodel_LIBRARY_DIR`` Location of GWmodel libraries
+# ``GWMODEL_LIBRARY_DIR`` Location of GWmodel libraries
 #
-# ``GWmodel_LIBRARIES`` List of the GWmodel libraries found
+# ``GWMODEL_LIBRARIES`` List of the GWmodel libraries found
 #
 
-find_path(GWmodel_INCLUDE_FILE
+find_file(GWMODEL_INCLUDE_FILE
     NAMES gwmodel.h
     PATHS 
     /usr/include
@@ -29,7 +29,7 @@ find_path(GWmodel_INCLUDE_FILE
     "$ENV{INCLUDE}"
 )
 
-find_library(GWmodel_LIBRARIES
+find_library(GWMODEL_LIBRARIES
     NAMES gwmodel.lib libgwmodel.a
     PATHS
     /usr/lib
@@ -40,24 +40,24 @@ find_library(GWmodel_LIBRARIES
     "$ENV{USR_LOCAL}/lib"
 )
 
-if(GWmodel_INCLUDE_FILE)
-    get_filename_component(GWmodel_INCLUDE_DIR ${GWmodel_INCLUDE_FILE} DIRECTORY)
-    set(GWmodel_INCLUDE_FOUDN TRUE)
-endif(GWmodel_INCLUDE_FILE)
+if(GWMODEL_INCLUDE_FILE)
+    get_filename_component(GWMODEL_INCLUDE_DIR ${GWMODEL_INCLUDE_FILE} DIRECTORY CACHE)
+    set(GWMODEL_INCLUDE_FOUDN TRUE)
+endif(GWMODEL_INCLUDE_FILE)
 
 
-if(GWmodel_LIBRARIES)
-    set(GWmodel_LIBRARIES_FOUND TRUE)
+if(GWMODEL_LIBRARIES)
+    set(GWMODEL_LIBRARIES_FOUND TRUE)
 endif()
 
-if(GWmodel_INCLUDE_FOUDN AND GWmodel_LIBRARIES_FOUND)
-    set(GWmodel_FOUND TRUE)
+if(GWMODEL_INCLUDE_FOUDN AND GWMODEL_LIBRARIES_FOUND)
+    set(GWMODEL_FOUND TRUE)
 endif()
 
-if(GWmodel_FOUND)
-    message(STATUS "Found GWmodel: ${GWmodel_LIBRARIES}")
+if(GWMODEL_FOUND)
+    message(STATUS "Found GWmodel: ${GWMODEL_LIBRARIES}")
 else()
-    if(GWmodel_FIND_REQUIRED)
+    if(GWMODEL_FIND_REQUIRED)
         message(FATAL_ERROR "Could not find GWmodel")
-    endif(GWmodel_FIND_REQUIRED)
+    endif(GWMODEL_FIND_REQUIRED)
 endif()
