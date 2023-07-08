@@ -15,8 +15,8 @@ qt5_add_resources(GWMODEL_ICONS images/images.qrc)
 
 if(WIN32)
     set(QT_USEQTMAIN TRUE)
-    set(app_WINRC app_win32.rc)
-    set_property(SOURCE app_win32.rc APPEND PROPERTY OBJECT_DEPENDS ${PROJECT_SOURCE_DIR}/icons/GWmodelS.ico)
+    set(app_WINRC windows/app_win32.rc)
+    set_property(SOURCE app_WINRC APPEND PROPERTY OBJECT_DEPENDS ${PROJECT_SOURCE_DIR}/icons/GWmodelS.ico)
 endif(WIN32)
 
 if(UNIX AND NOT CYGWIN)
