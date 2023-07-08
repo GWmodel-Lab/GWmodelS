@@ -106,89 +106,12 @@ if(NOT WIN32)
 endif(NOT WIN32)
 
 set(SOURCES 
-    DelimitedText/qgsdelimitedtextfeatureiterator.cpp
-    DelimitedText/qgsdelimitedtextfile.cpp
-    DelimitedText/qgsdelimitedtextprovider.cpp
-    GWmodel/GWmodel.cpp
-    GWmodel/gwmbinomialmodel.cpp
-    GWmodel/gwmgeneralizedlinearmodel.cpp
-    GWmodel/gwmlinearmodel.cpp
-    GWmodel/gwmpoissonmodel.cpp
-    Layout/gwmlayoutbatchconfigurationdelegate.cpp
-    Layout/gwmlayoutbatchconfigurationmodel.cpp
-    Layout/gwmlayoutbatchdialog.cpp
-    Layout/gwmlayoutbatchfieldlistmodel.cpp
-    Layout/gwmlayoutbatchlayerlistmodel.cpp
-    Layout/gwmlayoutbatchunifylayerpopupdialog.cpp
-    Layout/gwmlayoutdesigner.cpp
-    Layout/qgslayoutmanagerdialog.cpp
-    Model/gwmlayerattributeitem.cpp
-    Model/gwmlayerattributeitemmodel.cpp
-    Model/gwmlayerbasicgwritem.cpp
-    Model/gwmlayercollinearitygwritem.cpp
-    Model/gwmlayerggwritem.cpp
-    Model/gwmlayergroupitem.cpp
-    Model/gwmlayergtwritem.cpp
-    Model/gwmlayergwpcaitem.cpp
-    Model/gwmlayergwssitem.cpp
-    Model/gwmlayeritem.cpp
-    Model/gwmlayeritemmodel.cpp
-    Model/gwmlayermultiscalegwritem.cpp
-    Model/gwmlayeroriginitem.cpp
-    Model/gwmlayerscalablegwritem.cpp
-    Model/gwmlayersymbolitem.cpp
-    Model/gwmlayervectoritem.cpp
-    Model/gwmvariableitemmodel.cpp
-    Model/gwmalgorithmmetagwss.cpp
-    PropertyPanelTabs/gwmpropertycollinearitygwrtab.cpp
-    PropertyPanelTabs/gwmpropertyggwrtab.cpp
-    Model/gwmparameterspecifiedoptionsmodel.cpp
-    Model/gwmpropertymultiscaleparameterspecifieditemmodel.cpp
-    PropertyPanelTabs/gwmpropertygtwrtab.cpp
-    PropertyPanelTabs/gwmpropertygwpcatab.cpp
-    PropertyPanelTabs/gwmpropertygwrtab.cpp
-    PropertyPanelTabs/gwmpropertygwsstab.cpp
-    PropertyPanelTabs/gwmpropertymultiscalegwrtab.cpp
-    PropertyPanelTabs/gwmpropertyscalablegwrtab.cpp
-    SpatialWeight/gwmbandwidthweight.cpp
-    SpatialWeight/gwmcrsdistance.cpp
-    SpatialWeight/gwmdistance.cpp
-    SpatialWeight/gwmdmatdistance.cpp
-    SpatialWeight/gwmminkwoskidistance.cpp
-    SpatialWeight/gwmspatialtemporalweight.cpp
-    SpatialWeight/gwmspatialweight.cpp
-    SpatialWeight/gwmweight.cpp
-    TaskThread/gwmbandwidthsizeselector.cpp
-    TaskThread/gwmbasicgwralgorithm.cpp
-    TaskThread/gwmcsvtodatthread.cpp
-    TaskThread/gwmgeneralizedgwralgorithm.cpp
-    TaskThread/gwmgeographicalweightedregressionalgorithm.cpp
-    TaskThread/gwmgtwralgorithm.cpp
-    TaskThread/gwmgwpcataskthread.cpp
-    TaskThread/gwmggwrbandwidthsizeselector.cpp
-    TaskThread/gwmgwsstaskthread.cpp
-    TaskThread/gwmindependentvariableselector.cpp
-    TaskThread/gwmlocalcollinearitygwralgorithm.cpp
-    TaskThread/gwmmultiscalegwralgorithm.cpp
-    TaskThread/gwmrobustgwralgorithm.cpp
-    TaskThread/gwmsavelayerthread.cpp
-    TaskThread/gwmscalablegwralgorithm.cpp
-    TaskThread/gwmspatialalgorithm.cpp
-    TaskThread/gwmspatialmonoscalealgorithm.cpp
-    TaskThread/gwmspatialmultiscalealgorithm.cpp
-    TaskThread/gwmspatialtemporalmonoscale.cpp
-    Validity/qgsabstractvaliditycheck.cpp
-    attributetable/qgsfeaturefilterwidget.cpp
-    attributetable/qgsguivectorlayertools.cpp
     gwmapp.cpp
     gwmattributetabledialog.cpp
     gwmcoordtranssettingdialog.cpp
-    TaskThread/gwmcoordtransthread.cpp
     gwmcsvtodatdialog.cpp
     gwmdelimitedtextfile.cpp
     gwmfeaturepanel.cpp
-    PropertyPanelTabs/gwmpropertydefaulttab.cpp
-    PropertyPanelTabs/gwmpropertystatisticstab.cpp
     gwmggwroptionsdialog.cpp
     gwmgtwroptionsdialog.cpp
     gwmgwpcaoptionsdialog.cpp
@@ -203,116 +126,26 @@ set(SOURCES
     gwmprogressdialog.cpp
     gwmproject.cpp
     gwmpropertypanel.cpp
-    TaskThread/gwmtaskthread.cpp
     gwmrobustgwroptionsdialog.cpp
     gwmsaveascsvdialog.cpp
-    attributetable/qgsdelattrdialog.cpp
-    attributetable/qgsfeatureaction.cpp
     gwmscalablegwroptionsdialog.cpp
-    symbolwindow/gwmsymboleditordialog.cpp
-    symbolwindow/gwmsymbolwindow.cpp
     gwmtoolbar.cpp
     main.cpp
     aboutdevelopteam.cpp
     aboutdevelopers.cpp
     gwmprojcrssettingdialog.cpp
     gwmgwaverageoptionsdialog.cpp
-    TaskThread/gwmgwaveragetaskthread.cpp
     gwmcorrelationdialog.cpp
-    TaskThread/gwmgwcorrelationtaskthread.cpp
-    PropertyPanelTabs/gwmpropertygwcorrelationstab.cpp
-    Model/gwmpropertygwcorrelationsparameterspecifieditemmodel.cpp
 )
 
 set(HEADERS
-    DelimitedText/qgsdelimitedtextfeatureiterator.h
-    DelimitedText/qgsdelimitedtextfile.h
-    DelimitedText/qgsdelimitedtextprovider.h
-    GWmodel/GWmodel.h
-    GWmodel/gwmbinomialmodel.h
-    GWmodel/gwmgeneralizedlinearmodel.h
-    GWmodel/gwmlinearmodel.h
-    GWmodel/gwmpoissonmodel.h
-    Layout/gwmlayoutbatchconfigurationdelegate.h
-    Layout/gwmlayoutbatchconfigurationmodel.h
-    Layout/gwmlayoutbatchdialog.h
-    Layout/gwmlayoutbatchfieldlistmodel.h
-    Layout/gwmlayoutbatchlayerlistmodel.h
-    Layout/gwmlayoutbatchunifylayerpopupdialog.h
-    Layout/gwmlayoutdesigner.h
-    Layout/qgslayoutmanagerdialog.h
-    Model/gwmlayerattributeitem.h
-    Model/gwmlayerattributeitemmodel.h
-    Model/gwmlayerbasicgwritem.h
-    Model/gwmlayercollinearitygwritem.h
-    Model/gwmlayerggwritem.h
-    Model/gwmlayergroupitem.h
-    Model/gwmlayergtwritem.h
-    Model/gwmlayergwpcaitem.h
-    Model/gwmlayergwssitem.h
-    Model/gwmlayeritem.h
-    Model/gwmlayeritemmodel.h
-    Model/gwmlayermultiscalegwritem.h
-    Model/gwmlayeroriginitem.h
-    Model/gwmlayerscalablegwritem.h
-    Model/gwmlayersymbolitem.h
-    Model/gwmlayervectoritem.h
-    Model/gwmvariableitemmodel.h
-    Model/gwmalgorithmmetagwss.h
-    PropertyPanelTabs/gwmpropertycollinearitygwrtab.h
-    PropertyPanelTabs/gwmpropertyggwrtab.h
-    Model/gwmparameterspecifiedoptionsmodel.h
-    Model/gwmpropertymultiscaleparameterspecifieditemmodel.h
-    PropertyPanelTabs/gwmpropertygtwrtab.h
-    PropertyPanelTabs/gwmpropertygwpcatab.h
-    PropertyPanelTabs/gwmpropertygwrtab.h
-    PropertyPanelTabs/gwmpropertygwsstab.h
-    PropertyPanelTabs/gwmpropertymultiscalegwrtab.h
-    PropertyPanelTabs/gwmpropertyscalablegwrtab.h
-    PropertyPanelTabs/utils.h
-    SpatialWeight/gwmbandwidthweight.h
-    SpatialWeight/gwmcrsdistance.h
-    SpatialWeight/gwmdistance.h
-    SpatialWeight/gwmdmatdistance.h
-    SpatialWeight/gwmminkwoskidistance.h
-    SpatialWeight/gwmspatialtemporalweight.h
-    SpatialWeight/gwmspatialweight.h
-    TaskThread/gwmbandwidthsizeselector.h
-    TaskThread/gwmbasicgwralgorithm.h
-    TaskThread/gwmgeneralizedgwralgorithm.h
-    TaskThread/gwmgeographicalweightedregressionalgorithm.h
-    TaskThread/gwmgtwralgorithm.h
-    TaskThread/gwmgwpcataskthread.h
-    TaskThread/gwmggwrbandwidthsizeselector.h
-    TaskThread/gwmgwsstaskthread.h
-    TaskThread/gwmindependentvariableselector.h
-    TaskThread/gwmlocalcollinearitygwralgorithm.h
-    TaskThread/gwmmultiscalegwralgorithm.h
-    TaskThread/gwmrobustgwralgorithm.h
-    TaskThread/gwmrobustgwralgorithm.h
-    TaskThread/gwmsavelayerthread.h
-    TaskThread/gwmscalablegwralgorithm.h
-    TaskThread/gwmspatialalgorithm.h
-    TaskThread/gwmspatialmonoscalealgorithm.h
-    TaskThread/gwmspatialmultiscalealgorithm.h
-    TaskThread/gwmspatialtemporalmonoscale.h
-    TaskThread/imonovariableanalysis.h
-    TaskThread/imultivariableanalysis.h
-    TaskThread/iparallelable.h
-    TaskThread/iregressionanalysis.h
-    Validity/qgsabstractvaliditycheck.h
-    attributetable/gwmfeaturefilterwidget_p.h
-    attributetable/qgsguivectorlayertools.h
     gwmapp.h
     gwmattributetabledialog.h
     gwmcoordtranssettingdialog.h
-    TaskThread/gwmcoordtransthread.h
     gwmcsvtodatdialog.h
     gwmdelimitedtextfile.h
     gwmenumvaluenamemapper.h
     gwmfeaturepanel.h
-    PropertyPanelTabs/gwmpropertydefaulttab.h
-    PropertyPanelTabs/gwmpropertystatisticstab.h
     gwmggwroptionsdialog.h
     gwmgtwroptionsdialog.h
     gwmgwpcaoptionsdialog.h
@@ -327,49 +160,23 @@ set(HEADERS
     gwmprogressdialog.h
     gwmproject.h
     gwmpropertypanel.h
-    TaskThread/gwmtaskthread.h
     gwmrobustgwroptionsdialog.h
     gwmsaveascsvdialog.h
-    attributetable/qgsdelattrdialog.h
-    attributetable/qgsfeatureaction.h
     gwmscalablegwroptionsdialog.h
-    SpatialWeight/gwmweight.h
-    symbolwindow/gwmsymboleditordialog.h
-    symbolwindow/gwmsymbolwindow.h
     gwmtoolbar.h
     prefix.h
     aboutdevelopteam.h
     aboutdevelopers.h
     gwmprojcrssettingdialog.h
     gwmgwaverageoptionsdialog.h
-    TaskThread/gwmgwaveragetaskthread.h
     gwmcorrelationdialog.h
-    TaskThread/gwmgwcorrelationtaskthread.h
-    PropertyPanelTabs/gwmpropertygwcorrelationstab.h
-    Model/gwmpropertygwcorrelationsparameterspecifieditemmodel.h
 )
 
 set(FORMS
-    Layout/gwmlayoutbatchdialog.ui
-    Layout/gwmlayoutbatchunifylayerpopupdialog.ui
-    Layout/gwmlayoutdesigner.ui
-    Layout/qgslayoutatlaswidgetbase.ui
-    Layout/qgslayoutmanagerbase.ui
-    Layout/qgssvgexportoptions.ui
-    PropertyPanelTabs/gwmpropertycollinearitygwrtab.ui
-    PropertyPanelTabs/gwmpropertyggwrtab.ui
-    PropertyPanelTabs/gwmpropertygtwrtab.ui
-    PropertyPanelTabs/gwmpropertygwpcatab.ui
-    PropertyPanelTabs/gwmpropertygwrtab.ui
-    PropertyPanelTabs/gwmpropertygwsstab.ui
-    PropertyPanelTabs/gwmpropertymultiscalegwrtab.ui
-    PropertyPanelTabs/gwmpropertyscalablegwrtab.ui
     gwmapp.ui
     gwmcoordtranssettingdialog.ui
     gwmcsvtodatdialog.ui
     gwmfeaturepanel.ui
-    PropertyPanelTabs/gwmpropertydefaulttab.ui
-    PropertyPanelTabs/gwmpropertystatisticstab.ui
     gwmggwroptionsdialog.ui
     gwmgtwroptionsdialog.ui
     gwmgwpcaoptionsdialog.ui
@@ -397,27 +204,24 @@ set(FORMS
     qgsfieldconditionalformatwidget.ui
     qgsorganizetablecolumnsdialog.ui
     qgsvaliditycheckresultsbase.ui
-    symbolwindow/qgsgraduatedsymbolrendererwidget.ui
-    symbolwindow/qgscategorizedsymbolrendererwidget.ui
-    symbolwindow/qgsheatmaprendererwidgetbase.ui
-    symbolwindow/qgshistogramwidgetbase.ui
-    symbolwindow/qgsinvertedpolygonrendererwidgetbase.ui
-    symbolwindow/qgsmapunitscalewidgetbase.ui
-    symbolwindow/qgspointclusterrendererwidgetbase.ui
-    symbolwindow/qgspointdisplacementrendererwidgetbase.ui
-    symbolwindow/qgsrendererrulepropsdialogbase.ui
-    symbolwindow/qgsrulebasedrendererwidget.ui
-    symbolwindow/qgsstyleitemslistwidgetbase.ui
-    symbolwindow/qgssymbolselectordialogbase.ui
-    symbolwindow/qgsunitselectionwidget.ui
-    symbolwindow/widget_set_dd_value.ui
     aboutdevelopteam.ui
     aboutdevelopers.ui
     gwmprojcrssettingdialog.ui
     gwmgwaverageoptionsdialog.ui
     gwmcorrelationdialog.ui
-    PropertyPanelTabs/gwmpropertygwcorrelationstab.ui
 )
+
+add_subdirectory("./AttributeTable")
+add_subdirectory("./DelimitedText")
+add_subdirectory("./GWmodel")
+add_subdirectory("./Layout")
+add_subdirectory("./Model")
+add_subdirectory("./PropertyPanelTabs")
+add_subdirectory("./SpatialWeight")
+add_subdirectory("./SymbolWindow")
+add_subdirectory("./TaskThread")
+add_subdirectory("./Validity")
+
 qt5_wrap_ui(FORMS_H ${FORMS})
 
 if(WIN32)

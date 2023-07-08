@@ -578,7 +578,7 @@
   <customwidget>
    <class>GwmFeatureFilterWidget</class>
    <extends>QWidget</extends>
-   <header>attributetable/gwmfeaturefilterwidget_p.h</header>
+   <header>AttributeTable/gwmfeaturefilterwidget_p.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
