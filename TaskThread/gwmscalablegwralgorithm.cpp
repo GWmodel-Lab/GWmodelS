@@ -683,7 +683,7 @@ void GwmScalableGWRAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar, 
     }
 }
 
-void GwmScalableGWRAlgorithm::createResultLayer(initializer_list<CreateResultLayerDataItem> data)
+void GwmScalableGWRAlgorithm::createResultLayer(std::initializer_list<CreateResultLayerDataItem> data)
 {
     QgsVectorLayer* srcLayer = hasRegressionLayer() ? mRegressionLayer : mDataLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");

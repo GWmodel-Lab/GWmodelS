@@ -236,7 +236,7 @@ void GwmLayoutDesigner::initializeRegistry()
     sInitializedRegistry = true;
     auto createPageWidget = ([](QgsLayoutItem * item)->QgsLayoutItemBaseWidget *
     {
-        std::unique_ptr< QgsLayoutPagePropertiesWidget > newWidget = qgis::make_unique< QgsLayoutPagePropertiesWidget >(nullptr, item);
+        std::unique_ptr< QgsLayoutPagePropertiesWidget > newWidget = std::make_unique< QgsLayoutPagePropertiesWidget >(nullptr, item);
         return newWidget.release();
     });
 

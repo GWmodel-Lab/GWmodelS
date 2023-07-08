@@ -8,10 +8,10 @@
 using namespace std;
 
 QMap<QString, double> GwmGGWRTaskThread::TolUnitDict = {
-    make_pair(QString("e -3"), 0.001),
-    make_pair(QString("e -5"), 0.00001),
-    make_pair(QString("e -7"), 0.0000001),
-    make_pair(QString("e -10"), 0.0000000001)
+    std::make_pair(QString("e -3"), 0.001),
+    std::make_pair(QString("e -5"), 0.00001),
+    std::make_pair(QString("e -7"), 0.0000001),
+    std::make_pair(QString("e -10"), 0.0000000001)
 };
 
 
@@ -266,7 +266,7 @@ bool GwmGGWRTaskThread::gwrPoisson(){
 
                 emit tick(i + 1, mFeatureList.size());
             }
-            catch (exception e) {
+            catch (std::exception e) {
                 isAllCorrect = false;
                 emit error(e.what());
             }
@@ -315,7 +315,7 @@ bool GwmGGWRTaskThread::gwrPoisson(){
                 mBetas.col(i) = gwsi;
                 emit tick(i + 1, mFeatureList.size());
             }
-            catch (exception e) {
+            catch (std::exception e) {
                 isAllCorrect = false;
                 emit error(e.what());
             }
@@ -404,7 +404,7 @@ bool GwmGGWRTaskThread::gwrBinomial(){
                 mBetasSE.col(i) = diag(temp * trans(ci));
                 emit tick(i + 1, mFeatureList.size());
             }
-            catch (exception e) {
+            catch (std::exception e) {
                 isAllCorrect = false;
                 emit error(e.what());
             }
@@ -461,7 +461,7 @@ bool GwmGGWRTaskThread::gwrBinomial(){
                 mBetas.col(i) = gwsi;
                 emit tick(i + 1, mFeatureList.size());
             }
-            catch (exception e) {
+            catch (std::exception e) {
                 isAllCorrect = false;
                 emit error(e.what());
             }

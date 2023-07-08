@@ -548,7 +548,7 @@ GwmLayoutDesigner * GwmApp::createNewReport(QString title)
         title = QgsProject::instance()->layoutManager()->generateUniqueTitle(QgsMasterLayoutInterface::Report);
     }
     //create new report
-    std::unique_ptr< QgsReport > report = qgis::make_unique< QgsReport >(QgsProject::instance());
+    std::unique_ptr< QgsReport > report = std::make_unique< QgsReport >(QgsProject::instance());
     report->setName(title);
     QgsMasterLayoutInterface *layout = report.get();
     QgsProject::instance()->layoutManager()->addLayout(report.release());

@@ -196,7 +196,7 @@ protected:
     double mBandwidthSizeCriterionVarAICOmp(GwmBandwidthWeight* bandwidthWeight);
 #endif
 
-    void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
+    void createResultLayer(std::initializer_list<CreateResultLayerDataItem> data);
 
 protected:
     GwmBandwidthSizeSelector selector;

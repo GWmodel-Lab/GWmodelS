@@ -8,8 +8,8 @@
 int GwmGWcorrelationTaskThread::treeChildCount = 0;
 
 GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmGWcorrelationTaskThread::BandwidthSelectionCriterionTypeNameMapper = {
-    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV, tr("CV")),
-    make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC, tr("AIC"))
+    std::make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV, tr("CV")),
+    std::make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC, tr("AIC"))
 };
 
 vec GwmGWcorrelationTaskThread::del(vec x, int rowcount){

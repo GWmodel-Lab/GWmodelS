@@ -4,13 +4,11 @@
 #include <QHash>
 #include <QString>
 
-using namespace std;
-
 template <class EnumT>
 class GwmEnumValueNameMapper
 {
 public:
-    GwmEnumValueNameMapper(initializer_list<pair<EnumT, QString> > values);
+    GwmEnumValueNameMapper(std::initializer_list<std::pair<EnumT, QString> > values);
 
     QString name(const EnumT& value)
     {
@@ -38,7 +36,7 @@ private:
 };
 
 template<class EnumT>
-GwmEnumValueNameMapper<EnumT>::GwmEnumValueNameMapper(initializer_list<pair<EnumT, QString> > values)
+GwmEnumValueNameMapper<EnumT>::GwmEnumValueNameMapper(std::initializer_list<std::pair<EnumT, QString> > values)
 {
     for (auto i = values.begin(); i != values.end(); i++)
     {

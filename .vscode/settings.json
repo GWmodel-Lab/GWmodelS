@@ -11,6 +11,9 @@
         "Makevars": "makefile",
         "ostream": "cpp",
         "variant": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "utility": "cpp",
+        "initializer_list": "cpp",
+        "qpointer": "cpp"
     }
 }

@@ -78,7 +78,7 @@ private:
     mat regressionSerial(const arma::mat& x, const arma::vec& y);
     mat regressionHatmatrixSerial(const arma::mat &x, const arma::vec &y);
 
-    void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
+    void createResultLayer(std::initializer_list<CreateResultLayerDataItem> data);
 
     bool mHasPredict = false;
 
