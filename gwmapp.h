@@ -121,7 +121,7 @@ public slots:
     void onCsvToDat();
     void onRobustGWR();
     void onGGWRBtnClicked();
-    void onMapSelectionChanged(QgsVectorLayer* layer);
+    void onMapSelectionChanged(QgsMapLayer* layer);
 
     /**
      * @brief 当模型项发生改变时触发的槽

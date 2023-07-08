@@ -1,5 +1,5 @@
 /***************************************************************************
-    qgsfeaturefilterwidget.cpp
+    Gwmfeaturefilterwidget.cpp
      --------------------------------------
     Date                 : 20.9.2019
     Copyright            : (C) 2019 Julien Cabieces
@@ -52,12 +52,11 @@ GwmFeatureFilterWidget::GwmFeatureFilterWidget( QWidget *parent )
   mActionStoredFilterExpressions->setMenu( mStoredFilterExpressionMenu );
 
   // Set filter icon in a couple of places
-  QIcon filterIcon = QgsApplication::getThemeIcon( "/mActionFilter2.svg" );
-  mActionShowAllFilter->setIcon( filterIcon );
-  mActionAdvancedFilter->setIcon( filterIcon );
-  mActionSelectedFilter->setIcon( filterIcon );
-  mActionVisibleFilter->setIcon( filterIcon );
-  mActionEditedFilter->setIcon( filterIcon );
+  mActionShowAllFilter->setIcon( QgsApplication::getThemeIcon( "/mActionOpenTable.svg" ) );
+  mActionAdvancedFilter->setIcon( QgsApplication::getThemeIcon( "/mActionFilter2.svg" ) );
+  mActionSelectedFilter->setIcon( QgsApplication::getThemeIcon( "/mActionOpenTableSelected.svg" ) );
+  mActionVisibleFilter->setIcon( QgsApplication::getThemeIcon( "/mActionOpenTableVisible.svg" ) );
+  mActionEditedFilter->setIcon( QgsApplication::getThemeIcon( "/mActionOpenTableEdited.svg" ) );
 
 
   // Set button to store or delete stored filter expressions
@@ -196,21 +195,21 @@ void GwmFeatureFilterWidget::columnBoxInit()
   mFilterButton->addAction( mActionEditedFilter );
   mFilterButton->addAction( mActionFilterColumnsMenu );
   mFilterButton->addAction( mActionAdvancedFilter );
-  //mFilterButton->addAction( mActionStoredFilterExpressions );
+  mFilterButton->addAction( mActionStoredFilterExpressions );
 
   const QList<QgsField> fields = mLayer->fields().toList();
 
   const auto constFields = fields;
   for ( const QgsField &field : constFields )
   {
-    int idx = mLayer->fields().lookupField( field.name() );
+    const int idx = mLayer->fields().lookupField( field.name() );
     if ( idx < 0 )
       continue;
 
     if ( QgsGui::editorWidgetRegistry()->findBest( mLayer, field.name() ).type() != QLatin1String( "Hidden" ) )
     {
-      QIcon icon = mLayer->fields().iconForField( idx );
-      QString alias = mLayer->attributeDisplayName( idx );
+      const QIcon icon = mLayer->fields().iconForField( idx );
+      const QString alias = mLayer->attributeDisplayName( idx );
 
       // Generate action for the filter popup button
       QAction *filterAction = new QAction( icon, alias, mFilterButton );
@@ -290,9 +289,9 @@ void GwmFeatureFilterWidget::filterColumnChanged( QAction *filterAction )
     mCurrentSearchWidgetWrapper->widget()->setVisible( false );
     delete mCurrentSearchWidgetWrapper;
   }
-  QString fieldName = mFilterButton->defaultAction()->data().toString();
+  const QString fieldName = mFilterButton->defaultAction()->data().toString();
   // get the search widget
-  int fldIdx = mLayer->fields().lookupField( fieldName );
+  const int fldIdx = mLayer->fields().lookupField( fieldName );
   if ( fldIdx < 0 )
     return;
   const QgsEditorWidgetSetup setup = QgsGui::editorWidgetRegistry()->findBest( mLayer, fieldName );
@@ -317,7 +316,7 @@ void GwmFeatureFilterWidget::filterColumnChanged( QAction *filterAction )
 void GwmFeatureFilterWidget::filterExpressionBuilder()
 {
   // Show expression builder
-  QgsExpressionContext context( QgsExpressionContextUtils::globalProjectLayerScopes( mLayer ) );
+  const QgsExpressionContext context( QgsExpressionContextUtils::globalProjectLayerScopes( mLayer ) );
 
   QgsExpressionBuilderDialog dlg( mLayer, mFilterQuery->text(), this, QStringLiteral( "generic" ), context );
   dlg.setWindowTitle( tr( "Expression Based Filter" ) );
@@ -335,7 +334,7 @@ void GwmFeatureFilterWidget::filterExpressionBuilder()
 
 void GwmFeatureFilterWidget::saveAsStoredFilterExpression()
 {
-  QgsDialog *dlg = new QgsDialog( this, nullptr, QDialogButtonBox::Save | QDialogButtonBox::Cancel );
+  QgsDialog *dlg = new QgsDialog( this, Qt::WindowFlags(), QDialogButtonBox::Save | QDialogButtonBox::Cancel );
   dlg->setWindowTitle( tr( "Save Expression As" ) );
   QVBoxLayout *layout = dlg->layout();
   dlg->resize( std::max( 400, this->width() / 2 ), dlg->height() );
@@ -344,6 +343,7 @@ void GwmFeatureFilterWidget::saveAsStoredFilterExpression()
   QLineEdit *nameEdit = new QLineEdit( dlg );
   layout->addWidget( nameLabel );
   layout->addWidget( nameEdit );
+  nameEdit->setFocus();
 
   if ( dlg->exec() == QDialog::Accepted )
   {
@@ -356,7 +356,7 @@ void GwmFeatureFilterWidget::saveAsStoredFilterExpression()
 
 void GwmFeatureFilterWidget::editStoredFilterExpression()
 {
-  QgsDialog *dlg = new QgsDialog( this, nullptr, QDialogButtonBox::Save | QDialogButtonBox::Cancel );
+  QgsDialog *dlg = new QgsDialog( this, Qt::WindowFlags(), QDialogButtonBox::Save | QDialogButtonBox::Cancel );
   dlg->setWindowTitle( tr( "Edit expression" ) );
   QVBoxLayout *layout = dlg->layout();
   dlg->resize( std::max( 400, this->width() / 2 ), dlg->height() );
@@ -371,6 +371,7 @@ void GwmFeatureFilterWidget::editStoredFilterExpression()
   layout->addWidget( nameEdit );
   layout->addWidget( expressionLabel );
   layout->addWidget( expressionEdit );
+  nameEdit->setFocus();
 
   if ( dlg->exec() == QDialog::Accepted )
   {
@@ -386,7 +387,7 @@ void GwmFeatureFilterWidget::editStoredFilterExpression()
 
 void GwmFeatureFilterWidget::updateCurrentStoredFilterExpression()
 {
-  QgsStoredExpression currentStoredExpression = mLayer->storedExpressionManager()->findStoredExpressionByExpression( mFilterQuery->value() );
+  const QgsStoredExpression currentStoredExpression = mLayer->storedExpressionManager()->findStoredExpressionByExpression( mFilterQuery->value() );
 
   //set checked when it's an existing stored expression
   mActionHandleStoreFilterExpression->setChecked( !currentStoredExpression.id.isNull() );
@@ -445,71 +446,22 @@ void GwmFeatureFilterWidget::setFilterExpression( const QString &filterString, Q
     }
   }
 
-  QgsFeatureIds filteredFeatures;
-  QgsDistanceArea myDa;
-
-  myDa.setSourceCrs( mLayer->crs(), QgsProject::instance()->transformContext() );
-  myDa.setEllipsoid( QgsProject::instance()->ellipsoid() );
-
   // parse search string and build parsed tree
   QgsExpression filterExpression( filter );
   if ( filterExpression.hasParserError() )
   {
-  //  mMessageBar->pushMessage( tr( "Parsing error" ), filterExpression.parserErrorString(), Qgis::Warning, mMessageBarTimeout );
+    // mMessageBar->pushMessage( tr( "Parsing error" ), filterExpression.parserErrorString(), Qgis::MessageLevel::Warning );
     return;
   }
 
-  QgsExpressionContext context( QgsExpressionContextUtils::globalProjectLayerScopes( mLayer ) );
+  const QgsExpressionContext context( QgsExpressionContextUtils::globalProjectLayerScopes( mLayer ) );
 
   if ( !filterExpression.prepare( &context ) )
   {
-  //  mMessageBar->pushMessage( tr( "Evaluation error" ), filterExpression.evalErrorString(), Qgis::Warning, mMessageBarTimeout );
+    // mMessageBar->pushMessage( tr( "Evaluation error" ), filterExpression.evalErrorString(), Qgis::MessageLevel::Warning );
   }
 
-  bool fetchGeom = filterExpression.needsGeometry();
-
-  QApplication::setOverrideCursor( Qt::WaitCursor );
-
-  filterExpression.setGeomCalculator( &myDa );
-  filterExpression.setDistanceUnits( QgsProject::instance()->distanceUnits() );
-  filterExpression.setAreaUnits( QgsProject::instance()->areaUnits() );
-  QgsFeatureRequest request( mMainView->masterModel()->request() );
-  request.setSubsetOfAttributes( filterExpression.referencedColumns(), mLayer->fields() );
-  if ( !fetchGeom )
-  {
-    request.setFlags( QgsFeatureRequest::NoGeometry );
-  }
-  else
-  {
-    // force geometry extraction if the filter requests it
-    request.setFlags( request.flags() & ~QgsFeatureRequest::NoGeometry );
-  }
-  QgsFeatureIterator featIt = mLayer->getFeatures( request );
-
-  QgsFeature f;
-
-  while ( featIt.nextFeature( f ) )
-  {
-    context.setFeature( f );
-    if ( filterExpression.evaluate( &context ).toInt() != 0 )
-      filteredFeatures << f.id();
-
-    // check if there were errors during evaluating
-    if ( filterExpression.hasEvalError() )
-      break;
-  }
-
-  featIt.close();
-
-  mMainView->setFilteredFeatures( filteredFeatures );
-
-  QApplication::restoreOverrideCursor();
-
-  if ( filterExpression.hasEvalError() )
-  {
-  //  mMessageBar->pushMessage( tr( "Error filtering" ), filterExpression.evalErrorString(), Qgis::Warning, mMessageBarTimeout );
-    return;
-  }
+  mMainView->filterFeatures( filterExpression, context );
   mMainView->setFilterMode( QgsAttributeTableFilterModel::ShowFilteredList );
 }
 
@@ -517,7 +469,7 @@ void GwmFeatureFilterWidget::replaceSearchWidget( QWidget *oldw, QWidget *neww )
 {
   mFilterLayout->removeWidget( oldw );
   oldw->setVisible( false );
-  mFilterLayout->addWidget( neww, 0, 0, nullptr );
+  mFilterLayout->addWidget( neww, 0, 0 );
   neww->setVisible( true );
   neww->setFocus();
 }
