@@ -19,7 +19,7 @@
 #include "qgsexpression.h"
 #include "qgsexpressionbuilderwidget.h"
 #include "qgsaddattrdialog.h"
-#include "attributetable/qgsdelattrdialog.h"
+#include "AttributeTable/qgsdelattrdialog.h"
 #include "qgsdockwidget.h"
 #include "qgsfeatureiterator.h"
 #include "qgssearchquerybuilder.h"
@@ -27,7 +27,7 @@
 #include "qgsmapcanvas.h"
 #include "qgsproject.h"
 //#include "qgsfieldcalculator.h"
-#include "attributetable/qgsfeatureaction.h"
+#include "AttributeTable/qgsfeatureaction.h"
 #include "qgsactionmanager.h"
 #include "qgsmessagebar.h"
 #include "qgsexpressionselectiondialog.h"
@@ -42,7 +42,7 @@
 #include "qgsguiutils.h"
 #include "qgsproxyprogresstask.h"
 //#include "qgisapp.h"
-#include "attributetable/qgsguivectorlayertools.h"
+#include "AttributeTable/qgsguivectorlayertools.h"
 
 #include <algorithm>
 #include <sstream>

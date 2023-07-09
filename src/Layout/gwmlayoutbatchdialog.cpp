@@ -29,7 +29,7 @@
 #include "gwmlayoutbatchfieldlistmodel.h"
 #include "gwmlayoutbatchconfigurationmodel.h"
 #include "gwmlayoutbatchconfigurationdelegate.h"
-#include "symbolwindow/gwmsymboleditordialog.h"
+#include "SymbolWindow/gwmsymboleditordialog.h"
 #include "Layout/gwmlayoutbatchunifylayerpopupdialog.h"
 
 GwmLayoutBatchDialog::GwmLayoutBatchDialog(QWidget *parent)
