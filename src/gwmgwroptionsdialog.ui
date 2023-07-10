@@ -862,6 +862,12 @@
           <string>Others</string>
          </property>
          <layout class="QFormLayout" name="formLayout_7">
+          <property name="labelAlignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          </property>
+          <property name="formAlignment">
+           <set>Qt::AlignJustify|Qt::AlignTop</set>
+          </property>
           <item row="2" column="0">
            <widget class="QCheckBox" name="cbxFTest">
             <property name="text">

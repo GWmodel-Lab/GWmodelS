@@ -27,13 +27,19 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>877</width>
-        <height>892</height>
+        <width>803</width>
+        <height>911</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
         <layout class="QFormLayout" name="formLayout_6">
+         <property name="fieldGrowthPolicy">
+          <enum>QFormLayout::ExpandingFieldsGrow</enum>
+         </property>
+         <property name="formAlignment">
+          <set>Qt::AlignJustify|Qt::AlignTop</set>
+         </property>
          <item row="0" column="0">
           <widget class="QLabel" name="label">
            <property name="sizePolicy">
@@ -48,7 +54,14 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QComboBox" name="mLayerComboBox"/>
+          <widget class="QComboBox" name="mLayerComboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_12">
@@ -58,7 +71,14 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QComboBox" name="mDepVarComboBox"/>
+          <widget class="QComboBox" name="mDepVarComboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -870,7 +890,7 @@
           <item>
            <widget class="QStackedWidget" name="stackedWidget">
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="page">
              <layout class="QVBoxLayout" name="verticalLayout">
@@ -884,6 +904,9 @@
             </widget>
             <widget class="QWidget" name="page_3">
              <layout class="QFormLayout" name="formLayout_3">
+              <property name="formAlignment">
+               <set>Qt::AlignJustify|Qt::AlignTop</set>
+              </property>
               <property name="leftMargin">
                <number>9</number>
               </property>
@@ -914,6 +937,9 @@
             </widget>
             <widget class="QWidget" name="page_2">
              <layout class="QFormLayout" name="formLayout_4">
+              <property name="formAlignment">
+               <set>Qt::AlignJustify|Qt::AlignTop</set>
+              </property>
               <property name="topMargin">
                <number>0</number>
               </property>
@@ -947,6 +973,12 @@
           <string>Others</string>
          </property>
          <layout class="QFormLayout" name="formLayout_11">
+          <property name="labelAlignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          </property>
+          <property name="formAlignment">
+           <set>Qt::AlignJustify|Qt::AlignTop</set>
+          </property>
           <item row="0" column="0">
            <widget class="QCheckBox" name="cbxHatmatrix">
             <property name="text">
