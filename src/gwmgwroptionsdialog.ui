@@ -36,8 +36,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>684</width>
-        <height>857</height>
+        <width>678</width>
+        <height>929</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0,0,0,0,0">
@@ -45,6 +45,12 @@
         <layout class="QFormLayout" name="formLayout_6">
          <property name="sizeConstraint">
           <enum>QLayout::SetNoConstraint</enum>
+         </property>
+         <property name="fieldGrowthPolicy">
+          <enum>QFormLayout::ExpandingFieldsGrow</enum>
+         </property>
+         <property name="formAlignment">
+          <set>Qt::AlignJustify|Qt::AlignTop</set>
          </property>
          <property name="horizontalSpacing">
           <number>7</number>
@@ -66,7 +72,17 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QComboBox" name="mLayerComboBox"/>
+          <widget class="QComboBox" name="mLayerComboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="sizeAdjustPolicy">
+            <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+           </property>
+          </widget>
          </item>
          <item row="1" column="0">
           <widget class="QCheckBox" name="ckbRegressionPoints">
@@ -76,11 +92,17 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,0">
            <item>
             <widget class="QComboBox" name="cmbRegressionLayerSelect">
              <property name="enabled">
               <bool>false</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
             </widget>
            </item>
@@ -110,7 +132,14 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QComboBox" name="mDepVarComboBox"/>
+          <widget class="QComboBox" name="mDepVarComboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -203,6 +232,9 @@
          <layout class="QFormLayout" name="formLayout">
           <property name="sizeConstraint">
            <enum>QLayout::SetNoConstraint</enum>
+          </property>
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::ExpandingFieldsGrow</enum>
           </property>
           <property name="horizontalSpacing">
            <number>6</number>
@@ -534,11 +566,14 @@
           <item>
            <widget class="QStackedWidget" name="mDistParamSettingStack">
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="mCRSDistPage"/>
             <widget class="QWidget" name="mMinkowskiDistPage">
              <layout class="QFormLayout" name="formLayout_2">
+              <property name="formAlignment">
+               <set>Qt::AlignJustify|Qt::AlignTop</set>
+              </property>
               <property name="leftMargin">
                <number>0</number>
               </property>
@@ -569,6 +604,9 @@
               </item>
               <item row="0" column="1">
                <layout class="QFormLayout" name="formLayout_5">
+                <property name="formAlignment">
+                 <set>Qt::AlignJustify|Qt::AlignTop</set>
+                </property>
                 <property name="horizontalSpacing">
                  <number>6</number>
                 </property>
@@ -736,6 +774,9 @@
             </widget>
             <widget class="QWidget" name="page_3">
              <layout class="QFormLayout" name="formLayout_3">
+              <property name="formAlignment">
+               <set>Qt::AlignJustify|Qt::AlignTop</set>
+              </property>
               <property name="leftMargin">
                <number>9</number>
               </property>
@@ -766,6 +807,9 @@
             </widget>
             <widget class="QWidget" name="page_2">
              <layout class="QFormLayout" name="formLayout_4">
+              <property name="formAlignment">
+               <set>Qt::AlignJustify|Qt::AlignTop</set>
+              </property>
               <property name="topMargin">
                <number>0</number>
               </property>
