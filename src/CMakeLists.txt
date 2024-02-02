@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21.0 FATAL_ERROR)
 
 find_package(GDAL REQUIRED)
 if(NOT GDAL_FOUND)
@@ -226,17 +226,6 @@ qt5_wrap_ui(FORMS_H ${FORMS})
 
 if(WIN32)
     add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS})
-    if (CMAKE_BUILD_TYPE STREQUAL "Release")
-        get_filename_component(qgis_dir ${QGIS_INCLUDE_DIR} DIRECTORY)
-        file(GLOB GWMODELS_DEPS LIST_DIRECTORIES true "${qgis_dir}/bin/*.dll")
-        add_custom_command(TARGET GWmodelS POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GWMODELS_DEPS} $<TARGET_FILE_DIR:GWmodelS>)
-        get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
-        get_filename_component(qt_dir ${uic_location} DIRECTORY)
-        set(deployqt "${qt_dir}/windeployqt.exe")
-        add_custom_command(TARGET GWmodelS POST_BUILD
-            COMMAND ${deployqt} $<TARGET_FILE_DIR:GWmodelS> --release --no-translations)
-    endif()
 endif(WIN32)
 
 if(UNIX AND NOT CYGWIN)
@@ -285,3 +274,31 @@ target_link_libraries(GWmodelS
     ${GWMODELCUDA_LIBRARIES}
 )
 endif(ENABLE_CUDA)
+
+# INSTALL
+get_filename_component(qgis_dir ${QGIS_INCLUDE_DIR} DIRECTORY)
+install(TARGETS GWmodelS
+    COMPONENT Runtime
+    RUNTIME_DEPENDENCIES DIRECTORIES "${qgis_dir}/bin" POST_EXCLUDE_REGEXES ".*system32.*"
+    DESTINATION .
+)
+
+if (WIN32)
+get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
+get_filename_component( _dir ${uic_location} DIRECTORY)
+set(deployqt "${_dir}/windeployqt.exe")
+install(CODE "set(deployqt \"${deployqt}\")" COMPONENT Runtime)
+install(CODE [===[
+execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.exe")
+]===] COMPONENT Runtime)
+endif()
+
+# CPack
+set(CPACK_PACKAGE_NAME ${CMAKE_PROJECT_NAME})
+set(CPACK_PACKAGE_VENDOR "GWmodel Lab")
+set(CPACK_PACKAGE_VERSION ${CMAKE_PROJECT_VERSION})
+set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/icons/GWmodelS.ico")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CMAKE_PROJECT_NAME})
+set(CPACK_PACKAGE_EXECUTABLES "GWmodelS;GWmodelS")
+set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
+include(CPack)
