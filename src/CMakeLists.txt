@@ -226,6 +226,17 @@ qt5_wrap_ui(FORMS_H ${FORMS})
 
 if(WIN32)
     add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS})
+    if (CMAKE_BUILD_TYPE STREQUAL "Release")
+        get_filename_component(qgis_dir ${QGIS_INCLUDE_DIR} DIRECTORY)
+        file(GLOB GWMODELS_DEPS LIST_DIRECTORIES true "${qgis_dir}/bin/*.dll")
+        add_custom_command(TARGET GWmodelS POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${GWMODELS_DEPS} $<TARGET_FILE_DIR:GWmodelS>)
+        get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
+        get_filename_component(qt_dir ${uic_location} DIRECTORY)
+        set(deployqt "${qt_dir}/windeployqt.exe")
+        add_custom_command(TARGET GWmodelS POST_BUILD
+            COMMAND ${deployqt} $<TARGET_FILE_DIR:GWmodelS> --release --no-translations)
+    endif()
 endif(WIN32)
 
 if(UNIX AND NOT CYGWIN)
