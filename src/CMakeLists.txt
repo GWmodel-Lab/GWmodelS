@@ -231,11 +231,15 @@ endif(WIN32)
 if(UNIX AND NOT CYGWIN)
     if(APPLE)
         add_executable(GWmodelS MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${FORMS_H} ${app_MACICON} ${GWMODEL_ICONS})
-        set_target_properties(GWmodelS PROPERTIES FRAMEWORK TRUE MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/macOS/Info.plist.in)
+        set_target_properties(GWmodelS PROPERTIES
+            MACOSX_BUNDLE TRUE
+            MACOSX_FRAMEWORK_IDENTIFIER "org.GWmodel-Lab.GWmodelS"
+            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/macOS/Info.plist.in
+            RESOURCE "${app_MACICON}"
+        )
     else(APPLE)
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -no-pie")
         add_executable(GWmodelS ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS})
-        set_target_properties(GWmodelS PROPERTIES POSITION_INDEPENDENT_CODE FALSE)
     endif(APPLE)    
 endif(UNIX AND NOT CYGWIN)
 
@@ -290,6 +294,21 @@ set(deployqt "${_dir}/windeployqt.exe")
 install(CODE "set(deployqt \"${deployqt}\")" COMPONENT Runtime)
 install(CODE [===[
 execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.exe")
+]===] COMPONENT Runtime)
+elseif(APPLE)
+install(TARGETS GWmodelS
+    RUNTIME_DEPENDENCY_SET _dep_mac
+    DESTINATION .
+    BUNDLE DESTINATION .
+    RESOURCE DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources"
+)
+install(RUNTIME_DEPENDENCY_SET _dep_mac DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Frameworks")
+get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
+get_filename_component( _dir ${uic_location} DIRECTORY)
+set(deployqt "${_dir}/macdeployqt")
+install(CODE "set(deployqt \"${deployqt}\")" COMPONENT Runtime)
+install(CODE [===[
+execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.app")
 ]===] COMPONENT Runtime)
 endif()
 
