@@ -1,28 +1,28 @@
 cmake_minimum_required(VERSION 3.21.0 FATAL_ERROR)
 
-find_package(GDAL REQUIRED)
-if(NOT GDAL_FOUND)
-    message(FATAL_ERROR "GDAL Not Found!")
-endif(NOT GDAL_FOUND)
-include_directories(${GDAL_INCLUDE_DIR})
+# find_package(GDAL REQUIRED)
+# if(NOT GDAL_FOUND)
+#     message(FATAL_ERROR "GDAL Not Found!")
+# endif(NOT GDAL_FOUND)
+# include_directories(${GDAL_INCLUDE_DIR})
 
-find_package(GEOS REQUIRED)
-if(NOT GEOS_FOUND)
-    message(FATAL_ERROR "GEOS Not Found!")
-endif(NOT GEOS_FOUND)
-include_directories(${GEOS_INCLUDE_DIR})
+# find_package(GEOS REQUIRED)
+# if(NOT GEOS_FOUND)
+#     message(FATAL_ERROR "GEOS Not Found!")
+# endif(NOT GEOS_FOUND)
+# include_directories(${GEOS_INCLUDE_DIR})
 
-find_package(SQLite3 REQUIRED)
-if(NOT SQLITE3_FOUND)
-    message(FATAL_ERROR "SQLite3 Not Found!")
-endif(NOT SQLITE3_FOUND)
-include_directories(${SQLITE3_INCLUDE_DIR})
+# find_package(SQLite3 REQUIRED)
+# if(NOT SQLITE3_FOUND)
+#     message(FATAL_ERROR "SQLite3 Not Found!")
+# endif(NOT SQLITE3_FOUND)
+# include_directories(${SQLITE3_INCLUDE_DIR})
 
-find_package(QScintilla REQUIRED)
-if(NOT QSCINTILLA_FOUND)
-    message(FATAL_ERROR "QScintilla Not Found!")
-endif(NOT QSCINTILLA_FOUND)
-include_directories(${QSCINTILLA_INCLUDE_DIR})
+# find_package(QScintilla REQUIRED)
+# if(NOT QSCINTILLA_FOUND)
+#     message(FATAL_ERROR "QScintilla Not Found!")
+# endif(NOT QSCINTILLA_FOUND)
+# include_directories(${QSCINTILLA_INCLUDE_DIR})
 
 find_package(QGIS REQUIRED)
 if(NOT QGIS_FOUND)
@@ -30,16 +30,16 @@ if(NOT QGIS_FOUND)
 endif(NOT QGIS_FOUND)
 include_directories(${QGIS_INCLUDE_DIR} ${QGIS_UI_INCLUDE_DIR})
 
-find_package(HDF5)
-if(HDF5_FOUND)
-    include_directories(${HDF5_INCLUDE_DIRS})
-    set(ADDITIONAL_HDF5_LIBRARIES
-        ${HDF5_LIBRARIES}
-        ${HDF5_HL_LIBRARIES}
-    )
-else(HDF5_FOUND)
-    set(ADDITIONAL_HDF5_LIBRARIES "")
-endif(HDF5_FOUND)
+# find_package(HDF5)
+# if(HDF5_FOUND)
+#     include_directories(${HDF5_INCLUDE_DIRS})
+#     set(ADDITIONAL_HDF5_LIBRARIES
+#         ${HDF5_LIBRARIES}
+#         ${HDF5_HL_LIBRARIES}
+#     )
+# else(HDF5_FOUND)
+#     set(ADDITIONAL_HDF5_LIBRARIES "")
+# endif(HDF5_FOUND)
 
 find_package(Qwt REQUIRED)
 if(NOT QWT_FOUND)
@@ -276,14 +276,14 @@ target_link_libraries(GWmodelS
 endif(ENABLE_CUDA)
 
 # INSTALL
-get_filename_component(qgis_dir ${QGIS_INCLUDE_DIR} DIRECTORY)
+
+if (WIN32)
+get_filename_component(qgis_dir ${QGIS_INCLUDE_DIR} PARENT_DIRECTORY)
 install(TARGETS GWmodelS
     COMPONENT Runtime
     RUNTIME_DEPENDENCIES DIRECTORIES "${qgis_dir}/bin" POST_EXCLUDE_REGEXES ".*system32.*"
     DESTINATION .
 )
-
-if (WIN32)
 get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
 get_filename_component( _dir ${uic_location} DIRECTORY)
 set(deployqt "${_dir}/windeployqt.exe")
