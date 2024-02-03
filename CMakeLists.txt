@@ -33,6 +33,7 @@ if(UNIX AND NOT CYGWIN)
         set(app_MACICON ${CMAKE_SOURCE_DIR}/icons/${ICON_NAME})
         set(MACOSX_BUNDLE_ICON_FILE ${ICON_NAME})
         set_source_files_properties(${app_MACICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+        configure_file(macOS/Info.plist.in macOS/Info.plist)
     endif(APPLE)    
 endif(UNIX AND NOT CYGWIN)
 
