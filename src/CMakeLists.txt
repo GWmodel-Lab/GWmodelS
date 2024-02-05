@@ -230,16 +230,18 @@ endif(WIN32)
 
 if(UNIX AND NOT CYGWIN)
     if(APPLE)
-        set(CMAKE_INSTALL_NAME_DIR "@executable_path/../Frameworks")
         set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
         set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+        set(CMAKE_INSTALL_RPATH "@executable_path/../Frameworks")
         add_executable(GWmodelS MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${FORMS_H} ${app_MACICON} ${GWMODEL_ICONS})
         set_target_properties(GWmodelS PROPERTIES
             MACOSX_BUNDLE TRUE
-            MACOSX_FRAMEWORK_IDENTIFIER "org.GWmodel-Lab.GWmodelS"
-            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/macOS/Info.plist.in
             RESOURCE "${app_MACICON}"
-            XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks"
+            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/macOS/Info.plist.in
+            MACOSX_BUNDLE_BUNDLE_NAME ${PROJECT_NAME}
+            MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+            MACOSX_BUNDLE_GUI_IDENTIFIER "org.GWmodel-Lab.GWmodelS"
+            XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
         )
     else(APPLE)
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -no-pie")
@@ -306,6 +308,12 @@ install(TARGETS GWmodelS
     BUNDLE DESTINATION .
     RESOURCE DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources"
 )
+install(CODE "set(APPS ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app)" COMPONENT Runtime)
+install(CODE "set(DIRS ${QGIS_PREFIX_PATH}/lib)" COMPONENT Runtime)
+install(CODE [===[
+    include(BundleUtilities)
+    fixup_bundle("${APPS}" "" "")
+]===] COMPONENT Runtime)
 # install(RUNTIME_DEPENDENCY_SET _dep_mac DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Frameworks" POST_EXCLUDE_REGEXES ".*homebrew.*")
 # get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
 # get_filename_component( _dir ${uic_location} DIRECTORY)
