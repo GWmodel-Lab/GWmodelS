@@ -231,12 +231,15 @@ endif(WIN32)
 if(UNIX AND NOT CYGWIN)
     if(APPLE)
         set(CMAKE_INSTALL_NAME_DIR "@executable_path/../Frameworks")
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
         add_executable(GWmodelS MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${FORMS_H} ${app_MACICON} ${GWMODEL_ICONS})
         set_target_properties(GWmodelS PROPERTIES
             MACOSX_BUNDLE TRUE
             MACOSX_FRAMEWORK_IDENTIFIER "org.GWmodel-Lab.GWmodelS"
             MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/macOS/Info.plist.in
             RESOURCE "${app_MACICON}"
+            XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks"
         )
     else(APPLE)
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -no-pie")
@@ -298,19 +301,19 @@ execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.exe")
 ]===] COMPONENT Runtime)
 elseif(APPLE)
 install(TARGETS GWmodelS
-    RUNTIME_DEPENDENCY_SET _dep_mac
+    # RUNTIME_DEPENDENCY_SET _dep_mac
     DESTINATION .
     BUNDLE DESTINATION .
     RESOURCE DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources"
 )
-install(RUNTIME_DEPENDENCY_SET _dep_mac DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Frameworks")
-get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
-get_filename_component( _dir ${uic_location} DIRECTORY)
-set(deployqt "${_dir}/macdeployqt")
-install(CODE "set(deployqt \"${deployqt}\")" COMPONENT Runtime)
-install(CODE [===[
-execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.app")
-]===] COMPONENT Runtime)
+# install(RUNTIME_DEPENDENCY_SET _dep_mac DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Frameworks" POST_EXCLUDE_REGEXES ".*homebrew.*")
+# get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
+# get_filename_component( _dir ${uic_location} DIRECTORY)
+# set(deployqt "${_dir}/macdeployqt")
+# install(CODE "set(deployqt \"${deployqt}\")" COMPONENT Runtime)
+# install(CODE [===[
+# execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.app")
+# ]===] COMPONENT Runtime)
 endif()
 
 # CPack
