@@ -3,7 +3,9 @@
 ![icon](./icons/GWmodelS.ico "Icon")  
 Version:1.0.4
 
-[Click to download](https://github.com/GWmodel-Lab/GWmodelS/releases/tag/GWmodelS-Installer-V1.0.4)
+[Click to download Windows version](https://github.com/GWmodel-Lab/GWmodelS/releases/download/GWmodelS-Installer-V1.0.4/GWmodelS-v1.0.4.exe)
+
+[Click to download MacOS version](https://github.com/GWmodel-Lab/GWmodelS/releases/download/GWmodelS-Installer-V1.0.4/GWmodelS.dmg)
 
 ### Leading scientist:
 Binbin Lu (Wuhan University), Guanpeng Dong (Henan University)
