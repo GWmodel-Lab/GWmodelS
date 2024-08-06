@@ -302,6 +302,7 @@ install(CODE [===[
 execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.exe")
 ]===] COMPONENT Runtime)
 install(DIRECTORY "${qgis_dir}/resources" DESTINATION .)
+install(DIRECTORY "${qgis_dir}/share/proj" DESTINATION "${CMAKE_INSTALL_PREFIX}/${DATADIR}")
 elseif(APPLE)
 install(TARGETS GWmodelS
     # RUNTIME_DEPENDENCY_SET _dep_mac
