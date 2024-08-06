@@ -288,7 +288,7 @@ endif(ENABLE_CUDA)
 # INSTALL
 
 if (WIN32)
-get_filename_component(qgis_dir ${QGIS_INCLUDE_DIR} PARENT_DIRECTORY)
+get_filename_component(qgis_dir ${QGIS_INCLUDE_DIR} DIRECTORY)
 install(TARGETS GWmodelS
     COMPONENT Runtime
     RUNTIME_DEPENDENCIES DIRECTORIES "${qgis_dir}/bin" POST_EXCLUDE_REGEXES ".*system32.*"
