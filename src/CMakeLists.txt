@@ -24,6 +24,8 @@ cmake_minimum_required(VERSION 3.21.0 FATAL_ERROR)
 # endif(NOT QSCINTILLA_FOUND)
 # include_directories(${QSCINTILLA_INCLUDE_DIR})
 
+find_package(PROJ REQUIRED CONFIG)
+
 find_package(QGIS REQUIRED)
 if(NOT QGIS_FOUND)
     message(FATAL_ERROR "QGIS Not Found!")
@@ -261,6 +263,7 @@ target_link_libraries(GWmodelS
     Qt5::Gui 
     Qt5::Svg 
     Qt5::Core 
+    PROJ::proj
     ${BLAS_LIBRARIES}
     ${LAPACK_LIBRARIES}
     ${ARMADILLO_LIBRARIES}

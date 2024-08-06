@@ -10,11 +10,14 @@
 #include <qgsproject.h>
 #include <qgscoordinatereferencesystem.h>
 #include <qgslayoutitemguiregistry.h>
+#include <proj.h>
 
 #include "TaskThread/gwmtaskthread.h"
 
 int main(int argc, char *argv[])
 {
+    const char* proj_data_path[] = { "./proj" };
+    proj_context_set_search_paths(NULL, 1, proj_data_path);
 #if (QT_VERSION >= QT_VERSION_CHECK(5,6,0))
     QgsApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
 #endif
@@ -27,7 +30,6 @@ int main(int argc, char *argv[])
 
     GwmApp w;
     w.show();
-
 
     return a.exec();
 }
