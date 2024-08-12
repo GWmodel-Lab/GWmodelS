@@ -294,7 +294,7 @@ if (WIN32)
 get_filename_component(qgis_dir ${QGIS_INCLUDE_DIR} DIRECTORY)
 install(TARGETS GWmodelS
     COMPONENT Runtime
-    RUNTIME_DEPENDENCIES DIRECTORIES "${qgis_dir}/bin" POST_EXCLUDE_REGEXES ".*system32.*"
+    RUNTIME_DEPENDENCIES DIRECTORIES "${qgis_dir}/bin" POST_EXCLUDE_REGEXES ".*system32.*" POST_INCLUDE_REGEXES "libomp140.x86_64.dll"
     DESTINATION .
 )
 get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
