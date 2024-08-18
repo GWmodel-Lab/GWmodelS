@@ -313,6 +313,10 @@ install(TARGETS GWmodelS
     BUNDLE DESTINATION .
     RESOURCE DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources"
 )
+get_filename_component(qgis_dir ${QGIS_UI_INCLUDE_DIR} DIRECTORY)
+get_filename_component(qgis_dir ${qgis_dir} DIRECTORY)
+install(DIRECTORY "${qgis_dir}/share/proj" DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources")
+install(DIRECTORY "${qgis_dir}/share/qgis/resources" DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources")
 install(CODE "set(APPS ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app)" COMPONENT Runtime)
 install(CODE "set(DIRS ${QGIS_PREFIX_PATH}/lib)" COMPONENT Runtime)
 install(CODE [===[
