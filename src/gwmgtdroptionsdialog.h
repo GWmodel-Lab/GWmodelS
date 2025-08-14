@@ -3,7 +3,7 @@
 
 #include <QDialog>
 #include "Model/gwmlayergroupitem.h"
-#include "Model/gwmalgorithmmetagwss.h"
+#include "Model/gwmalgorithmmetagtdr.h"
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
 #include "Model/gwmvariableitemmodel.h"
@@ -23,7 +23,7 @@ public:
     explicit GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemList, QWidget *parent = nullptr);
     ~GwmGTDROptionsDialog();
 
-    GwmAlgorithmMetaGWSS meta() const { return mAlgorithmMeta; }
+    GwmAlgorithmMetaGTDR meta() const { return mAlgorithmMeta; }
 
 private:
     Ui::GwmGTDROptionsDialog *ui;
@@ -31,7 +31,7 @@ private:
     GwmLayerGroupItem* mSelectedLayer = nullptr;
     bool isNumeric(QVariant::Type type);
     GwmBandwidthWeight* mBandwidth;
-    GwmAlgorithmMetaGWSS mAlgorithmMeta;
+    GwmAlgorithmMetaGTDR mAlgorithmMeta;
 
 public slots:
     void layerChanged(const int index);

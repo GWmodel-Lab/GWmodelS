@@ -350,7 +350,7 @@ void GwmGTDROptionsDialog::updateFields()
     {
         if (selectedIndepVarModel->rowCount() > 0)
         {
-            mAlgorithmMeta.variables = selectedIndepVarModel->attributeItemList();
+            mAlgorithmMeta.independentVariables = selectedIndepVarModel->attributeItemList();
         }
     }
 
@@ -397,7 +397,7 @@ void GwmGTDROptionsDialog::updateFields()
         mAlgorithmMeta.parallelType = gwm::ParallelType::SerialOnly;
     }
 
-    mAlgorithmMeta.quantile = ui->mQuantileCheckBox->isChecked();
+    mAlgorithmMeta.hatmatrix = ui->mQuantileCheckBox->isChecked();
 
 }
 

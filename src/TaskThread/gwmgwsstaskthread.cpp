@@ -17,7 +17,7 @@ GwmGWSSTaskThread::GwmGWSSTaskThread() : GwmSpatialMonoscaleAlgorithm()
 
 }
 
-GwmGWSSTaskThread::GwmGWSSTaskThread(const GwmAlgorithmMetaGWSS& meta) : mMeta(meta)
+GwmGWSSTaskThread::GwmGWSSTaskThread(const GwmAlgorithmMetaGTDR& meta) : mMeta(meta)
 {
     // Check parameter
     QString metaError;
@@ -27,7 +27,7 @@ GwmGWSSTaskThread::GwmGWSSTaskThread(const GwmAlgorithmMetaGWSS& meta) : mMeta(m
     }
 
     mLayer = meta.layer;
-    mVariables = meta.variables;
+    mVariables = meta.independentVariables;
 
     // Spatial Weight
     BandwidthWeight weight(meta.weightBandwidthSize, meta.weightBandwidthAdaptive, meta.weightBandwidthKernel);
@@ -57,7 +57,7 @@ GwmGWSSTaskThread::GwmGWSSTaskThread(const GwmAlgorithmMetaGWSS& meta) : mMeta(m
         break;
     }
     // Others
-    mAlgorithm.setQuantile(meta.quantile);
+    mAlgorithm.setQuantile(meta.hatmatrix);
     delete distance;
 }
 

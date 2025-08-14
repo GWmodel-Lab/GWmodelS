@@ -1,10 +1,10 @@
-#include "gwmalgorithmmetagwss.h"
+#include "gwmalgorithmmetagtdr.h"
 
 #include <QTranslator>
 
 using namespace gwm;
 
-bool GwmAlgorithmMetaGWSS::validate(QString &error) const
+bool GwmAlgorithmMetaGTDR::validate(QString &error) const
 {
     if (layer == nullptr)
     {
@@ -12,7 +12,7 @@ bool GwmAlgorithmMetaGWSS::validate(QString &error) const
         return false;
     }
 
-    if (variables.size() <= 0)
+    if (independentVariables.size() <= 0)
     {
         error = QTranslator::tr("No variable selected.");
         return false;

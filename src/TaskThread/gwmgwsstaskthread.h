@@ -11,7 +11,7 @@
 #include "TaskThread/iparallelable.h"
 #include "TaskThread/gwmbandwidthsizeselector.h"
 
-#include "Model/gwmalgorithmmetagwss.h"
+#include "Model/gwmalgorithmmetagtdr.h"
 
 class GwmGWSSTaskThread;
 //typedef double (GwmGWSSTaskThread::*pfGwmCVApproach)(const mat& , GwmBandwidthWeight*);
@@ -27,9 +27,9 @@ public:
 public:
     GwmGWSSTaskThread();
 
-    GwmGWSSTaskThread(const GwmAlgorithmMetaGWSS& meta);
+    GwmGWSSTaskThread(const GwmAlgorithmMetaGTDR& meta);
 
-    GwmAlgorithmMetaGWSS meta() const { return mMeta; }
+    GwmAlgorithmMetaGTDR meta() const { return mMeta; }
 
     bool quantile() const { return mAlgorithm.quantile(); }
 
@@ -71,7 +71,7 @@ protected:  // GwmSpatialMonoscaleAlgorithm interface
     void createResultLayer(CreateResultLayerData data);
 
 protected:
-    GwmAlgorithmMetaGWSS mMeta;
+    GwmAlgorithmMetaGTDR mMeta;
     gwm::GWSS mAlgorithm;
     QgsVectorLayer* mLayer = nullptr;
     QList<GwmVariable> mVariables;
