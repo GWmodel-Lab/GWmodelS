@@ -116,7 +116,7 @@ set(SOURCES
     gwmgtwroptionsdialog.cpp
     gwmgwpcaoptionsdialog.cpp
     gwmgwroptionsdialog.cpp
-    gwmgwssoptionsdialog.cpp
+    gwmgtdroptionsdialog.cpp
     gwmindepvarselectorwidget.cpp
     gwmlcrgwroptionsdialog.cpp
     gwmmaptoolidentifyfeature.cpp
@@ -150,7 +150,7 @@ set(HEADERS
     gwmgtwroptionsdialog.h
     gwmgwpcaoptionsdialog.h
     gwmgwroptionsdialog.h
-    gwmgwssoptionsdialog.h
+    gwmgtdroptionsdialog.h
     gwmindepvarselectorwidget.h
     gwmlcrgwroptionsdialog.h
     gwmmaptoolidentifyfeature.h
@@ -181,7 +181,7 @@ set(FORMS
     gwmgtwroptionsdialog.ui
     gwmgwpcaoptionsdialog.ui
     gwmgwroptionsdialog.ui
-    gwmgwssoptionsdialog.ui
+    gwmgtdroptionsdialog.ui
     gwmindepvarselectorwidget.ui
     gwmmultiscalegwroptionsdialog.ui
     gwmlcrgwroptionsdialog.ui

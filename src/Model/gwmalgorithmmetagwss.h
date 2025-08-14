@@ -10,6 +10,7 @@ struct GwmAlgorithmMetaGWSS
 {
     QgsVectorLayer* layer = nullptr;
     QList<GwmVariable> variables;
+    GwmVariable dependentVariable;
     // Weight
     gwm::Weight::WeightType weightType = gwm::Weight::BandwidthWeight;
     double weightBandwidthSize = DBL_MAX;

@@ -56,8 +56,9 @@
 #include "TaskThread/gwmbasicgwralgorithm.h"
 #include "TaskThread/gwmgeneralizedgwralgorithm.h"
 #include "Model/gwmlayergwssitem.h"
-#include "gwmgwssoptionsdialog.h"
 #include "SpatialWeight/gwmcrsdistance.h"
+
+#include "gwmgtdroptionsdialog.h"
 
 #include "Model/gwmlayerbasicgwritem.h"
 #include "Model/gwmlayercollinearitygwritem.h"
@@ -134,7 +135,7 @@ GwmApp::GwmApp(QWidget *parent)
     setupPropertyPanel();
     QgsGui::editorWidgetRegistry()->initEditors(mMapCanvas);
 //    ui->actionGWR->setIcon(QIcon("images/icons/res/GWR.png"));
-//    ui->actionGWSS->setIcon(QIcon("C:/Users/GWmodelS/Documents/gwmodeldesktop/images/icons/GWSS.svg"));
+//    ui->actionGTDR->setIcon(QIcon("C:/Users/GWmodelS/Documents/gwmodeldesktop/images/icons/GWSS.svg"));
 //    ui->actionGWPCA->setIcon(QIcon("C:/Users/GWmodelS/Documents/gwmodeldesktop/images/icons/GWPCA.svg"));
 
 #ifdef Q_OS_MAC
@@ -444,7 +445,7 @@ void GwmApp::setupToolbar()
     });
 
     connect(ui->actionGWR, &QAction::triggered,this,&GwmApp::onGWRBtnClicked);
-    connect(ui->actionGWSS, &QAction::triggered,this,&GwmApp::onGWSSBtnClicked);
+    connect(ui->actionGTDR, &QAction::triggered,this,&GwmApp::onGTDRBtnClicked);
     connect(ui->actionGWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
 
     connect(ui->actionNew_Layout, &QAction::triggered, this, [&]()
@@ -1338,27 +1339,27 @@ void GwmApp::onGWRNewBtnClicked()
 
 }
 
-void GwmApp::onGWSSBtnClicked()
+void GwmApp::onGTDRBtnClicked()
 {
-    GwmGWSSOptionsDialog* gwssOptionDialog = new GwmGWSSOptionsDialog(mMapModel->rootChildren(), this);
+    GwmGTDROptionsDialog* gtdrOptionDialog = new GwmGTDROptionsDialog(mMapModel->rootChildren(), this);
     QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
     {
         GwmLayerItem* selectedItem = mMapModel->itemFromIndex(selectedIndex);
         if (selectedItem->itemType() == GwmLayerItem::Group)
         {
-            gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+            gtdrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
         }
         else if (selectedItem->itemType() == GwmLayerItem::Origin)
         {
-            gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+            gtdrOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
         }
     }
-    if (gwssOptionDialog->exec() == QDialog::Accepted)
+    if (gtdrOptionDialog->exec() == QDialog::Accepted)
     {
-        GwmGWSSTaskThread* gwssTaskThread = new GwmGWSSTaskThread(gwssOptionDialog->meta());
-        gwssOptionDialog->updateFields();
-        GwmLayerGroupItem* selectedItem = gwssOptionDialog->selectedLayer();
+        GwmGWSSTaskThread* gwssTaskThread = new GwmGWSSTaskThread(gtdrOptionDialog->meta());
+        gtdrOptionDialog->updateFields();
+        GwmLayerGroupItem* selectedItem = gtdrOptionDialog->selectedLayer();
         const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwssTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
@@ -1371,8 +1372,44 @@ void GwmApp::onGWSSBtnClicked()
             onShowLayerProperty(mMapModel->indexFromItem(gwssItem));
         }
     }
-    delete gwssOptionDialog;
+    delete gtdrOptionDialog;
 }
+
+// void GwmApp::onGWSSBtnClicked()
+// {
+//     GwmGWSSOptionsDialog* gwssOptionDialog = new GwmGWSSOptionsDialog(mMapModel->rootChildren(), this);
+//     QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
+//     for (QModelIndex selectedIndex : selectedIndexes)
+//     {
+//         GwmLayerItem* selectedItem = mMapModel->itemFromIndex(selectedIndex);
+//         if (selectedItem->itemType() == GwmLayerItem::Group)
+//         {
+//             gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+//         }
+//         else if (selectedItem->itemType() == GwmLayerItem::Origin)
+//         {
+//             gwssOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+//         }
+//     }
+//     if (gwssOptionDialog->exec() == QDialog::Accepted)
+//     {
+//         GwmGWSSTaskThread* gwssTaskThread = new GwmGWSSTaskThread(gwssOptionDialog->meta());
+//         gwssOptionDialog->updateFields();
+//         GwmLayerGroupItem* selectedItem = gwssOptionDialog->selectedLayer();
+//         const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
+//         GwmProgressDialog* progressDlg = new GwmProgressDialog(gwssTaskThread);
+//         if (progressDlg->exec() == QDialog::Accepted)
+//         {
+//             QgsVectorLayer* resultLayer = gwssTaskThread->resultLayer();
+//             QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+//             resultLayer0 = resultLayer->clone();
+//             GwmLayerGWSSItem* gwssItem = new GwmLayerGWSSItem(selectedItem, resultLayer0, gwssTaskThread);
+//             mMapModel->appentItem(gwssItem, selectedIndex);
+//             onShowLayerProperty(mMapModel->indexFromItem(gwssItem));
+//         }
+//     }
+//     delete gwssOptionDialog;
+// }
 
 void GwmApp::onGWaverageBtnClicked()
 {
