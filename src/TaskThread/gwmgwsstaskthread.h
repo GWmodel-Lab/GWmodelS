@@ -17,7 +17,7 @@ class GwmGWSSTaskThread;
 //typedef double (GwmGWSSTaskThread::*pfGwmCVApproach)(const mat& , GwmBandwidthWeight*);
 
 
-class GwmGWSSTaskThread : public GwmSpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IOpenmpParallelable
+class GwmGWSSTaskThread : public GwmSpatialMonoscaleAlgorithm, public IGwmMultivariableAnalysis, public IOpenmpParallelable
 {
     Q_OBJECT
 
@@ -41,7 +41,7 @@ public:
     void setParallelType(const ParallelType& type) override { mAlgorithm.setParallelType(gwm::ParallelType(type)); }
     void setOmpThreadNum(const int threadNum) override { mAlgorithm.setOmpThreadNum(threadNum); }
 
-    QString name() const override { return tr("GWSS"); };
+    QString name() const override { return tr("GWAverage"); };
 
     mat localmean() const{return mAlgorithm.localMean();}
     mat standarddev() const{return mAlgorithm.localSDev();}
@@ -53,9 +53,9 @@ public:
     mat iqr() const{return mAlgorithm.iqr();}
     mat qi() const{return mAlgorithm.qi();}
 
-    mat covmat() const{return mAlgorithm.localCov();}
-    mat corrmat() const{return mAlgorithm.localCorr();}
-    mat scorrmat() const{return mAlgorithm.localSCorr();}
+    // mat covmat() const{return mAlgorithm.localCov();}
+    // mat corrmat() const{return mAlgorithm.localCorr();}
+    // mat scorrmat() const{return mAlgorithm.localSCorr();}
 
     bool isValid() override { return mAlgorithm.isValid(); }
 
@@ -72,7 +72,7 @@ protected:  // GwmSpatialMonoscaleAlgorithm interface
 
 protected:
     GwmAlgorithmMetaGTDR mMeta;
-    gwm::GWSS mAlgorithm;
+    gwm::GWAverage mAlgorithm;
     QgsVectorLayer* mLayer = nullptr;
     QList<GwmVariable> mVariables;
     CreateResultLayerData mResultList;

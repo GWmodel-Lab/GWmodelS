@@ -26,11 +26,11 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
             mQI = taskThread->qi();
         }
 
-        if(mVariables.size() >= 2){
-            mCovmat = taskThread->covmat();
-            mCorrmat = taskThread->corrmat();
-            mSCorrmat = taskThread->scorrmat();
-        }
+        // if(mVariables.size() >= 2){
+        //     mCovmat = taskThread->covmat();
+        //     mCorrmat = taskThread->corrmat();
+        //     mSCorrmat = taskThread->scorrmat();
+        // }
     }
     else
     {

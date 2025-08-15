@@ -19,7 +19,7 @@ class GwmGWcorrelationTaskThread;
 //typedef double (GwmGWcorrelationTaskThread::*pfGwmCVApproach)(const mat& , GwmBandwidthWeight*);
 
 
-class GwmGWcorrelationTaskThread : public GwmSpatialMultiscaleAlgorithm, public IBandwidthSizeSelectable,public IMultivariableAnalysis, public IOpenmpParallelable
+class GwmGWcorrelationTaskThread : public GwmSpatialMultiscaleAlgorithm, public IBandwidthSizeSelectable,public IGwmMultivariableAnalysis, public IOpenmpParallelable
 {
     Q_OBJECT
 
@@ -103,7 +103,7 @@ public:
 protected:  // QThread interface
     void run() override;
 
-public:  // IMultivariableAnalysis interface
+public:  // IGwmMultivariableAnalysis interface
     QList<GwmVariable> variables() const  override;
     void setVariables(const QList<GwmVariable> &variables)  override;
     void setVariables(const QList<GwmVariable> &&variables);

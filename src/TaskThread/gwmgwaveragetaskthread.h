@@ -15,7 +15,7 @@ class GwmGWaverageTaskThread;
 //typedef double (GwmGWaverageTaskThread::*pfGwmCVApproach)(const mat& , GwmBandwidthWeight*);
 
 
-class GwmGWaverageTaskThread :public GwmSpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IOpenmpParallelable
+class GwmGWaverageTaskThread :public GwmSpatialMonoscaleAlgorithm, public IGwmMultivariableAnalysis, public IOpenmpParallelable
 {
     Q_OBJECT
 
@@ -72,7 +72,7 @@ public:
 protected:  // QThread interface
     void run() override;
 
-public:  // IMultivariableAnalysis interface
+public:  // IGwmMultivariableAnalysis interface
     QList<GwmVariable> variables() const override;
     void setVariables(const QList<GwmVariable> &variables) override;
     void setVariables(const QList<GwmVariable> &&variables);
@@ -107,9 +107,9 @@ public:
     mat iqr() const{return mIQR;}
     mat qi() const{return mQI;}
 
-    mat covmat() const{return mCovmat;}
-    mat corrmat() const{return mCorrmat;}
-    mat scorrmat() const{return mSCorrmat;}
+    // mat covmat() const{return mCovmat;}
+    // mat corrmat() const{return mCorrmat;}
+    // mat scorrmat() const{return mSCorrmat;}
 
     CreateResultLayerData resultlist() const{return mResultList;}
 

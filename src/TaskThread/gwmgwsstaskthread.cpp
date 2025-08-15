@@ -91,12 +91,12 @@ void GwmGWSSTaskThread::run()
             mResultList.push_back(qMakePair(QString("IQR"), iqr()));
             mResultList.push_back(qMakePair(QString("QI"), qi()));
         }
-        if(mAlgorithm.variables().n_cols >= 2)
-        {
-            mResultList.push_back(qMakePair(QString("Cov"), covmat()));
-            mResultList.push_back(qMakePair(QString("Corr"), corrmat()));
-            mResultList.push_back(qMakePair(QString("Spearman_rho"), scorrmat()));
-        }
+        // if(mAlgorithm.variables().n_cols >= 2)
+        // {
+        //     mResultList.push_back(qMakePair(QString("Cov"), covmat()));
+        //     mResultList.push_back(qMakePair(QString("Corr"), corrmat()));
+        //     mResultList.push_back(qMakePair(QString("Spearman_rho"), scorrmat()));
+        // }
         if(!checkCanceled())
         {
             createResultLayer(mResultList);
