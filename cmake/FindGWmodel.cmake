@@ -17,13 +17,13 @@
 # ``GWmodel_LIBRARIES`` List of the GWmodel libraries found
 #
 
-if(DEFINED ENV{USR} AND NOT "$ENV{USR}" EQUAL "")
+if(DEFINED ENV{USR} AND NOT "$ENV{USR}" STREQUAL "")
     set(USR_DIR "$ENV{USR}")
 else()
     set(USR_DIR "/usr")
 endif()
 
-if(DEFINED ENV{USR_LOCAL} AND NOT "$ENV{USR_LOCAL}" EQUAL "")
+if(DEFINED ENV{USR_LOCAL} AND NOT "$ENV{USR_LOCAL}" STREQUAL "")
     set(USR_LOCAL_DIR "$ENV{USR_LOCAL}")
 else()
     set(USR_LOCAL_DIR "/usr/local")
@@ -38,13 +38,14 @@ set(GWmodel_SEARCH_PATHS
     "$ENV{LIB}"
 )
 
+unset(GWmodel_INCLUDE_DIRS CACHE)
 find_path(GWmodel_INCLUDE_DIRS
     NAMES gwmodel.h
     PATHS ${GWmodel_SEARCH_PATHS}
     PATH_SUFFIXES "include"
 )
 
-
+unset(GWmodel_LIBRARIES CACHE)
 find_library(GWmodel_LIBRARIES
     NAMES gwmodel.lib libgwmodel.a libgwmodel.lib
     PATHS ${GWmodel_SEARCH_PATHS}
@@ -52,12 +53,17 @@ find_library(GWmodel_LIBRARIES
 )
 
 if(GWmodel_INCLUDE_DIRS AND GWmodel_LIBRARIES)
-    set(GWmodel_FOUND TRUE CACHE BOOL "Whether GWmodel is Found")
+    set(GWmodel_FOUND TRUE CACHE BOOL "Whether GWmodel is found")
+else()
+    set(GWmodel_FOUND FALSE CACHE BOOL "Whether GWmodel is found")
 endif()
 
 if(GWmodel_FOUND)
-    message(STATUS "Found GWmodel: ${GWmodel_LIBRARIES}")
+    message(STATUS "Found GWmodel:")
+    message(STATUS "  Include: ${GWmodel_INCLUDE_DIRS}")
+    message(STATUS "  Library: ${GWmodel_LIBRARIES}")
 else()
+    message(STATUS "GWmodel not found")
     if(GWmodel_FIND_REQUIRED)
         message(FATAL_ERROR "Could not find GWmodel")
     endif(GWmodel_FIND_REQUIRED)
