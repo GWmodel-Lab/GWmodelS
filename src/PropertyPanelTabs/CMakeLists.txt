@@ -7,6 +7,7 @@ set(SOURCES_SUBFOLDER
     gwmpropertygwpcatab.cpp
     gwmpropertygwrtab.cpp
     gwmpropertygwsstab.cpp
+    gwmpropertygtdrtab.cpp
     gwmpropertymultiscalegwrtab.cpp
     gwmpropertyscalablegwrtab.cpp
     gwmpropertydefaulttab.cpp
@@ -21,6 +22,7 @@ set(HEADERS_SUBFOLDER
     gwmpropertygwpcatab.h
     gwmpropertygwrtab.h
     gwmpropertygwsstab.h
+    gwmpropertygtdrtab.h
     gwmpropertymultiscalegwrtab.h
     gwmpropertyscalablegwrtab.h
     gwmpropertydefaulttab.h
@@ -36,6 +38,7 @@ set(FORMS_SUBFOLDER
     gwmpropertygwpcatab.ui
     gwmpropertygwrtab.ui
     gwmpropertygwsstab.ui
+    gwmpropertygtdrtab.ui
     gwmpropertymultiscalegwrtab.ui
     gwmpropertyscalablegwrtab.ui
     gwmpropertydefaulttab.ui

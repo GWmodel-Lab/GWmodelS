@@ -29,6 +29,7 @@ public:
         GeneralizedGWR,
         MultiscaleGWR,
         GWSS,
+        GTDR,
         CollinearityGWR,
         GWPCA,
         GTWR
