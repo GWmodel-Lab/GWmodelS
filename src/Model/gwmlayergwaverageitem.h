@@ -14,7 +14,7 @@ public:
 
     virtual int childNumber() override;
 
-    inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::GWSS; }
+    inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::GWAverage; }
 
     virtual bool readXml(QDomNode &node) override;
     virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;
