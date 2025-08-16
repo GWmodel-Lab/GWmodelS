@@ -20,6 +20,7 @@ set(SOURCES_SUBFOLDER
     gwmlayervectoritem.cpp
     gwmvariableitemmodel.cpp
     gwmalgorithmmetagtdr.cpp
+    gwmalgorithmmetavariable.cpp
     gwmparameterspecifiedoptionsmodel.cpp
     gwmpropertymultiscaleparameterspecifieditemmodel.cpp
     gwmpropertygwcorrelationsparameterspecifieditemmodel.cpp
@@ -45,6 +46,7 @@ set(HEADERS_SUBFOLDER
     gwmlayervectoritem.h
     gwmvariableitemmodel.h
     gwmalgorithmmetagtdr.h
+    gwmalgorithmmetavariable.h
     gwmparameterspecifiedoptionsmodel.h
     gwmpropertymultiscaleparameterspecifieditemmodel.h
     gwmpropertygwcorrelationsparameterspecifieditemmodel.h

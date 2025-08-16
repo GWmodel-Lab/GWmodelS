@@ -7,6 +7,7 @@
 #include "gwmlayerggwritem.h"
 #include "gwmlayergwpcaitem.h"
 #include "gwmlayergtwritem.h"
+#include "gwmlayergtdritem.h"
 #include <qmessagebox.h>
 
 #include "gwmapp.h"
@@ -196,6 +197,7 @@ bool GwmLayerGroupItem::appendChildren(QList<GwmLayerItem *> items)
         case GwmLayerItemType::GeneralizedGWR:
         case GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItemType::GWSS:
+        case GwmLayerItemType::GTDR:
         case GwmLayerItemType::CollinearityGWR:
         case GwmLayerItemType::GWPCA:
         case GwmLayerItemType::GTWR:
@@ -285,6 +287,9 @@ bool GwmLayerGroupItem::readXml(QDomNode &node)
                 break;
             case GwmLayerItemType::GWSS:
                 analyseItem = new GwmLayerGWSSItem(this);
+                break;
+            case GwmLayerItemType::GTDR:
+                analyseItem = new GwmLayerGTDRItem(this);
                 break;
             case GwmLayerItemType::GWPCA:
                 analyseItem = new GwmLayerGWPCAItem(this);

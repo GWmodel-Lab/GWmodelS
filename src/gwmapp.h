@@ -148,7 +148,7 @@ public slots:
     void onGWRBtnClicked();
     // void onGWSSBtnClicked();
     void onGTDRBtnClicked();
-    void onGWaverageBtnClicked();
+    void onGWAverageBtnClicked();
     void onGWRNewBtnClicked();
     void onScalableGWRBtnClicked();
     void onMultiscaleGWRBtnClicked();

@@ -9,7 +9,6 @@ set(SOURCES_SUBFOLDER
     gwmgtwralgorithm.cpp
     gwmgwpcataskthread.cpp
     gwmggwrbandwidthsizeselector.cpp
-    gwmgwsstaskthread.cpp
     gwmgtdrtaskthread.cpp
     gwmindependentvariableselector.cpp
     gwmlocalcollinearitygwralgorithm.cpp
@@ -35,7 +34,6 @@ set(HEADERS_SUBFOLDER
     gwmgtwralgorithm.h
     gwmgwpcataskthread.h
     gwmggwrbandwidthsizeselector.h
-    gwmgwsstaskthread.h
     gwmgtdrtaskthread.h
     gwmindependentvariableselector.h
     gwmlocalcollinearitygwralgorithm.h

@@ -2,7 +2,6 @@
 #define GWMLAYERGWSSITEM_H
 
 #include "gwmlayervectoritem.h"
-#include "TaskThread/gwmgwsstaskthread.h"
 #include "TaskThread/gwmgwaveragetaskthread.h"
 #include "TaskThread/gwmgwcorrelationtaskthread.h"
 #include "TaskThread/gwmmultiscalegwralgorithm.h"
@@ -10,9 +9,9 @@
 class GwmLayerGWSSItem : public GwmLayerVectorItem
 {
 public:
-    GwmLayerGWSSItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWSSTaskThread* taskThread = nullptr);
+    // GwmLayerGWSSItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWSSTaskThread* taskThread = nullptr);
     //average构造函数
-    GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWaverageTaskThread* taskThread);
+    GwmLayerGWSSItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWAverageTaskThread* taskThread = nullptr);
     //correlation构造函数
     GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWcorrelationTaskThread* taskThread);
     ~GwmLayerGWSSItem();
@@ -42,7 +41,7 @@ public:
 
     bool quantile() const{return mQuantile;}
 
-    GwmGWSSTaskThread::CreateResultLayerData resultlist() const{return mResultList;}
+    GwmGWAverageTaskThread::CreateResultLayerData resultlist() const{return mResultListAvg;}
 
 
     QList<GwmVariable> variables() const
@@ -60,7 +59,7 @@ public:
         return mBandwidth;
     }
 
-    //coreelationdai带宽部分
+    //coreelation带宽部分
     QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> bandwidthSelectionApproach() const{
         return mBandwidthSelectionApproach;
     };
@@ -112,7 +111,8 @@ protected:
     mat mCorrmat;
     mat mSCorrmat;
 
-    GwmGWSSTaskThread::CreateResultLayerData mResultList;
+    GwmGWAverageTaskThread::CreateResultLayerData mResultListAvg;
+    GwmGWcorrelationTaskThread::CreateResultLayerData mResultListCor;
     //类别标识符 1为average，2为correlation
     int mType = 0;
 };

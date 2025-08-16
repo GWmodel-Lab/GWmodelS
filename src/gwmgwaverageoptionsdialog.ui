@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GwmGWaverageOptionsDialog</class>
- <widget class="QDialog" name="GwmGWaverageOptionsDialog">
+ <class>GwmGWAverageOptionsDialog</class>
+ <widget class="QDialog" name="GwmGWAverageOptionsDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>677</width>
-    <height>695</height>
+    <width>654</width>
+    <height>659</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>GW Averages Configure</string>
+   <string>GWAverage Configure</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0">
    <item>
@@ -27,8 +27,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>659</width>
-        <height>677</height>
+        <width>636</width>
+        <height>641</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -675,7 +675,7 @@
   <connection>
    <sender>btbOkCancle</sender>
    <signal>accepted()</signal>
-   <receiver>GwmGWaverageOptionsDialog</receiver>
+   <receiver>GwmGWAverageOptionsDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -691,7 +691,7 @@
   <connection>
    <sender>btbOkCancle</sender>
    <signal>rejected()</signal>
-   <receiver>GwmGWaverageOptionsDialog</receiver>
+   <receiver>GwmGWAverageOptionsDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

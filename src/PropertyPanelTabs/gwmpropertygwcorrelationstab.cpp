@@ -10,7 +10,7 @@
 #include <armadillo>
 
 #include <QStandardItemModel>
-#include "TaskThread/gwmgwsstaskthread.h"
+// #include "TaskThread/gwmgwsstaskthread.h"
 
 
 GwmPropertyGWCorrelationsTab::GwmPropertyGWCorrelationsTab(QWidget *parent,GwmLayerGWSSItem *item) :
@@ -42,7 +42,7 @@ void GwmPropertyGWCorrelationsTab::updateUI()
     // 计算四分位数
     QList<GwmVariable> var = mLayerItem->variables();
     QList<GwmVariable> varY = mLayerItem->variablesY();
-    GwmGWSSTaskThread::CreateResultLayerData data = mLayerItem->resultlist();
+    GwmGWcorrelationTaskThread::CreateResultLayerData data = mLayerItem->resultlist();
     int nVar = var.size()*varY.size();
     for (QPair<QString, const mat&> item : data)
     {

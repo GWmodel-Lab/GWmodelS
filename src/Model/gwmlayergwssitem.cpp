@@ -2,41 +2,41 @@
 #include "gwmlayergroupitem.h"
 
 
-GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWSSTaskThread* taskThread)
-    : GwmLayerVectorItem(parentItem, vector)
-{
-    if (taskThread)
-    {
-        auto taskMeta = taskThread->meta();
-        mDataPointsSize = taskMeta.layer->featureCount();
-        mVariables = taskMeta.independentVariables;
-        mBandwidth = new GwmBandwidthWeight(taskMeta.weightBandwidthSize, taskMeta.weightBandwidthAdaptive, GwmBandwidthWeight::KernelFunctionType(taskMeta.weightBandwidthKernel));
-        mQuantile = taskThread->quantile();
-        mResultList = taskThread->resultlist();
+// GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWSSTaskThread* taskThread)
+//     : GwmLayerVectorItem(parentItem, vector)
+// {
+//     if (taskThread)
+//     {
+//         auto taskMeta = taskThread->meta();
+//         mDataPointsSize = taskMeta.layer->featureCount();
+//         mVariables = taskMeta.independentVariables;
+//         mBandwidth = new GwmBandwidthWeight(taskMeta.weightBandwidthSize, taskMeta.weightBandwidthAdaptive, GwmBandwidthWeight::KernelFunctionType(taskMeta.weightBandwidthKernel));
+//         mQuantile = taskThread->quantile();
+//         mResultList = taskThread->resultlist();
 
-        mLocalMean = taskThread->localmean();
-        mStandardDev = taskThread->standarddev();
-        mLocalSkewness = taskThread->localskewness();
-        mLCV = taskThread->lcv();
-        mLVar = taskThread->lvar();
+//         mLocalMean = taskThread->localmean();
+//         mStandardDev = taskThread->standarddev();
+//         mLocalSkewness = taskThread->localskewness();
+//         mLCV = taskThread->lcv();
+//         mLVar = taskThread->lvar();
 
-        if(mQuantile){
-            mLocalMedian = taskThread->localmedian();
-            mIQR = taskThread->iqr();
-            mQI = taskThread->qi();
-        }
+//         if(mQuantile){
+//             mLocalMedian = taskThread->localmedian();
+//             mIQR = taskThread->iqr();
+//             mQI = taskThread->qi();
+//         }
 
-        // if(mVariables.size() >= 2){
-        //     mCovmat = taskThread->covmat();
-        //     mCorrmat = taskThread->corrmat();
-        //     mSCorrmat = taskThread->scorrmat();
-        // }
-    }
-    else
-    {
-        mBandwidth = new GwmBandwidthWeight();
-    }
-}
+//         // if(mVariables.size() >= 2){
+//         //     mCovmat = taskThread->covmat();
+//         //     mCorrmat = taskThread->corrmat();
+//         //     mSCorrmat = taskThread->scorrmat();
+//         // }
+//     }
+//     else
+//     {
+//         mBandwidth = new GwmBandwidthWeight();
+//     }
+// }
 
 GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWcorrelationTaskThread* taskThread)
     : GwmLayerVectorItem(parentItem, vector)
@@ -57,24 +57,24 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
         }
         mBandwidthInitilize = taskThread->bandwidthInitilize();
         mBandwidthSelectionApproach = taskThread->bandwidthSelectionApproach();
-        mResultList = taskThread->resultlist();
+        mResultListCor = taskThread->resultlist();
         mCovmat = taskThread->covmat();
         mCorrmat = taskThread->corrmat();
         mSCorrmat = taskThread->scorrmat();
     }
 }
 
-GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWaverageTaskThread* taskThread)
+GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWAverageTaskThread* taskThread)
     : GwmLayerVectorItem(parentItem, vector)
 {
     if (taskThread)
     {
-        this->setType(1);
-        mDataPointsSize = taskThread->dataPointsSize();
-        mVariables = taskThread->variables();
-        mBandwidth = taskThread->bandwidth();
+        auto taskMeta = taskThread->meta();
+        mDataPointsSize = taskMeta.layer->featureCount();
+        mVariables = taskMeta.variables;
+        mBandwidth = new GwmBandwidthWeight(taskMeta.weightBandwidthSize, taskMeta.weightBandwidthAdaptive, GwmBandwidthWeight::KernelFunctionType(taskMeta.weightBandwidthKernel));
         mQuantile = taskThread->quantile();
-        mResultList = taskThread->resultlist();
+        mResultListAvg = taskThread->resultlist();
 
         mLocalMean = taskThread->localmean();
         mStandardDev = taskThread->standarddev();
@@ -87,7 +87,6 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
             mIQR = taskThread->iqr();
             mQI = taskThread->qi();
         }
-
     }
     else
     {
@@ -216,7 +215,7 @@ bool GwmLayerGWSSItem::readXml(QDomNode &node)
                 }
             }
 
-            GwmGWSSTaskThread::CreateResultLayerData resultLayerData;
+            GwmGWAverageTaskThread::CreateResultLayerData resultLayerData;
             resultLayerData.push_back(qMakePair(QString("LM"), mLocalMean));
             resultLayerData.push_back(qMakePair(QString("LSD"), mStandardDev));
             resultLayerData.push_back(qMakePair(QString("LVar"), mLVar));
@@ -232,7 +231,8 @@ bool GwmLayerGWSSItem::readXml(QDomNode &node)
                 resultLayerData.push_back(qMakePair(QString("Corr"), mCorrmat));
                 resultLayerData.push_back(qMakePair(QString("Spearman_rho"), mSCorrmat));
             }
-            mResultList = resultLayerData;
+            mResultListAvg = resultLayerData;
+            mResultListCor = resultLayerData;
         }
 
         return true;

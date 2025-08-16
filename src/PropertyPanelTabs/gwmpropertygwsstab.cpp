@@ -10,7 +10,8 @@
 #include <armadillo>
 
 #include <QStandardItemModel>
-#include "TaskThread/gwmgwsstaskthread.h"
+// #include "TaskThread/gwmgwsstaskthread.h"
+#include "TaskThread/gwmgwaveragetaskthread.h"
 #include "SpatialWeight/gwmbandwidthweight.h"
 
 QMap<GwmBandwidthWeight::KernelFunctionType, QString> GwmPropertyGWSSTab::kernelFunctionNameDict = {
@@ -59,7 +60,7 @@ void GwmPropertyGWSSTab::updateUI()
 
     // 计算四分位数
     QList<GwmVariable> indepVars = mLayerItem->variables();
-    GwmGWSSTaskThread::CreateResultLayerData data = mLayerItem->resultlist();
+    GwmGWAverageTaskThread::CreateResultLayerData data = mLayerItem->resultlist();
     int nVar = indepVars.size();
     for (QPair<QString, const mat&> item : data)
     {
