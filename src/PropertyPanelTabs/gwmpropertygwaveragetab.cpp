@@ -1,5 +1,5 @@
-#include "gwmpropertygwsstab.h"
-#include "ui_gwmpropertygwsstab.h"
+#include "gwmpropertygwaveragetab.h"
+#include "ui_gwmpropertygwaveragetab.h"
 
 #include <QVBoxLayout>
 #include <QScrollArea>
@@ -10,11 +10,10 @@
 #include <armadillo>
 
 #include <QStandardItemModel>
-// #include "TaskThread/gwmgwsstaskthread.h"
 #include "TaskThread/gwmgwaveragetaskthread.h"
 #include "SpatialWeight/gwmbandwidthweight.h"
 
-QMap<GwmBandwidthWeight::KernelFunctionType, QString> GwmPropertyGWSSTab::kernelFunctionNameDict = {
+QMap<GwmBandwidthWeight::KernelFunctionType, QString> GwmPropertyGWAverageTab::kernelFunctionNameDict = {
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Gaussian, QStringLiteral("Gaussian")),
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Exponential, QStringLiteral("Exponential")),
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Bisquare, QStringLiteral("Bisquare")),
@@ -22,25 +21,25 @@ QMap<GwmBandwidthWeight::KernelFunctionType, QString> GwmPropertyGWSSTab::kernel
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Boxcar, QStringLiteral("Boxcar"))
 };
 
-QMap<bool, QString> GwmPropertyGWSSTab::bandwidthTypeNameDict = {
+QMap<bool, QString> GwmPropertyGWAverageTab::bandwidthTypeNameDict = {
     std::make_pair(true, QStringLiteral("Adaptive")),
     std::make_pair(false, QStringLiteral("Fixed:"))
 };
 
-GwmPropertyGWSSTab::GwmPropertyGWSSTab(QWidget *parent, GwmLayerGWSSItem *item) :
+GwmPropertyGWAverageTab::GwmPropertyGWAverageTab(QWidget *parent, GwmLayerGWAverageItem *item) :
     QWidget(parent),
-    ui(new Ui::GwmPropertyGWSSTab),
+    ui(new Ui::GwmPropertyGWAverageTab),
     mLayerItem(item)
 {
     ui->setupUi(this);
 }
 
-GwmPropertyGWSSTab::~GwmPropertyGWSSTab()
+GwmPropertyGWAverageTab::~GwmPropertyGWAverageTab()
 {
     delete ui;
 }
 
-void GwmPropertyGWSSTab::updateUI()
+void GwmPropertyGWAverageTab::updateUI()
 {
     if (!mLayerItem)
         return;

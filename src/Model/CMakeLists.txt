@@ -10,6 +10,7 @@ set(SOURCES_SUBFOLDER
     gwmlayergtwritem.cpp
     gwmlayergwpcaitem.cpp
     gwmlayergwssitem.cpp
+    gwmlayergwaverageitem.cpp
     gwmlayergtdritem.cpp
     gwmlayeritem.cpp
     gwmlayeritemmodel.cpp
@@ -36,6 +37,7 @@ set(HEADERS_SUBFOLDER
     gwmlayergtwritem.h
     gwmlayergwpcaitem.h
     gwmlayergwssitem.h
+    gwmlayergwaverageitem.h
     gwmlayergtdritem.h
     gwmlayeritem.h
     gwmlayeritemmodel.h

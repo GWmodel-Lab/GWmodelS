@@ -89,6 +89,7 @@
 #include "aboutdevelopteam.h"
 #include "aboutdevelopers.h"
 
+#include "Model/gwmlayergwaverageitem.h"
 #include "TaskThread/gwmgwaveragetaskthread.h"
 #include "gwmgwaverageoptionsdialog.h"
 
@@ -807,6 +808,7 @@ void GwmApp::onFeaturePanelCurrentChanged(const QModelIndex &current,const QMode
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::GWAverage:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
         case GwmLayerItem::GwmLayerItemType::GTWR:
         case GwmLayerItem::GwmLayerItemType::GWPCA:
@@ -867,6 +869,7 @@ void GwmApp::onSaveLayer()
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::GWAverage:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
         case GwmLayerItem::GwmLayerItemType::GTWR:
         case GwmLayerItem::GwmLayerItemType::GWPCA:
@@ -912,6 +915,7 @@ void GwmApp::onExportLayerAsCsv(const QModelIndex &index)
     case GwmLayerItem::GwmLayerItemType::ScalableGWR:
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
     case GwmLayerItem::GwmLayerItemType::GWSS:
+    case GwmLayerItem::GwmLayerItemType::GWAverage:
     case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
     case GwmLayerItem::GwmLayerItemType::GTWR:
     case GwmLayerItem::GwmLayerItemType::GWPCA:
@@ -963,6 +967,7 @@ void GwmApp::onExportLayer(QString filetype)
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
         case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::GWAverage:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
         case GwmLayerItem::GwmLayerItemType::GTWR:
         case GwmLayerItem::GwmLayerItemType::GWPCA:
@@ -1369,9 +1374,9 @@ void GwmApp::onGTDRBtnClicked()
             QgsVectorLayer* resultLayer = gtdrTaskThread->resultLayer();
             QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
             resultLayer0 = resultLayer->clone();
-            GwmLayerGTDRItem* gwssItem = new GwmLayerGTDRItem(selectedItem, resultLayer0, gtdrTaskThread);
-            mMapModel->appentItem(gwssItem, selectedIndex);
-            onShowLayerProperty(mMapModel->indexFromItem(gwssItem));
+            GwmLayerGTDRItem* gtdrItem = new GwmLayerGTDRItem(selectedItem, resultLayer0, gtdrTaskThread);
+            mMapModel->appentItem(gtdrItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gtdrItem));
         }
     }
     delete gtdrOptionDialog;
@@ -1405,9 +1410,9 @@ void GwmApp::onGWAverageBtnClicked()
             QgsVectorLayer* resultLayer = gwaverageTaskThread->resultLayer();
             QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
             resultLayer0 = resultLayer->clone();
-            GwmLayerGWSSItem* gwssItem = new GwmLayerGWSSItem(selectedItem, resultLayer0, gwaverageTaskThread);
-            mMapModel->appentItem(gwssItem, selectedIndex);
-            onShowLayerProperty(mMapModel->indexFromItem(gwssItem));
+            GwmLayerGWAverageItem* gwavgItem = new GwmLayerGWAverageItem(selectedItem, resultLayer0, gwaverageTaskThread);
+            mMapModel->appentItem(gwavgItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwavgItem));
         }
     }
     delete gwaverageOptionDialog;

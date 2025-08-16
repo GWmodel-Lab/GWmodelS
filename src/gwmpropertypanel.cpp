@@ -5,7 +5,7 @@
 #include "PropertyPanelTabs/gwmpropertyggwrtab.h"
 #include "PropertyPanelTabs/gwmpropertygtwrtab.h"
 #include "PropertyPanelTabs/gwmpropertymultiscalegwrtab.h"
-#include "PropertyPanelTabs/gwmpropertygwsstab.h"
+#include "PropertyPanelTabs/gwmpropertygwaveragetab.h"
 #include "PropertyPanelTabs/gwmpropertycollinearitygwrtab.h"
 #include "PropertyPanelTabs/gwmpropertygwcorrelationstab.h"
 #include "PropertyPanelTabs/gwmpropertygwpcatab.h"
@@ -123,10 +123,10 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
                         tabWidget = new GwmPropertyGWCorrelationsTab(this, static_cast<GwmLayerGWSSItem*>(item));
                         (static_cast<GwmPropertyGWCorrelationsTab*>(tabWidget))->updateUI();
                     }
-                    else{
-                    tabWidget = new GwmPropertyGWSSTab(this, static_cast<GwmLayerGWSSItem*>(item));
-                    (static_cast<GwmPropertyGWSSTab*>(tabWidget))->updateUI();
-                    }
+                    break;
+                case GwmLayerItem::GWAverage:
+                    tabWidget = new GwmPropertyGWAverageTab(this, static_cast<GwmLayerGWAverageItem*>(item));
+                    (static_cast<GwmPropertyGWAverageTab*>(tabWidget))->updateUI();
                     break;
                 case GwmLayerItem::GWPCA:
                     tabWidget = new GwmPropertyGWPCATab(this, static_cast<GwmLayerGWPCAItem*>(item));
@@ -166,7 +166,10 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
                     (static_cast<GwmPropertyGTWRTab*>(tabWidget))->updateUI();
                     break;
                 case GwmLayerItem::GWSS:
-                    (static_cast<GwmPropertyGWSSTab*>(tabWidget))->updateUI();
+                    (static_cast<GwmPropertyGWCorrelationsTab*>(tabWidget))->updateUI();
+                    break;
+                case GwmLayerItem::GWAverage:
+                    (static_cast<GwmPropertyGWAverageTab*>(tabWidget))->updateUI();
                     break;
                 case GwmLayerItem::GWPCA:
                     (static_cast<GwmPropertyGWPCATab*>(tabWidget))->updateUI();

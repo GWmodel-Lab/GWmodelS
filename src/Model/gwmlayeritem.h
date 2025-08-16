@@ -32,7 +32,8 @@ public:
         GTDR,
         CollinearityGWR,
         GWPCA,
-        GTWR
+        GTWR,
+        GWAverage
     };
 
     static GwmEnumValueNameMapper<GwmLayerItemType> LayerItemTypeNameMapper;

@@ -8,6 +8,7 @@
 #include "gwmlayergwpcaitem.h"
 #include "gwmlayergtwritem.h"
 #include "gwmlayergtdritem.h"
+#include "gwmlayergwaverageitem.h"
 #include <qmessagebox.h>
 
 #include "gwmapp.h"
@@ -287,6 +288,9 @@ bool GwmLayerGroupItem::readXml(QDomNode &node)
                 break;
             case GwmLayerItemType::GWSS:
                 analyseItem = new GwmLayerGWSSItem(this);
+                break;
+            case GwmLayerItemType::GWAverage:
+                analyseItem = new GwmLayerGWAverageItem(this);
                 break;
             case GwmLayerItemType::GTDR:
                 analyseItem = new GwmLayerGTDRItem(this);
