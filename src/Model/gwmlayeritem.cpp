@@ -14,7 +14,7 @@ GwmEnumValueNameMapper<GwmLayerItem::GwmLayerItemType> GwmLayerItem::LayerItemTy
     std::make_pair(GwmLayerItem::GwmLayerItemType::CollinearityGWR, "CollinearityGWR"),
     std::make_pair(GwmLayerItem::GwmLayerItemType::GTWR, "GTWR"),
     std::make_pair(GwmLayerItem::GwmLayerItemType::GWAverage, "GWAverage"),
-    std::make_pair(GwmLayerItem::GwmLayerItemType::GWSS, "GWSS"),
+    std::make_pair(GwmLayerItem::GwmLayerItemType::GWCorrelation, "GWCorrelation"),
     std::make_pair(GwmLayerItem::GwmLayerItemType::GWPCA, "GWPCA")
 };
 

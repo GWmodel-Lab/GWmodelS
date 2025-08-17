@@ -1,24 +1,19 @@
-#ifndef GWMLAYERGWSSITEM_H
-#define GWMLAYERGWSSITEM_H
+#ifndef GwmLayerGWCorrelationItem_H
+#define GwmLayerGWCorrelationItem_H
 
 #include "gwmlayervectoritem.h"
-#include "TaskThread/gwmgwaveragetaskthread.h"
 #include "TaskThread/gwmgwcorrelationtaskthread.h"
 #include "TaskThread/gwmmultiscalegwralgorithm.h"
 
-class GwmLayerGWSSItem : public GwmLayerVectorItem
+class GwmLayerGWCorrelationItem : public GwmLayerVectorItem
 {
 public:
-    // GwmLayerGWSSItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWSSTaskThread* taskThread = nullptr);
-    //average构造函数
-    GwmLayerGWSSItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWAverageTaskThread* taskThread = nullptr);
-    //correlation构造函数
-    GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWcorrelationTaskThread* taskThread);
-    ~GwmLayerGWSSItem();
+    GwmLayerGWCorrelationItem(GwmLayerItem* parentItem = nullptr, QgsVectorLayer* vector = nullptr, const GwmGWCorrelationTaskThread* taskThread = nullptr);
+    ~GwmLayerGWCorrelationItem();
 
     virtual int childNumber() override;
 
-    inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::GWSS; }
+    inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::GWCorrelation; }
 
     virtual bool readXml(QDomNode &node) override;
     virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;
@@ -41,7 +36,7 @@ public:
 
     bool quantile() const{return mQuantile;}
 
-    GwmGWAverageTaskThread::CreateResultLayerData resultlist() const{return mResultListAvg;}
+    GwmGWCorrelationTaskThread::CreateResultLayerData resultlist() const{return mResultList;}
 
 
     QList<GwmVariable> variables() const
@@ -76,15 +71,6 @@ public:
         return mDistaneTypes;
     };
 
-    //设置类型
-    void setType(int t){
-        mType = t;
-    }
-
-    int getType(){
-        return mType;
-    }
-
 protected:
     int mDataPointsSize;
     QList<GwmVariable> mVariables;
@@ -111,10 +97,7 @@ protected:
     mat mCorrmat;
     mat mSCorrmat;
 
-    GwmGWAverageTaskThread::CreateResultLayerData mResultListAvg;
-    GwmGWcorrelationTaskThread::CreateResultLayerData mResultListCor;
-    //类别标识符 1为average，2为correlation
-    int mType = 0;
+    GwmGWCorrelationTaskThread::CreateResultLayerData mResultList;
 };
 
-#endif // GWMLAYERGWSSITEM_H
+#endif // GwmLayerGWCorrelationItem_H

@@ -1,8 +1,8 @@
-#include "gwmlayergwssitem.h"
+#include "gwmlayergwcorrelationitem.h"
 #include "gwmlayergroupitem.h"
 
 
-// GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWSSTaskThread* taskThread)
+// GwmLayerGWCorrelationItem::GwmLayerGWCorrelationItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWCorrelationTaskThread* taskThread)
 //     : GwmLayerVectorItem(parentItem, vector)
 // {
 //     if (taskThread)
@@ -26,11 +26,11 @@
 //             mQI = taskThread->qi();
 //         }
 
-//         // if(mVariables.size() >= 2){
-//         //     mCovmat = taskThread->covmat();
-//         //     mCorrmat = taskThread->corrmat();
-//         //     mSCorrmat = taskThread->scorrmat();
-//         // }
+//         if(mVariables.size() >= 2){
+//             mCovmat = taskThread->covmat();
+//             mCorrmat = taskThread->corrmat();
+//             mSCorrmat = taskThread->scorrmat();
+//         }
 //     }
 //     else
 //     {
@@ -38,12 +38,11 @@
 //     }
 // }
 
-GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWcorrelationTaskThread* taskThread)
+GwmLayerGWCorrelationItem::GwmLayerGWCorrelationItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWCorrelationTaskThread* taskThread)
     : GwmLayerVectorItem(parentItem, vector)
 {
     if (taskThread)
     {
-        this->setType(2);
         mDataPointsSize = taskThread->dataPointsSize();
         mVariables = taskThread->variables();
         mVariablesY = taskThread->variablesY();
@@ -57,57 +56,27 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
         }
         mBandwidthInitilize = taskThread->bandwidthInitilize();
         mBandwidthSelectionApproach = taskThread->bandwidthSelectionApproach();
-        mResultListCor = taskThread->resultlist();
+        mResultList = taskThread->resultlist();
         mCovmat = taskThread->covmat();
         mCorrmat = taskThread->corrmat();
         mSCorrmat = taskThread->scorrmat();
     }
 }
 
-GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWAverageTaskThread* taskThread)
-    : GwmLayerVectorItem(parentItem, vector)
-{
-    if (taskThread)
-    {
-        auto taskMeta = taskThread->meta();
-        mDataPointsSize = taskMeta.layer->featureCount();
-        mVariables = taskMeta.variables;
-        mBandwidth = new GwmBandwidthWeight(taskMeta.weightBandwidthSize, taskMeta.weightBandwidthAdaptive, GwmBandwidthWeight::KernelFunctionType(taskMeta.weightBandwidthKernel));
-        mQuantile = taskThread->quantile();
-        mResultListAvg = taskThread->resultlist();
-
-        mLocalMean = taskThread->localmean();
-        mStandardDev = taskThread->standarddev();
-        mLocalSkewness = taskThread->localskewness();
-        mLCV = taskThread->lcv();
-        mLVar = taskThread->lvar();
-
-        if(mQuantile){
-            mLocalMedian = taskThread->localmedian();
-            mIQR = taskThread->iqr();
-            mQI = taskThread->qi();
-        }
-    }
-    else
-    {
-        mBandwidth = new GwmBandwidthWeight();
-    }
-}
-
-GwmLayerGWSSItem::~GwmLayerGWSSItem()
+GwmLayerGWCorrelationItem::~GwmLayerGWCorrelationItem()
 {
     if (mBandwidth)
         delete mBandwidth;
 }
 
-int GwmLayerGWSSItem::childNumber()
+int GwmLayerGWCorrelationItem::childNumber()
 {
     if (mParentItem)
         return ((GwmLayerGroupItem*)mParentItem)->analyseChildren().indexOf(this) + 1;
     return 0;
 }
 
-bool GwmLayerGWSSItem::readXml(QDomNode &node)
+bool GwmLayerGWCorrelationItem::readXml(QDomNode &node)
 {
     if (GwmLayerVectorItem::readXml(node))
     {
@@ -215,7 +184,7 @@ bool GwmLayerGWSSItem::readXml(QDomNode &node)
                 }
             }
 
-            GwmGWAverageTaskThread::CreateResultLayerData resultLayerData;
+            GwmGWCorrelationTaskThread::CreateResultLayerData resultLayerData;
             resultLayerData.push_back(qMakePair(QString("LM"), mLocalMean));
             resultLayerData.push_back(qMakePair(QString("LSD"), mStandardDev));
             resultLayerData.push_back(qMakePair(QString("LVar"), mLVar));
@@ -231,8 +200,7 @@ bool GwmLayerGWSSItem::readXml(QDomNode &node)
                 resultLayerData.push_back(qMakePair(QString("Corr"), mCorrmat));
                 resultLayerData.push_back(qMakePair(QString("Spearman_rho"), mSCorrmat));
             }
-            mResultListAvg = resultLayerData;
-            mResultListCor = resultLayerData;
+            mResultList = resultLayerData;
         }
 
         return true;
@@ -240,7 +208,7 @@ bool GwmLayerGWSSItem::readXml(QDomNode &node)
     else return false;
 }
 
-bool GwmLayerGWSSItem::writeXml(QDomNode &node, QDomDocument &doc)
+bool GwmLayerGWCorrelationItem::writeXml(QDomNode &node, QDomDocument &doc)
 {
     if (GwmLayerVectorItem::writeXml(node, doc))
     {
@@ -271,7 +239,7 @@ bool GwmLayerGWSSItem::writeXml(QDomNode &node, QDomDocument &doc)
     else return false;
 }
 
-int GwmLayerGWSSItem::dataPointsSize() const
+int GwmLayerGWCorrelationItem::dataPointsSize() const
 {
     return mDataPointsSize;
 }

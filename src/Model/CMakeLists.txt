@@ -9,7 +9,7 @@ set(SOURCES_SUBFOLDER
     gwmlayergroupitem.cpp
     gwmlayergtwritem.cpp
     gwmlayergwpcaitem.cpp
-    gwmlayergwssitem.cpp
+    gwmlayergwcorrelationitem.cpp
     gwmlayergwaverageitem.cpp
     gwmlayergtdritem.cpp
     gwmlayeritem.cpp
@@ -36,7 +36,7 @@ set(HEADERS_SUBFOLDER
     gwmlayergroupitem.h
     gwmlayergtwritem.h
     gwmlayergwpcaitem.h
-    gwmlayergwssitem.h
+    gwmlayergwcorrelationitem.h
     gwmlayergwaverageitem.h
     gwmlayergtdritem.h
     gwmlayeritem.h

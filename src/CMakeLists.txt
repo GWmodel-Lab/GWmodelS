@@ -135,7 +135,7 @@ set(SOURCES
     aboutdevelopers.cpp
     gwmprojcrssettingdialog.cpp
     gwmgwaverageoptionsdialog.cpp
-    gwmcorrelationdialog.cpp
+    gwmgwcorrelationoptionsdialog.cpp
 )
 
 set(HEADERS
@@ -169,7 +169,7 @@ set(HEADERS
     aboutdevelopers.h
     gwmprojcrssettingdialog.h
     gwmgwaverageoptionsdialog.h
-    gwmcorrelationdialog.h
+    gwmgwcorrelationoptionsdialog.h
 )
 
 set(FORMS
@@ -208,7 +208,7 @@ set(FORMS
     aboutdevelopers.ui
     gwmprojcrssettingdialog.ui
     gwmgwaverageoptionsdialog.ui
-    gwmcorrelationdialog.ui
+    gwmgwcorrelationoptionsdialog.ui
 )
 
 add_subdirectory("./AttributeTable")

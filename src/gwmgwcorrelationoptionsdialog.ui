@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>gwmcorrelationdialog</class>
- <widget class="QDialog" name="gwmcorrelationdialog">
+ <class>GwmGWCorrelationOptionsDialog</class>
+ <widget class="QDialog" name="GwmGWCorrelationOptionsDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -760,7 +760,7 @@
   <connection>
    <sender>btbOkCancle</sender>
    <signal>accepted()</signal>
-   <receiver>gwmcorrelationdialog</receiver>
+   <receiver>GwmGWCorrelationOptionsDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -776,7 +776,7 @@
   <connection>
    <sender>btbOkCancle</sender>
    <signal>rejected()</signal>
-   <receiver>gwmcorrelationdialog</receiver>
+   <receiver>GwmGWCorrelationOptionsDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

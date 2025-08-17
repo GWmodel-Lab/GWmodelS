@@ -1,6 +1,5 @@
 #include "gwmlayergroupitem.h"
 #include "gwmlayerbasicgwritem.h"
-#include "gwmlayergwssitem.h"
 #include "gwmlayerscalablegwritem.h"
 #include "gwmlayermultiscalegwritem.h"
 #include "gwmlayercollinearitygwritem.h"
@@ -9,6 +8,7 @@
 #include "gwmlayergtwritem.h"
 #include "gwmlayergtdritem.h"
 #include "gwmlayergwaverageitem.h"
+#include "gwmlayergwcorrelationitem.h"
 #include <qmessagebox.h>
 
 #include "gwmapp.h"
@@ -197,7 +197,8 @@ bool GwmLayerGroupItem::appendChildren(QList<GwmLayerItem *> items)
         case GwmLayerItemType::ScalableGWR:
         case GwmLayerItemType::GeneralizedGWR:
         case GwmLayerItemType::MultiscaleGWR:
-        case GwmLayerItemType::GWSS:
+        case GwmLayerItemType::GWAverage:
+        case GwmLayerItemType::GWCorrelation:
         case GwmLayerItemType::GTDR:
         case GwmLayerItemType::CollinearityGWR:
         case GwmLayerItemType::GWPCA:
@@ -286,8 +287,8 @@ bool GwmLayerGroupItem::readXml(QDomNode &node)
             case GwmLayerItemType::GTWR:
                 analyseItem = new GwmLayerGTWRItem(this);
                 break;
-            case GwmLayerItemType::GWSS:
-                analyseItem = new GwmLayerGWSSItem(this);
+            case GwmLayerItemType::GWCorrelation:
+                analyseItem = new GwmLayerGWCorrelationItem(this);
                 break;
             case GwmLayerItemType::GWAverage:
                 analyseItem = new GwmLayerGWAverageItem(this);

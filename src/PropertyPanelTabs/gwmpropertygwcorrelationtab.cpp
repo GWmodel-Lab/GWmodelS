@@ -1,5 +1,5 @@
-#include "gwmpropertygwcorrelationstab.h"
-#include "ui_gwmpropertygwcorrelationstab.h"
+#include "gwmpropertygwcorrelationtab.h"
+#include "ui_gwmpropertygwcorrelationtab.h"
 
 #include <QVBoxLayout>
 #include <QScrollArea>
@@ -10,12 +10,11 @@
 #include <armadillo>
 
 #include <QStandardItemModel>
-// #include "TaskThread/gwmgwsstaskthread.h"
 
 
-GwmPropertyGWCorrelationsTab::GwmPropertyGWCorrelationsTab(QWidget *parent,GwmLayerGWSSItem *item) :
+GwmPropertyGWCorrelationTab::GwmPropertyGWCorrelationTab(QWidget *parent,GwmLayerGWCorrelationItem *item) :
     QWidget(parent),
-    ui(new Ui::GwmPropertyGWCorrelationsTab),
+    ui(new Ui::GwmPropertyGWCorrelationTab),
     mLayerItem(item)
 {
     ui->setupUi(this);
@@ -25,12 +24,12 @@ GwmPropertyGWCorrelationsTab::GwmPropertyGWCorrelationsTab(QWidget *parent,GwmLa
     }
 }
 
-GwmPropertyGWCorrelationsTab::~GwmPropertyGWCorrelationsTab()
+GwmPropertyGWCorrelationTab::~GwmPropertyGWCorrelationTab()
 {
     delete ui;
 }
 
-void GwmPropertyGWCorrelationsTab::updateUI()
+void GwmPropertyGWCorrelationTab::updateUI()
 {
     if (!mLayerItem)
         return;
@@ -42,7 +41,7 @@ void GwmPropertyGWCorrelationsTab::updateUI()
     // 计算四分位数
     QList<GwmVariable> var = mLayerItem->variables();
     QList<GwmVariable> varY = mLayerItem->variablesY();
-    GwmGWcorrelationTaskThread::CreateResultLayerData data = mLayerItem->resultlist();
+    GwmGWCorrelationTaskThread::CreateResultLayerData data = mLayerItem->resultlist();
     int nVar = var.size()*varY.size();
     for (QPair<QString, const mat&> item : data)
     {

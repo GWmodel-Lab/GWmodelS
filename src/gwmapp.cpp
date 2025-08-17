@@ -55,7 +55,7 @@
 
 #include "TaskThread/gwmbasicgwralgorithm.h"
 #include "TaskThread/gwmgeneralizedgwralgorithm.h"
-#include "Model/gwmlayergwssitem.h"
+
 #include "SpatialWeight/gwmcrsdistance.h"
 
 #include "Model/gwmlayergtdritem.h"
@@ -93,8 +93,11 @@
 #include "TaskThread/gwmgwaveragetaskthread.h"
 #include "gwmgwaverageoptionsdialog.h"
 
+#include "Model/gwmlayergwcorrelationitem.h"
+#include "TaskThread/gwmgwcorrelationtaskthread.h"
+#include "gwmgwcorrelationoptionsdialog.h"
+
 #include "gwmprojcrssettingdialog.h"
-#include "gwmcorrelationdialog.h"
 
 static bool cmpByText_(QAction *a, QAction *b)
 {
@@ -138,7 +141,7 @@ GwmApp::GwmApp(QWidget *parent)
     setupPropertyPanel();
     QgsGui::editorWidgetRegistry()->initEditors(mMapCanvas);
 //    ui->actionGWR->setIcon(QIcon("images/icons/res/GWR.png"));
-//    ui->actionGTDR->setIcon(QIcon("C:/Users/GWmodelS/Documents/gwmodeldesktop/images/icons/GWSS.svg"));
+//    ui->actionGTDR->setIcon(QIcon("C:/Users/GWmodelS/Documents/gwmodeldesktop/images/icons/GWCorrelation.svg"));
 //    ui->actionGWPCA->setIcon(QIcon("C:/Users/GWmodelS/Documents/gwmodeldesktop/images/icons/GWPCA.svg"));
 
 #ifdef Q_OS_MAC
@@ -236,8 +239,8 @@ void GwmApp::setupMenus()
 }
 
 void GwmApp::gwmcorrelation(){
-    GwmGWcorrelationTaskThread* gwcorrelationTaskThread = new GwmGWcorrelationTaskThread();
-    gwmcorrelationdialog* gwcorrelationOptionDialog = new gwmcorrelationdialog(mMapModel->rootChildren(), gwcorrelationTaskThread);
+    GwmGWCorrelationTaskThread* gwcorrelationTaskThread = new GwmGWCorrelationTaskThread();
+    GwmGWCorrelationOptionsDialog* gwcorrelationOptionDialog = new GwmGWCorrelationOptionsDialog(mMapModel->rootChildren(), gwcorrelationTaskThread);
     QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
     for (QModelIndex selectedIndex : selectedIndexes)
     {
@@ -262,7 +265,7 @@ void GwmApp::gwmcorrelation(){
             QgsVectorLayer* resultLayer = gwcorrelationTaskThread->resultLayer();
             QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
             resultLayer0 = resultLayer->clone();
-            GwmLayerGWSSItem* gwcorrelationItem = new GwmLayerGWSSItem(selectedItem, resultLayer0, gwcorrelationTaskThread);
+            GwmLayerGWCorrelationItem* gwcorrelationItem = new GwmLayerGWCorrelationItem(selectedItem, resultLayer0, gwcorrelationTaskThread);
             mMapModel->appentItem(gwcorrelationItem, selectedIndex);
             onShowLayerProperty(mMapModel->indexFromItem(gwcorrelationItem));
         }
@@ -807,7 +810,7 @@ void GwmApp::onFeaturePanelCurrentChanged(const QModelIndex &current,const QMode
         case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
-        case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::GWCorrelation:
         case GwmLayerItem::GwmLayerItemType::GWAverage:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
         case GwmLayerItem::GwmLayerItemType::GTWR:
@@ -868,7 +871,7 @@ void GwmApp::onSaveLayer()
         case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
-        case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::GWCorrelation:
         case GwmLayerItem::GwmLayerItemType::GWAverage:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
         case GwmLayerItem::GwmLayerItemType::GTWR:
@@ -914,7 +917,7 @@ void GwmApp::onExportLayerAsCsv(const QModelIndex &index)
     case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
     case GwmLayerItem::GwmLayerItemType::ScalableGWR:
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
-    case GwmLayerItem::GwmLayerItemType::GWSS:
+    case GwmLayerItem::GwmLayerItemType::GWCorrelation:
     case GwmLayerItem::GwmLayerItemType::GWAverage:
     case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
     case GwmLayerItem::GwmLayerItemType::GTWR:
@@ -966,7 +969,7 @@ void GwmApp::onExportLayer(QString filetype)
         case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
         case GwmLayerItem::GwmLayerItemType::ScalableGWR:
         case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
-        case GwmLayerItem::GwmLayerItemType::GWSS:
+        case GwmLayerItem::GwmLayerItemType::GWCorrelation:
         case GwmLayerItem::GwmLayerItemType::GWAverage:
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
         case GwmLayerItem::GwmLayerItemType::GTWR:

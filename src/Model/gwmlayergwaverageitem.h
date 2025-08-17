@@ -72,15 +72,6 @@ public:
         return mDistaneTypes;
     };
 
-    //设置类型
-    void setType(int t){
-        mType = t;
-    }
-
-    int getType(){
-        return mType;
-    }
-
 protected:
     int mDataPointsSize;
     QList<GwmVariable> mVariables;
@@ -108,7 +99,6 @@ protected:
     mat mSCorrmat;
 
     GwmGWAverageTaskThread::CreateResultLayerData mResultList ;
-    int mType = 0;
 };
 
 #endif // GWMLAYERGWSSITEM_H
