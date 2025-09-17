@@ -7,7 +7,6 @@
 #include <gwmodel.h>
 
 #include "TaskThread/iregressionanalysis.h"
-#include "TaskThread/gwmindependentvariableselector.h"
 #include "TaskThread/gwmspatialalgorithm.h"
 #include "TaskThread/iparallelable.h"
 #include "TaskThread/gwmbandwidthsizeselector.h"
@@ -17,7 +16,7 @@
 class GwmGTDRTaskThread;
 //typedef double (GwmGTDRTaskThread::*pfGwmCVApproach)(const mat& , GwmBandwidthWeight*);
 
-class GwmGTDRTaskThread : public GwmSpatialAlgorithm, public IOpenmpParallelable /*, public IRegressionAnalysis, public GwmIndependentVariableSelector,*/
+class GwmGTDRTaskThread : public GwmSpatialAlgorithm, public IOpenmpParallelable /*, public IRegressionAnalysis*/
 {
     Q_OBJECT
 
@@ -54,6 +53,11 @@ public:
 
     bool isValid() override { return mAlgorithm.isValid(); }
 
+    GwmDiagnostic diagnostic() const
+    {
+        return toGwmDiagnostic(mDiagnostic);
+    }
+
     CreateResultLayerData resultlist() const { return mResultList; }
     
 protected:  // QThread interface
@@ -65,6 +69,13 @@ protected:
 protected:  // GwmSpatialMonoscaleAlgorithm interface
     void createResultLayer(CreateResultLayerData data);
 
+private:
+    inline GwmDiagnostic toGwmDiagnostic(const gwm::RegressionDiagnostic& diag) const
+    {
+        return GwmDiagnostic{diag.RSS, diag.AIC, diag.AICc,
+            diag.ENP, diag.EDF, diag.RSquare, diag.RSquareAdjust};
+    }
+
 protected:
     GwmAlgorithmMetaGTDR mMeta;
 
@@ -72,7 +83,8 @@ protected:
     vec mY;
     mat mBetas;
 
-    GwmDiagnostic mDiagnostic;
+    // GwmDiagnostic mDiagnostic;
+    gwm::RegressionDiagnostic mDiagnostic;
 
     gwm::GTDR mAlgorithm;
     QgsVectorLayer* mLayer = nullptr;

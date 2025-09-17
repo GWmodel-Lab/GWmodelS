@@ -9,12 +9,12 @@ GwmLayerGTDRItem::GwmLayerGTDRItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
     {
         auto taskMeta = taskThread->meta();
         mBandwidth = new GwmBandwidthWeight(taskMeta.weightBandwidthSize, taskMeta.weightBandwidthAdaptive, GwmBandwidthWeight::KernelFunctionType(taskMeta.weightBandwidthKernel));
-        mDataPointsSize = taskThread->dataLayer()->featureCount();
-        mDepVar = taskThread->dependentVariable();
-        mIndepVars = taskThread->independentVariables();
+        mDataPointsSize = taskMeta.layer->featureCount();
+        mDepVar = taskMeta.dependentVariable;
+        mIndepVars = taskMeta.independentVariables;
         hasHatmatrix = taskThread->hasHatMatrix();
         mBetas = mat(taskThread->betas());
-        // mDiagnostic = taskThread->diagnostic();
+        mDiagnostic = taskThread->diagnostic();
         // isBandwidthOptimized = taskThread->isAutoselectBandwidth();
         // mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();
         // isRegressionPointGiven = !(taskThread->regressionLayer() == nullptr);

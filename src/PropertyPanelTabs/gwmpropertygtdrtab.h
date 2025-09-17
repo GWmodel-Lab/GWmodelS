@@ -2,6 +2,10 @@
 #define GWMPROPERTYGTDRTAB_H
 
 #include <QWidget>
+#include <QTableWidgetItem>
+#include <QStandardItemModel>
+#include <QMenu>
+#include <QAction>
 
 #include "Model/gwmlayergtdritem.h"
 #include <QTableWidgetItem>

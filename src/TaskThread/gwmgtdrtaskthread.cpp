@@ -30,20 +30,6 @@ GwmGTDRTaskThread::GwmGTDRTaskThread(const GwmAlgorithmMetaGTDR& meta) : mMeta(m
     mDepVar = meta.dependentVariable;
 
     // Spatial Weight
-    // BandwidthWeight weight(meta.weightBandwidthSize, meta.weightBandwidthAdaptive, meta.weightBandwidthKernel);
-    // Distance* distance;
-    // switch (meta.distanceType)
-    // {
-    // case Distance::DistanceType::CRSDistance:
-    //     distance = new CRSDistance(meta.distanceCrsGeographic);
-    //     break;
-    // case Distance::DistanceType::MinkwoskiDistance:
-    //     distance = new MinkwoskiDistance(meta.distanceMinkowskiPower, meta.distanceMinkowskiTheta);
-    //     break;
-    // default:
-    //     distance = new CRSDistance(false);
-    //     break;
-    // }
     uword nDim = mIndepVars.size();
     vector<SpatialWeight> spatials;
     for (size_t i = 0; i < nDim; i++)
@@ -64,7 +50,7 @@ GwmGTDRTaskThread::GwmGTDRTaskThread(const GwmAlgorithmMetaGTDR& meta) : mMeta(m
         break;
     }
     // Others
-    // mAlgorithm.setQuantile(meta.quantile);
+    mAlgorithm.setHasHatMatrix(meta.hatmatrix);
     // delete distance;
 }
 
@@ -75,9 +61,12 @@ void GwmGTDRTaskThread::run()
     {
         emit message(tr("Extracting data and coordinates."));
         mAlgorithm.setCoords(initPoints(mLayer));
+        emit message(tr("1"));
         initXY(mX, mY, mDepVar, mIndepVars);
+        emit message(tr("2"));
         mAlgorithm.setIndependentVariables(mY);
         mAlgorithm.setDependentVariable(mX);
+        emit message(tr("variable set"));
     }
 
     // Run algorithm;
@@ -87,6 +76,7 @@ void GwmGTDRTaskThread::run()
         mAlgorithm.setTelegram(make_unique<GwmTaskThreadTelegram>(this));
         mAlgorithm.fit();
         mBetas = mAlgorithm.betas();
+        mDiagnostic=mAlgorithm.diagnostic();
         if(!checkCanceled())
         {   
             mResultList.push_back(qMakePair(QString("%1"), mBetas));
@@ -124,16 +114,20 @@ mat GwmGTDRTaskThread::initPoints(QgsVectorLayer* layer)
 
 void GwmGTDRTaskThread::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
 {
+    emit message(tr("10"));
     int nDp = mDataLayer->featureCount(), nVar = indepVars.size() + 1;
     // Data layer and X,Y
+    emit message(tr("11"));
     x = mat(nDp, nVar, fill::zeros);
     y = vec(nDp, fill::zeros);
+    emit message(tr("11"));
     QgsFeatureIterator iterator = mDataLayer->getFeatures();
     QgsFeature f;
     bool ok = false;
+    emit message(tr("12"));
     for (int i = 0; iterator.nextFeature(f); i++)
     {
-
+    emit message(tr("13"));
         double vY = f.attribute(depVar.name).toDouble(&ok);
         if (ok)
         {
@@ -148,6 +142,7 @@ void GwmGTDRTaskThread::initXY(mat &x, mat &y, const GwmVariable &depVar, const 
         }
         else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
     }
+    emit message(tr("13"));
 
     
     // if (hasRegressionLayer())

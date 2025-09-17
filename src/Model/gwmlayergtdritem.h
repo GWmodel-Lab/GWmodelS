@@ -22,15 +22,15 @@ public:
 
     int dataPointsSize() const;
 
-    GwmDiagnostic diagnostic() const;
+    GwmDiagnostic diagnostic() const {return mDiagnostic;};
 
     arma::mat betas() const;
 
-    bool modelOptimized() const;
+    bool modelOptimized() const {return isModelOptimized;};
 
-    bool bandwidthOptimized() const;
+    bool bandwidthOptimized() const {return isBandwidthOptimized;};
 
-    bool hatmatrix() const;
+    bool hatmatrix() const {return hasHatmatrix;};
 
     // bool fTest() const;
 
@@ -51,31 +51,6 @@ public:
     // GwmLayerGTDRItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGTDRTaskThread* taskThread);
     ~GwmLayerGTDRItem();
 
-    // virtual int childNumber() override;
-
-    // inline virtual GwmLayerItemType itemType() override { return GwmLayerItemType::GTDR; }
-
-    // virtual bool readXml(QDomNode &node) override;
-    // virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;
-
-    // int dataPointsSize() const;
-
-    // mat localmean() const{return mLocalMean;}
-    // mat standarddev() const{return mStandardDev;}
-    // mat localskewness() const{return mLocalSkewness;}
-    // mat lcv() const{return mLCV;}
-    // mat lvar() const{return mLVar;}
-
-    // mat localmedian() const{return mLocalMedian;}
-    // mat iqr() const{return mIQR;}
-    // mat qi() const{return mQI;}
-
-    // mat covmat() const{return mCovmat;}
-    // mat corrmat() const{return mCorrmat;}
-    // mat scorrmat() const{return mSCorrmat;}
-
-    // bool quantile() const{return mQuantile;}
-
     GwmGTDRTaskThread::CreateResultLayerData resultlist() const{return mResultList;}
 
 
@@ -93,32 +68,6 @@ public:
     {
         return mBandwidth;
     }
-
-    // //coreelationdai带宽部分
-    // QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> bandwidthSelectionApproach() const{
-    //     return mBandwidthSelectionApproach;
-    // };
-
-    // QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> bandwidthInitilize() const{
-    //     return mBandwidthInitilize;
-    // };
-
-    // QList<GwmBandwidthWeight> bandwidthWeights() const{
-    //     return mBandwidthWeights;
-    // };
-
-    // QList<GwmDistance::DistanceType> distaneTypes() const{
-    //     return mDistaneTypes;
-    // };
-
-    // //设置类型
-    // void setType(int t){
-    //     mType = t;
-    // }
-
-    // int getType(){
-    //     return mType;
-    // }
 
 protected:
 
@@ -139,37 +88,10 @@ protected:
     bool isModelOptimized;
     bool isBandwidthOptimized;
     bool hasHatmatrix;
-    bool hasFTest;
-    bool hasols;
-
-    // int mDataPointsSize;
-    // QList<GwmVariable> mVariables;
-    // QList<GwmVariable> mVariablesY;
-    // GwmBandwidthWeight* mBandwidth;
-    // bool mQuantile;
-    // // correlation带宽信息
-    // QList<GwmBandwidthWeight> mBandwidthWeights;
-    // QList<GwmDistance::DistanceType> mDistaneTypes;
-    // QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
-    // QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> mBandwidthInitilize;
-
-    // mat mLocalMean;
-    // mat mStandardDev;
-    // mat mLocalSkewness;
-    // mat mLCV;
-    // mat mLVar;
-
-    // mat mLocalMedian;
-    // mat mIQR;
-    // mat mQI;
-
-    // mat mCovmat;
-    // mat mCorrmat;
-    // mat mSCorrmat;
+    // bool hasFTest;
+    // bool hasols;
 
     GwmGTDRTaskThread::CreateResultLayerData mResultList;
-    // //类别标识符 1为average，2为correlation
-    // int mType = 0;
 };
 
 #endif // GWMLAYERGTDRITEM_H

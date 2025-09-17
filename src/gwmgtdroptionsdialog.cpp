@@ -93,7 +93,7 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mQuantileCheckBox, &QAbstractButton::toggle, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mHatmatrixCheckBox, &QAbstractButton::toggle, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
 
     ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
     ui->mBwSizeFixedSize->setMaximum(DBL_MAX);
@@ -225,13 +225,13 @@ void GwmGTDROptionsDialog::onGPURadioToggled(bool checked)
 GwmDistance::DistanceType GwmGTDROptionsDialog::distanceSourceType()
 {
     if (ui->mDistTypeCRSRadio->isChecked())
-        return GwmDistance::DistanceType::CRSDistance;
+        return GwmDistance::DistanceType::OneDimDistance;
     else if (ui->mDistTypeDmatRadio->isChecked())
         return GwmDistance::DistanceType::DMatDistance;
     else if (ui->mDistTypeMinkowskiRadio->isChecked())
         return GwmDistance::DistanceType::MinkwoskiDistance;
     else
-        return GwmDistance::DistanceType::CRSDistance;
+        return GwmDistance::DistanceType::OneDimDistance;
 }
 
 QVariant GwmGTDROptionsDialog::distanceSourceParameters()
@@ -340,6 +340,8 @@ void GwmGTDROptionsDialog::updateFields()
     {
         return;
     }
+    
+
     if (ui->mDepVarComboBox->currentIndex() > -1)
     {
         mAlgorithmMeta.dependentVariable = mDepVarModel->item(ui->mDepVarComboBox->currentIndex());
@@ -374,8 +376,8 @@ void GwmGTDROptionsDialog::updateFields()
     }
     else
     {
-        mAlgorithmMeta.distanceType = gwm::Distance::DistanceType::CRSDistance;
-        mAlgorithmMeta.distanceCrsGeographic = dataLayer->crs().isGeographic();
+        mAlgorithmMeta.distanceType = gwm::Distance::DistanceType::OneDimDistance;
+        // mAlgorithmMeta.distanceCrsGeographic = dataLayer->crs().isGeographic();
     }
 
     // 并行设置
@@ -397,7 +399,7 @@ void GwmGTDROptionsDialog::updateFields()
         mAlgorithmMeta.parallelType = gwm::ParallelType::SerialOnly;
     }
 
-    mAlgorithmMeta.hatmatrix = ui->mQuantileCheckBox->isChecked();
+    mAlgorithmMeta.hatmatrix = ui->mHatmatrixCheckBox->isChecked();
 
 }
 

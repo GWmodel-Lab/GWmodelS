@@ -624,7 +624,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_6">
           <item>
-           <widget class="QCheckBox" name="mQuantileCheckBox">
+           <widget class="QCheckBox" name="mHatmatrixCheckBox">
             <property name="text">
              <string>hatmatrix</string>
             </property>
