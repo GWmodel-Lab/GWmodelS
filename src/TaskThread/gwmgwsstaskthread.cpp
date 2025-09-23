@@ -1,4 +1,4 @@
-#include "gwmgwsstaskthread.h"
+﻿//#include "gwmgwsstaskthread.h"
 #include "gwmgwsstaskthread.h"
 #include <exception>
 #include <gwmodel.h>
@@ -45,19 +45,28 @@ GwmGWSSTaskThread::GwmGWSSTaskThread(const GwmAlgorithmMetaGWSS& meta) : mMeta(m
         break;
     }
     SpatialWeight spatialWeight(&weight, distance);
-    mAlgorithm.setSpatialWeight(spatialWeight);
+
+    std::vector<SpatialWeight> spatialWeights;
+    
+    // 设置两个算法的空间权重
+    mAlgorithmAverage.setSpatialWeight(spatialWeight);
+    mAlgorithmCorrelation.setSpatialWeights(spatialWeights);
+
     // Parallel
-    mAlgorithm.setParallelType(meta.parallelType);
+    mAlgorithmAverage.setParallelType(meta.parallelType);
+    mAlgorithmCorrelation.setParallelType(meta.parallelType);
     switch (meta.parallelType)
     {
     case gwm::ParallelType::OpenMP:
-        mAlgorithm.setOmpThreadNum(meta.parallelOmpThreads);
+        mAlgorithmAverage.setOmpThreadNum(meta.parallelOmpThreads);
+        mAlgorithmCorrelation.setOmpThreadNum(meta.parallelOmpThreads);
         break;
     default:
         break;
     }
     // Others
-    mAlgorithm.setQuantile(meta.quantile);
+    mAlgorithmAverage.setQuantile(meta.quantile);
+    //mAlgorithmCorrelation.setQuantile(meta.quantile);
     delete distance;
 }
 
@@ -67,16 +76,30 @@ void GwmGWSSTaskThread::run()
     if (!checkCanceled())
     {
         emit message(tr("Extracting data and coordinates."));
-        mAlgorithm.setCoords(initPoints(mLayer));
-        mAlgorithm.setVariables(initXY(mLayer, mVariables));
+        mat coords = initPoints(mLayer);
+        mat variables = initXY(mLayer, mVariables);
+        
+        // 设置两个算法的坐标和变量
+        mAlgorithmAverage.setCoords(coords);
+        mAlgorithmAverage.setVariables(variables);
+        mAlgorithmCorrelation.setCoords(coords);
+        mAlgorithmCorrelation.setVariables1(variables);
+        mAlgorithmCorrelation.setVariables2(variables);
     }
 
     // Run algorithm;
     if (checkCanceled()) return;
     try
     {
-        mAlgorithm.setTelegram(make_unique<GwmTaskThreadTelegram>(this));
-        mAlgorithm.run();
+        // 运行两个算法
+        mAlgorithmAverage.setTelegram(make_unique<GwmTaskThreadTelegram>(this));
+        mAlgorithmAverage.run();
+        
+        if (checkCanceled()) return;
+        
+        mAlgorithmCorrelation.setTelegram(make_unique<GwmTaskThreadTelegram>(this));
+        mAlgorithmCorrelation.run();
+        
         if(!checkCanceled())
         {
             mResultList.push_back(qMakePair(QString("LM"), localmean()));
@@ -85,13 +108,13 @@ void GwmGWSSTaskThread::run()
             mResultList.push_back(qMakePair(QString("LSke"), localskewness()));
             mResultList.push_back(qMakePair(QString("LCV"), lcv()));
         }
-        if(mAlgorithm.quantile())
+        if(mAlgorithmAverage.quantile())
         {
             mResultList.push_back(qMakePair(QString("Median"), localmedian()));
             mResultList.push_back(qMakePair(QString("IQR"), iqr()));
             mResultList.push_back(qMakePair(QString("QI"), qi()));
         }
-        if(mAlgorithm.variables().n_cols >= 2)
+        if(mAlgorithmAverage.variables().n_cols >= 2)
         {
             mResultList.push_back(qMakePair(QString("Cov"), covmat()));
             mResultList.push_back(qMakePair(QString("Corr"), corrmat()));
@@ -145,8 +168,6 @@ mat GwmGWSSTaskThread::initXY(QgsVectorLayer* layer, const QList<GwmVariable> &i
     return x;
 }
 
-
-
 void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
 {
     QgsVectorLayer* srcLayer = mLayer;
@@ -198,7 +219,6 @@ void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
     mResultLayer->dataProvider()->addAttributes(fields.toList());
     mResultLayer->updateFields();
 
-
     // 设置要素几何
     mResultLayer->startEditing();
     QgsFeatureIterator iterator = srcLayer->getFeatures();
@@ -221,5 +241,4 @@ void GwmGWSSTaskThread::createResultLayer(CreateResultLayerData data)
         mResultLayer->addFeature(feature);
     }
     mResultLayer->commitChanges();
-
 }

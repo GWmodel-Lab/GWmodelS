@@ -31,33 +31,33 @@ public:
 
     GwmAlgorithmMetaGWSS meta() const { return mMeta; }
 
-    bool quantile() const { return mAlgorithm.quantile(); }
+    bool quantile() const { return mAlgorithmAverage.quantile(); }
 
     QList<GwmVariable> variables() const override { return mVariables; }
     void setVariables(const QList<GwmVariable>& variables) override { mVariables = variables; }
 
-    int parallelAbility() const override { return mAlgorithm.parallelAbility(); }
-    ParallelType parallelType() const override { return ParallelType(mAlgorithm.parallelType()); }
-    void setParallelType(const ParallelType& type) override { mAlgorithm.setParallelType(gwm::ParallelType(type)); }
-    void setOmpThreadNum(const int threadNum) override { mAlgorithm.setOmpThreadNum(threadNum); }
+    int parallelAbility() const override { return mAlgorithmAverage.parallelAbility(); }
+    ParallelType parallelType() const override { return ParallelType(mAlgorithmAverage.parallelType()); }
+    void setParallelType(const ParallelType& type) override { mAlgorithmAverage.setParallelType(gwm::ParallelType(type)); }
+    void setOmpThreadNum(const int threadNum) override { mAlgorithmAverage.setOmpThreadNum(threadNum); }
 
     QString name() const override { return tr("GWSS"); };
 
-    mat localmean() const{return mAlgorithm.localMean();}
-    mat standarddev() const{return mAlgorithm.localSDev();}
-    mat localskewness() const{return mAlgorithm.localSkewness();}
-    mat lcv() const{return mAlgorithm.localCV();}
-    mat lvar() const{return mAlgorithm.localVar();}
+    mat localmean() const{return mAlgorithmAverage.localMean();}
+    mat standarddev() const{return mAlgorithmAverage.localSDev();}
+    mat localskewness() const{return mAlgorithmAverage.localSkewness();}
+    mat lcv() const{return mAlgorithmAverage.localCV();}
+    mat lvar() const{return mAlgorithmAverage.localVar();}
 
-    mat localmedian() const{return mAlgorithm.localMedian();}
-    mat iqr() const{return mAlgorithm.iqr();}
-    mat qi() const{return mAlgorithm.qi();}
+    mat localmedian() const{return mAlgorithmAverage.localMedian();}
+    mat iqr() const{return mAlgorithmAverage.iqr();}
+    mat qi() const{return mAlgorithmAverage.qi();}
 
-    mat covmat() const{return mAlgorithm.localCov();}
-    mat corrmat() const{return mAlgorithm.localCorr();}
-    mat scorrmat() const{return mAlgorithm.localSCorr();}
+    mat covmat() const{return mAlgorithmCorrelation.localCov();}
+    mat corrmat() const{return mAlgorithmCorrelation.localCorr();}
+    mat scorrmat() const{return mAlgorithmCorrelation.localSCorr();}
 
-    bool isValid() override { return mAlgorithm.isValid(); }
+    bool isValid() override { return mAlgorithmAverage.isValid() && mAlgorithmCorrelation.isValid(); }
 
     CreateResultLayerData resultlist() const { return mResultList; }
     
@@ -72,7 +72,8 @@ protected:  // GwmSpatialMonoscaleAlgorithm interface
 
 protected:
     GwmAlgorithmMetaGWSS mMeta;
-    gwm::GWSS mAlgorithm;
+    gwm::GWAverage mAlgorithmAverage;
+    gwm::GWCorrelation mAlgorithmCorrelation;
     QgsVectorLayer* mLayer = nullptr;
     QList<GwmVariable> mVariables;
     CreateResultLayerData mResultList;
