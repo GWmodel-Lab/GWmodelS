@@ -1,4 +1,4 @@
-#include "gwmlayervectoritem.h"
+﻿#include "gwmlayervectoritem.h"
 #include "gwmlayersymbolitem.h"
 #include <qgsrenderer.h>
 #include <qgssinglesymbolrenderer.h>
@@ -10,6 +10,8 @@
 #include "TaskThread/gwmsavelayerthread.h"
 #include "gwmprogressdialog.h"
 #include "Model/gwmlayergroupitem.h"
+#include <QFileInfo>
+#include <QDir>
 
 GwmEnumValueNameMapper<GwmLayerVectorItem::SymbolType> GwmLayerVectorItem::SymbolTypeNameMapper = {
     std::make_pair(GwmLayerVectorItem::SymbolType::singleSymbol, "singleSymbol"),
@@ -314,7 +316,9 @@ bool GwmLayerVectorItem::save(QString filePath, QString fileName, QString fileTy
     {
         return mLayer->commitChanges();
     }
-
+    // 检查目标文件是否存在，决定覆盖策略
+    QFileInfo targetFile(filePath);
+    bool fileExists = targetFile.exists();
     QgsVectorFileWriter::ActionOnExistingFile mActionOnExistingFile;
     mActionOnExistingFile = QgsVectorFileWriter::CreateOrOverwriteFile;
     options.actionOnExistingFile = mActionOnExistingFile;
@@ -343,10 +347,49 @@ bool GwmLayerVectorItem::save(QString filePath, QString fileName, QString fileTy
     else{
         options.driverName = "ESRI Shapefile";
     }
+    
+    // 特殊处理：如果目标文件已存在，先写到临时文件再原子替换
+    QString tempPath;
+    QString originalPath;
+    if (fileExists) {
+        // 生成临时文件路径
+        QFileInfo fileInfo(filePath);
+        QString timeStamp = QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
+        tempPath = fileInfo.absolutePath() + "/" + fileInfo.baseName() + "_" +
+                            timeStamp+ ".shp";
+        
+        // 保存原始路径用于后续替换
+        originalPath = fileInfo.absolutePath() + "/" + fileInfo.baseName()  + ".shp";
+
+        // 修改写入路径为临时文件
+        filePath = tempPath;
+
+    }
+    
+    // 添加编码选项，避免中文乱码
+    if (!options.layerOptions.contains("ENCODING=UTF-8")) {
+        options.layerOptions << "ENCODING=UTF-8";
+    }
     GwmSaveLayerThread* thread = new GwmSaveLayerThread(mLayer,filePath,options);
     GwmProgressDialog* progressDialog = new GwmProgressDialog(thread);
     if (progressDialog->exec() == QDialog::Accepted)
     {
+        // 如果使用了临时文件，删除它
+        // 理论上应当是删除原文件，并将临时文件名该为原文件名，但是QGIS的API不支持
+        // 后续还是要改成原子替换
+        if (!tempPath.isEmpty() && QFile::exists(tempPath)) {
+            // 直接删除临时文件
+            QFileInfo tempInfo(tempPath);
+            QStringList sideFiles = {"shp", "shx", "dbf", "prj", "cpg", "qpj"};
+            
+            for (const QString& ext : sideFiles) {
+                QString tempFile = tempPath;
+                tempFile.replace(".shp", "." + ext);
+                if (QFile::exists(tempFile)) {
+                    QFile::remove(tempFile);
+                }
+            }
+        }
         return true;
     }
     else return false;
