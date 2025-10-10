@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GwmGWSSOptionsDialog</class>
- <widget class="QDialog" name="GwmGWSSOptionsDialog">
+ <class>GwmGTDROptionsDialog</class>
+ <widget class="QDialog" name="GwmGTDROptionsDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>654</width>
-    <height>659</height>
+    <width>700</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>GWSS Configure</string>
+   <string>GTDR Configure</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0">
    <item>
@@ -49,6 +49,16 @@
          </item>
          <item row="0" column="1">
           <widget class="QComboBox" name="mLayerComboBox"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>Dependent Variable</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="mDepVarComboBox"/>
          </item>
         </layout>
        </item>
@@ -614,9 +624,9 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_6">
           <item>
-           <widget class="QCheckBox" name="mQuantileCheckBox">
+           <widget class="QCheckBox" name="mHatmatrixCheckBox">
             <property name="text">
-             <string>Quantile</string>
+             <string>hatmatrix</string>
             </property>
            </widget>
           </item>
@@ -675,7 +685,7 @@
   <connection>
    <sender>btbOkCancle</sender>
    <signal>accepted()</signal>
-   <receiver>GwmGWSSOptionsDialog</receiver>
+   <receiver>GwmGTDROptionsDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -691,7 +701,7 @@
   <connection>
    <sender>btbOkCancle</sender>
    <signal>rejected()</signal>
-   <receiver>GwmGWSSOptionsDialog</receiver>
+   <receiver>GwmGTDROptionsDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

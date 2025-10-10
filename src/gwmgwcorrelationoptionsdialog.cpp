@@ -1,5 +1,5 @@
- #include "gwmcorrelationdialog.h"
-#include "ui_gwmcorrelationdialog.h"
+#include "gwmgwcorrelationoptionsdialog.h"
+#include "ui_gwmgwcorrelationoptionsdialog.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
@@ -15,9 +15,9 @@
 #include <SpatialWeight/gwmminkwoskidistance.h>
 #include "TaskThread/gwmmultiscalegwralgorithm.h"
 
-gwmcorrelationdialog::gwmcorrelationdialog(QList<GwmLayerGroupItem*> originItemList, GwmGWcorrelationTaskThread* thread,QWidget *parent) :
+GwmGWCorrelationOptionsDialog::GwmGWCorrelationOptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGWCorrelationTaskThread* thread,QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::gwmcorrelationdialog),
+    ui(new Ui::GwmGWCorrelationOptionsDialog),
     mMapLayerList(originItemList),
     mTaskThread(thread),
     mDepVarModel(new GwmVariableItemModel),
@@ -33,49 +33,49 @@ gwmcorrelationdialog::gwmcorrelationdialog(QList<GwmLayerGroupItem*> originItemL
         ui->mLayerComboBox->addItem(item->originChild()->layer()->name());
     }
     ui->mLayerComboBox->setCurrentIndex(-1);
-    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &gwmcorrelationdialog::layerChanged);
-    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &gwmcorrelationdialog::onDepVarChanged);
+    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWCorrelationOptionsDialog::layerChanged);
+    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWCorrelationOptionsDialog::onDepVarChanged);
     //independent选择器监听候选图层的变化
-    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &gwmcorrelationdialog::onSelectedIndenpendentVariablesChanged);
-    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &gwmcorrelationdialog::onXchangedToY);
+    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWCorrelationOptionsDialog::onSelectedIndenpendentVariablesChanged);
+    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWCorrelationOptionsDialog::onXchangedToY);
 
-    connect(ui->mIndepVarSelectorY, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &gwmcorrelationdialog::onSelectedIndenpendentVariablesChanged);
+    connect(ui->mIndepVarSelectorY, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWCorrelationOptionsDialog::onSelectedIndenpendentVariablesChanged);
     // Parameter Specified 参数设置，即变量参数设置区域
     mParameterSpecifiedOptionsSelectionModel = new QItemSelectionModel(mParameterSpecifiedOptionsModel);
     ui->lsvParameterSpecifiedParameterList->setModel(mParameterSpecifiedOptionsModel);
     ui->lsvParameterSpecifiedParameterList->setSelectionModel(mParameterSpecifiedOptionsSelectionModel);
-    connect(mParameterSpecifiedOptionsSelectionModel, &QItemSelectionModel::currentChanged, this, &gwmcorrelationdialog::onSpecifiedParameterCurrentChanged);
+    connect(mParameterSpecifiedOptionsSelectionModel, &QItemSelectionModel::currentChanged, this, &GwmGWCorrelationOptionsDialog::onSpecifiedParameterCurrentChanged);
 
     //带宽类型选择
     QButtonGroup* bwTypeBtnGroup = new QButtonGroup(this);
     bwTypeBtnGroup->addButton(ui->mBwTypeAdaptiveRadio);
     bwTypeBtnGroup->addButton(ui->mBwTypeFixedRadio);
-    connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::onFixedRadioToggled);
-    connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::onVariableRadioToggled);
+    connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::onFixedRadioToggled);
+    connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::onVariableRadioToggled);
 
     //带宽选择方式 自动选择 || 用户自定义
     QButtonGroup* bwSizeTypeBtnGroup = new QButtonGroup(this);
     bwSizeTypeBtnGroup->addButton(ui->mBwSizeAutomaticRadio);
     bwSizeTypeBtnGroup->addButton(ui->mBwSizeCustomizeRadio);
-    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::onAutomaticRadioToggled);//自动选择
-    connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::onCustomizeRaidoToggled);//用户自定义
-    connect(ui->mBwSizeAutomaticApprochCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &gwmcorrelationdialog::onBwSizeAutomaticApprochChanged);//自动选择带宽的方式
+    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::onAutomaticRadioToggled);//自动选择
+    connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::onCustomizeRaidoToggled);//用户自定义
+    connect(ui->mBwSizeAutomaticApprochCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWCorrelationOptionsDialog::onBwSizeAutomaticApprochChanged);//自动选择带宽的方式
     
-    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &gwmcorrelationdialog::onBwSizeAdaptiveSizeChanged); //带宽类型:邻居
-    connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &gwmcorrelationdialog::onBwSizeAdaptiveUnitChanged);//带宽单位
-    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &gwmcorrelationdialog::onBwSizeFixedSizeChanged);//带宽类型:固定距离
-    connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &gwmcorrelationdialog::onBwSizeFixedUnitChanged);//贷款单位
-    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &gwmcorrelationdialog::onBwKernelFunctionChanged);//核函数类型
+    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWCorrelationOptionsDialog::onBwSizeAdaptiveSizeChanged); //带宽类型:邻居
+    connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWCorrelationOptionsDialog::onBwSizeAdaptiveUnitChanged);//带宽单位
+    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWCorrelationOptionsDialog::onBwSizeFixedSizeChanged);//带宽类型:固定距离
+    connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWCorrelationOptionsDialog::onBwSizeFixedUnitChanged);//贷款单位
+    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWCorrelationOptionsDialog::onBwKernelFunctionChanged);//核函数类型
     
     //距离矩阵设置
     QButtonGroup* distanceSettingBtnGroup = new QButtonGroup(this);
     distanceSettingBtnGroup->addButton(ui->mDistTypeCRSRadio);
     distanceSettingBtnGroup->addButton(ui->mDistTypeDmatRadio);
     distanceSettingBtnGroup->addButton(ui->mDistTypeMinkowskiRadio);
-    connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::onDistTypeCRSToggled);
-    connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::onDistTypeMinkowskiToggled);
-    connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::onDistTypeDmatToggled);
-    connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &gwmcorrelationdialog::onDmatFileOpenClicked);
+    connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::onDistTypeCRSToggled);
+    connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::onDistTypeMinkowskiToggled);
+    connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::onDistTypeDmatToggled);
+    connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &GwmGWCorrelationOptionsDialog::onDmatFileOpenClicked);
 
     //计算方式，多线程等
     QButtonGroup* calcParallelTypeBtnGroup = new QButtonGroup(this);
@@ -86,11 +86,11 @@ gwmcorrelationdialog::gwmcorrelationdialog(QList<GwmLayerGroupItem*> originItemL
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);
-    connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::onMultithreadingRadioToggled);
+    connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::onMultithreadingRadioToggled);
 #else
     ui->mCalcParallelMultithreadRadio->setEnabled(false);
 #endif
-    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::onNoneRadioToggled);
+    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::onNoneRadioToggled);
 
     ui->mBwTypeAdaptiveRadio->setChecked(true);
     ui->mBwSizeAutomaticRadio->setChecked(true);
@@ -98,42 +98,42 @@ gwmcorrelationdialog::gwmcorrelationdialog(QList<GwmLayerGroupItem*> originItemL
     ui->mDistTypeCRSRadio->setChecked(true);
 
 
-    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mIndepVarSelectorY, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAutomaticApprochCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-//    connect(ui->mBwSelecionThresholdSpb, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mThetaValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mPValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mDistMatrixFileNameEdit, &QLineEdit::textChanged, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &gwmcorrelationdialog::updateFieldsAndEnable);
-    connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
-//    connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &gwmcorrelationdialog::updateFieldsAndEnable);
+    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mIndepVarSelectorY, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAutomaticApprochCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+//    connect(ui->mBwSelecionThresholdSpb, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mThetaValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mPValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistMatrixFileNameEdit, &QLineEdit::textChanged, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
+//    connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWCorrelationOptionsDialog::updateFieldsAndEnable);
     updateFieldsAndEnable();
 }
 
 
-gwmcorrelationdialog::~gwmcorrelationdialog()
+GwmGWCorrelationOptionsDialog::~GwmGWCorrelationOptionsDialog()
 {
     delete ui;
 }
 
-bool gwmcorrelationdialog::isNumeric(QVariant::Type type)
+bool GwmGWCorrelationOptionsDialog::isNumeric(QVariant::Type type)
 {
     switch (type)
     {
@@ -148,17 +148,17 @@ bool gwmcorrelationdialog::isNumeric(QVariant::Type type)
     }
 }
 
-GwmLayerGroupItem *gwmcorrelationdialog::selectedLayer() const
+GwmLayerGroupItem *GwmGWCorrelationOptionsDialog::selectedLayer() const
 {
     return mSelectedLayer;
 }
 
-void gwmcorrelationdialog::setSelectedLayer(GwmLayerGroupItem *selectedLayer)
+void GwmGWCorrelationOptionsDialog::setSelectedLayer(GwmLayerGroupItem *selectedLayer)
 {
     mSelectedLayer = selectedLayer;
 }
 
-void gwmcorrelationdialog::layerChanged(int index)
+void GwmGWCorrelationOptionsDialog::layerChanged(int index)
 {
     ui->mIndepVarSelector->layerChanged(mMapLayerList[index]->originChild()->layer());
     ui->mIndepVarSelectorY->layerChanged(mMapLayerList[index]->originChild()->layer());
@@ -185,25 +185,25 @@ void gwmcorrelationdialog::layerChanged(int index)
     }
 }
 
-void gwmcorrelationdialog::onDepVarChanged(const int index)
+void GwmGWCorrelationOptionsDialog::onDepVarChanged(const int index)
 {
     //用于触发自变量选择框刷新
     ui->mIndepVarSelector->onDepVarChanged("");
     ui->mIndepVarSelectorY->onIndepVarChanged(ui->mIndepVarSelector->mSelectedIndepVarModel);
 }
 
-QString gwmcorrelationdialog::crsRotateTheta()
+QString GwmGWCorrelationOptionsDialog::crsRotateTheta()
 {
     return ui->mThetaValue->text();
 }
 
-QString gwmcorrelationdialog::crsRotateP()
+QString GwmGWCorrelationOptionsDialog::crsRotateP()
 {
     return ui->mPValue->text();
 }
 
 //带宽计算方式
-bool gwmcorrelationdialog::bandwidthType()
+bool GwmGWCorrelationOptionsDialog::bandwidthType()
 {
     if(ui->mBwTypeFixedRadio->isChecked()){
         return false;
@@ -215,7 +215,7 @@ bool gwmcorrelationdialog::bandwidthType()
 }
 
 //多线程
-IParallelalbe::ParallelType gwmcorrelationdialog::parallelType()
+IParallelalbe::ParallelType GwmGWCorrelationOptionsDialog::parallelType()
 {
     if(ui->mCalcParallelNoneRadio->isChecked()){
         return IParallelalbe::ParallelType::SerialOnly;
@@ -230,21 +230,21 @@ IParallelalbe::ParallelType gwmcorrelationdialog::parallelType()
 }
 
 //切换计算方式显示区内容
-void gwmcorrelationdialog::onNoneRadioToggled(bool checked)
+void GwmGWCorrelationOptionsDialog::onNoneRadioToggled(bool checked)
 {
     if(checked){
         ui->stackedWidget->setCurrentIndex(0);
     }
 }
 
-void gwmcorrelationdialog::onMultithreadingRadioToggled(bool checked)
+void GwmGWCorrelationOptionsDialog::onMultithreadingRadioToggled(bool checked)
 {
     if(checked){
         ui->stackedWidget->setCurrentIndex(1);
     }
 }
 
-void gwmcorrelationdialog::onGPURadioToggled(bool checked)
+void GwmGWCorrelationOptionsDialog::onGPURadioToggled(bool checked)
 {
     if(checked){
         ui->stackedWidget->setCurrentIndex(2);
@@ -252,7 +252,7 @@ void gwmcorrelationdialog::onGPURadioToggled(bool checked)
 }
 
 //记录: 自动选择带宽还是用户定义
-void gwmcorrelationdialog::onAutomaticRadioToggled(bool checked)
+void GwmGWCorrelationOptionsDialog::onAutomaticRadioToggled(bool checked)
 {
     if (checked){
         ui->mBwSizeAdaptiveSize->setEnabled(false);
@@ -271,7 +271,7 @@ void gwmcorrelationdialog::onAutomaticRadioToggled(bool checked)
 }
 
 //
-void gwmcorrelationdialog::onDistTypeCRSToggled(bool checked)
+void GwmGWCorrelationOptionsDialog::onDistTypeCRSToggled(bool checked)
 {
     if (checked)
     {
@@ -285,7 +285,7 @@ void gwmcorrelationdialog::onDistTypeCRSToggled(bool checked)
     }
 }
 
-void gwmcorrelationdialog::onDistTypeMinkowskiToggled(bool checked)
+void GwmGWCorrelationOptionsDialog::onDistTypeMinkowskiToggled(bool checked)
 {
     if (checked)
     {
@@ -301,7 +301,7 @@ void gwmcorrelationdialog::onDistTypeMinkowskiToggled(bool checked)
     }
 }
 
-void gwmcorrelationdialog::onDistTypeDmatToggled(bool checked)
+void GwmGWCorrelationOptionsDialog::onDistTypeDmatToggled(bool checked)
 {
     if (checked)
     {
@@ -318,13 +318,13 @@ void gwmcorrelationdialog::onDistTypeDmatToggled(bool checked)
     ui->mCalcParallelNoneRadio->setChecked(true);
 }
 
-void gwmcorrelationdialog::onDmatFileOpenClicked()
+void GwmGWCorrelationOptionsDialog::onDmatFileOpenClicked()
 {
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open Dmat File"), tr(""), tr("Dmat File (*.dmat)"));
     ui->mDistMatrixFileNameEdit->setText(filePath);
 }
 
-void gwmcorrelationdialog::onSelectedIndenpendentVariablesChanged()
+void GwmGWCorrelationOptionsDialog::onSelectedIndenpendentVariablesChanged()
 {
     GwmVariableItemModel *newDoubleVarsModel = new GwmVariableItemModel(ui->mIndepVarSelector->selectedIndepVarModel(), ui->mIndepVarSelectorY->selectedIndepVarModel());
 
@@ -335,13 +335,13 @@ void gwmcorrelationdialog::onSelectedIndenpendentVariablesChanged()
     }
 
 }
-void gwmcorrelationdialog::onXchangedToY()
+void GwmGWCorrelationOptionsDialog::onXchangedToY()
 {
     ui->mIndepVarSelectorY->onIndepVarChanged(ui->mIndepVarSelector->mSelectedIndepVarModel);
 }
 
 //重点部分:挨个设置变量的计算参数
-void gwmcorrelationdialog::onSpecifiedParameterCurrentChanged(const QModelIndex& current, const QModelIndex& previous)
+void GwmGWCorrelationOptionsDialog::onSpecifiedParameterCurrentChanged(const QModelIndex& current, const QModelIndex& previous)
 {
     ui->mParameterSpecifiedOptionsLayout->setEnabled(current.isValid());
     ui->mPSBandwidthSettingGroup->setEnabled(current.isValid());
@@ -394,7 +394,7 @@ void gwmcorrelationdialog::onSpecifiedParameterCurrentChanged(const QModelIndex&
 }
 
 //记录:带宽的的值，自动选择或手动选择的值全部在这个地方设置
-void gwmcorrelationdialog::onBwSizeAutomaticApprochChanged(int index)
+void GwmGWCorrelationOptionsDialog::onBwSizeAutomaticApprochChanged(int index)
 {
     // 记录数据
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
@@ -405,7 +405,7 @@ void gwmcorrelationdialog::onBwSizeAutomaticApprochChanged(int index)
     }
 }
 
-void gwmcorrelationdialog::onBwSizeAdaptiveSizeChanged(int size)
+void GwmGWCorrelationOptionsDialog::onBwSizeAdaptiveSizeChanged(int size)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
     if (option)
@@ -414,7 +414,7 @@ void gwmcorrelationdialog::onBwSizeAdaptiveSizeChanged(int size)
     }
 }
 
-void gwmcorrelationdialog::onBwSizeAdaptiveUnitChanged(int index)
+void GwmGWCorrelationOptionsDialog::onBwSizeAdaptiveUnitChanged(int index)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
     if (option)
@@ -423,7 +423,7 @@ void gwmcorrelationdialog::onBwSizeAdaptiveUnitChanged(int index)
     }
 }
 
-void gwmcorrelationdialog::onBwSizeFixedSizeChanged(double size)
+void GwmGWCorrelationOptionsDialog::onBwSizeFixedSizeChanged(double size)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
     if (option)
@@ -432,7 +432,7 @@ void gwmcorrelationdialog::onBwSizeFixedSizeChanged(double size)
     }
 }
 
-void gwmcorrelationdialog::onBwSizeFixedUnitChanged(int index)
+void GwmGWCorrelationOptionsDialog::onBwSizeFixedUnitChanged(int index)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
     if (option)
@@ -441,7 +441,7 @@ void gwmcorrelationdialog::onBwSizeFixedUnitChanged(int index)
     }
 }
 
-void gwmcorrelationdialog::onBwKernelFunctionChanged(int index)
+void GwmGWCorrelationOptionsDialog::onBwKernelFunctionChanged(int index)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
     if (option)
@@ -450,7 +450,7 @@ void gwmcorrelationdialog::onBwKernelFunctionChanged(int index)
     }
 }
 
-void gwmcorrelationdialog::onPredictorCentralizationToggled(bool checked)
+void GwmGWCorrelationOptionsDialog::onPredictorCentralizationToggled(bool checked)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
     if (option)
@@ -459,7 +459,7 @@ void gwmcorrelationdialog::onPredictorCentralizationToggled(bool checked)
     }
 }
 
-void gwmcorrelationdialog::onCustomizeRaidoToggled(bool checked)
+void GwmGWCorrelationOptionsDialog::onCustomizeRaidoToggled(bool checked)
 {
     if (checked){
         ui->mBwSizeAdaptiveSize->setEnabled(true);
@@ -479,7 +479,7 @@ void gwmcorrelationdialog::onCustomizeRaidoToggled(bool checked)
 }
 
 //这里设置各个变量的adaptive和fixed
-void gwmcorrelationdialog::onFixedRadioToggled(bool checked)
+void GwmGWCorrelationOptionsDialog::onFixedRadioToggled(bool checked)
 {
    ui->mBwSizeSettingStack->setCurrentIndex(1);
    GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
@@ -489,7 +489,7 @@ void gwmcorrelationdialog::onFixedRadioToggled(bool checked)
    }
 }
 
-void gwmcorrelationdialog::onVariableRadioToggled(bool checked)
+void GwmGWCorrelationOptionsDialog::onVariableRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(0);
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
@@ -503,7 +503,7 @@ void gwmcorrelationdialog::onVariableRadioToggled(bool checked)
 //    }
 }
 
-double gwmcorrelationdialog::bandwidthSize(){
+double GwmGWCorrelationOptionsDialog::bandwidthSize(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
         QList<double> unit = { 1, 10, 100, 1000 };
@@ -516,7 +516,7 @@ double gwmcorrelationdialog::bandwidthSize(){
     }
 }
 
-GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType gwmcorrelationdialog::bandwidthSelectionApproach()
+GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType GwmGWCorrelationOptionsDialog::bandwidthSelectionApproach()
 {
     switch (ui->mBwSizeAutomaticApprochCombo->currentIndex())
     {
@@ -527,14 +527,14 @@ GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType gwmcorrelationdialog:
     }
 }
 
-void gwmcorrelationdialog::onBwSelecionThresholdSpbChanged(int value)
+void GwmGWCorrelationOptionsDialog::onBwSelecionThresholdSpbChanged(int value)
 {
     GwmParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(mParameterSpecifiedOptionsSelectionModel->currentIndex());
     option->threshold = pow(10.0, -value);
 }
 
 //带宽的类型 邻居个数或距离带宽
-QString gwmcorrelationdialog::bandWidthUnit(){
+QString GwmGWCorrelationOptionsDialog::bandWidthUnit(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
         return ui->mBwSizeAdaptiveUnit->currentText();
@@ -545,13 +545,13 @@ QString gwmcorrelationdialog::bandWidthUnit(){
     }
 }
 
-GwmBandwidthWeight::KernelFunctionType gwmcorrelationdialog::bandwidthKernelFunction()
+GwmBandwidthWeight::KernelFunctionType GwmGWCorrelationOptionsDialog::bandwidthKernelFunction()
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
     return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
-GwmDistance::DistanceType gwmcorrelationdialog::distanceSourceType()
+GwmDistance::DistanceType GwmGWCorrelationOptionsDialog::distanceSourceType()
 {
     if (ui->mDistTypeCRSRadio->isChecked())
         return GwmDistance::DistanceType::CRSDistance;
@@ -563,7 +563,7 @@ GwmDistance::DistanceType gwmcorrelationdialog::distanceSourceType()
         return GwmDistance::DistanceType::CRSDistance;
 }
 
-QVariant gwmcorrelationdialog::distanceSourceParameters()
+QVariant GwmGWCorrelationOptionsDialog::distanceSourceParameters()
 {
     if (ui->mDistTypeDmatRadio->isChecked())
     {
@@ -580,7 +580,7 @@ QVariant gwmcorrelationdialog::distanceSourceParameters()
     else return QVariant();
 }
 
-QVariant gwmcorrelationdialog::parallelParameters()
+QVariant GwmGWCorrelationOptionsDialog::parallelParameters()
 {
 /*    if (ui->mCalcParallelGPURadio->isChecked())
     {
@@ -596,12 +596,12 @@ QVariant gwmcorrelationdialog::parallelParameters()
     }
 }
 
-void gwmcorrelationdialog::setTaskThread(GwmGWcorrelationTaskThread* taskThread)
+void GwmGWCorrelationOptionsDialog::setTaskThread(GwmGWCorrelationTaskThread* taskThread)
 {
     mTaskThread = taskThread;
 }
 
-void gwmcorrelationdialog::updateFieldsAndEnable()
+void GwmGWCorrelationOptionsDialog::updateFieldsAndEnable()
 {
     if (this->mTaskThread)
     {
@@ -615,7 +615,7 @@ void gwmcorrelationdialog::updateFieldsAndEnable()
 }
 
 //将计算参数传给计算线程
-void gwmcorrelationdialog::updateFields()
+void GwmGWCorrelationOptionsDialog::updateFields()
 {
     QgsVectorLayer* dataLayer;
     // 图层设置
@@ -704,7 +704,7 @@ void gwmcorrelationdialog::updateFields()
     }
 }
 
-void gwmcorrelationdialog::enableAccept()
+void GwmGWCorrelationOptionsDialog::enableAccept()
 {
     QString message;
     if (mTaskThread->isValid())

@@ -3,7 +3,7 @@
 
 #include "Model/gwmvariableitemmodel.h"
 
-struct IMultivariableAnalysis
+struct IGwmMultivariableAnalysis
 {
     virtual QList<GwmVariable> variables() const = 0;
     virtual void setVariables(const QList<GwmVariable>& variables) = 0;

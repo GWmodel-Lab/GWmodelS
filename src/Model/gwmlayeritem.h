@@ -28,10 +28,12 @@ public:
         ScalableGWR,
         GeneralizedGWR,
         MultiscaleGWR,
-        GWSS,
+        GTDR,
         CollinearityGWR,
         GWPCA,
-        GTWR
+        GTWR,
+        GWAverage,
+        GWCorrelation
     };
 
     static GwmEnumValueNameMapper<GwmLayerItemType> LayerItemTypeNameMapper;

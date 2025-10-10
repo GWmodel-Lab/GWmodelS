@@ -1,5 +1,5 @@
-#ifndef GWMCORRELATIONDIALOG_H
-#define GWMCORRELATIONDIALOG_H
+#ifndef GWMGWCORRELATIONOPTIONSDIALOG_H
+#define GWMGWCORRELATIONOPTIONSDIALOG_H
 
 #include <QDialog>
 #include <QItemSelectionModel>
@@ -11,27 +11,28 @@
 #include "Model/gwmlayergroupitem.h"
 #include "Model/gwmparameterspecifiedoptionsmodel.h"
 
-namespace Ui {
-class gwmcorrelationdialog;
+namespace Ui
+{
+    class GwmGWCorrelationOptionsDialog;
 }
 
-class gwmcorrelationdialog : public QDialog
+class GwmGWCorrelationOptionsDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit gwmcorrelationdialog(QList<GwmLayerGroupItem*> originItemList, GwmGWcorrelationTaskThread* thread,QWidget *parent = nullptr);
-    ~gwmcorrelationdialog();
+    explicit GwmGWCorrelationOptionsDialog(QList<GwmLayerGroupItem *> originItemList, GwmGWCorrelationTaskThread *thread, QWidget *parent = nullptr);
+    ~GwmGWCorrelationOptionsDialog();
 
 private:
-    Ui::gwmcorrelationdialog *ui;
-    QList<GwmLayerGroupItem*> mMapLayerList;
-    GwmLayerGroupItem* mSelectedLayer = nullptr;
-    GwmGWcorrelationTaskThread* mTaskThread = nullptr;
-    GwmVariableItemModel* mDepVarModel;
+    Ui::GwmGWCorrelationOptionsDialog *ui;
+    QList<GwmLayerGroupItem *> mMapLayerList;
+    GwmLayerGroupItem *mSelectedLayer = nullptr;
+    GwmGWCorrelationTaskThread *mTaskThread = nullptr;
+    GwmVariableItemModel *mDepVarModel;
     bool isNumeric(QVariant::Type type);
-    GwmParameterSpecifiedOptionsModel* mParameterSpecifiedOptionsModel = nullptr;
-    QItemSelectionModel* mParameterSpecifiedOptionsSelectionModel = nullptr;
+    GwmParameterSpecifiedOptionsModel *mParameterSpecifiedOptionsModel = nullptr;
+    QItemSelectionModel *mParameterSpecifiedOptionsSelectionModel = nullptr;
 public slots:
     void layerChanged(const int index);
     void onDepVarChanged(const int index);
@@ -41,14 +42,14 @@ public slots:
     void onMultithreadingRadioToggled(bool checked);
     void onGPURadioToggled(bool checked);
     void onCustomizeRaidoToggled(bool checked);
-//    void onInitializeRadioToggled(bool checked);
+    //    void onInitializeRadioToggled(bool checked);
     void onAutomaticRadioToggled(bool checked);
     void onDistTypeCRSToggled(bool checked);
     void onDistTypeMinkowskiToggled(bool checked);
     void onDistTypeDmatToggled(bool checked);
     void onDmatFileOpenClicked();
     void onSelectedIndenpendentVariablesChanged();
-    void onSpecifiedParameterCurrentChanged(const QModelIndex& currnet, const QModelIndex& previous);
+    void onSpecifiedParameterCurrentChanged(const QModelIndex &currnet, const QModelIndex &previous);
     void onBwSizeAutomaticApprochChanged(int index);
     void onBwSizeAdaptiveSizeChanged(int size);
     void onBwSizeAdaptiveUnitChanged(int index);
@@ -71,7 +72,7 @@ public:
     QVariant distanceSourceParameters();
     QVariant parallelParameters();
 
-    void setTaskThread(GwmGWcorrelationTaskThread* taskThread);
+    void setTaskThread(GwmGWCorrelationTaskThread *taskThread);
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
@@ -82,6 +83,4 @@ private slots:
     void onBwSelecionThresholdSpbChanged(int arg1);
 };
 
-
-
-#endif // GWMCORRELATIONDIALOG_H
+#endif // GWMGWCORRELATIONOPTIONSDIALOG_H

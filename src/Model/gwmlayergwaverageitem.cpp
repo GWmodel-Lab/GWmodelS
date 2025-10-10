@@ -1,8 +1,7 @@
-#include "gwmlayergwssitem.h"
+#include "gwmlayergwaverageitem.h"
 #include "gwmlayergroupitem.h"
 
-
-GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWSSTaskThread* taskThread)
+GwmLayerGWAverageItem::GwmLayerGWAverageItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWAverageTaskThread* taskThread)
     : GwmLayerVectorItem(parentItem, vector)
 {
     if (taskThread)
@@ -25,12 +24,6 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
             mIQR = taskThread->iqr();
             mQI = taskThread->qi();
         }
-
-        if(mVariables.size() >= 2){
-            mCovmat = taskThread->covmat();
-            mCorrmat = taskThread->corrmat();
-            mSCorrmat = taskThread->scorrmat();
-        }
     }
     else
     {
@@ -38,77 +31,20 @@ GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
     }
 }
 
-GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWcorrelationTaskThread* taskThread)
-    : GwmLayerVectorItem(parentItem, vector)
-{
-    if (taskThread)
-    {
-        this->setType(2);
-        mDataPointsSize = taskThread->dataPointsSize();
-        mVariables = taskThread->variables();
-        mVariablesY = taskThread->variablesY();
-        QList<GwmSpatialWeight> ssp = taskThread->spatialWeights();
-        for (const GwmSpatialWeight& sp : taskThread->spatialWeights())
-        {
-            GwmBandwidthWeight* pBw = static_cast<GwmBandwidthWeight*>(sp.weight()->clone());
-            GwmBandwidthWeight bw(pBw);
-            mBandwidthWeights.append(bw);
-            mDistaneTypes.append(sp.distance()->type());
-        }
-        mBandwidthInitilize = taskThread->bandwidthInitilize();
-        mBandwidthSelectionApproach = taskThread->bandwidthSelectionApproach();
-        mResultList = taskThread->resultlist();
-        mCovmat = taskThread->covmat();
-        mCorrmat = taskThread->corrmat();
-        mSCorrmat = taskThread->scorrmat();
-    }
-}
-
-GwmLayerGWSSItem::GwmLayerGWSSItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWaverageTaskThread* taskThread)
-    : GwmLayerVectorItem(parentItem, vector)
-{
-    if (taskThread)
-    {
-        this->setType(1);
-        mDataPointsSize = taskThread->dataPointsSize();
-        mVariables = taskThread->variables();
-        mBandwidth = taskThread->bandwidth();
-        mQuantile = taskThread->quantile();
-        mResultList = taskThread->resultlist();
-
-        mLocalMean = taskThread->localmean();
-        mStandardDev = taskThread->standarddev();
-        mLocalSkewness = taskThread->localskewness();
-        mLCV = taskThread->lcv();
-        mLVar = taskThread->lvar();
-
-        if(mQuantile){
-            mLocalMedian = taskThread->localmedian();
-            mIQR = taskThread->iqr();
-            mQI = taskThread->qi();
-        }
-
-    }
-    else
-    {
-        mBandwidth = new GwmBandwidthWeight();
-    }
-}
-
-GwmLayerGWSSItem::~GwmLayerGWSSItem()
+GwmLayerGWAverageItem::~GwmLayerGWAverageItem()
 {
     if (mBandwidth)
         delete mBandwidth;
 }
 
-int GwmLayerGWSSItem::childNumber()
+int GwmLayerGWAverageItem::childNumber()
 {
     if (mParentItem)
         return ((GwmLayerGroupItem*)mParentItem)->analyseChildren().indexOf(this) + 1;
     return 0;
 }
 
-bool GwmLayerGWSSItem::readXml(QDomNode &node)
+bool GwmLayerGWAverageItem::readXml(QDomNode &node)
 {
     if (GwmLayerVectorItem::readXml(node))
     {
@@ -216,7 +152,7 @@ bool GwmLayerGWSSItem::readXml(QDomNode &node)
                 }
             }
 
-            GwmGWSSTaskThread::CreateResultLayerData resultLayerData;
+            GwmGWAverageTaskThread::CreateResultLayerData resultLayerData;
             resultLayerData.push_back(qMakePair(QString("LM"), mLocalMean));
             resultLayerData.push_back(qMakePair(QString("LSD"), mStandardDev));
             resultLayerData.push_back(qMakePair(QString("LVar"), mLVar));
@@ -240,7 +176,7 @@ bool GwmLayerGWSSItem::readXml(QDomNode &node)
     else return false;
 }
 
-bool GwmLayerGWSSItem::writeXml(QDomNode &node, QDomDocument &doc)
+bool GwmLayerGWAverageItem::writeXml(QDomNode &node, QDomDocument &doc)
 {
     if (GwmLayerVectorItem::writeXml(node, doc))
     {
@@ -271,7 +207,7 @@ bool GwmLayerGWSSItem::writeXml(QDomNode &node, QDomDocument &doc)
     else return false;
 }
 
-int GwmLayerGWSSItem::dataPointsSize() const
+int GwmLayerGWAverageItem::dataPointsSize() const
 {
     return mDataPointsSize;
 }

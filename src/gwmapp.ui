@@ -280,7 +280,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionGWR"/>
-   <addaction name="actionGWSS"/>
+   <addaction name="actionGTDR"/>
    <addaction name="actionGWPCA"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -453,13 +453,13 @@
     <string>GWR</string>
    </property>
   </action>
-  <action name="actionGWSS">
+  <action name="actionGTDR">
    <property name="icon">
     <iconset resource="images/images.qrc">
-     <normaloff>:/images/icons/GWSS.svg</normaloff>:/images/icons/GWSS.svg</iconset>
+     <normaloff>:/images/icons/GTDR.png</normaloff>:/images/icons/GTDR.png</iconset>
    </property>
    <property name="text">
-    <string>GWSS</string>
+    <string>GTDR</string>
    </property>
   </action>
   <action name="actionGWPCA">

@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "Model/gwmlayergroupitem.h"
+#include "Model/gwmalgorithmmetavariable.h"
 #include <qgsvectorlayer.h>
 #include <qstandarditemmodel.h>
 #include "Model/gwmvariableitemmodel.h"
@@ -11,24 +12,26 @@
 #include "SpatialWeight/gwmdistance.h"
 
 namespace Ui {
-class GwmGWaverageOptionsDialog;
+class GwmGWAverageOptionsDialog;
 }
 
-class GwmGWaverageOptionsDialog : public QDialog
+class GwmGWAverageOptionsDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit GwmGWaverageOptionsDialog(QList<GwmLayerGroupItem*> originItemList, GwmGWaverageTaskThread* thread,QWidget *parent = nullptr);
-    ~GwmGWaverageOptionsDialog();
+    explicit GwmGWAverageOptionsDialog(QList<GwmLayerGroupItem*> originItemList, QWidget *parent = nullptr);
+    ~GwmGWAverageOptionsDialog();
+
+    GwmAlgorithmMetaVariable meta() const { return mAlgorithmMeta; }
 
 private:
-    Ui::GwmGWaverageOptionsDialog *ui;
+    Ui::GwmGWAverageOptionsDialog *ui;
     QList<GwmLayerGroupItem*> mMapLayerList;
     GwmLayerGroupItem* mSelectedLayer = nullptr;
-    GwmGWaverageTaskThread* mTaskThread = nullptr;
     bool isNumeric(QVariant::Type type);
     GwmBandwidthWeight* mBandwidth;
+    GwmAlgorithmMetaVariable mAlgorithmMeta;
 
 public slots:
     void layerChanged(const int index);
@@ -51,23 +54,17 @@ public:
     bool bandwidthType();
     IParallelalbe::ParallelType approachType();
     double bandwidthSize();
-//    GwmGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
-//    QString bandWidthUnit();
-    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
+    gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     GwmDistance::DistanceType distanceSourceType();
     QVariant distanceSourceParameters();
     QVariant parallelParameters();
 
-    void setTaskThread(GwmGWaverageTaskThread* taskThread);
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
-
-
-
 };
 
 #endif // GWMGWAVERAGEOPTIONSDIALOG_H
