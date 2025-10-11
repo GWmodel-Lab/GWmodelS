@@ -38,14 +38,14 @@ set(GWmodel_SEARCH_PATHS
     "$ENV{LIB}"
 )
 
-unset(GWmodel_INCLUDE_DIRS CACHE)
+#unset(GWmodel_INCLUDE_DIRS CACHE)
 find_path(GWmodel_INCLUDE_DIRS
     NAMES gwmodel.h
     PATHS ${GWmodel_SEARCH_PATHS}
     PATH_SUFFIXES "include"
 )
 
-unset(GWmodel_LIBRARIES CACHE)
+#unset(GWmodel_LIBRARIES CACHE)
 find_library(GWmodel_LIBRARIES
     NAMES gwmodel.lib libgwmodel.a libgwmodel.lib
     PATHS ${GWmodel_SEARCH_PATHS}
