@@ -1,4 +1,4 @@
-#include "gwmbasicgwralgorithm.h"
+﻿#include "gwmbasicgwralgorithm.h"
 #include <SpatialWeight/gwmcrsdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 #include <gsl/gsl_cdf.h>
@@ -8,6 +8,7 @@
 
 #include <armadillo>
 using namespace arma;
+using namespace gwm;
 int GwmBasicGWRAlgorithm::treeChildCount = 0;
 
 
@@ -35,7 +36,7 @@ GwmEnumValueNameMapper<GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType> Gw
 
 GwmBasicGWRAlgorithm::GwmBasicGWRAlgorithm() : GwmGeographicalWeightedRegressionAlgorithm()
 {
-
+    mGWRCore = std::make_unique<GWRBasic>();
 }
 
 
@@ -1131,14 +1132,15 @@ void GwmBasicGWRAlgorithm::fTest(GwmBasicGWRAlgorithm::FTestParameters params)
     }
 }
 
-int GwmBasicGWRAlgorithm::groupSize() const
+std::size_t GwmBasicGWRAlgorithm::groupSize() const
 {
     return mGroupSize;
 }
 
-void GwmBasicGWRAlgorithm::setGroupSize(int groupSize)
+void GwmBasicGWRAlgorithm::setGroupSize(const std::size_t groupSize)
 {
-    mGroupSize = groupSize;
+    Q_ASSERT(groupSize <= static_cast<std::size_t>(std::numeric_limits<int>::max()));
+    mGroupSize = static_cast<int>(groupSize);
 }
 
 double GwmBasicGWRAlgorithm::calcTrQtQSerial()
@@ -1463,65 +1465,26 @@ void GwmBasicGWRAlgorithm::initXY(mat &x, mat &y, const GwmVariable &depVar, con
 void GwmBasicGWRAlgorithm::setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
 {
     mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
-    QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
+    QMap<QPair<BandwidthSelectionCriterionType, gwm::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
     #ifdef ENABLE_CUDA
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVCuda),
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::CUDA), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICCuda),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::CUDA), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVCuda),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::CUDA), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICCuda),
     #endif
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::SerialOnly), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial),
     #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::OpenMP), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp),
     #endif
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::SerialOnly), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial),
     #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp)
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::OpenMP), &GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp)
     #endif
     };
     mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
 }
 
-void GwmBasicGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &type)
+void GwmBasicGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    if (type & parallelAbility())
-    {
-        mParallelType = type;
-        switch (type) {
-        case IParallelalbe::ParallelType::SerialOnly:
-            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
-            mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixSerial;
-            mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial;
-            mCalcTrQtQFunction = &GwmBasicGWRAlgorithm::calcTrQtQSerial;
-            mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBSerial;
-            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            break;
-#ifdef ENABLE_OpenMP
-        case IParallelalbe::ParallelType::OpenMP:
-            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionOmp;
-            mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixOmp;
-            mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionOmp;
-            mCalcTrQtQFunction = &GwmBasicGWRAlgorithm::calcTrQtQOmp;
-            mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBOmp;
-            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            break;
-#endif
-#ifdef ENABLE_CUDA
-        case IParallelalbe::ParallelType::CUDA:
-            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionCuda;
-            mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixCuda;
-            mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionCuda;
-            mCalcTrQtQFunction = &GwmBasicGWRAlgorithm::calcTrQtQCuda;
-            mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBCuda;
-            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            break;
-#endif
-        default:
-            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
-            mRegressionHatmatrixFunction = &GwmBasicGWRAlgorithm::regressionHatmatrixSerial;
-            mIndepVarsSelectCriterionFunction = &GwmBasicGWRAlgorithm::indepVarsSelectCriterionSerial;
-            mCalcTrQtQFunction = &GwmBasicGWRAlgorithm::calcTrQtQSerial;
-            mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBSerial;
-            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            break;
-        }
-    }
+    if (mGWRCore)
+        mGWRCore->setParallelType(type);
+    mParallelType = type;
 }

@@ -1,4 +1,4 @@
-#include "gwmrobustgwralgorithm.h"
+﻿#include "gwmrobustgwralgorithm.h"
 
 #include <gsl/gsl_cdf.h>
 
@@ -233,14 +233,14 @@ void GwmRobustGWRAlgorithm::createResultLayer(CreateResultLayerData data)
     mResultLayer->commitChanges();
 }
 
-void GwmRobustGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &type)
+void GwmRobustGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
     GwmBasicGWRAlgorithm::setParallelType(type);
     if (type & parallelAbility())
     {
         mParallelType = type;
         switch (type) {
-        case IParallelalbe::ParallelType::SerialOnly:
+        case gwm::ParallelType::SerialOnly:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
             break;
 #ifdef ENABLE_OpenMP

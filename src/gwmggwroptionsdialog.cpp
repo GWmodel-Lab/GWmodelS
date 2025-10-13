@@ -1,4 +1,4 @@
-#include "gwmggwroptionsdialog.h"
+﻿#include "gwmggwroptionsdialog.h"
 #include "ui_gwmggwroptionsdialog.h"
 #include <QComboBox>
 #include <QButtonGroup>
@@ -487,20 +487,20 @@ void GwmGGWROptionsDialog::updateFields()
     // 并行设置
     if (ui->mCalcParallelNoneRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+        mTaskThread->setParallelType(gwm::SerialOnly);
     }
     else if (ui->mCalcParallelMultithreadRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setParallelType(gwm::OpenMP);
         mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
     }
     else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::CUDA);
+        mTaskThread->setParallelType(gwm::CUDA);
     }
     else
     {
-        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+        mTaskThread->setParallelType(gwm::SerialOnly);
     }
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());

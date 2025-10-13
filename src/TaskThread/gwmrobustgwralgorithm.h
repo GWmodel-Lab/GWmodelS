@@ -1,4 +1,4 @@
-#ifndef GWMROBUSTGWRTASKTHREAD_H
+﻿#ifndef GWMROBUSTGWRTASKTHREAD_H
 #define GWMROBUSTGWRTASKTHREAD_H
 
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
@@ -27,7 +27,7 @@ public:
     mat regression(const mat& x, const vec& y) override;
 
 public:
-    void setParallelType(const ParallelType &type) override;
+    void setParallelType(const gwm::ParallelType &type) override;
     int parallelAbility() const override;
 
 protected:
@@ -88,7 +88,7 @@ inline void GwmRobustGWRAlgorithm::setFiltered(bool value)
 
 inline int GwmRobustGWRAlgorithm::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly
+    return gwm::SerialOnly
         #ifdef ENABLE_OpenMP
             | IParallelalbe::OpenMP
         #endif
