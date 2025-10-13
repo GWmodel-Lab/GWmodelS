@@ -1,4 +1,4 @@
-#include "gwmpropertygwpcatab.h"
+﻿#include "gwmpropertygwpcatab.h"
 #include "ui_gwmpropertygwpcatab.h"
 
 #include <armadillo>
@@ -142,6 +142,58 @@ void GwmPropertyGWPCATab::updateUI()
         BandwidthCriterionList bwScores = mLayerItem->bandwidthSelScores();
         QVariant data = QVariant::fromValue(bwScores);
         GwmBandwidthSizeSelector::PlotBandwidthResult(data, mBandwidthSelPlot);
+    }
+
+    // 若没有得分数据，则清空表格并返回
+    if (mLayerItem->mScores.is_empty())
+    {
+        ui->tbwScores->setRowCount(0);
+        ui->tbwScores->setColumnCount(0);
+        ui->label_5->hide();
+        ui->tbwScores->hide();
+    }
+    else
+    {
+        // 将 cube(scores) 的所有 slice 按“行拼接”的方式合并为一个二维矩阵
+        // 假设 mScores 的维度是 [nSamples x mK x nSlices]，每列为一个主成分
+        const uword nRows = mLayerItem->mScores.n_rows;
+        const uword nCols = mLayerItem->mScores.n_cols;    // 通常等于 mK
+        const uword nSlices = mLayerItem->mScores.n_slices;
+
+        mat scoresCombined(nRows * nSlices, nCols);
+        for (uword s = 0; s < nSlices; s++)
+        {
+            scoresCombined.rows(s * nRows, s * nRows + nRows - 1) = mLayerItem->mScores.slice(s);
+        }
+
+        // 与前面两张表一致的表头与统计分位点
+        ui->tbwScores->setRowCount(nCols);
+        ui->tbwScores->setColumnCount(6);
+        ui->tbwScores->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+
+        QStringList scoreHeaders = QStringList()
+            << tr("Name") << tr("Min") << tr("1st Qu") << tr("Median") << tr("3rd Qu") << tr("Max");
+        ui->tbwScores->setHorizontalHeaderLabels(scoreHeaders);
+
+        const vec p = { 0.0, 0.25, 0.5, 0.75, 1.0 };
+        for (uword r = 0; r < scoresCombined.n_cols; r++)
+        {
+            // 每个主成分一行：统计所有 slice 和全部样本上的 score 分布
+            vec q = quantile(scoresCombined.col(r), p);
+
+            QString name = QString("Comp.%1").arg(r + 1);
+            QTableWidgetItem* nameItem = new QTableWidgetItem(name);
+            nameItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+            ui->tbwScores->setItem(r, 0, nameItem);
+
+            for (int c = 0; c < 5; c++)
+            {
+                QTableWidgetItem* quantileItem = new QTableWidgetItem(QString("%1").arg(q(c), 0, 'f', 3));
+                quantileItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+                quantileItem->setFlags(Qt::ItemFlag::NoItemFlags | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+                ui->tbwScores->setItem(r, c + 1, quantileItem);
+            }
+        }
     }
 }
 
