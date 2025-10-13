@@ -1,28 +1,30 @@
-cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21.0 FATAL_ERROR)
 
-find_package(GDAL REQUIRED)
-if(NOT GDAL_FOUND)
-    message(FATAL_ERROR "GDAL Not Found!")
-endif(NOT GDAL_FOUND)
-include_directories(${GDAL_INCLUDE_DIR})
+# find_package(GDAL REQUIRED)
+# if(NOT GDAL_FOUND)
+#     message(FATAL_ERROR "GDAL Not Found!")
+# endif(NOT GDAL_FOUND)
+# include_directories(${GDAL_INCLUDE_DIR})
 
-find_package(GEOS REQUIRED)
-if(NOT GEOS_FOUND)
-    message(FATAL_ERROR "GEOS Not Found!")
-endif(NOT GEOS_FOUND)
-include_directories(${GEOS_INCLUDE_DIR})
+# find_package(GEOS REQUIRED)
+# if(NOT GEOS_FOUND)
+#     message(FATAL_ERROR "GEOS Not Found!")
+# endif(NOT GEOS_FOUND)
+# include_directories(${GEOS_INCLUDE_DIR})
 
-find_package(SQLite3 REQUIRED)
-if(NOT SQLITE3_FOUND)
-    message(FATAL_ERROR "SQLite3 Not Found!")
-endif(NOT SQLITE3_FOUND)
-include_directories(${SQLITE3_INCLUDE_DIR})
+# find_package(SQLite3 REQUIRED)
+# if(NOT SQLITE3_FOUND)
+#     message(FATAL_ERROR "SQLite3 Not Found!")
+# endif(NOT SQLITE3_FOUND)
+# include_directories(${SQLITE3_INCLUDE_DIR})
 
-find_package(QScintilla REQUIRED)
-if(NOT QSCINTILLA_FOUND)
-    message(FATAL_ERROR "QScintilla Not Found!")
-endif(NOT QSCINTILLA_FOUND)
-include_directories(${QSCINTILLA_INCLUDE_DIR})
+# find_package(QScintilla REQUIRED)
+# if(NOT QSCINTILLA_FOUND)
+#     message(FATAL_ERROR "QScintilla Not Found!")
+# endif(NOT QSCINTILLA_FOUND)
+# include_directories(${QSCINTILLA_INCLUDE_DIR})
+
+find_package(PROJ REQUIRED CONFIG)
 
 find_package(QGIS REQUIRED)
 if(NOT QGIS_FOUND)
@@ -30,16 +32,16 @@ if(NOT QGIS_FOUND)
 endif(NOT QGIS_FOUND)
 include_directories(${QGIS_INCLUDE_DIR} ${QGIS_UI_INCLUDE_DIR})
 
-find_package(HDF5)
-if(HDF5_FOUND)
-    include_directories(${HDF5_INCLUDE_DIRS})
-    set(ADDITIONAL_HDF5_LIBRARIES
-        ${HDF5_LIBRARIES}
-        ${HDF5_HL_LIBRARIES}
-    )
-else(HDF5_FOUND)
-    set(ADDITIONAL_HDF5_LIBRARIES "")
-endif(HDF5_FOUND)
+# find_package(HDF5)
+# if(HDF5_FOUND)
+#     include_directories(${HDF5_INCLUDE_DIRS})
+#     set(ADDITIONAL_HDF5_LIBRARIES
+#         ${HDF5_LIBRARIES}
+#         ${HDF5_HL_LIBRARIES}
+#     )
+# else(HDF5_FOUND)
+#     set(ADDITIONAL_HDF5_LIBRARIES "")
+# endif(HDF5_FOUND)
 
 find_package(Qwt REQUIRED)
 if(NOT QWT_FOUND)
@@ -230,12 +232,22 @@ endif(WIN32)
 
 if(UNIX AND NOT CYGWIN)
     if(APPLE)
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+        set(CMAKE_INSTALL_RPATH "@executable_path/../Frameworks")
         add_executable(GWmodelS MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${FORMS_H} ${app_MACICON} ${GWMODEL_ICONS})
-        set_target_properties(GWmodelS PROPERTIES FRAMEWORK TRUE MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/macOS/Info.plist.in)
+        set_target_properties(GWmodelS PROPERTIES
+            MACOSX_BUNDLE TRUE
+            RESOURCE "${app_MACICON}"
+            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/macOS/Info.plist.in
+            MACOSX_BUNDLE_BUNDLE_NAME ${PROJECT_NAME}
+            MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+            MACOSX_BUNDLE_GUI_IDENTIFIER "org.GWmodel-Lab.GWmodelS"
+            XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
+        )
     else(APPLE)
         set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -no-pie")
         add_executable(GWmodelS ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS})
-        set_target_properties(GWmodelS PROPERTIES POSITION_INDEPENDENT_CODE FALSE)
     endif(APPLE)    
 endif(UNIX AND NOT CYGWIN)
 
@@ -251,6 +263,7 @@ target_link_libraries(GWmodelS
     Qt5::Gui 
     Qt5::Svg 
     Qt5::Core 
+    PROJ::proj
     ${BLAS_LIBRARIES}
     ${LAPACK_LIBRARIES}
     ${ARMADILLO_LIBRARIES}
@@ -274,3 +287,58 @@ target_link_libraries(GWmodelS
     ${GWMODELCUDA_LIBRARIES}
 )
 endif(ENABLE_CUDA)
+
+# INSTALL
+
+if (WIN32)
+get_filename_component(qgis_dir ${QGIS_INCLUDE_DIR} DIRECTORY)
+install(TARGETS GWmodelS
+    COMPONENT Runtime
+    RUNTIME_DEPENDENCIES DIRECTORIES "${qgis_dir}/bin" POST_EXCLUDE_REGEXES ".*system32.*" POST_INCLUDE_REGEXES "libomp140.x86_64.dll"
+    DESTINATION .
+)
+get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
+get_filename_component( _dir ${uic_location} DIRECTORY)
+set(deployqt "${_dir}/windeployqt.exe")
+install(CODE "set(deployqt \"${deployqt}\")" COMPONENT Runtime)
+install(CODE [===[
+execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.exe")
+]===] COMPONENT Runtime)
+install(DIRECTORY "${qgis_dir}/resources" DESTINATION .)
+install(DIRECTORY "${qgis_dir}/share/proj" DESTINATION "./${DATADIR}")
+elseif(APPLE)
+install(TARGETS GWmodelS
+    # RUNTIME_DEPENDENCY_SET _dep_mac
+    DESTINATION .
+    BUNDLE DESTINATION .
+    RESOURCE DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources"
+)
+get_filename_component(qgis_dir ${QGIS_UI_INCLUDE_DIR} DIRECTORY)
+get_filename_component(qgis_dir ${qgis_dir} DIRECTORY)
+install(DIRECTORY "${qgis_dir}/share/proj" DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources")
+install(DIRECTORY "${qgis_dir}/share/qgis/resources" DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources")
+install(CODE "set(APPS ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app)" COMPONENT Runtime)
+install(CODE "set(DIRS ${QGIS_PREFIX_PATH}/lib)" COMPONENT Runtime)
+install(CODE [===[
+    include(BundleUtilities)
+    fixup_bundle("${APPS}" "" "")
+]===] COMPONENT Runtime)
+# install(RUNTIME_DEPENDENCY_SET _dep_mac DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Frameworks" POST_EXCLUDE_REGEXES ".*homebrew.*")
+# get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
+# get_filename_component( _dir ${uic_location} DIRECTORY)
+# set(deployqt "${_dir}/macdeployqt")
+# install(CODE "set(deployqt \"${deployqt}\")" COMPONENT Runtime)
+# install(CODE [===[
+# execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.app")
+# ]===] COMPONENT Runtime)
+endif()
+
+# CPack
+set(CPACK_PACKAGE_NAME ${CMAKE_PROJECT_NAME})
+set(CPACK_PACKAGE_VENDOR "GWmodel Lab")
+set(CPACK_PACKAGE_VERSION ${CMAKE_PROJECT_VERSION})
+set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/icons/GWmodelS.ico")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CMAKE_PROJECT_NAME})
+set(CPACK_PACKAGE_EXECUTABLES "GWmodelS;GWmodelS")
+set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
+include(CPack)
