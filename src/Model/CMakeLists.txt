@@ -9,7 +9,9 @@ set(SOURCES_SUBFOLDER
     gwmlayergroupitem.cpp
     gwmlayergtwritem.cpp
     gwmlayergwpcaitem.cpp
-    gwmlayergwssitem.cpp
+    gwmlayergwcorrelationitem.cpp
+    gwmlayergwaverageitem.cpp
+    gwmlayergtdritem.cpp
     gwmlayeritem.cpp
     gwmlayeritemmodel.cpp
     gwmlayermultiscalegwritem.cpp
@@ -18,7 +20,8 @@ set(SOURCES_SUBFOLDER
     gwmlayersymbolitem.cpp
     gwmlayervectoritem.cpp
     gwmvariableitemmodel.cpp
-    gwmalgorithmmetagwss.cpp
+    gwmalgorithmmetagtdr.cpp
+    gwmalgorithmmetavariable.cpp
     gwmparameterspecifiedoptionsmodel.cpp
     gwmpropertymultiscaleparameterspecifieditemmodel.cpp
     gwmpropertygwcorrelationsparameterspecifieditemmodel.cpp
@@ -33,7 +36,9 @@ set(HEADERS_SUBFOLDER
     gwmlayergroupitem.h
     gwmlayergtwritem.h
     gwmlayergwpcaitem.h
-    gwmlayergwssitem.h
+    gwmlayergwcorrelationitem.h
+    gwmlayergwaverageitem.h
+    gwmlayergtdritem.h
     gwmlayeritem.h
     gwmlayeritemmodel.h
     gwmlayermultiscalegwritem.h
@@ -42,7 +47,8 @@ set(HEADERS_SUBFOLDER
     gwmlayersymbolitem.h
     gwmlayervectoritem.h
     gwmvariableitemmodel.h
-    gwmalgorithmmetagwss.h
+    gwmalgorithmmetagtdr.h
+    gwmalgorithmmetavariable.h
     gwmparameterspecifiedoptionsmodel.h
     gwmpropertymultiscaleparameterspecifieditemmodel.h
     gwmpropertygwcorrelationsparameterspecifieditemmodel.h

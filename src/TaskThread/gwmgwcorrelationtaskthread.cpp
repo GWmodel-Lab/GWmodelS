@@ -5,14 +5,14 @@
 #include <omp.h>
 #endif
 
-int GwmGWcorrelationTaskThread::treeChildCount = 0;
+int GwmGWCorrelationTaskThread::treeChildCount = 0;
 
-GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmGWcorrelationTaskThread::BandwidthSelectionCriterionTypeNameMapper = {
+GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmGWCorrelationTaskThread::BandwidthSelectionCriterionTypeNameMapper = {
     std::make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV, tr("CV")),
     std::make_pair(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC, tr("AIC"))
 };
 
-vec GwmGWcorrelationTaskThread::del(vec x, int rowcount){
+vec GwmGWCorrelationTaskThread::del(vec x, int rowcount){
     vec res;
     if(rowcount == 0)
         res = x.rows(rowcount+1,x.n_rows-1);
@@ -23,12 +23,12 @@ vec GwmGWcorrelationTaskThread::del(vec x, int rowcount){
     return res;
 }
 
-GwmGWcorrelationTaskThread::GwmGWcorrelationTaskThread() : GwmSpatialMultiscaleAlgorithm()
+GwmGWCorrelationTaskThread::GwmGWCorrelationTaskThread() : GwmSpatialMultiscaleAlgorithm()
 {
 
 }
 
-bool GwmGWcorrelationTaskThread::isValid()
+bool GwmGWCorrelationTaskThread::isValid()
 {
     if (mDataLayer == nullptr)
         return false;
@@ -62,7 +62,7 @@ bool GwmGWcorrelationTaskThread::isValid()
     return true;
 }
 
-void GwmGWcorrelationTaskThread::run()
+void GwmGWCorrelationTaskThread::run()
 {
     if(!checkCanceled())
     {
@@ -114,7 +114,7 @@ void GwmGWcorrelationTaskThread::run()
     if(checkCanceled()) return;
 }
 //普通计算
-bool GwmGWcorrelationTaskThread::CalculateSerial(){
+bool GwmGWCorrelationTaskThread::CalculateSerial(){
     mat rankX = mX;
     rankX.each_col([&](vec x) { x = rank(x); });
     mat rankY = mY;
@@ -150,7 +150,7 @@ bool GwmGWcorrelationTaskThread::CalculateSerial(){
 }
 //多线程计算
 #ifdef ENABLE_OpenMP
-bool GwmGWcorrelationTaskThread::CalculateOmp(){
+bool GwmGWCorrelationTaskThread::CalculateOmp(){
     mat rankX = mX;
     rankX.each_col([&](vec x) { x = rank(x); });
     mat rankY = mY;
@@ -188,7 +188,7 @@ bool GwmGWcorrelationTaskThread::CalculateOmp(){
 }
 #endif
 
-//vec GwmGWcorrelationTaskThread::findq(const mat &x, const vec &w)
+//vec GwmGWCorrelationTaskThread::findq(const mat &x, const vec &w)
 //{
 //    int lw = w.n_rows;
 //    int lp = 3;
@@ -216,7 +216,7 @@ bool GwmGWcorrelationTaskThread::CalculateOmp(){
 //}
 
 //初始化点坐标
-void GwmGWcorrelationTaskThread::initPoints()
+void GwmGWCorrelationTaskThread::initPoints()
 {
     int nDp = mDataLayer->featureCount();
     mDataPoints = mat(nDp, 2, fill::zeros);
@@ -246,7 +246,7 @@ void GwmGWcorrelationTaskThread::initPoints()
     }
 }
 //初始化字段值
-void GwmGWcorrelationTaskThread::initXY(mat& x,mat& y, const QList<GwmVariable>& indepVarsX,QList<GwmVariable>& indepVarsY)
+void GwmGWCorrelationTaskThread::initXY(mat& x,mat& y, const QList<GwmVariable>& indepVarsX,QList<GwmVariable>& indepVarsY)
 {
     int nDp = mDataLayer->featureCount(), nVarX = indepVarsX.size();
     int nRp = mDataPoints.n_rows;
@@ -296,7 +296,7 @@ void GwmGWcorrelationTaskThread::initXY(mat& x,mat& y, const QList<GwmVariable>&
 
 
 //创建结果图层
-void GwmGWcorrelationTaskThread::createResultLayer(CreateResultLayerData data)
+void GwmGWCorrelationTaskThread::createResultLayer(CreateResultLayerData data)
 {
     QgsVectorLayer* srcLayer =  mDataLayer;
     //第一组变量
@@ -362,7 +362,7 @@ void GwmGWcorrelationTaskThread::createResultLayer(CreateResultLayerData data)
 
 }
 //设置多线程字段
-void GwmGWcorrelationTaskThread::setParallelType(const IParallelalbe::ParallelType &type)
+void GwmGWCorrelationTaskThread::setParallelType(const IParallelalbe::ParallelType &type)
 {
     if (type & parallelAbility())
     {
@@ -370,21 +370,21 @@ void GwmGWcorrelationTaskThread::setParallelType(const IParallelalbe::ParallelTy
         switch (type) {
         case IParallelalbe::ParallelType::SerialOnly:
 //            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
-            mCalFunciton = &GwmGWcorrelationTaskThread::CalculateSerial;
+            mCalFunciton = &GwmGWCorrelationTaskThread::CalculateSerial;
             break;
 #ifdef ENABLE_OpenMP
         case IParallelalbe::ParallelType::OpenMP:
-            mCalFunciton = &GwmGWcorrelationTaskThread::CalculateOmp;
+            mCalFunciton = &GwmGWCorrelationTaskThread::CalculateOmp;
             break;
 #endif
         default:
-            mCalFunciton = &GwmGWcorrelationTaskThread::CalculateSerial;
+            mCalFunciton = &GwmGWCorrelationTaskThread::CalculateSerial;
             break;
         }
     }
 }
 //CV值计算
-double GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight *bandwidthWeight)
+double GwmGWCorrelationTaskThread::bandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     uword nDp = mDataPoints.n_rows;
@@ -414,7 +414,7 @@ double GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarCVSerial(GwmBandwidt
     else return DBL_MAX;
 }
 //AIC值计算
-double GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight *bandwidthWeight)
+double GwmGWCorrelationTaskThread::bandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     uword nDp = mDataPoints.n_rows;
@@ -441,25 +441,25 @@ double GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarAICSerial(GwmBandwid
             return DBL_MAX;
         }
     }
-    double value = GwmGWcorrelationTaskThread::AICc(mXi, mYi, betas.t(), shat);
+    double value = GwmGWCorrelationTaskThread::AICc(mXi, mYi, betas.t(), shat);
     if(!checkCanceled()) return value;
     else return DBL_MAX;
 }
 //带宽优选函数类型设置
-GwmGWcorrelationTaskThread::BandwidthSizeCriterionFunction GwmGWcorrelationTaskThread::bandwidthSizeCriterionVar(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType type)
+GwmGWCorrelationTaskThread::BandwidthSizeCriterionFunction GwmGWCorrelationTaskThread::bandwidthSizeCriterionVar(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType type)
 {
     switch (type)
     {
         case GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::CV:
-            return &GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarCVSerial;
+            return &GwmGWCorrelationTaskThread::bandwidthSizeCriterionVarCVSerial;
             break;
         case GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType::AIC:
-            return &GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarAICSerial;
+            return &GwmGWCorrelationTaskThread::bandwidthSizeCriterionVarAICSerial;
             break;
     }
 }
 
-void GwmGWcorrelationTaskThread::setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights)
+void GwmGWCorrelationTaskThread::setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights)
 {
     GwmSpatialMultiscaleAlgorithm::setSpatialWeights(spatialWeights);
 }

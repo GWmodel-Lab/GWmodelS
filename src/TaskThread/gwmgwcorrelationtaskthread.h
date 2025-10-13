@@ -1,4 +1,4 @@
-    #ifndef GWMGWCORRELATIONTASKTHREAD_H
+#ifndef GWMGWCORRELATIONTASKTHREAD_H
 #define GWMGWCORRELATIONTASKTHREAD_H
 
 #include <QObject>
@@ -15,11 +15,11 @@
 #include "iparallelable.h"
 #include "TaskThread/gwmbandwidthsizeselector.h"
 
-class GwmGWcorrelationTaskThread;
-//typedef double (GwmGWcorrelationTaskThread::*pfGwmCVApproach)(const mat& , GwmBandwidthWeight*);
+class GwmGWCorrelationTaskThread;
+//typedef double (GwmGWCorrelationTaskThread::*pfGwmCVApproach)(const mat& , GwmBandwidthWeight*);
 
 
-class GwmGWcorrelationTaskThread : public GwmSpatialMultiscaleAlgorithm, public IBandwidthSizeSelectable,public IMultivariableAnalysis, public IOpenmpParallelable
+class GwmGWCorrelationTaskThread : public GwmSpatialMultiscaleAlgorithm, public IBandwidthSizeSelectable,public IGwmMultivariableAnalysis, public IOpenmpParallelable
 {
     Q_OBJECT
 
@@ -31,9 +31,9 @@ public:
         dCVR
     };
 
-    typedef double (GwmGWcorrelationTaskThread::*BandwidthSizeCriterionFunction)(GwmBandwidthWeight*);
-//    typedef mat (GwmGWcorrelationTaskThread::*RegressionAllFunction)(const arma::mat&, const arma::vec&);
-//    typedef vec (GwmGWcorrelationTaskThread::*RegressionVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
+    typedef double (GwmGWCorrelationTaskThread::*BandwidthSizeCriterionFunction)(GwmBandwidthWeight*);
+//    typedef mat (GwmGWCorrelationTaskThread::*RegressionAllFunction)(const arma::mat&, const arma::vec&);
+//    typedef vec (GwmGWCorrelationTaskThread::*RegressionVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
 //    typedef QPair<QString, const mat> CreateResultLayerDataItem;
 
 public:
@@ -80,10 +80,10 @@ public:
         median
     };
 
-    typedef double (GwmGWcorrelationTaskThread::*CVFunction)(const mat& ,GwmBandwidthWeight*);
+    typedef double (GwmGWCorrelationTaskThread::*CVFunction)(const mat& ,GwmBandwidthWeight*);
     typedef QList<QPair<QString, mat> > CreateResultLayerData;
 
-    typedef bool (GwmGWcorrelationTaskThread::*CalFunction)();
+    typedef bool (GwmGWCorrelationTaskThread::*CalFunction)();
 
     static GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> BandwidthSelectionCriterionTypeNameMapper;
 
@@ -95,7 +95,7 @@ protected:
     bool CalculateOmp();
 #endif
 public:
-    GwmGWcorrelationTaskThread();
+    GwmGWCorrelationTaskThread();
 
     bool quantile() const;
     void setQuantile(bool quantile);
@@ -103,7 +103,7 @@ public:
 protected:  // QThread interface
     void run() override;
 
-public:  // IMultivariableAnalysis interface
+public:  // IGwmMultivariableAnalysis interface
     QList<GwmVariable> variables() const  override;
     void setVariables(const QList<GwmVariable> &variables)  override;
     void setVariables(const QList<GwmVariable> &&variables);
@@ -139,7 +139,7 @@ public:     // IBandwidthSizeSelectable interface
         return (this->*mBandwidthSelectCriterionFunction)(bandwidthWeight);
     }
 
-    BandwidthSizeCriterionFunction mBandwidthSelectCriterionFunction = &GwmGWcorrelationTaskThread::bandwidthSizeCriterionVarCVSerial;
+    BandwidthSizeCriterionFunction mBandwidthSelectCriterionFunction = &GwmGWCorrelationTaskThread::bandwidthSizeCriterionVarCVSerial;
     GwmBandwidthSizeSelector mBandwidthSizeSelector;
     QList<bool> mIsAutoselectBandwidth;
 
@@ -153,7 +153,7 @@ public:     // IBandwidthSizeSelectable interface
         return static_cast<GwmBandwidthWeight*>(mSpatialWeights[i].weight());
     }
 
-    GwmGWcorrelationTaskThread::BandwidthSizeCriterionFunction bandwidthSizeCriterionVar(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType type);
+    GwmGWCorrelationTaskThread::BandwidthSizeCriterionFunction bandwidthSizeCriterionVar(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType type);
     double bandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight* bandwidthWeight);
     int mBandwidthSelectionCurrentIndex = 0;
@@ -229,47 +229,47 @@ public:
 
 
 
-inline bool GwmGWcorrelationTaskThread::quantile() const
+inline bool GwmGWCorrelationTaskThread::quantile() const
 {
     return mQuantile;
 }
 
-inline void GwmGWcorrelationTaskThread::setQuantile(bool quantile)
+inline void GwmGWCorrelationTaskThread::setQuantile(bool quantile)
 {
     mQuantile = quantile;
 }
 
-inline QList<GwmVariable> GwmGWcorrelationTaskThread::variables() const{
+inline QList<GwmVariable> GwmGWCorrelationTaskThread::variables() const{
     return mVariables;
 }
 
-inline void GwmGWcorrelationTaskThread::setVariables(const QList<GwmVariable> &variables)
+inline void GwmGWCorrelationTaskThread::setVariables(const QList<GwmVariable> &variables)
 {
     mVariables = variables;
 }
 
-inline void GwmGWcorrelationTaskThread::setVariables(const QList<GwmVariable> &&variables)
+inline void GwmGWCorrelationTaskThread::setVariables(const QList<GwmVariable> &&variables)
 {
     mVariables = variables;
 }
 
-inline void GwmGWcorrelationTaskThread::setVariablesY(const QList<GwmVariable> &variables)
+inline void GwmGWCorrelationTaskThread::setVariablesY(const QList<GwmVariable> &variables)
 {
     mVariablesY = variables;
 }
 
-inline void GwmGWcorrelationTaskThread::setVariablesY(const QList<GwmVariable> &&variables)
+inline void GwmGWCorrelationTaskThread::setVariablesY(const QList<GwmVariable> &&variables)
 {
     mVariablesY = variables;
 }
 
 
-//inline void GwmGWcorrelationTaskThread::setBandwidth(GwmBandwidthWeight *bandwidth)
+//inline void GwmGWCorrelationTaskThread::setBandwidth(GwmBandwidthWeight *bandwidth)
 //{
 //    mSpatialWeight.setWeight(bandwidth);
 //}
 
-inline int GwmGWcorrelationTaskThread::parallelAbility() const
+inline int GwmGWCorrelationTaskThread::parallelAbility() const
 {
     return IParallelalbe::SerialOnly
         #ifdef ENABLE_OpenMP
@@ -278,32 +278,32 @@ inline int GwmGWcorrelationTaskThread::parallelAbility() const
             ;
 }
 
-inline IParallelalbe::ParallelType GwmGWcorrelationTaskThread::parallelType() const
+inline IParallelalbe::ParallelType GwmGWCorrelationTaskThread::parallelType() const
 {
     return mParallelType;
 }
 
-inline void GwmGWcorrelationTaskThread::setOmpThreadNum(const int threadNum)
+inline void GwmGWCorrelationTaskThread::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
 }
 
-inline QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmGWcorrelationTaskThread::bandwidthSelectionApproach() const
+inline QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmGWCorrelationTaskThread::bandwidthSelectionApproach() const
 {
-    return GwmGWcorrelationTaskThread::mBandwidthSelectionApproach;
+    return GwmGWCorrelationTaskThread::mBandwidthSelectionApproach;
 }
 
-inline void GwmGWcorrelationTaskThread::setBandwidthSelectionApproach(const QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
+inline void GwmGWCorrelationTaskThread::setBandwidthSelectionApproach(const QList<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
 {
     mBandwidthSelectionApproach = bandwidthSelectionApproach;
 }
 
-inline QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> GwmGWcorrelationTaskThread::bandwidthInitilize() const
+inline QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> GwmGWCorrelationTaskThread::bandwidthInitilize() const
 {
-    return GwmGWcorrelationTaskThread::mBandwidthInitilize;
+    return GwmGWCorrelationTaskThread::mBandwidthInitilize;
 }
 
-inline void GwmGWcorrelationTaskThread::setBandwidthInitilize(const QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> &bandwidthInitilize)
+inline void GwmGWCorrelationTaskThread::setBandwidthInitilize(const QList<GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType> &bandwidthInitilize)
 {
     mBandwidthInitilize = bandwidthInitilize;
 }

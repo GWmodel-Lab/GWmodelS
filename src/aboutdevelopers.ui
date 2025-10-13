@@ -308,7 +308,7 @@ font: 11pt &quot;Times New Roman&quot;;</string>
        <string notr="true">font: 11pt &quot;Times New Roman&quot;;</string>
       </property>
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; font-weight:600;&quot;&gt;Geographical Data Science Team&lt;/span&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt; including Yong Liu, Dongyang Yang, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;Hang Zhang, Wenkai Gao, Xiangbiao Wang, Zhipeng Zhang, Mingyang Liu&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; font-weight:600;&quot;&gt;Geographical Data Science Team&lt;/span&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;  including Yong Liu, Dongyang Yang, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;Hang Zhang, Wenkai Gao, Xiangbiao Wang, Zhipeng Zhang, Mingyang Liu&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
      </widget>
     </item>
@@ -328,7 +328,7 @@ font: 11pt &quot;Times New Roman&quot;;</string>
        <string notr="true">font: 11pt &quot;Times New Roman&quot;;</string>
       </property>
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;GWmodel Lab Team&lt;/span&gt; including Yigong Hu, Tongyao Zhang, Linyi Zhang, &lt;/p&gt;&lt;p&gt;Liuqi Liao, Zuoyao Yin, Tianyang Xia, Jintao Dong, Zheyi Dong&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;GWmodel Lab Team&lt;/span&gt;  including Yigong Hu, Tongyao Zhang, Linyi Zhang, &lt;/p&gt;&lt;p&gt;Liuqi Liao, Zuoyao Yin, Tianyang Xia, Jintao Dong, Zheyi Dong, &lt;/p&gt;Haotian Zhang, Guangyu Ou, Yiyun Zhang&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
      </widget>
     </item>

@@ -1,5 +1,5 @@
-#include "gwmpropertygwsstab.h"
-#include "ui_gwmpropertygwsstab.h"
+#include "gwmpropertygtdrtab.h"
+#include "ui_gwmpropertygtdrtab.h"
 
 #include <QVBoxLayout>
 #include <QScrollArea>
@@ -10,10 +10,10 @@
 #include <armadillo>
 
 #include <QStandardItemModel>
-#include "TaskThread/gwmgwsstaskthread.h"
+#include "TaskThread/gwmgtdrtaskthread.h"
 #include "SpatialWeight/gwmbandwidthweight.h"
 
-QMap<GwmBandwidthWeight::KernelFunctionType, QString> GwmPropertyGWSSTab::kernelFunctionNameDict = {
+QMap<GwmBandwidthWeight::KernelFunctionType, QString> GwmPropertyGTDRTab::kernelFunctionNameDict = {
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Gaussian, QStringLiteral("Gaussian")),
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Exponential, QStringLiteral("Exponential")),
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Bisquare, QStringLiteral("Bisquare")),
@@ -21,25 +21,25 @@ QMap<GwmBandwidthWeight::KernelFunctionType, QString> GwmPropertyGWSSTab::kernel
     std::make_pair(GwmBandwidthWeight::KernelFunctionType::Boxcar, QStringLiteral("Boxcar"))
 };
 
-QMap<bool, QString> GwmPropertyGWSSTab::bandwidthTypeNameDict = {
+QMap<bool, QString> GwmPropertyGTDRTab::bandwidthTypeNameDict = {
     std::make_pair(true, QStringLiteral("Adaptive")),
     std::make_pair(false, QStringLiteral("Fixed:"))
 };
 
-GwmPropertyGWSSTab::GwmPropertyGWSSTab(QWidget *parent, GwmLayerGWSSItem *item) :
+GwmPropertyGTDRTab::GwmPropertyGTDRTab(QWidget *parent, GwmLayerGTDRItem *item) :
     QWidget(parent),
-    ui(new Ui::GwmPropertyGWSSTab),
+    ui(new Ui::GwmPropertyGTDRTab),
     mLayerItem(item)
 {
     ui->setupUi(this);
 }
 
-GwmPropertyGWSSTab::~GwmPropertyGWSSTab()
+GwmPropertyGTDRTab::~GwmPropertyGTDRTab()
 {
     delete ui;
 }
 
-void GwmPropertyGWSSTab::updateUI()
+void GwmPropertyGTDRTab::updateUI()
 {
     if (!mLayerItem)
         return;
@@ -57,9 +57,22 @@ void GwmPropertyGWSSTab::updateUI()
         ui->lblDistanceMetric->setText(tr("Edclidean distance metric is used."));
     }
 
+    if (mLayerItem->hatmatrix())
+    {
+        GwmDiagnostic diagnostic = mLayerItem->diagnostic();
+        ui->lblENP->setText(QString("%1").arg(diagnostic.ENP, 0, 'f', 6));
+        ui->lblEDF->setText(QString("%1").arg(diagnostic.EDF, 0, 'f', 6));
+        ui->lblAIC->setText(QString("%1").arg(diagnostic.AIC, 0, 'f', 6));
+        ui->lblAICc->setText(QString("%1").arg(diagnostic.AICc, 0, 'f', 6));
+        ui->lblRSS->setText(QString("%1").arg(diagnostic.RSS, 0, 'f', 6));
+        ui->lblRSquare->setText(QString("%1").arg(diagnostic.RSquare, 0, 'f', 6));
+        ui->lblRSquareAdjusted->setText(QString("%1").arg(diagnostic.RSquareAdjust, 0, 'f', 6));
+    }
+
+
     // 计算四分位数
-    QList<GwmVariable> indepVars = mLayerItem->variables();
-    GwmGWSSTaskThread::CreateResultLayerData data = mLayerItem->resultlist();
+    QList<GwmVariable> indepVars = mLayerItem->indepVar();
+    GwmGTDRTaskThread::CreateResultLayerData data = mLayerItem->resultlist();
     int nVar = indepVars.size();
     for (QPair<QString, const mat&> item : data)
     {

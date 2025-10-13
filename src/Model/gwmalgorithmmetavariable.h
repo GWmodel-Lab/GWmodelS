@@ -1,12 +1,12 @@
-#ifndef GWMALGORITHMMETAGWSS
-#define GWMALGORITHMMETAGWSS
+#ifndef GWMALGORITHMMETAVARIABLE
+#define GWMALGORITHMMETAVARIABLE
 
 #include <string>
 #include <qgsvectorlayer.h>
 #include <gwmodel.h>
 #include "gwmvariableitemmodel.h"
 
-struct GwmAlgorithmMetaGWSS
+struct GwmAlgorithmMetaVariable
 {
     QgsVectorLayer* layer = nullptr;
     QList<GwmVariable> variables;
@@ -33,4 +33,4 @@ struct GwmAlgorithmMetaGWSS
 };
 
 
-#endif  // GWMALGORITHMMETAGWSS
+#endif  // GWMALGORITHMMETAVARIABLE

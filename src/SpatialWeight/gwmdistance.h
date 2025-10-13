@@ -13,7 +13,8 @@ public:
     {
         CRSDistance,
         MinkwoskiDistance,
-        DMatDistance
+        DMatDistance,
+        OneDimDistance
     };
 
     static GwmEnumValueNameMapper<DistanceType> TypeNameMapper;

@@ -138,7 +138,8 @@ bool GwmLayerItemModel::insertItem(int row, GwmLayerItem *item, const QModelInde
         case GwmLayerItem::ScalableGWR:
         case GwmLayerItem::GeneralizedGWR:
         case GwmLayerItem::MultiscaleGWR:
-        case GwmLayerItem::GWSS:
+        case GwmLayerItem::GWCorrelation:
+        case GwmLayerItem::GWAverage:
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
@@ -212,7 +213,8 @@ bool GwmLayerItemModel::removeRows(int row, int count, const QModelIndex &parent
         case GwmLayerItem::ScalableGWR:
         case GwmLayerItem::GeneralizedGWR:
         case GwmLayerItem::MultiscaleGWR:
-        case GwmLayerItem::GWSS:
+        case GwmLayerItem::GWCorrelation:
+        case GwmLayerItem::GWAverage:
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
@@ -269,7 +271,8 @@ GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
         case GwmLayerItem::ScalableGWR:
         case GwmLayerItem::GeneralizedGWR:
         case GwmLayerItem::MultiscaleGWR:
-        case GwmLayerItem::GWSS:
+        case GwmLayerItem::GWCorrelation:
+        case GwmLayerItem::GWAverage:
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
@@ -326,7 +329,8 @@ bool GwmLayerItemModel::appentItem(GwmLayerItem *item, const QModelIndex &parent
         case GwmLayerItem::ScalableGWR:
         case GwmLayerItem::GeneralizedGWR:
         case GwmLayerItem::MultiscaleGWR:
-        case GwmLayerItem::GWSS:
+        case GwmLayerItem::GWCorrelation:
+        case GwmLayerItem::GWAverage:
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
@@ -379,7 +383,8 @@ QList<GwmLayerItem *> GwmLayerItemModel::takeRows(int row, int count, const QMod
             case GwmLayerItem::ScalableGWR:
             case GwmLayerItem::GeneralizedGWR:
             case GwmLayerItem::MultiscaleGWR:
-            case GwmLayerItem::GWSS:
+            case GwmLayerItem::GWCorrelation:
+            case GwmLayerItem::GWAverage:
             case GwmLayerItem::CollinearityGWR:
             case GwmLayerItem::GTWR:
             case GwmLayerItem::GWPCA:
@@ -476,7 +481,8 @@ QgsVectorLayer *GwmLayerItemModel::layerFromItem(GwmLayerItem* item) const
     case GwmLayerItem::GwmLayerItemType::ScalableGWR:
     case GwmLayerItem::GwmLayerItemType::GeneralizedGWR:
     case GwmLayerItem::GwmLayerItemType::MultiscaleGWR:
-    case GwmLayerItem::GwmLayerItemType::GWSS:
+    case GwmLayerItem::GwmLayerItemType::GWCorrelation:
+    case GwmLayerItem::GwmLayerItemType::GWAverage:
     case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
     case GwmLayerItem::GwmLayerItemType::GTWR:
     case GwmLayerItem::GwmLayerItemType::GWPCA:
@@ -528,7 +534,8 @@ bool GwmLayerItemModel::canMoveUp(const QModelIndex &index)
     case GwmLayerItem::MultiscaleGWR:
     case GwmLayerItem::CollinearityGWR:
     case GwmLayerItem::GTWR:
-    case GwmLayerItem::GWSS:
+    case GwmLayerItem::GWCorrelation:
+    case GwmLayerItem::GWAverage:
     case GwmLayerItem::GWPCA:
         return row > 1 && row < (item->parentItem()->childCount() - 1);
     default:
@@ -548,7 +555,8 @@ bool GwmLayerItemModel::canMoveDown(const QModelIndex &index)
     case GwmLayerItem::GeneralizedGWR:
     case GwmLayerItem::ScalableGWR:
     case GwmLayerItem::MultiscaleGWR:
-    case GwmLayerItem::GWSS:
+    case GwmLayerItem::GWCorrelation:
+    case GwmLayerItem::GWAverage:
     case GwmLayerItem::CollinearityGWR:
     case GwmLayerItem::GTWR:
     case GwmLayerItem::GWPCA:
@@ -568,7 +576,8 @@ bool GwmLayerItemModel::canRemove(const QModelIndex &index)
     case GwmLayerItem::GeneralizedGWR:
     case GwmLayerItem::ScalableGWR:
     case GwmLayerItem::MultiscaleGWR:
-    case GwmLayerItem::GWSS:
+    case GwmLayerItem::GWCorrelation:
+    case GwmLayerItem::GWAverage:
     case GwmLayerItem::CollinearityGWR:
     case GwmLayerItem::GTWR:
     case GwmLayerItem::GWPCA:
@@ -589,7 +598,8 @@ bool GwmLayerItemModel::canSetSymbol(const QModelIndex &index)
     case GwmLayerItem::GeneralizedGWR:
     case GwmLayerItem::ScalableGWR:
     case GwmLayerItem::MultiscaleGWR:
-    case GwmLayerItem::GWSS:
+    case GwmLayerItem::GWCorrelation:
+    case GwmLayerItem::GWAverage:
     case GwmLayerItem::CollinearityGWR:
     case GwmLayerItem::GTWR:
     case GwmLayerItem::GWPCA:
