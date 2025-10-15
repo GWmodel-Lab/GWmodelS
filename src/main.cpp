@@ -10,6 +10,7 @@
 #include <qgsproject.h>
 #include <qgscoordinatereferencesystem.h>
 #include <qgslayoutitemguiregistry.h>
+#include "DelimitedText/qgsdelimitedtextprovider.h"
 
 #include "TaskThread/gwmtaskthread.h"
 
@@ -22,6 +23,8 @@ int main(int argc, char *argv[])
     QgsApplication::initQgis();
     QString pluginDir = "./plugins";
     QgsProviderRegistry::instance(pluginDir);
+    // 确保内置的分隔文本 provider 已注册（无需插件）
+    QgsProviderRegistry::instance()->registerProvider(new QgsDelimitedTextProviderMetadata());
     QgsProject::instance()->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(4326));
     qRegisterMetaType<PlotFunction>("PlotFunction");
 
