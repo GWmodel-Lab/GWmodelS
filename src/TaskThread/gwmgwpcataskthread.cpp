@@ -848,7 +848,7 @@ mat GwmGWPCATaskThread::pcaLoadingsSdevOmp(const mat &x, cube &loadings, mat &st
     //R代码中的d1计算
     d_all = trans(d_all);
     mat variance = (d_all / pow(sum(mLatestWt),0.5)) % (d_all / pow(sum(mLatestWt),0.5));
-    stddev = sqrt(stddev);
+    stddev = sqrt(variance);
     //dResult1.print();
     //取dResult1的前K列
     mat pv = variance.cols(0, mK - 1).each_col() % (1.0 / sum(variance,1)) * 100.0;

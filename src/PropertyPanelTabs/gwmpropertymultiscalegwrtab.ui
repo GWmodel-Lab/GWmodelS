@@ -47,9 +47,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-488</y>
+        <y>-394</y>
         <width>403</width>
-        <height>1101</height>
+        <height>1130</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -241,7 +241,7 @@
              </sizepolicy>
             </property>
             <property name="title">
-             <string>Summary of GWR Coefficient Estimates</string>
+             <string>Summary of MGWR Coefficient Estimates</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_2">
              <property name="leftMargin">

@@ -1754,6 +1754,7 @@ void GwmApp::onRobustGWPCABtnClicked()
             QgsVectorLayer* resultLayer = gwpcaTaskThread->resultLayer();
             GwmLayerGWPCAItem * gwrItem = new GwmLayerGWPCAItem(selectedItem, resultLayer, gwpcaTaskThread);
             mMapModel->appentItem(gwrItem, selectedIndex);
+            onShowLayerProperty(mMapModel->indexFromItem(gwrItem));
             if(gwpcaTaskThread->plotLayer()){
                 QgsVectorLayer* plotLayer = gwpcaTaskThread->plotLayer();
                 QgsVectorLayer* plotLayer0 = new QgsVectorLayer();
