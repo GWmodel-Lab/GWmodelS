@@ -11,11 +11,16 @@
 #include <qgscoordinatereferencesystem.h>
 #include <qgslayoutitemguiregistry.h>
 #include <proj.h>
+#include <QDir>
+#include "DelimitedText/qgsdelimitedtextprovider.h"
 #include "TaskThread/gwmtaskthread.h"
 #include <QDebug>
 
 int main(int argc, char *argv[])
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(5,6,0))
+    QgsApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
+#endif
     QgsApplication a(argc, argv, true);
     QgsApplication::initQgis();
 #ifdef Q_OS_MAC
@@ -33,10 +38,8 @@ int main(int argc, char *argv[])
     QgsProviderRegistry::instance(pluginDir);
 #endif
     proj_context_set_search_paths(NULL, 1, proj_data_path);
-
-#if (QT_VERSION >= QT_VERSION_CHECK(5,6,0))
-    QgsApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
-#endif
+    // 纭繚鍐呯疆鐨勫垎闅旀枃鏈�provider 宸叉敞鍐岋紙鏃犻渶鎻掍欢锛�
+    QgsProviderRegistry::instance()->registerProvider(new QgsDelimitedTextProviderMetadata());
     QgsProject::instance()->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(4326));
     qRegisterMetaType<PlotFunction>("PlotFunction");
 

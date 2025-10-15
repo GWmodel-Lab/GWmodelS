@@ -784,6 +784,12 @@ void GwmApp::createLayerToModel(const QString &uri, const QString &layerName, co
     qDebug() << "[MainWindow::addLayerToModel]"
              << uri << layerName << providerKey;
     QgsVectorLayer* vectorLayer = new QgsVectorLayer(uri, layerName, providerKey);
+    if (!vectorLayer->isValid() && providerKey == QStringLiteral("delimitedtext"))
+    {
+        // 回退：尝试以 OGR 打开 CSV
+        delete vectorLayer;
+        vectorLayer = new QgsVectorLayer(QUrl(uri).toLocalFile(), layerName, QStringLiteral("ogr"));
+    }
     if (vectorLayer->isValid())
     {
         mMapModel->appendItem(vectorLayer,uri,providerKey);
