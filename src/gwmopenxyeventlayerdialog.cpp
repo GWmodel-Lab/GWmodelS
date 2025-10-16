@@ -154,46 +154,35 @@ void GwmOpenXYEventLayerDialog::accept()
       query.addQueryItem( QStringLiteral( "xyDms" ), QStringLiteral( "yes" ) );
     }
 
-    bool haveGeom = true;
-//    if (geomTypeXY->isChecked())
-    if (true)
+    bool haveGeom = false;
+    // 仅当选择了 X/Y 字段时，才认为存在几何
     {
-      QString field;
-      if ( !ui->geometryXField->currentText().isEmpty() && !ui->geometryYField->currentText().isEmpty() )
+      const QString xField = ui->geometryXField->currentText();
+      const QString yField = ui->geometryYField->currentText();
+      const bool hasXY = !xField.isEmpty() && !yField.isEmpty();
+      if ( hasXY )
       {
-        field = ui->geometryXField->currentText();
-        query.addQueryItem( QStringLiteral( "xField" ), field );
-        field = ui->geometryYField->currentText();
-        query.addQueryItem( QStringLiteral( "yField" ), field );
+        haveGeom = true;
+        query.addQueryItem( QStringLiteral( "xField" ), xField );
+        query.addQueryItem( QStringLiteral( "yField" ), yField );
       }
-      if ( !ui->geometryZField->currentText().isEmpty() )
+      const QString zField = ui->geometryZField->currentText();
+      if ( !zField.isEmpty() )
       {
-        field = ui->geometryZField->currentText();
-        query.addQueryItem( QStringLiteral( "zField" ), field );
+        query.addQueryItem( QStringLiteral( "zField" ), zField );
       }
-      if ( !ui->geometryMField->currentText().isEmpty() )
+      const QString mField = ui->geometryMField->currentText();
+      if ( !mField.isEmpty() )
       {
-        field = ui->geometryMField->currentText();
-        query.addQueryItem( QStringLiteral( "mField" ), field );
+        query.addQueryItem( QStringLiteral( "mField" ), mField );
       }
     }
-//    else if ( geomTypeWKT->isChecked() )
-//    {
-//      if ( ! cmbWktField->currentText().isEmpty() )
-//      {
-//        QString field = cmbWktField->currentText();
-//        query.addQueryItem( QStringLiteral( "wktField" ), field );
-//      }
-//      if ( cmbGeometryType->currentIndex() > 0 )
-//      {
-//        query.addQueryItem( QStringLiteral( "geomType" ), cmbGeometryType->currentText() );
-//      }
-//    }
-//    else
-//    {
-//      haveGeom = false;
-//      query.addQueryItem( QStringLiteral( "geomType" ), QStringLiteral( "none" ) );
-//    }
+    // 如果没有几何字段，则明确声明为非几何表
+    if ( !haveGeom )
+    {
+      query.addQueryItem( QStringLiteral( "geomType" ), QStringLiteral( "none" ) );
+    }
+    // 仅在有几何时附加 CRS
     if ( haveGeom )
     {
       QgsCoordinateReferenceSystem crs = mCRSSelector->crs();
@@ -201,11 +190,9 @@ void GwmOpenXYEventLayerDialog::accept()
       {
         query.addQueryItem( QStringLiteral( "crs" ), crs.authid() );
       }
-
     }
-
-//    if ( ! geomTypeNone->isChecked() )
-    if ( true )
+    // 仅在有几何时考虑空间索引
+    if ( haveGeom )
     {
       query.addQueryItem( QStringLiteral( "spatialIndex" ), ui->layerUseSpatialIndexCombo->isChecked() ? QStringLiteral( "yes" ) : QStringLiteral( "no" ) );
     }
@@ -593,3 +580,4 @@ void GwmOpenXYEventLayerDialog::onFormatCustomDelimiterOthersCheckToggled(bool c
 {
     ui->formatCustomDelimiterOthersEdit->setEnabled(checked);
 }
+
