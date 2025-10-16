@@ -37,7 +37,7 @@
    <property name="title">
     <string/>
    </property>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -139,7 +139,7 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -328,7 +328,7 @@ font: 11pt &quot;Times New Roman&quot;;</string>
        <string notr="true">font: 11pt &quot;Times New Roman&quot;;</string>
       </property>
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;GWmodel Lab Team&lt;/span&gt;  including Yigong Hu, Tongyao Zhang, Linyi Zhang, &lt;/p&gt;&lt;p&gt;Liuqi Liao, Zuoyao Yin, Tianyang Xia, Jintao Dong, Zheyi Dong, &lt;/p&gt;Haotian Zhang, Guangyu Ou, Yiyun Zhang&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;GWmodel Lab Team&lt;/span&gt; including Yigong Hu, Tongyao Zhang, Linyi Zhang, &lt;/p&gt;&lt;p&gt;Liuqi Liao, Zuoyao Yin, Tianyang Xia, Jintao Dong, Zheyi Dong, Haotian Zhang,&lt;/p&gt;&lt;p&gt;Guangyu Ou, Yiyun Zhang, Nianshuo Wen, Shaoqi Yang, Zihao Su&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
      </widget>
     </item>
