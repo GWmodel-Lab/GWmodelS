@@ -1,4 +1,4 @@
-#include "gwmpropertymultiscalegwrtab.h"
+﻿#include "gwmpropertymultiscalegwrtab.h"
 #include "ui_gwmpropertymultiscalegwrtab.h"
 
 #include <armadillo>
@@ -212,7 +212,7 @@ void GwmPropertyMultiscaleGWRTab::on_btnSaveRes_clicked()
               out << "" << Qt::endl;
               out << "**********************************************" << Qt::endl;
               out << "" << Qt::endl;
-              out << "  Summary of GWR Coefficient Estimates"<< Qt::endl;
+              out << "  Summary of multiscale GWR Coefficient Estimates"<< Qt::endl;
               out << "----------------------------------------------"<< Qt::endl;
               for(int i = 0 ; i < 6 ; i++){
                   out << ui->tbwCoefficient->horizontalHeaderItem(i)->text();
