@@ -37,7 +37,7 @@
    <property name="title">
     <string/>
    </property>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -139,12 +139,12 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>20</x>
      <y>20</y>
-     <width>581</width>
+     <width>709</width>
      <height>531</height>
     </rect>
    </property>
@@ -169,31 +169,7 @@
            <string notr="true">font: 11pt &quot;Times New Roman&quot;;</string>
           </property>
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Paul Harris, &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_3">
-          <property name="styleSheet">
-           <string notr="true">border: 1px solid rgb(0,0,0);
-font: 11pt &quot;Times New Roman&quot;;</string>
-          </property>
-          <property name="text">
-           <string> Martin Charlton </string>
-          </property>
-          <property name="indent">
-           <number>1</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_22">
-          <property name="styleSheet">
-           <string notr="true">font: 11pt &quot;Times New Roman&quot;;</string>
-          </property>
-          <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;，Chris Brunsdon, Tomoki Nakaya, &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Paul Harris, Martin Charlton&lt;span style=&quot; font-family:'-apple-system','BlinkMacSystemFont','Helvetica Neue','PingFang SC','Microsoft YaHei','Source Han Sans SC','Noto Sans CJK SC','WenQuanYi Micro Hei','MiSans L3','Segoe UI','sans-serif'; font-size:15px; color:#191b1f; background-color:#ffffff;&quot;&gt;†&lt;/span&gt;, Chris Brunsdon, Tomoki Nakaya,&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
@@ -328,7 +304,7 @@ font: 11pt &quot;Times New Roman&quot;;</string>
        <string notr="true">font: 11pt &quot;Times New Roman&quot;;</string>
       </property>
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;GWmodel Lab Team&lt;/span&gt;  including Yigong Hu, Tongyao Zhang, Linyi Zhang, &lt;/p&gt;&lt;p&gt;Liuqi Liao, Zuoyao Yin, Tianyang Xia, Jintao Dong, Zheyi Dong, &lt;/p&gt;Haotian Zhang, Guangyu Ou, Yiyun Zhang&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;GWmodel Lab Team&lt;/span&gt; including Yigong Hu, Tongyao Zhang, Linyi Zhang, &lt;/p&gt;&lt;p&gt;Liuqi Liao, Zuoyao Yin, Tianyang Xia, Jintao Dong, Zheyi Dong, &lt;/p&gt;&lt;p&gt;Haotian Zhang, Guangyu Ou, Yiyun Zhang, Nianshuo Wen, Shaoqi Yang, Zihao Su&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
      </widget>
     </item>
