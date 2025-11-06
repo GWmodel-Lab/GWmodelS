@@ -31,7 +31,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -59,6 +59,7 @@
     <addaction name="actionLocal_collinearity_GWR"/>
     <addaction name="action_GGWR"/>
     <addaction name="actionScalable_GWR"/>
+    <addaction name="actionGTDR_2"/>
    </widget>
    <widget class="QMenu" name="menuLayer_Data">
     <property name="title">
@@ -142,7 +143,7 @@
           <string>...</string>
          </property>
          <property name="icon">
-          <iconset resource="images/images.qrc">
+          <iconset resource="../images/images.qrc">
            <normaloff>:/images/themes/default/propertyicons/symbology.svg</normaloff>:/images/themes/default/propertyicons/symbology.svg</iconset>
          </property>
          <property name="autoRaise">
@@ -159,7 +160,7 @@
           <string>...</string>
          </property>
          <property name="icon">
-          <iconset resource="images/images.qrc">
+          <iconset resource="../images/images.qrc">
            <normaloff>:/images/themes/default/mActionCollapseTree.svg</normaloff>:/images/themes/default/mActionCollapseTree.svg</iconset>
          </property>
          <property name="autoRaise">
@@ -176,7 +177,7 @@
           <string>...</string>
          </property>
          <property name="icon">
-          <iconset resource="images/images.qrc">
+          <iconset resource="../images/images.qrc">
            <normaloff>:/images/themes/default/mActionExpandTree.svg</normaloff>:/images/themes/default/mActionExpandTree.svg</iconset>
          </property>
          <property name="autoRaise">
@@ -193,7 +194,7 @@
           <string>...</string>
          </property>
          <property name="icon">
-          <iconset resource="images/images.qrc">
+          <iconset resource="../images/images.qrc">
            <normaloff>:/images/themes/default/mActionRemoveLayer.svg</normaloff>:/images/themes/default/mActionRemoveLayer.svg</iconset>
          </property>
          <property name="autoRaise">
@@ -347,7 +348,7 @@
   </action>
   <action name="actionOpen">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionAddOgrLayer.svg</normaloff>:/images/themes/default/mActionAddOgrLayer.svg</iconset>
    </property>
    <property name="text">
@@ -359,7 +360,7 @@
   </action>
   <action name="actionOpen_XY_Coordinate_Layer">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionAddDelimitedTextLayer.svg</normaloff>:/images/themes/default/mActionAddDelimitedTextLayer.svg</iconset>
    </property>
    <property name="text">
@@ -371,7 +372,7 @@
   </action>
   <action name="actionSave_Layer">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionFileSave.svg</normaloff>:/images/themes/default/mActionFileSave.svg</iconset>
    </property>
    <property name="text">
@@ -380,7 +381,7 @@
   </action>
   <action name="actionSave_Layer_As">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionFileSaveAs.svg</normaloff>:/images/themes/default/mActionFileSaveAs.svg</iconset>
    </property>
    <property name="text">
@@ -392,7 +393,7 @@
   </action>
   <action name="actionSelect_Feature">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionIdentify.svg</normaloff>:/images/themes/default/mActionIdentify.svg</iconset>
    </property>
    <property name="text">
@@ -401,7 +402,7 @@
   </action>
   <action name="actionPan">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionPan.svg</normaloff>:/images/themes/default/mActionPan.svg</iconset>
    </property>
    <property name="text">
@@ -410,7 +411,7 @@
   </action>
   <action name="actionEdit">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionToggleEditing.svg</normaloff>:/images/themes/default/mActionToggleEditing.svg</iconset>
    </property>
    <property name="text">
@@ -419,7 +420,7 @@
   </action>
   <action name="actionZoom_Full_Extent">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionZoomFullExtent.svg</normaloff>:/images/themes/default/mActionZoomFullExtent.svg</iconset>
    </property>
    <property name="text">
@@ -428,7 +429,7 @@
   </action>
   <action name="actionZoom_to_Layer">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionZoomToLayer.svg</normaloff>:/images/themes/default/mActionZoomToLayer.svg</iconset>
    </property>
    <property name="text">
@@ -437,7 +438,7 @@
   </action>
   <action name="actionZoom_to_Area">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionZoomToArea.svg</normaloff>:/images/themes/default/mActionZoomToArea.svg</iconset>
    </property>
    <property name="text">
@@ -446,7 +447,7 @@
   </action>
   <action name="actionGWR">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/icons/GWR.svg</normaloff>:/images/icons/GWR.svg</iconset>
    </property>
    <property name="text">
@@ -455,7 +456,7 @@
   </action>
   <action name="actionGTDR">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/icons/GTDR.png</normaloff>:/images/icons/GTDR.png</iconset>
    </property>
    <property name="text">
@@ -464,7 +465,7 @@
   </action>
   <action name="actionGWPCA">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/icons/GWPCA.svg</normaloff>:/images/icons/GWPCA.svg</iconset>
    </property>
    <property name="text">
@@ -479,7 +480,7 @@
   </action>
   <action name="actionNew_Layout">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionNewLayout.svg</normaloff>:/images/themes/default/mActionNewLayout.svg</iconset>
    </property>
    <property name="text">
@@ -488,7 +489,7 @@
   </action>
   <action name="actionLayout_Manager">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mActionLayoutManager.svg</normaloff>:/images/themes/default/mActionLayoutManager.svg</iconset>
    </property>
    <property name="text">
@@ -497,7 +498,7 @@
   </action>
   <action name="actionLayout_Batch">
    <property name="icon">
-    <iconset resource="images/images.qrc">
+    <iconset resource="../images/images.qrc">
      <normaloff>:/images/themes/default/mLayoutItemTable.svg</normaloff>:/images/themes/default/mLayoutItemTable.svg</iconset>
    </property>
    <property name="text">
@@ -649,6 +650,11 @@
     <string>Set Proj CRS</string>
    </property>
   </action>
+  <action name="actionGTDR_2">
+   <property name="text">
+    <string>GTDR</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -671,8 +677,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="images/images.qrc"/>
-  <include location="images/images.qrc"/>
+  <include location="../images/images.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -1,4 +1,4 @@
-#include "gwmgtdrtaskthread.h"
+﻿#include "gwmgtdrtaskthread.h"
 #include <exception>
 #include <gwmodel.h>
 #include "SpatialWeight/gwmcrsdistance.h"
@@ -31,12 +31,26 @@ GwmGTDRTaskThread::GwmGTDRTaskThread(const GwmAlgorithmMetaGTDR& meta) : mMeta(m
 
     // Spatial Weight
     uword nDim = mIndepVars.size();
-    vector<SpatialWeight> spatials;
+    std::vector<SpatialWeight> spatials;
+    mBandwidthHolders.clear();
+    mDistanceHolders.clear();
+    mBandwidthHolders.reserve(nDim);
+    mDistanceHolders.reserve(nDim);
     for (size_t i = 0; i < nDim; i++)
     {
-        OneDimDistance distance;
-        BandwidthWeight bandwidth(meta.weightBandwidthSize, meta.weightBandwidthAdaptive, meta.weightBandwidthKernel);
-        spatials.push_back(SpatialWeight(&bandwidth, &distance));
+        //OneDimDistance distance;
+        //BandwidthWeight bandwidth(meta.weightBandwidthSize, meta.weightBandwidthAdaptive, meta.weightBandwidthKernel);
+        //spatials.push_back(SpatialWeight(&bandwidth, &distance));
+
+        auto bw = std::make_unique<BandwidthWeight>(meta.weightBandwidthSize, meta.weightBandwidthAdaptive, meta.weightBandwidthKernel);
+        auto dist = std::make_unique<OneDimDistance>();
+
+        BandwidthWeight* bwRaw = bw.get();
+        OneDimDistance* distRaw = dist.get();
+        mBandwidthHolders.push_back(std::move(bw));
+        mDistanceHolders.push_back(std::move(dist));
+
+        spatials.emplace_back(bwRaw, distRaw);
     }
     mAlgorithm.setSpatialWeights(spatials);
     // Parallel
@@ -64,25 +78,152 @@ void GwmGTDRTaskThread::run()
         emit message(tr("1"));
         initXY(mX, mY, mDepVar, mIndepVars);
         emit message(tr("2"));
-        mAlgorithm.setIndependentVariables(mY);
-        mAlgorithm.setDependentVariable(mX);
+        mAlgorithm.setIndependentVariables(mX);
+        mAlgorithm.setDependentVariable(mY);
         emit message(tr("variable set"));
+
+        //set parameters for OneDimDistance: Each dimension has its own dependent variable column
+        const auto& sws = mAlgorithm.spatialWeights();
+        if (sws.size() == 0) {
+            emit error(tr("GTDR invalid: spatialWeights empty before parameterization."));
+            return;
+        }
+        // mX 列0是截距，从列1开始对应各自变量
+        if (mX.n_cols < 2 || sws.size() != size_t(mX.n_cols - 1)) {
+            emit message(tr("[WARN] spatialWeights size (%1) != indep columns (%2)")
+                         .arg(sws.size()).arg(mX.n_cols - 1));
+        }
+        arma::uword p = mX.n_cols >= 1 ? mX.n_cols - 1 : 0;
+        for (arma::uword k = 0; k < p && k < sws.size(); ++k) {
+            auto* od = sws[k].distance<gwm::OneDimDistance>();
+            if (!od) {
+                emit error(tr("GTDR invalid: spatialWeights[%1] is not OneDimDistance.").arg(int(k)));
+                return;
+            }
+            arma::vec col = mX.col(k + 1);  // 自变量第k列（跳过截距列）
+            // focus 和 data 都使用该列（计算一维距离 |x_i - x_j|）
+            od->makeParameter({ col, col });
+        }
     }
 
     // Run algorithm;
     if (checkCanceled()) return;
     try
     {
-        mAlgorithm.setTelegram(make_unique<GwmTaskThreadTelegram>(this));
+        mAlgorithm.setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+        //if(!mAlgorithm.isValid())
+        //{
+        //    emit error(tr("GTDR invalid: check X/Y/coords/spatialWeights consistency."));
+        //    return;
+        //}
+
+        // 1) 基本维度检查
+        emit message(tr("[DBG] X shape: %1, %2").arg(mX.n_rows).arg(mX.n_cols));
+        emit message(tr("[DBG] Y shape: %1").arg(mY.n_rows));
+        arma::mat coords = mAlgorithm.coords();
+        emit message(tr("[DBG] coords shape: %1, %2").arg(coords.n_rows).arg(coords.n_cols));
+
+        if (mX.n_rows == 0 || mY.n_rows == 0 || coords.n_rows == 0) {
+            emit error(tr("GTDR invalid: X/Y/coords empty."));
+            return;
+        }
+        if (mX.n_rows != mY.n_rows || mX.n_rows != coords.n_rows) {
+            emit error(tr("GTDR invalid: X/Y/coords row-size mismatch: X=%1, Y=%2, C=%3")
+                       .arg(mX.n_rows).arg(mY.n_rows).arg(coords.n_rows));
+            return;
+        }
+    
+        // 2) 空间权重检查
+        const auto& sws = mAlgorithm.spatialWeights();
+        emit message(QString("[DBG] spatialWeights count: %1").arg(sws.size()));
+        if (sws.empty()) {
+            emit error(tr("GTDR invalid: spatialWeights empty."));
+            return;
+        }
+    
+        // 一般 GTDR 用“每个维度一个权重”，这里检查数量与自变量个数的一致性
+        if (sws.size() != size_t(mIndepVars.size())) {
+            emit message(QString("[WARN] spatialWeights size (%1) != indepVars size (%2)")
+                         .arg(sws.size()).arg(mIndepVars.size()));
+        }
+    
+        bool hasNull = false;
+        for (size_t i = 0; i < sws.size(); ++i) {
+            bool wok = sws[i].weight() != nullptr;
+            bool dok = sws[i].distance() != nullptr;
+            emit message(QString("[DBG] sw[%1]: weight=%2, distance=%3")
+                         .arg(int(i)).arg(wok ? "ok" : "NULL").arg(dok ? "ok" : "NULL"));
+            if (!wok || !dok) hasNull = true;
+        }
+        if (hasNull) {
+            emit error(tr("GTDR invalid: some spatialWeights have NULL weight/distance."));
+            return;
+        }
+    
+        // 3) 取一个样本点尝试生成权重向量，排除 distance/weight 内部再用到空指针
+        try {
+            const SpatialWeight& sw0 = sws.front();
+            arma::vec w0 = sw0.weightVector(0);    // 若这里抛异常/崩溃，distance/weight 内部还在引用空对象
+            emit message(QString("[DBG] sw[0].weightVector(0) len=%1, first=%2")
+                         .arg(w0.n_rows).arg(w0.n_rows ? w0(0) : 0.0, 0, 'g', 10));
+        } catch (const std::exception& ex) {
+            emit error(QString("GTDR invalid: weightVector test failed: %1").arg(ex.what()));
+            return;
+        } catch (...) {
+            emit error(tr("GTDR invalid: weightVector test failed: unknown exception."));
+            return;
+        }
+    
+        // 4) lib 层面的 isValid() 兜底
+        //if (!mAlgorithm.isValid()) {
+        //    emit error(tr("GTDR invalid: check X/Y/coords/spatialWeights consistency."));
+        //    return;
+        //}
+
+        //检查结束
+        
         mAlgorithm.fit();
-        mBetas = mAlgorithm.betas();
+        emit message(tr("fit"));
         mDiagnostic=mAlgorithm.diagnostic();
+        emit message(tr("diagnostic"));
+        mBetas = mAlgorithm.betas();
+        mBetasSE = mAlgorithm.betasSE();
+
+        int nDp = mX.n_rows;
+        vec shat = mAlgorithm.sHat();
+        double trs = shat(0);
+        double trStS = shat(1);
+        //注意：仅mAlgorithm.hasHatMatrix()为true时，才计算sigmaHat
+        //后续需要添加检查机制
+        double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trs + trStS);
+        vec qDiag = mAlgorithm.qDiag();
+        mBetasSE = sqrt(sigmaHat * mBetasSE);
+        vec yhat = mAlgorithm.Fitted(mX, mBetas);
+        vec res = mY - yhat;
+        vec stu_res = res / sqrt(sigmaHat * qDiag);
+        mat betasTV = mBetas/mBetasSE;
+        const auto& spatialWeights = mAlgorithm.spatialWeights();
+        const SpatialWeight& sw = spatialWeights.front(); // 或选择合适维度的 sw
+        vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
+        vec dyhat2 = (mY - yhat) % (mY - yhat);
+        vec localR2 = vec(nDp, fill::zeros);
+        for (uword i = 0; i < nDp && !checkCanceled(); i++)
+        {
+            vec w = sw.weightVector(i);
+            double tss = sum(dybar2 % w);
+            double rss = sum(dyhat2 % w);
+            localR2(i) = (tss - rss) / tss;
+        }
+
         if(!checkCanceled())
         {   
             mResultList.push_back(qMakePair(QString("%1"), mBetas));
             mResultList.push_back(qMakePair(QString("y"), mY));
-            mResultList.push_back(qMakePair(QString("yhat"), mAlgorithm.Fitted(mX, mBetas)));
-            mResultList.push_back(qMakePair(QString("%1_SE"), mAlgorithm.betasSE()));
+            mResultList.push_back(qMakePair(QString("yhat"), yhat));
+            mResultList.push_back(qMakePair(QString("residual"), res));
+            mResultList.push_back(qMakePair(QString("%1_SE"), mBetasSE));
+            mResultList.push_back(qMakePair(QString("%1_TV"), betasTV));
+            mResultList.push_back(qMakePair(QString("localR2"), localR2));
         }
         if(!checkCanceled())
         {
@@ -115,13 +256,13 @@ mat GwmGTDRTaskThread::initPoints(QgsVectorLayer* layer)
 void GwmGTDRTaskThread::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
 {
     emit message(tr("10"));
-    int nDp = mDataLayer->featureCount(), nVar = indepVars.size() + 1;
+    int nDp = mLayer->featureCount(), nVar = indepVars.size() + 1;
     // Data layer and X,Y
     emit message(tr("11"));
     x = mat(nDp, nVar, fill::zeros);
     y = vec(nDp, fill::zeros);
     emit message(tr("11"));
-    QgsFeatureIterator iterator = mDataLayer->getFeatures();
+    QgsFeatureIterator iterator = mLayer->getFeatures();
     QgsFeature f;
     bool ok = false;
     emit message(tr("12"));
@@ -249,4 +390,16 @@ void GwmGTDRTaskThread::createResultLayer(CreateResultLayerData data)
     }
     mResultLayer->commitChanges();
 
+    // test code
+    emit message(tr("[GTDR] result fields=%1, features=%2")
+    .arg(mResultLayer->fields().count())
+    .arg(int(mResultLayer->featureCount())));
+    // 打印前两条要素的前5个属性，避免UI阻塞
+    int cnt = 0;
+    for (auto it = mResultLayer->getFeatures(); cnt < 2 && it.nextFeature(f); ++cnt) {
+        QStringList vals;
+        for (int k = 0; k < std::min(5, mResultLayer->fields().count()); ++k)
+            vals << f.attribute(k).toString();
+        emit message(tr("[GTDR] feat%1 attrs: %2").arg(cnt).arg(vals.join(",")));
+    }
 }

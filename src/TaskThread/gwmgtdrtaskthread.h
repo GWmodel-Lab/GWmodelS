@@ -1,4 +1,4 @@
-#ifndef GWMGTDRTASKTHREAD_H
+﻿#ifndef GWMGTDRTASKTHREAD_H
 #define GWMGTDRTASKTHREAD_H
 
 #include <QObject>
@@ -30,11 +30,11 @@ public:
 
     GwmAlgorithmMetaGTDR meta() const { return mMeta; }
 
-    QList<GwmVariable> independentVariables() const  { return mIndepVars; }
-    void setIndependentVariables(const QList<GwmVariable>& indepVars)  { mIndepVars = indepVars; }
+    //QList<GwmVariable> independentVariables() const  { return mIndepVars; }
+    //void setIndependentVariables(const QList<GwmVariable>& indepVars)  { mIndepVars = indepVars; }
 
-    GwmVariable dependentVariable() const  { return mDepVar; }
-    void setDependentVariable(const GwmVariable& depVar)  { mDepVar = depVar; }
+    //GwmVariable dependentVariable() const  { return mDepVar; }
+    //void setDependentVariable(const GwmVariable& depVar)  { mDepVar = depVar; }
 
     int parallelAbility() const override { return mAlgorithm.parallelAbility(); }
     ParallelType parallelType() const override { return ParallelType(mAlgorithm.parallelType()); }
@@ -82,6 +82,7 @@ protected:
     mat mX;
     vec mY;
     mat mBetas;
+    mat mBetasSE;
 
     // GwmDiagnostic mDiagnostic;
     gwm::RegressionDiagnostic mDiagnostic;
@@ -94,6 +95,9 @@ protected:
 
 public:
     static int treeChildCount;
+private:
+    std::vector<std::unique_ptr<gwm::BandwidthWeight>> mBandwidthHolders;
+    std::vector<std::unique_ptr<gwm::OneDimDistance>> mDistanceHolders;
 
 };
 
