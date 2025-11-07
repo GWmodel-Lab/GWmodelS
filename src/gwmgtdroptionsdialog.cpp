@@ -93,7 +93,7 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mHatmatrixCheckBox, &QAbstractButton::toggle, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mHatmatrixCheckBox, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
 
     ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
     ui->mBwSizeFixedSize->setMaximum(DBL_MAX);

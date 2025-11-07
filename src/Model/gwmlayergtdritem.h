@@ -1,4 +1,4 @@
-#ifndef GWMLAYERGTDRITEM_H
+﻿#ifndef GWMLAYERGTDRITEM_H
 #define GWMLAYERGTDRITEM_H
 
 #include "gwmlayervectoritem.h"
@@ -24,7 +24,7 @@ public:
 
     GwmDiagnostic diagnostic() const {return mDiagnostic;};
 
-    arma::mat betas() const;
+    arma::mat betas() const {return mBetas;};
 
     bool modelOptimized() const {return isModelOptimized;};
 

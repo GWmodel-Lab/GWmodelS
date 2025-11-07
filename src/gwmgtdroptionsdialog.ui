@@ -626,7 +626,10 @@
           <item>
            <widget class="QCheckBox" name="mHatmatrixCheckBox">
             <property name="text">
-             <string>hatmatrix</string>
+             <string>Hatmatrix</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
