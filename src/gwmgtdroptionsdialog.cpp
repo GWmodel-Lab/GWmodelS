@@ -41,6 +41,8 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     bwTypeBtnGroup->addButton(ui->mBwTypeFixedRadio);
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onFixedRadioToggled);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onVariableRadioToggled);
+    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onBwSizeAutomaticToggled);
+    connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onBwSizeCustomizeToggled);
 
 
     //距离计算部分
@@ -98,6 +100,8 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
     ui->mBwSizeFixedSize->setMaximum(DBL_MAX);
     ui->mDistTypeCRSRadio->setChecked(true);
+    ui->mBwTypeAdaptiveRadio->setChecked(true);
+    ui->mBwSizeSettingStack->setEnabled(ui->mBwSizeCustomizeRadio->isChecked());
     updateFieldsAndEnable();
 }
 
@@ -280,6 +284,17 @@ void GwmGTDROptionsDialog::onFixedRadioToggled(bool checked)
     ui->mBwSizeSettingStack->setCurrentIndex(1);
 }
 
+void GwmGTDROptionsDialog::onBwSizeAutomaticToggled(bool checked)
+{
+    if (checked)
+        ui->mBwSizeSettingStack->setEnabled(false);
+}
+
+void GwmGTDROptionsDialog::onBwSizeCustomizeToggled(bool checked)
+{
+    ui->mBwSizeSettingStack->setEnabled(checked);
+}
+
 void GwmGTDROptionsDialog::onVariableRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(0);
@@ -397,6 +412,21 @@ void GwmGTDROptionsDialog::updateFields()
     else
     {
         mAlgorithmMeta.parallelType = gwm::ParallelType::SerialOnly;
+    }
+
+    // Bandwidth Autoselection Settings
+    mAlgorithmMeta.bandwidthAuto = ui->mBwSizeAutomaticRadio->isChecked();
+    if (mAlgorithmMeta.bandwidthAuto)
+    {
+        mAlgorithmMeta.bandwidthCriterionType =
+            ui->mBwSizeAutomaticApprochCombo->currentIndex() == 0
+                ? gwm::GTDR::BandwidthCriterionType::AIC
+                : gwm::GTDR::BandwidthCriterionType::CV;
+        mAlgorithmMeta.weightBandwidthSize = bandwidthSize(); // 作为初始值使用，可保留
+    }
+    else
+    {
+        mAlgorithmMeta.weightBandwidthSize = bandwidthSize();
     }
 
     mAlgorithmMeta.hatmatrix = ui->mHatmatrixCheckBox->isChecked();

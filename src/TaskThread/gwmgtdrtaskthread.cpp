@@ -29,6 +29,13 @@ GwmGTDRTaskThread::GwmGTDRTaskThread(const GwmAlgorithmMetaGTDR& meta) : mMeta(m
     mIndepVars = meta.independentVariables;
     mDepVar = meta.dependentVariable;
 
+    // Bandwidth Selection
+    mAlgorithm.setEnableBandwidthOptimize(meta.bandwidthAuto);
+    mAlgorithm.setBandwidthCriterionType(meta.bandwidthCriterionType);
+    mAlgorithm.setBandwidthOptimizeEps(meta.bandwidthOptimizeEps);
+    mAlgorithm.setBandwidthOptimizeStep(meta.bandwidthOptimizeStep);
+    mAlgorithm.setBandwidthOptimizeMaxIter(meta.bandwidthOptimizeMaxIter);
+
     // Spatial Weight
     uword nDim = mIndepVars.size();
     std::vector<SpatialWeight> spatials;
@@ -161,6 +168,7 @@ void GwmGTDRTaskThread::run()
         }
     
         // 3) 取一个样本点尝试生成权重向量，排除 distance/weight 内部再用到空指针
+        /**/
         try {
             const SpatialWeight& sw0 = sws.front();
             arma::vec w0 = sw0.weightVector(0);    // 若这里抛异常/崩溃，distance/weight 内部还在引用空对象

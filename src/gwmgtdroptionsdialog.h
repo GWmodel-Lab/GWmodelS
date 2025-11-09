@@ -38,6 +38,8 @@ public slots:
 
     void onFixedRadioToggled(bool checked);
     void onVariableRadioToggled(bool checked);
+    void onBwSizeAutomaticToggled(bool checked);
+    void onBwSizeCustomizeToggled(bool checked);
     void onNoneRadioToggled(bool checked);
     void onMultithreadingRadioToggled(bool checked);
     void onGPURadioToggled(bool checked);

@@ -31,6 +31,13 @@ struct GwmAlgorithmMetaGTDR
     bool hatmatrix = false;
 
     bool validate(QString &error) const;
+
+    // Bandwidth Autoselection
+    bool bandwidthAuto = true;
+    gwm::GTDR::BandwidthCriterionType bandwidthCriterionType = gwm::GTDR::BandwidthCriterionType::AIC;
+    double bandwidthOptimizeEps = 1e-6;
+    std::size_t bandwidthOptimizeMaxIter = 500;
+    double bandwidthOptimizeStep = 0.1;
 };
 
 
