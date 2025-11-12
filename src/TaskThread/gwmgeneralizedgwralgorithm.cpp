@@ -26,7 +26,8 @@ QMap<QString, double> GwmGeneralizedGWRAlgorithm::TolUnitDict = {
 };
 
 
-GwmGeneralizedGWRAlgorithm::GwmGeneralizedGWRAlgorithm() : GwmGeographicalWeightedRegressionAlgorithm()
+GwmGeneralizedGWRAlgorithm::GwmGeneralizedGWRAlgorithm() : GwmGeographicalWeightedRegressionAlgorithm(),
+    mGWRCore(std::make_unique<gwm::GWRBasic>())
 {
 
 }
@@ -34,8 +35,8 @@ GwmGeneralizedGWRAlgorithm::GwmGeneralizedGWRAlgorithm() : GwmGeographicalWeight
 void GwmGeneralizedGWRAlgorithm::setCanceled(bool canceled)
 {
     if (mGlm) mGlm->setCanceled(canceled);
-    mBandwidthSizeSelector.setCanceled(canceled);
-    mSpatialWeight.distance()->setCanceled(canceled);
+    // mBandwidthSizeSelector.setCanceled(canceled);
+    // mSpatialWeight.distance()->setCanceled(canceled);
     return GwmTaskThread::setCanceled(canceled);
 }
 
@@ -58,19 +59,22 @@ void GwmGeneralizedGWRAlgorithm::run()
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
         //emit tick(0, 0);
-        if ((mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance) && !checkCanceled())
+        if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
         {
-            GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
-            d->setDataPoints(&mDataPoints);
-            d->setFocusPoints(&mDataPoints);
+            gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+            d->makeParameter({ mDataPoints, mDataPoints });
         }
-        GwmBandwidthWeight* bandwidthWeight0 = mSpatialWeight.weight<GwmBandwidthWeight>();
+        gwm::BandwidthWeight* bandwidthWeight0 = mSpatialWeight.weight<gwm::BandwidthWeight>();
         mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
         double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSpatialWeight.distance()->maxDistance();
         mBandwidthSizeSelector.setLower(lower);
         mBandwidthSizeSelector.setUpper(upper);
-        GwmBandwidthWeight* bandwidthWeight = !checkCanceled() ? mBandwidthSizeSelector.optimize(this) : nullptr;
+        mGWRCore->setCoords(mDataPoints);
+        mGWRCore->setDependentVariable(mY);
+        mGWRCore->setIndependentVariables(mX);
+        mGWRCore->setSpatialWeight(mSpatialWeight);
+        gwm::BandwidthWeight* bandwidthWeight = !checkCanceled() ? mBandwidthSizeSelector.optimize(mGWRCore.get()) : nullptr;
         if (bandwidthWeight && !checkCanceled())
         {
             mSpatialWeight.setWeight(bandwidthWeight);
@@ -78,11 +82,11 @@ void GwmGeneralizedGWRAlgorithm::run()
             QVariant data = QVariant::fromValue(mBandwidthSizeSelector.bandwidthCriterion());
             emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
         }
-        if ((mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance) && !checkCanceled())
+        if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
         {
-            GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
-            d->setDataPoints(&mDataPoints);
-            d->setFocusPoints(&mRegressionPoints);
+            gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+            d->makeParameter({ mDataPoints, mDataPoints });
+
         }
     }
 
@@ -106,11 +110,10 @@ void GwmGeneralizedGWRAlgorithm::run()
             mWtMat2.col(i) = weight;
             emit tick(i, nRp);
         }
-        if ((mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance) && !checkCanceled())
+        if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
         {
-            GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
-            d->setDataPoints(&mDataPoints);
-            d->setFocusPoints(&mDataPoints);
+            gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+            d->makeParameter({ mDataPoints, mDataPoints });
         }
         for(int i = 0; i < nDp && !checkCanceled(); i++){
             vec weight = mSpatialWeight.weightVector(i);
@@ -528,6 +531,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionBinomialSerial(const mat &x, const vec
 
 double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial(GwmBandwidthWeight *bandwidthWeight)
 {
+    int mBandwidthCounter = 0;
     int n = mDataPoints.n_rows;
     vec cv = vec(n);
     mat wt = mat(n,n);
@@ -537,8 +541,9 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial(GwmBandwid
         vec w = bandwidthWeight->weight(d);
         w.row(i) = 0;
         wt.col(i) = w;
-        if(mBandwidthSizeSelector.counter<10)
-            emit tick(mBandwidthSizeSelector.counter*10 + i * 5 / n, 100);
+        mBandwidthCounter++;
+        if (mBandwidthCounter < 10)
+            emit tick(mBandwidthCounter * 10 + i * 5 / n, 100);
     }
     if (!checkCanceled()) (this->*mCalWtFunction)(mX,mY,wt);
     for (int i = 0; i < n && !checkCanceled(); i++){
@@ -551,8 +556,9 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial(GwmBandwid
         else{
             cv.row(i) = mY.row(i) - exp(yhatnoi)/(1+exp(yhatnoi));
         }
-        if(mBandwidthSizeSelector.counter<10)
-            emit tick(mBandwidthSizeSelector.counter*10 + i * 5 / n + 5, 100);
+        mBandwidthCounter++;
+        if (mBandwidthCounter < 10)
+            emit tick(mBandwidthCounter * 10 + i * 5 / n, 100);
     }
     vec cvsquare = trans(cv) * cv ;
     double res = sum(cvsquare);
@@ -626,6 +632,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
 #endif
 double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwidthWeight *bandwidthWeight)
 {
+    int mBandwidthCounter = 0;
     int n = mDataPoints.n_rows;
     vec cv = vec(n);
     mat S = mat(n,n);
@@ -635,8 +642,9 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwi
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         wt.col(i) = w;
-        if(mBandwidthSizeSelector.counter<10)
-            emit tick(mBandwidthSizeSelector.counter*10 + i * 5 / n, 100);
+        mBandwidthCounter++;
+        if (mBandwidthCounter < 10)
+            emit tick(mBandwidthCounter * 10 + i * 5 / n, 100);
     }
     if(!checkCanceled()) (this->*mCalWtFunction)(mX,mY,wt);
     vec trS = vec(1,fill::zeros);
@@ -645,8 +653,9 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwi
         mat Ci = CiMat(mX,wi);
         S.row(i) = mX.row(i) * Ci;
         trS(0) += S(i,i);
-        if(mBandwidthSizeSelector.counter<10)
-            emit tick(mBandwidthSizeSelector.counter*10 + i * 5 / n + 5, 100);
+        mBandwidthCounter++;
+        if (mBandwidthCounter < 10)
+            emit tick(mBandwidthCounter * 10 + i * 5 / n, 100);
     }
     double AICc;
     if(!checkCanceled())
@@ -955,12 +964,12 @@ void GwmGeneralizedGWRAlgorithm::setBandwidthSelectionCriterionType(const Bandwi
     QMap<QPair<BandwidthSelectionCriterionType, gwm::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
     #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp),
     #endif
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial),
     #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp),
+        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp),
     #endif
         std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial)
     };
@@ -1068,27 +1077,27 @@ bool GwmGeneralizedGWRAlgorithm::setFamily(Family family){
     QMap<QPair<Family, gwm::ParallelType>, GGWRRegressionFunction> mapper = {
         std::make_pair(qMakePair(Family::Poisson, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::regressionPoissonSerial),
     #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::regressionPoissonOmp),
+        std::make_pair(qMakePair(Family::Poisson, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::regressionPoissonOmp),
     #endif
-//        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::regressionPoissonSerial),
+//        std::make_pair(qMakePair(Family::Poisson, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::regressionPoissonSerial),
         std::make_pair(qMakePair(Family::Binomial, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::regressionBinomialSerial),
     #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::regressionBinomialOmp),
+        std::make_pair(qMakePair(Family::Binomial, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::regressionBinomialOmp),
     #endif
-//        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::regressionBinomialSerial)
+//        std::make_pair(qMakePair(Family::Binomial, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::regressionBinomialSerial)
     };
     mGGWRRegressionFunction = mapper[qMakePair(family, mParallelType)];
     QMap<QPair<Family, gwm::ParallelType>, CalWtFunction> mapper1 = {
         std::make_pair(qMakePair(Family::Poisson, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::PoissonWtSerial),
     #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::PoissonWtOmp),
+        std::make_pair(qMakePair(Family::Poisson, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::PoissonWtOmp),
     #endif
-//        std::make_pair(qMakePair(Family::Poisson, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::PoissonWtSerial),
+//        std::make_pair(qMakePair(Family::Poisson, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::PoissonWtSerial),
         std::make_pair(qMakePair(Family::Binomial, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::BinomialWtSerial),
     #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::BinomialWtOmp),
+        std::make_pair(qMakePair(Family::Binomial, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::BinomialWtOmp),
     #endif
-//        std::make_pair(qMakePair(Family::Binomial, IParallelalbe::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::BinomialWtSerial)
+//        std::make_pair(qMakePair(Family::Binomial, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::BinomialWtSerial)
     };
     mCalWtFunction = mapper1[qMakePair(family, mParallelType)];
     return true;

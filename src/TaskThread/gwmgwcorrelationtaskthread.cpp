@@ -1,5 +1,4 @@
-#include "gwmgwcorrelationtaskthread.h"
-#include "gwmgwcorrelationtaskthread.h"
+﻿#include "gwmgwcorrelationtaskthread.h"
 #include "SpatialWeight/gwmcrsdistance.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>

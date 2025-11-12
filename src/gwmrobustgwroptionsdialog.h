@@ -1,4 +1,4 @@
-#ifndef GWMROBUSTGWROPTIONSDIALOG_H
+﻿#ifndef GWMROBUSTGWROPTIONSDIALOG_H
 #define GWMROBUSTGWROPTIONSDIALOG_H
 
 #include <QDialog>
@@ -70,7 +70,7 @@ public:
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
 
     bool bandwidthType();
-    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
+    gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();
 private slots:
     void on_cbxHatmatrix_toggled(bool checked);
     void on_cbkRegressionPoints_toggled(bool checked);

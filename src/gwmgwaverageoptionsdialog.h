@@ -1,4 +1,4 @@
-#ifndef GWMGWAVERAGEOPTIONSDIALOG_H
+﻿#ifndef GWMGWAVERAGEOPTIONSDIALOG_H
 #define GWMGWAVERAGEOPTIONSDIALOG_H
 
 #include <QDialog>
@@ -53,7 +53,7 @@ public:
     double bandwidthSize();
 //    GwmGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
 //    QString bandWidthUnit();
-    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
+    gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     GwmDistance::DistanceType distanceSourceType();
     QVariant distanceSourceParameters();
     QVariant parallelParameters();

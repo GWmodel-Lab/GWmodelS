@@ -1,4 +1,4 @@
-#include "gwmlcrgwroptionsdialog.h"
+﻿#include "gwmlcrgwroptionsdialog.h"
 #include "ui_gwmlcrgwroptionsdialog.h"
 #include <QComboBox>
 #include <QButtonGroup>
@@ -340,10 +340,10 @@ QString GwmLcrGWROptionsDialog::bandWidthUnit(){
         return ui->mBwSizeFixedUnit->currentText();
     }
 }
-GwmBandwidthWeight::KernelFunctionType GwmLcrGWROptionsDialog::bandwidthKernelFunction()
+gwm::BandwidthWeight::KernelFunctionType GwmLcrGWROptionsDialog::bandwidthKernelFunction()
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
-    return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
+    return gwm::BandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
 QVariant GwmLcrGWROptionsDialog::distanceSourceParameters()
@@ -471,27 +471,27 @@ void GwmLcrGWROptionsDialog::updateFields()
     {
         mTaskThread->setIsAutoselectBandwidth(false);
     }
-    GwmSpatialWeight spatialWeight;
-    GwmBandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
+    gwm::SpatialWeight spatialWeight;
+    gwm::BandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
     spatialWeight.setWeight(weight);
     // 距离设置
     int featureCount = dataLayer->featureCount();
     if (ui->mDistTypeDmatRadio->isChecked())
     {
         QString filename = ui->mDistMatrixFileNameEdit->text();
-        GwmDMatDistance distance(featureCount, filename);
+        gwm::DMatDistance distance(filename.toStdString());
         spatialWeight.setDistance(distance);
     }
     else if (ui->mDistTypeMinkowskiRadio->isChecked())
     {
         double theta = ui->mThetaValue->value();
         double p = ui->mPValue->value();
-        GwmMinkwoskiDistance distance(featureCount, p, theta);
+        gwm::MinkwoskiDistance distance(p, theta);
         spatialWeight.setDistance(distance);
     }
     else
     {
-        GwmCRSDistance distance(featureCount, dataLayer->crs().isGeographic());
+        gwm::CRSDistance distance;
         spatialWeight.setDistance(distance);
     }
     mTaskThread->setSpatialWeight(spatialWeight);

@@ -66,6 +66,8 @@ private:
 
     RegressionHatmatrix mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
 
+    std::unique_ptr<gwm::GWRBasic> mGWRCore;
+
 public:
     static int treeChildCount;
 };
@@ -90,10 +92,10 @@ inline int GwmRobustGWRAlgorithm::parallelAbility() const
 {
     return gwm::SerialOnly
         #ifdef ENABLE_OpenMP
-            | IParallelalbe::OpenMP
+            | gwm::OpenMP
         #endif
         #ifdef ENABLE_CUDA
-            | IParallelalbe::CUDA
+            | gwm::CUDA
         #endif
             ;
 }

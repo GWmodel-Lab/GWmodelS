@@ -1,4 +1,4 @@
-#include "gwmpropertyscalablegwrtab.h"
+﻿#include "gwmpropertyscalablegwrtab.h"
 #include "ui_gwmpropertyscalablegwrtab.h"
 
 #include <armadillo>
@@ -37,8 +37,10 @@ void GwmPropertyScalableGWRTab::updateUI()
     if (!mLayerItem)
         return;
 
-    GwmBandwidthWeight weight = mLayerItem->weight();
-    ui->lblKernelFunction->setText(GwmBandwidthWeight::KernelFunctionTypeNameMapper.name(weight.kernel()));
+    gwm::BandwidthWeight weight = mLayerItem->weight();
+    ui->lblKernelFunction->setText(
+        QString::fromStdString(gwm::BandwidthWeight::KernelFunctionTypeNameMapper.at(weight.kernel()))
+        );
     ui->lblBandwidthType->setText(weight.adaptive() ? tr("Adaptive") : tr("Fixed"));
     if (weight.adaptive())
     {
@@ -53,7 +55,10 @@ void GwmPropertyScalableGWRTab::updateUI()
         ui->lblBandwidthSize->setText(bwSizeString);
     }
     ui->lblRegressionPoints->setText(tr("The same location as observations are used."));
-    ui->lblDistanceMetric->setText(tr("%1 distance metric is used.").arg(GwmDistance::TypeNameMapper[mLayerItem->distanceType()]));
+    ui->lblDistanceMetric->setText(
+        tr("%1 distance metric is used.")
+            .arg(QString::fromStdString(gwm::Distance::TypeNameMapper[mLayerItem->distanceType()]))
+        );
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
 
     if (!mLayerItem->hasRegressionLayer())

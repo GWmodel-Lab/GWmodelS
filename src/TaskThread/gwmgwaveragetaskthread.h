@@ -1,4 +1,4 @@
-    #ifndef GWMGWAVERAGETASKTHREAD_H
+﻿    #ifndef GWMGWAVERAGETASKTHREAD_H
 #define GWMGWAVERAGETASKTHREAD_H
 
 #include <QObject>
@@ -93,8 +93,8 @@ public:     // GwmTaskThread interface
 
 public:
 
-    GwmBandwidthWeight* bandwidth() const;
-    void setBandwidth(GwmBandwidthWeight* bandwidth);
+    gwm::BandwidthWeight* bandwidth() const;
+    void setBandwidth(gwm::BandwidthWeight* bandwidth);
 
 
     mat localmean() const{return mLocalMean;}
@@ -189,12 +189,12 @@ inline void GwmGWaverageTaskThread::setVariables(const QList<GwmVariable> &&vari
     mVariables = variables;
 }
 
-inline GwmBandwidthWeight *GwmGWaverageTaskThread::bandwidth() const
+inline gwm::BandwidthWeight *GwmGWaverageTaskThread::bandwidth() const
 {
-    return static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    return static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight());
 }
 
-inline void GwmGWaverageTaskThread::setBandwidth(GwmBandwidthWeight *bandwidth)
+inline void GwmGWaverageTaskThread::setBandwidth(gwm::BandwidthWeight *bandwidth)
 {
     mSpatialWeight.setWeight(bandwidth);
 }

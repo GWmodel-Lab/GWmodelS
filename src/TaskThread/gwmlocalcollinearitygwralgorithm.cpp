@@ -1,4 +1,4 @@
-#include "gwmlocalcollinearitygwralgorithm.h"
+﻿#include "gwmlocalcollinearitygwralgorithm.h"
 
 #include <armadillo>
 
@@ -10,7 +10,8 @@ int GwmLocalCollinearityGWRAlgorithm::treeChildCount = 0;
 
 using namespace arma;
 
-GwmLocalCollinearityGWRAlgorithm::GwmLocalCollinearityGWRAlgorithm():GwmGeographicalWeightedRegressionAlgorithm()
+GwmLocalCollinearityGWRAlgorithm::GwmLocalCollinearityGWRAlgorithm():GwmGeographicalWeightedRegressionAlgorithm(),
+    mGWRCore(std::make_unique<gwm::GWRBasic>())
 {
 
 }
@@ -37,8 +38,8 @@ double GwmLocalCollinearityGWRAlgorithm::cnThresh() const
 
 void GwmLocalCollinearityGWRAlgorithm::setCanceled(bool canceled)
 {
-    selector.setCanceled(canceled);
-    mSpatialWeight.distance()->setCanceled(canceled);
+    // selector.setCanceled(canceled);
+    // mSpatialWeight.distance()->setCanceled(canceled);
     return GwmTaskThread::setCanceled(canceled);
 }
 
@@ -58,13 +59,17 @@ void GwmLocalCollinearityGWRAlgorithm::run()
     if(mIsAutoselectBandwidth && !checkCanceled())
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
-        GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+        gwm::BandwidthWeight* bandwidthWeight0 = static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight());
         selector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
         double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSpatialWeight.distance()->maxDistance();
         selector.setLower(lower);
         selector.setUpper(upper);
-        GwmBandwidthWeight* bandwidthWeight = selector.optimize(this);
+        mGWRCore->setCoords(mDataPoints);
+        mGWRCore->setDependentVariable(mY);
+        mGWRCore->setIndependentVariables(mX);
+        mGWRCore->setSpatialWeight(mSpatialWeight);
+        gwm::BandwidthWeight* bandwidthWeight = selector.optimize(mGWRCore.get());
         if(bandwidthWeight)
         {
             mSpatialWeight.setWeight(bandwidthWeight);
@@ -234,6 +239,7 @@ void GwmLocalCollinearityGWRAlgorithm::createResultLayer(CreateResultLayerData d
 
 double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *weight)
 {
+    int mBandwidthCounter = 0;
     //行数
     double n = mX.n_rows;
     //列数
@@ -278,8 +284,9 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandw
             }
         }
         betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
-        if(selector.counter<10)
-            emit tick(selector.counter*10 + i * 10 / n, 100);
+        mBandwidthCounter++;
+        if (mBandwidthCounter < 10)
+            emit tick(mBandwidthCounter * 10 + i * 5 / n, 100);
     }
     //yhat赋值
     //vec mYHat = fitted(mX,betas);
@@ -546,7 +553,7 @@ bool GwmLocalCollinearityGWRAlgorithm::isValid()
 {
     if (GwmGeographicalWeightedRegressionAlgorithm::isValid())
     {
-        GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+        gwm::BandwidthWeight* bandwidth = static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight());
 
         if(!mIsAutoselectBandwidth)
         {

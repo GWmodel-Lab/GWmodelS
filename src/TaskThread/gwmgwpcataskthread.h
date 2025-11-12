@@ -1,4 +1,4 @@
-#ifndef GWMGWPCATASKTHREAD_H
+﻿#ifndef GWMGWPCATASKTHREAD_H
 #define GWMGWPCATASKTHREAD_H
 
 #include <QObject>
@@ -108,6 +108,7 @@ private:
     void rwpca(const mat &x, const vec &wt, mat &coeff, vec &latent, double nu, double nv);
     void createResultLayer(CreateResultLayerData data,QList<QString> winvar);
     void createPlotLayer(CreatePlotLayerData data, QList<QString> varpc);
+    std::unique_ptr<gwm::GWRBasic> mGWRCore;
 
     mat pca(const mat& x, cube& loadings, mat& sdev, cube& scores)
     {
@@ -147,7 +148,7 @@ private:
     mat mX;
     vec mLatestWt;
 
-    GwmBandwidthSizeSelector mSelector;
+    gwm::BandwidthSelector mSelector;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::CV;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial;
     bool mIsAutoselectBandwidth = false;

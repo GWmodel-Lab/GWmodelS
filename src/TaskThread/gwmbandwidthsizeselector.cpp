@@ -1,4 +1,4 @@
-#include "gwmbandwidthsizeselector.h"
+﻿#include "gwmbandwidthsizeselector.h"
 
 #include <qwt_plot_curve.h>
 #include <qwt_plot_layout.h>
@@ -31,9 +31,9 @@ void GwmBandwidthSizeSelector::PlotBandwidthResult(QVariant data, QwtPlot *plot)
     //输入数据
     QVector<double> xData;
     QVector<double> yData;
-    for(auto i = result.constBegin();i!=result.constEnd();++i){
-        xData.push_back(i->first);
-        yData.push_back(i->second);
+    for (const auto& p : result) {
+        xData.push_back(p.first);
+        yData.push_back(p.second);
     }
     //设置X与Y坐标范围
     //返回xData与yData最大最小值
@@ -58,16 +58,17 @@ GwmBandwidthSizeSelector::GwmBandwidthSizeSelector()
 
 }
 
-QList<QPair<double, double> > GwmBandwidthSizeSelector::bandwidthCriterion() const
+BandwidthCriterionList GwmBandwidthSizeSelector::bandwidthCriterion() const
 {
-    QList<QPair<double, double> > criterions;
-    for (double key : mBandwidthCriterion.keys())
+    BandwidthCriterionList criterions;
+    for (auto it = mBandwidthCriterion.constBegin(); it != mBandwidthCriterion.constEnd(); ++it)
     {
-        criterions.append(qMakePair(key, mBandwidthCriterion[key]));
+        criterions.push_back(std::make_pair(it.key(), it.value()));
     }
-    std::sort(criterions.begin(), criterions.end(), [](const QPair<double, double>& a, const QPair<double, double>& b){
-        return a.first < b.first;
-    });
+    std::sort(criterions.begin(), criterions.end(),
+              [](const std::pair<double, double>& a, const std::pair<double, double>& b){
+                  return a.first < b.first;
+              });
     return criterions;
 }
 

@@ -1,4 +1,4 @@
-#ifndef GWMLAYERGWSSITEM_H
+﻿#ifndef GWMLAYERGWSSITEM_H
 #define GWMLAYERGWSSITEM_H
 
 #include "gwmlayervectoritem.h"
@@ -55,7 +55,7 @@ public:
         return mVariablesY;
     }
 
-    GwmBandwidthWeight* bandwidth() const
+    gwm::BandwidthWeight* bandwidth() const
     {
         return mBandwidth;
     }
@@ -90,7 +90,7 @@ protected:
     int mDataPointsSize;
     QList<GwmVariable> mVariables;
     QList<GwmVariable> mVariablesY;
-    GwmBandwidthWeight* mBandwidth;
+    gwm::BandwidthWeight* mBandwidth;
     bool mQuantile;
     // correlation带宽信息
     QList<GwmBandwidthWeight> mBandwidthWeights;

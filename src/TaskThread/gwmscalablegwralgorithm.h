@@ -1,4 +1,4 @@
-#ifndef GWMSCALABLEGWRTASKTHREAD_H
+﻿#ifndef GWMSCALABLEGWRTASKTHREAD_H
 #define GWMSCALABLEGWRTASKTHREAD_H
 
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
@@ -71,7 +71,7 @@ protected:
 
 private:
     void findDataPointNeighbours();
-    mat findNeighbours(const GwmSpatialWeight& spatialWeight, umat &nnIndex);
+    mat findNeighbours(const gwm::SpatialWeight& spatialWeight, umat &nnIndex);
     double optimize(const mat& Mx0, const mat& My0, double& b_tilde, double& alpha);
     void prepare();
 
@@ -95,7 +95,7 @@ private:
 
     bool mHasHatMatrix = true;
 
-    GwmSpatialWeight mDpSpatialWeight;
+    gwm::SpatialWeight mDpSpatialWeight;
 
     ParameterOptimizeCriterionType mParameterOptimizeCriterion = ParameterOptimizeCriterionType::CV;
 

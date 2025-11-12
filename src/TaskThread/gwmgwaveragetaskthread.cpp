@@ -1,4 +1,4 @@
-#include "gwmgwaveragetaskthread.h"
+﻿#include "gwmgwaveragetaskthread.h"
 #include "gwmgwaveragetaskthread.h"
 #include "SpatialWeight/gwmcrsdistance.h"
 #ifdef ENABLE_OpenMP
@@ -31,7 +31,7 @@ bool GwmGWaverageTaskThread::isValid()
     if (mVariables.size() < 1)
         return false;
 
-    if (static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight())->bandwidth() == 0)
+    if (static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight())->bandwidth() == 0)
         return false;
 
     return true;
@@ -214,11 +214,10 @@ void GwmGWaverageTaskThread::initPoints()
         mDataPoints(i, 1) = centroPoint.y();
     }
 
-    if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
-        GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
-        d->setDataPoints(&mDataPoints);
-        d->setFocusPoints(&mDataPoints);
+        gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+        d->makeParameter({ mDataPoints, mDataPoints });
     }
 }
 

@@ -1,4 +1,4 @@
-#ifndef GWMLAYERCOLLINEARUTYGWRITEM_H
+﻿#ifndef GWMLAYERCOLLINEARUTYGWRITEM_H
 #define GWMLAYERCOLLINEARUTYGWRITEM_H
 
 #include "prefix.h"
@@ -30,13 +30,13 @@ public:
 
     QList<GwmVariable> indepVars() const;
 
-    GwmBandwidthWeight weight() const;
+    gwm::BandwidthWeight weight() const;
 
     GwmDiagnostic diagnostic() const;
 
     arma::mat betas() const;
 
-    QList<QPair<double, double> > bandwidthSelScores() const;
+    BandwidthCriterionList bandwidthSelScores() const;
 
     bool getIsRegressionPointGiven() const;
 
@@ -54,11 +54,11 @@ protected:
     int mDataPointsSize;
     GwmVariable mDepVar;
     QList<GwmVariable> mIndepVars;
-    GwmBandwidthWeight mWeight;
+    gwm::BandwidthWeight mWeight;
     GwmDiagnostic mDiagnostic;
     arma::mat mBetas;
     //QList<QPair<QList<GwmVariable>, double> > mModelSelModels;
-    QList<QPair<double, double> > mBandwidthSelScores;
+    BandwidthCriterionList mBandwidthSelScores;
     //GwmBasicGWRAlgorithm::FTestResultPack mFTestResults;
 
     bool isRegressionPointGiven;
