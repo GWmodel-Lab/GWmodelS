@@ -1,4 +1,4 @@
-#include "gwmlayerggwritem.h"
+﻿#include "gwmlayerggwritem.h"
 
 GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmGeneralizedGWRAlgorithm* taskThread)
     :GwmLayerBasicGWRItem(parent,vector)
@@ -8,7 +8,7 @@ GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector,
         mDataPointsSize = taskThread->dataLayer()->featureCount();
         mDepVar = taskThread->dependentVariable();
         mIndepVars = taskThread->independentVariables();
-        mWeight = GwmBandwidthWeight(*static_cast<GwmBandwidthWeight*>(taskThread->spatialWeight().weight()));
+        mWeight = gwm::BandwidthWeight(*static_cast<gwm::BandwidthWeight*>(taskThread->spatialWeight().weight()));
         mBetas = mat(taskThread->betas());
         isBandwidthOptimized = taskThread->autoselectBandwidth();
         mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();

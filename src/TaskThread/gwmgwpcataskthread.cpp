@@ -1,4 +1,4 @@
-#include "gwmgwpcataskthread.h"
+﻿#include "gwmgwpcataskthread.h"
 #include <SpatialWeight/gwmcrsdistance.h>
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "gwmtaskthread.h"
@@ -12,15 +12,16 @@
 
 int GwmGWPCATaskThread::treeChildCount = 0;
 
-GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm()
+GwmGWPCATaskThread::GwmGWPCATaskThread() : GwmSpatialMonoscaleAlgorithm(),
+    mGWRCore(std::make_unique<gwm::GWRBasic>())
 {
 
 }
 
 void GwmGWPCATaskThread::setCanceled(bool canceled)
 {
-    mSelector.setCanceled(canceled);
-    mSpatialWeight.distance()->setCanceled(canceled);
+    // mSelector.setCanceled(canceled);
+    // mSpatialWeight.distance()->setCanceled(canceled);
     return GwmTaskThread::setCanceled(canceled);
 }
 
@@ -46,14 +47,18 @@ void GwmGWPCATaskThread::run()
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
         emit tick(0, 0);
-        GwmBandwidthWeight* bandwidthWeight0 = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+        gwm::BandwidthWeight* bandwidthWeight0 = static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight());
         mSelector.setBandwidth(bandwidthWeight0);
         double tmpMaxD = mSpatialWeight.distance()->maxDistance();
         double lower = bandwidthWeight0->adaptive() ? 2 : tmpMaxD / 5000;
         double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : tmpMaxD;
         mSelector.setLower(lower);
         mSelector.setUpper(upper);
-        GwmBandwidthWeight* bandwidthWeight = mSelector.optimize(this);
+        mGWRCore->setCoords(mDataPoints);
+        // mGWRCore->setDependentVariable(mY);
+        mGWRCore->setIndependentVariables(mX);
+        mGWRCore->setSpatialWeight(mSpatialWeight);
+        gwm::BandwidthWeight* bandwidthWeight = mSelector.optimize(mGWRCore.get());
         if(bandwidthWeight && !checkCanceled())
         {
             mSpatialWeight.setWeight(bandwidthWeight);
@@ -131,7 +136,7 @@ void GwmGWPCATaskThread::run()
 
 bool GwmGWPCATaskThread::isValid()
 {
-    GwmBandwidthWeight* bandwidth = static_cast<GwmBandwidthWeight*>(mSpatialWeight.weight());
+    gwm::BandwidthWeight* bandwidth = static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight());
     if(bandwidth){
         if(!mIsAutoselectBandwidth)
         {
@@ -165,7 +170,7 @@ void GwmGWPCATaskThread::initPoints()
         mDataPoints(i, 0) = centroPoint.x();
         mDataPoints(i, 1) = centroPoint.y();
     }
-    if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
         GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
         d->setDataPoints(&mDataPoints);
@@ -473,6 +478,7 @@ void GwmGWPCATaskThread::createPlotLayer(CreatePlotLayerData data, QList<QString
 
 double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *weight)
 {
+    int mBandwidthCounter = 0;
     int n = mX.n_rows;
     int m = mX.n_cols;
     double score = 0;
@@ -502,8 +508,9 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
         V = V.cols(0, mK - 1);
         V = V * trans(V);
         score = score + pow(sum(mX.row(i) - mX.row(i) * V),2);
-        if(mSelector.counter<10)
-            emit tick(mSelector.counter * 10 + i * 10 / n, 100);
+        mBandwidthCounter++;
+        if (mBandwidthCounter < 10)
+            emit tick(mBandwidthCounter * 10 + i * 5 / n, 100);
     }
     return score;
 }

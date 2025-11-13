@@ -1,4 +1,4 @@
-#include "gwmlayerbasicgwritem.h"
+﻿#include "gwmlayerbasicgwritem.h"
 #include "gwmlayergroupitem.h"
 #include "TaskThread/gwmbasicgwralgorithm.h"
 
@@ -10,7 +10,7 @@ GwmLayerBasicGWRItem::GwmLayerBasicGWRItem(GwmLayerItem* parent, QgsVectorLayer*
         mDataPointsSize = taskThread->dataLayer()->featureCount();
         mDepVar = taskThread->dependentVariable();
         mIndepVars = taskThread->independentVariables();
-        mWeight = GwmBandwidthWeight(*static_cast<GwmBandwidthWeight*>(taskThread->spatialWeight().weight()));
+        mWeight = gwm::BandwidthWeight(*static_cast<gwm::BandwidthWeight*>(taskThread->spatialWeight().weight()));
         mDiagnostic = taskThread->diagnostic();
         mBetas = mat(taskThread->betas());
         mModelSelModels = taskThread->indepVarSelectorCriterions();
@@ -88,8 +88,15 @@ bool GwmLayerBasicGWRItem::readXml(QDomNode &node)
         {
             double bandwidth = weightNode.attribute("bandwidth").toDouble();
             bool adaptive = weightNode.attribute("adaptive").toInt();
-            GwmBandwidthWeight::KernelFunctionType kernel = GwmBandwidthWeight::KernelFunctionTypeNameMapper.value(weightNode.attribute("kernel"));
-            mWeight = GwmBandwidthWeight(bandwidth, adaptive, kernel);
+            auto it = std::find_if(
+                gwm::BandwidthWeight::KernelFunctionTypeNameMapper.begin(),
+                gwm::BandwidthWeight::KernelFunctionTypeNameMapper.end(),
+                [&](const auto& kv){ return kv.second == weightNode.attribute("kernel").toStdString(); }
+                );
+            gwm::BandwidthWeight::KernelFunctionType kernel =
+                it != gwm::BandwidthWeight::KernelFunctionTypeNameMapper.end() ? it->first : gwm::BandwidthWeight::Gaussian;
+
+            mWeight = gwm::BandwidthWeight(bandwidth, adaptive, kernel);
         }
         else return false;
 
@@ -214,7 +221,7 @@ bool GwmLayerBasicGWRItem::readXml(QDomNode &node)
                     {
                         double size = bandwidthNode.attribute("size").toDouble();
                         double criterion = bandwidthNode.attribute("criterion").toDouble();
-                        mBandwidthSelScores.append(qMakePair(size, criterion));
+                        mBandwidthSelScores.push_back(std::make_pair(size, criterion));
                     }
                     bandwidthNode = bandwidthNode.nextSiblingElement("bandwidth");
                 }
@@ -331,7 +338,10 @@ bool GwmLayerBasicGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
         nodeAnalyse.appendChild(nodeIndepVarList);
 
         QDomElement nodeBandwidth = doc.createElement("weight");
-        nodeBandwidth.setAttribute("kernel", GwmBandwidthWeight::KernelFunctionTypeNameMapper.name(mWeight.kernel()));
+        nodeBandwidth.setAttribute(
+            "kernel",
+            QString::fromStdString(gwm::BandwidthWeight::KernelFunctionTypeNameMapper.at(mWeight.kernel()))
+            );
         nodeBandwidth.setAttribute("bandwidth", mWeight.bandwidth());
         nodeBandwidth.setAttribute("adaptive", mWeight.adaptive());
         nodeAnalyse.appendChild(nodeBandwidth);
@@ -523,12 +533,12 @@ QList<QPair<QList<GwmVariable>, double> > GwmLayerBasicGWRItem::modelSelModels()
     return mModelSelModels;
 }
 
-QList<QPair<double, double> > GwmLayerBasicGWRItem::bandwidthSelScores() const
+BandwidthCriterionList GwmLayerBasicGWRItem::bandwidthSelScores() const
 {
     return mBandwidthSelScores;
 }
 
-GwmBandwidthWeight GwmLayerBasicGWRItem::weight() const
+gwm::BandwidthWeight GwmLayerBasicGWRItem::weight() const
 {
     return mWeight;
 }

@@ -1,4 +1,4 @@
-#ifndef GwmLcrGWROptionsDialog_H
+﻿#ifndef GwmLcrGWROptionsDialog_H
 #define GwmLcrGWROptionsDialog_H
 
 #include <QDialog>
@@ -61,7 +61,7 @@ public:
     QVariant distanceSourceParameters();
     //GwmLcrGWRTaskThread::ParallelMethod parallelMethod();
     QVariant parallelParameters();
-    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
+    gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();
 
     void setTaskThread(GwmLocalCollinearityGWRAlgorithm* taskThread);
     void updateFieldsAndEnable();

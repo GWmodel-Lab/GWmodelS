@@ -8,7 +8,8 @@
 
 int GwmRobustGWRAlgorithm::treeChildCount = 0;
 
-GwmRobustGWRAlgorithm::GwmRobustGWRAlgorithm(): GwmBasicGWRAlgorithm()
+GwmRobustGWRAlgorithm::GwmRobustGWRAlgorithm(): GwmBasicGWRAlgorithm(),
+    mGWRCore(std::make_unique<gwm::GWRBasic>())
 {
 
 }
@@ -244,12 +245,12 @@ void GwmRobustGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
             break;
 #ifdef ENABLE_OpenMP
-        case IParallelalbe::ParallelType::OpenMP:
+        case gwm::ParallelType::OpenMP:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixOmp;
             break;
 #endif
 #ifdef ENABLE_CUDA
-        case IParallelalbe::ParallelType::CUDA:
+        case gwm::ParallelType::CUDA:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixCuda;
             break;
 #endif

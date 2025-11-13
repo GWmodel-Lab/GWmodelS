@@ -1,4 +1,4 @@
-#include "gwmlayercollinearitygwritem.h"
+﻿#include "gwmlayercollinearitygwritem.h"
 #include "gwmlayergroupitem.h"
 
 GwmLayerCollinearityGWRItem::GwmLayerCollinearityGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmLocalCollinearityGWRAlgorithm* taskThread)
@@ -9,7 +9,7 @@ GwmLayerCollinearityGWRItem::GwmLayerCollinearityGWRItem(GwmLayerItem* parent, Q
         mDataPointsSize = taskThread->dataLayer()->featureCount();
         mDepVar = taskThread->dependentVariable();
         mIndepVars = taskThread->independentVariables();
-        mWeight = GwmBandwidthWeight(*static_cast<GwmBandwidthWeight*>(taskThread->spatialWeight().weight()));
+        mWeight = gwm::BandwidthWeight(*static_cast<gwm::BandwidthWeight*>(taskThread->spatialWeight().weight()));
         mDiagnostic = taskThread->dialnostic();
         mBetas = mat(taskThread->betas());
         //mModelSelModels = taskThread->indepVarSelectorCriterions();
@@ -88,8 +88,14 @@ bool GwmLayerCollinearityGWRItem::readXml(QDomNode &node)
         {
             double bandwidth = weightNode.attribute("bandwidth").toDouble();
             bool adaptive = weightNode.attribute("adaptive").toInt();
-            GwmBandwidthWeight::KernelFunctionType kernel = GwmBandwidthWeight::KernelFunctionTypeNameMapper.value(weightNode.attribute("kernel"));
-            mWeight = GwmBandwidthWeight(bandwidth, adaptive, kernel);
+            auto it = std::find_if(
+                gwm::BandwidthWeight::KernelFunctionTypeNameMapper.begin(),
+                gwm::BandwidthWeight::KernelFunctionTypeNameMapper.end(),
+                [&](const auto& kv){ return kv.second == weightNode.attribute("kernel").toStdString(); }
+                );
+            gwm::BandwidthWeight::KernelFunctionType kernel =
+                it != gwm::BandwidthWeight::KernelFunctionTypeNameMapper.end() ? it->first : gwm::BandwidthWeight::Gaussian;
+            mWeight = gwm::BandwidthWeight(bandwidth, adaptive, kernel);
         }
         else return false;
 
@@ -142,7 +148,7 @@ bool GwmLayerCollinearityGWRItem::readXml(QDomNode &node)
                     {
                         double size = bandwidthNode.attribute("size").toDouble();
                         double criterion = bandwidthNode.attribute("criterion").toDouble();
-                        mBandwidthSelScores.append(qMakePair(size, criterion));
+                        mBandwidthSelScores.push_back(std::make_pair(size, criterion));
                     }
                     bandwidthNode = bandwidthNode.nextSiblingElement("bandwidth");
                 }
@@ -190,7 +196,10 @@ bool GwmLayerCollinearityGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
         nodeAnalyse.appendChild(nodeIndepVarList);
 
         QDomElement nodeBandwidth = doc.createElement("weight");
-        nodeBandwidth.setAttribute("kernel", GwmBandwidthWeight::KernelFunctionTypeNameMapper.name(mWeight.kernel()));
+        nodeBandwidth.setAttribute(
+            "kernel",
+            QString::fromStdString(gwm::BandwidthWeight::KernelFunctionTypeNameMapper.at(mWeight.kernel()))
+            );
         nodeBandwidth.setAttribute("bandwidth", mWeight.bandwidth());
         nodeBandwidth.setAttribute("adaptive", mWeight.adaptive());
         nodeAnalyse.appendChild(nodeBandwidth);
@@ -241,7 +250,7 @@ QList<GwmVariable> GwmLayerCollinearityGWRItem::indepVars() const
     return mIndepVars;
 }
 
-GwmBandwidthWeight GwmLayerCollinearityGWRItem::weight() const
+gwm::BandwidthWeight GwmLayerCollinearityGWRItem::weight() const
 {
     return mWeight;
 }
@@ -256,7 +265,7 @@ arma::mat GwmLayerCollinearityGWRItem::betas() const
     return mBetas;
 }
 
-QList<QPair<double, double> > GwmLayerCollinearityGWRItem::bandwidthSelScores() const
+BandwidthCriterionList GwmLayerCollinearityGWRItem::bandwidthSelScores() const
 {
     return mBandwidthSelScores;
 }

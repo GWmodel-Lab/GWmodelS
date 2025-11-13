@@ -152,6 +152,8 @@ private:
 
     double bandwidthSizeGGWRCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeGGWRCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight);
+    std::unique_ptr<gwm::GWRBasic> mGWRCore;
+
 #ifdef ENABLE_OpenMP
     double bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeGGWRCriterionAICOmp(GwmBandwidthWeight* bandwidthWeight);
@@ -220,7 +222,7 @@ protected:
     bool mIsAutoselectBandwidth = false;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial;
-    GwmGGWRBandwidthSizeSelector mBandwidthSizeSelector;
+    gwm::BandwidthSelector mBandwidthSizeSelector;
 
     gwm::ParallelType mParallelType = gwm::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
@@ -317,9 +319,9 @@ inline int GwmGeneralizedGWRAlgorithm::parallelAbility() const
 {
     return gwm::SerialOnly
         #ifdef ENABLE_OpenMP
-            | IParallelalbe::OpenMP
+            | gwm::OpenMP
         #endif
-//            | IParallelalbe::CUDA
+//            | gwm::CUDA
             ;
 }
 

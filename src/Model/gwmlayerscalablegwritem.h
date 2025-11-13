@@ -1,4 +1,4 @@
-#ifndef GWMLAYERSCALABLEGWRITEM_H
+﻿#ifndef GWMLAYERSCALABLEGWRITEM_H
 #define GWMLAYERSCALABLEGWRITEM_H
 
 #include "Model/gwmlayerbasicgwritem.h"
@@ -31,13 +31,13 @@ public:
 
     QList<GwmVariable> indepVars() const;
 
-    GwmBandwidthWeight weight() const;
+    gwm::BandwidthWeight weight() const;
 
     GwmDiagnostic diagnostic() const;
 
     arma::mat betas() const;
 
-    GwmDistance::DistanceType distanceType() const;
+    gwm::Distance::DistanceType distanceType() const;
 
     GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType parameterOptimizeCriterionType() const;
 
@@ -49,8 +49,8 @@ private:
     int mDataPointsSize;
     GwmVariable mDepVar;
     QList<GwmVariable> mIndepVars;
-    GwmBandwidthWeight mWeight;
-    GwmDistance::DistanceType mDistanceType;
+    gwm::BandwidthWeight mWeight;
+    gwm::Distance::DistanceType mDistanceType;
     GwmDiagnostic mDiagnostic;
     arma::mat mBetas;
     GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType mParameterOptimizeCriterionType;

@@ -1,4 +1,4 @@
-#ifndef GWMLAYERBASICGWRITEM_H
+﻿#ifndef GWMLAYERBASICGWRITEM_H
 #define GWMLAYERBASICGWRITEM_H
 
 #include "prefix.h"
@@ -49,9 +49,9 @@ public:
 
     QList<QPair<QList<GwmVariable>, double> > modelSelModels() const;
 
-    QList<QPair<double, double> > bandwidthSelScores() const;
+    BandwidthCriterionList bandwidthSelScores() const;
 
-    GwmBandwidthWeight weight() const;
+    gwm::BandwidthWeight weight() const;
 
     GwmBasicGWRAlgorithm::OLSVar OLSResults() const;
 
@@ -59,11 +59,11 @@ protected:
     int mDataPointsSize;
     GwmVariable mDepVar;
     QList<GwmVariable> mIndepVars;
-    GwmBandwidthWeight mWeight;
+    gwm::BandwidthWeight mWeight;
     GwmDiagnostic mDiagnostic;
     arma::mat mBetas;
     QList<QPair<QList<GwmVariable>, double> > mModelSelModels;
-    QList<QPair<double, double> > mBandwidthSelScores;
+    BandwidthCriterionList mBandwidthSelScores;
     GwmBasicGWRAlgorithm::FTestResultPack mFTestResults;
     GwmBasicGWRAlgorithm::OLSVar mOLSVar;
     bool isRegressionPointGiven;

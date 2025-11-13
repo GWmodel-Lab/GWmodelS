@@ -1,4 +1,4 @@
-#include "gwmscalablegwralgorithm.h"
+﻿#include "gwmscalablegwralgorithm.h"
 
 #include <QPair>
 #include "gsl/gsl_multimin.h"
@@ -283,11 +283,11 @@ void GwmScalableGWRAlgorithm::findDataPointNeighbours()
     mDpNNDists.submat(0, 0, 2, 2).print(std::cout, "nn");
 }
 
-mat GwmScalableGWRAlgorithm::findNeighbours(const GwmSpatialWeight &spatialWeight, umat &nnIndex)
+mat GwmScalableGWRAlgorithm::findNeighbours(const gwm::SpatialWeight &spatialWeight, umat &nnIndex)
 {
-    GwmBandwidthWeight* bandwidth = spatialWeight.weight<GwmBandwidthWeight>();
-    uword nDp = mDpSpatialWeight.distance()->total();
-    uword nRp = spatialWeight.distance()->total();
+    gwm::BandwidthWeight* bandwidth = spatialWeight.weight<gwm::BandwidthWeight>();
+    uword nRp = spatialWeight.distance()->distance(0).n_elem;
+    uword nDp = mDpSpatialWeight.distance()->distance(0).n_elem;
     uword nBw = bandwidth->bandwidth() < nDp ? bandwidth->bandwidth() : nDp;
     umat index(nBw, nRp, fill::zeros);
     mat dists(nBw, nRp, fill::zeros);
@@ -412,7 +412,7 @@ void GwmScalableGWRAlgorithm::prepare()
 
 mat GwmScalableGWRAlgorithm::regressionSerial(const arma::mat &x, const arma::vec &y)
 {
-    GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
+    gwm::BandwidthWeight* bandwidth = mSpatialWeight.weight<gwm::BandwidthWeight>();
     arma::uword nDp = mDataPoints.n_rows, nRp = mRegressionPoints.n_rows, nVar = mX.n_cols, nBw = bandwidth->bandwidth();
     double band0 = 0.0;
     mat G0;
@@ -420,11 +420,11 @@ mat GwmScalableGWRAlgorithm::regressionSerial(const arma::mat &x, const arma::ve
     mat rpNNDists = findNeighbours(mSpatialWeight, rpNNIndex);
     switch (bandwidth->kernel())
     {
-    case GwmBandwidthWeight::KernelFunctionType::Gaussian:
+    case gwm::BandwidthWeight::KernelFunctionType::Gaussian:
         band0 = median(rpNNDists.col(qMin<uword>(50, nBw) - 1)) / sqrt(3);
         G0 = exp(-pow(rpNNDists / band0, 2));
         break;
-    case GwmBandwidthWeight::KernelFunctionType::Exponential:
+    case gwm::BandwidthWeight::KernelFunctionType::Exponential:
         band0 = median(rpNNDists.col(qMin<uword>(50, nBw) - 1)) / 3;
         G0 = exp(-pow(rpNNDists / band0, 2));
         break;
@@ -635,11 +635,10 @@ arma::mat GwmScalableGWRAlgorithm::regressionHatmatrixSerial(const arma::mat &x,
 void GwmScalableGWRAlgorithm::initPoints()
 {
     GwmGeographicalWeightedRegressionAlgorithm::initPoints();
-    if (mDpSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mDpSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mDpSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mDpSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
-        GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mDpSpatialWeight.distance());
-        d->setDataPoints(&mDataPoints);
-        d->setFocusPoints(&mDataPoints);
+        gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+        d->makeParameter({ mDataPoints, mDataPoints });
     }
 }
 

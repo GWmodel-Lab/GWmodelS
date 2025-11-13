@@ -103,7 +103,7 @@ public:
         return { mF1TestResult, mF2TestResult, mF3TestResult, mF4TestResult };
     }
 
-    BandwidthCriterionList bandwidthSelectorCriterions() const;
+    gwm::BandwidthCriterionList bandwidthSelectorCriterions() const;
 
     IndepVarsCriterionList indepVarSelectorCriterions() const;
 
@@ -165,7 +165,7 @@ protected:
 
     rowvec distanceParam1(int i)
     {
-        return (mSpatialWeight.distance()->type() == GwmDistance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
+        return (mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
     }
 protected:
     void OLS();
@@ -248,7 +248,7 @@ protected:
     vec mRegressionLayerY;
     mat mRegressionLayerX;
 
-    GwmBandwidthSizeSelector mBandwidthSizeSelector;
+    gwm::BandwidthSelector mBandwidthSizeSelector;
     bool mIsAutoselectBandwidth = false;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial;
@@ -380,7 +380,7 @@ inline void GwmBasicGWRAlgorithm::setGPUId(const int gpuId)
     mGpuId = gpuId;
 }
 
-inline BandwidthCriterionList GwmBasicGWRAlgorithm::bandwidthSelectorCriterions() const
+inline gwm::BandwidthCriterionList GwmBasicGWRAlgorithm::bandwidthSelectorCriterions() const
 {
     return mBandwidthSizeSelector.bandwidthCriterion();
 }

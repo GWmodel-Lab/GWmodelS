@@ -1,4 +1,4 @@
-#include "gwmapp.h"
+﻿#include "gwmapp.h"
 #include "ui_gwmapp.h"
 
 #include <QMenuBar>
@@ -1333,9 +1333,9 @@ void GwmApp::onGWRNewBtnClicked()
     algorithm->setIndependentVariables(indepVars);
     algorithm->setIsAutoselectIndepVars(true);
     algorithm->setIndepVarSelectionThreshold(150.0);
-    GwmSpatialWeight spatialWeight;
-    spatialWeight.setDistance(GwmCRSDistance(dataLayer->featureCount(), false));
-    spatialWeight.setWeight(GwmBandwidthWeight(36, true, GwmBandwidthWeight::Gaussian));
+    gwm::SpatialWeight spatialWeight;
+    spatialWeight.setDistance(gwm::CRSDistance());
+    spatialWeight.setWeight(gwm::BandwidthWeight(36, true, gwm::BandwidthWeight::Gaussian));
     algorithm->setSpatialWeight(spatialWeight);
     algorithm->setIsAutoselectBandwidth(true);
     algorithm->setBandwidthSelectionCriterionType(GwmBasicGWRAlgorithm::CV);

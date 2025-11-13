@@ -34,17 +34,17 @@ GwmEnumValueNameMapper<GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType> Gw
 };
 
 
-GwmBasicGWRAlgorithm::GwmBasicGWRAlgorithm() : GwmGeographicalWeightedRegressionAlgorithm()
+GwmBasicGWRAlgorithm::GwmBasicGWRAlgorithm() : GwmGeographicalWeightedRegressionAlgorithm(),
+    mGWRCore(std::make_unique<gwm::GWRBasic>())
 {
-    mGWRCore = std::make_unique<GWRBasic>();
 }
 
 
 
 void GwmBasicGWRAlgorithm::setCanceled(bool canceled)
 {
-    mBandwidthSizeSelector.setCanceled(canceled);
-    mSpatialWeight.distance()->setCanceled(canceled);
+    // mBandwidthSizeSelector.setCanceled(canceled);
+    // mSpatialWeight.distance()->setCanceled(canceled);
     return GwmTaskThread::setCanceled(canceled);
 }
 
@@ -126,18 +126,23 @@ void GwmBasicGWRAlgorithm::run()
 
 
 
-    // 优选带宽    
+    // 优选带宽
     if (!checkCanceled() && !hasRegressionLayer() && mIsAutoselectBandwidth)
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
         //emit tick(0, 0);
-        GwmBandwidthWeight* bandwidthWeight0 = mSpatialWeight.weight<GwmBandwidthWeight>();
+        gwm::BandwidthWeight* bandwidthWeight0 = mSpatialWeight.weight<gwm::BandwidthWeight>();
         mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
         double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
         double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSpatialWeight.distance()->maxDistance();
         mBandwidthSizeSelector.setLower(lower);
         mBandwidthSizeSelector.setUpper(upper);
-        GwmBandwidthWeight* bandwidthWeight = mBandwidthSizeSelector.optimize(this);
+        mGWRCore->setCoords(mDataPoints);
+        mGWRCore->setDependentVariable(mY);
+        mGWRCore->setIndependentVariables(mX);
+        mGWRCore->setSpatialWeight(mSpatialWeight);
+        qDebug()<<"BandwidthWeight";
+        gwm::BandwidthWeight* bandwidthWeight = mBandwidthSizeSelector.optimize(mGWRCore.get());
         if (bandwidthWeight && !checkCanceled())
         {
             mSpatialWeight.setWeight(bandwidthWeight);
@@ -149,7 +154,9 @@ void GwmBasicGWRAlgorithm::run()
 
     if (!checkCanceled())
     {
+        qDebug()<<"regression";
         mBetas = regression(mX, mY);
+        qDebug()<<"regressionend";
     }
 
     if (checkCanceled())
@@ -187,7 +194,7 @@ void GwmBasicGWRAlgorithm::run()
         }
 
         CreateResultLayerData resultLayerData = {
-//            qMakePair(QString("%1"), mX),
+            //            qMakePair(QString("%1"), mX),
             qMakePair(QString("%1"), mBetas),
             qMakePair(QString("y"), mY),
             qMakePair(QString("yhat"), yhat),
@@ -235,7 +242,7 @@ void GwmBasicGWRAlgorithm::run()
             vec residual = mRegressionLayerY - yhat;
             resultLayerData = {
                 qMakePair(QString(mDepVar.name), mRegressionLayerY),
-//                qMakePair(QString("%1"), mRegressionLayerX),
+                //                qMakePair(QString("%1"), mRegressionLayerX),
                 qMakePair(QString("%1"), mBetas),
                 qMakePair(QString("yhat"), yhat),
                 qMakePair(QString("residual"), residual)
@@ -245,10 +252,11 @@ void GwmBasicGWRAlgorithm::run()
         {
             resultLayerData = {
                 qMakePair(QString("%1"), mBetas)
-            };
-        }
-        createResultLayer(resultLayerData);
+        };
     }
+    createResultLayer(resultLayerData);
+    qDebug()<<"end";
+}
 
     if(!checkCanceled())
     {
@@ -278,7 +286,7 @@ void GwmBasicGWRAlgorithm::initCuda(IGWmodelCUDA* cuda, const mat& x, const vec&
             cuda->SetRp(r, mRegressionPoints(r, 0), mRegressionPoints(r, 1));
         }
     }
-    bool hasDmat = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    bool hasDmat = mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance;
     if (hasDmat)
     {
         for (arma::uword r = 0; r < nRp; r++)
@@ -396,19 +404,19 @@ double GwmBasicGWRAlgorithm::indepVarsSelectCriterionCuda(const QList<GwmVariabl
     initXY(x, y, mDepVar, indepVars);
     int nDp = mDataPoints.n_rows, nVar = indepVars.size() + 1;
     int nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
-    bool hasDp = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    bool hasDp = mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance;
     IGWmodelCUDA* cuda = GWCUDA_Create(nDp, nVar, hasRegressionLayer(), nRp, hasDp);
     initCuda(cuda, x, y);
     // 计算参数
     double p = 2.0, theta = 0.0;
     double longlat = false;
-    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
         GwmMinkwoskiDistance* d = mSpatialWeight.distance<GwmMinkwoskiDistance>();
         p = d->poly();
         theta = d->theta();
     }
-    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    else if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
     {
         GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
         longlat = d->geographic();
@@ -503,18 +511,18 @@ mat GwmBasicGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
 mat GwmBasicGWRAlgorithm::regressionCuda(const mat &x, const vec &y)
 {
     int nDp = mDataPoints.n_rows, nVar = x.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
-    bool hasDmat = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    bool hasDmat = mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance;
     IGWmodelCUDA* cuda = GWCUDA_Create(nDp ,nVar, hasRegressionLayer(), nRp, hasDmat);
     initCuda(cuda, x, y);
     double p = 2.0, theta = 0.0;
     double longlat = false;
-    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
         GwmMinkwoskiDistance* d = mSpatialWeight.distance<GwmMinkwoskiDistance>();
         p = d->poly();
         theta = d->theta();
     }
-    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    else if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
     {
         GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
         longlat = d->geographic();
@@ -633,18 +641,18 @@ mat GwmBasicGWRAlgorithm::regressionHatmatrixOmp(const mat &x, const vec &y, mat
 mat GwmBasicGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
     int nDp = mDataPoints.n_rows, nVar = x.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
-    bool hasDmat = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    bool hasDmat = mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance;
     IGWmodelCUDA* cuda = GWCUDA_Create(nDp ,nVar, hasRegressionLayer(), nRp, hasDmat);
     initCuda(cuda, x, y);
     double p = 2.0, theta = 0.0;
     bool longlat = false;
-    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
         GwmMinkwoskiDistance* d = mSpatialWeight.distance<GwmMinkwoskiDistance>();
         p = d->poly();
         theta = d->theta();
     }
-    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    else if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
     {
         GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
         longlat = d->geographic();
@@ -754,6 +762,7 @@ void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString 
 
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight)
 {
+    int mBandwidthCounter = 0;
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
@@ -777,8 +786,9 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight*
         {
             return DBL_MAX;
         }
-        if(mBandwidthSizeSelector.counter<10)
-            emit tick(mBandwidthSizeSelector.counter*10 + i * 10 / nDp, 100);
+        mBandwidthCounter++;
+        if (mBandwidthCounter < 10)
+            emit tick(mBandwidthCounter * 10 + i * 5 / nDp, 100);
     }
     if(!checkCanceled())
     {
@@ -857,18 +867,18 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *ba
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICCuda(GwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows, nVar = mX.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
-    bool hasDmat = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    bool hasDmat = mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance;
     IGWmodelCUDA* cuda = GWCUDA_Create(nDp ,nVar, hasRegressionLayer(), nRp, hasDmat);
     initCuda(cuda, mX, mY);
     double p = 2.0, theta = 0.0;
     double longlat = false;
-    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
         GwmMinkwoskiDistance* d = mSpatialWeight.distance<GwmMinkwoskiDistance>();
         p = d->poly();
         theta = d->theta();
     }
-    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    else if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
     {
         GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
         longlat = d->geographic();
@@ -904,6 +914,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICCuda(GwmBandwidthWeight *b
 
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *bandwidthWeight)
 {
+    int mBandwidthCounter = 0;
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
@@ -926,8 +937,9 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *
         {
             return DBL_MAX;
         }
-        if(mBandwidthSizeSelector.counter<10)
-            emit tick(mBandwidthSizeSelector.counter*10 + i * 10 / nDp, 100);
+        mBandwidthCounter++;
+        if (mBandwidthCounter < 10)
+            emit tick(mBandwidthCounter * 10 + i * 5 / nDp, 100);
     }
     if(!checkCanceled())
     {
@@ -1002,18 +1014,18 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *ban
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVCuda(GwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows, nVar = mX.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
-    bool hasDmat = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    bool hasDmat = mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance;
     IGWmodelCUDA* cuda = GWCUDA_Create(nDp ,nVar, hasRegressionLayer(), nRp, hasDmat);
     initCuda(cuda, mX, mY);
     double p = 2.0, theta = 0.0;
     double longlat = false;
-    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
         GwmMinkwoskiDistance* d = mSpatialWeight.distance<GwmMinkwoskiDistance>();
         p = d->poly();
         theta = d->theta();
     }
-    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    else if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
     {
         GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
         longlat = d->geographic();
@@ -1245,18 +1257,18 @@ double GwmBasicGWRAlgorithm::calcTrQtQOmp()
 double GwmBasicGWRAlgorithm::calcTrQtQCuda()
 {
     int nDp = mDataPoints.n_rows, nVar = mX.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
-    bool hasDmat = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    bool hasDmat = mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance;
     IGWmodelCUDA* cuda = GWCUDA_Create(nDp ,nVar, hasRegressionLayer(), nRp, hasDmat);
     initCuda(cuda, mX, mY);
     double p = 2.0, theta = 0.0;
     double longlat = false;
-    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
         GwmMinkwoskiDistance* d = mSpatialWeight.distance<GwmMinkwoskiDistance>();
         p = d->poly();
         theta = d->theta();
     }
-    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    else if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
     {
         GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
         longlat = d->geographic();
@@ -1357,18 +1369,18 @@ vec GwmBasicGWRAlgorithm::calcDiagBOmp(int i)
 vec GwmBasicGWRAlgorithm::calcDiagBCuda(int i)
 {
     int nDp = mDataPoints.n_rows, nVar = mX.n_cols, nRp = hasRegressionLayer() ? mRegressionPoints.n_rows : mDataPoints.n_rows;
-    bool hasDmat = mSpatialWeight.distance()->type() == GwmDistance::DMatDistance;
+    bool hasDmat = mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance;
     IGWmodelCUDA* cuda = GWCUDA_Create(nDp ,nVar, hasRegressionLayer(), nRp, hasDmat);
     initCuda(cuda, mX, mY);
     double p = 2.0, theta = 0.0;
     double longlat = false;
-    if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
         GwmMinkwoskiDistance* d = mSpatialWeight.distance<GwmMinkwoskiDistance>();
         p = d->poly();
         theta = d->theta();
     }
-    else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
+    else if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
     {
         GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
         longlat = d->geographic();
@@ -1414,7 +1426,7 @@ void GwmBasicGWRAlgorithm::initPoints()
     if (!hasRegressionLayer() && !mHasHatMatrix)
     {
         mRegressionPoints = mDataPoints;
-        if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+        if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
         {
             GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
             d->setFocusPoints(&mRegressionPoints);
@@ -1484,7 +1496,7 @@ void GwmBasicGWRAlgorithm::setBandwidthSelectionCriterionType(const BandwidthSel
 
 void GwmBasicGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    if (mGWRCore)
-        mGWRCore->setParallelType(type);
     mParallelType = type;
+    qDebug()<<"setParallelType";
+    mGWRCore->setParallelType(type);
 }
