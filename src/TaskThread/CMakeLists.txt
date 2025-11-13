@@ -1,4 +1,4 @@
-get_filename_component(SRC_SUBFOLDER_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+﻿get_filename_component(SRC_SUBFOLDER_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 set(SOURCES_SUBFOLDER
     gwmbandwidthsizeselector.cpp
@@ -24,6 +24,7 @@ set(SOURCES_SUBFOLDER
     gwmtaskthread.cpp
     gwmgwaveragetaskthread.cpp
     gwmgwcorrelationtaskthread.cpp
+    gwmgwdataskthread.cpp
 )
 
 set(HEADERS_SUBFOLDER
@@ -54,6 +55,7 @@ set(HEADERS_SUBFOLDER
     gwmtaskthread.h
     gwmgwaveragetaskthread.h
     gwmgwcorrelationtaskthread.h
+    gwmgwdataskthread.h
 )
 
 list(TRANSFORM SOURCES_SUBFOLDER PREPEND "${SRC_SUBFOLDER_NAME}/")
