@@ -452,6 +452,7 @@ void GwmApp::setupToolbar()
 
     connect(ui->actionGWR, &QAction::triggered,this,&GwmApp::onGWRBtnClicked);
     connect(ui->actionGTDR, &QAction::triggered,this,&GwmApp::onGTDRBtnClicked);
+    connect(ui->actionGTDR_2, &QAction::triggered,this,&GwmApp::onGTDRBtnClicked);
     connect(ui->actionGWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
 
     connect(ui->actionNew_Layout, &QAction::triggered, this, [&]()

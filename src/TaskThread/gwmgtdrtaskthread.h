@@ -41,6 +41,9 @@ public:
     void setParallelType(const ParallelType& type) override { mAlgorithm.setParallelType(gwm::ParallelType(type)); }
     void setOmpThreadNum(const int threadNum) override { mAlgorithm.setOmpThreadNum(threadNum); }
 
+    const gwm::GTDR& algorithm() const { return mAlgorithm; }
+    std::vector<gwm::SpatialWeight> spatialWeights() const { return mAlgorithm.spatialWeights(); }
+
     // QString name() const override { return tr("GTDR"); };
 
     mat betas() const { return mAlgorithm.betas(); }
@@ -86,6 +89,7 @@ protected:
 
     // GwmDiagnostic mDiagnostic;
     gwm::RegressionDiagnostic mDiagnostic;
+    std::unique_ptr<gwm::GTDR> mGTDRCore;
 
     gwm::GTDR mAlgorithm;
     QgsVectorLayer* mLayer = nullptr;
@@ -98,6 +102,24 @@ public:
 private:
     std::vector<std::unique_ptr<gwm::BandwidthWeight>> mBandwidthHolders;
     std::vector<std::unique_ptr<gwm::OneDimDistance>> mDistanceHolders;
+
+    gwm::BandwidthSelector mBandwidthSizeSelector;
+    //gwm::GTDRBandwidthOptimizer mGTDRBandwidthOptimizer;
+    int mCurrentOptimizingDim = -1;
+
+    std::vector<gwm::SpatialWeight> mSpatialWeights;
+
+    // 带宽优化准则方法（实现 IBandwidthSizeSelectable 接口）
+    double criterion(GwmBandwidthWeight* weight);
+
+    // 为特定维度优化带宽
+    void optimizeBandwidthForDimension(size_t dimIndex);
+
+    // 计算 AIC 准则（串行版本）
+    double bandwidthSizeCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight, size_t dimIndex);
+
+    // 计算 CV 准则（串行版本）
+    double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight, size_t dimIndex);
 
 };
 

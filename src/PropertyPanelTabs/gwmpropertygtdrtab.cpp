@@ -44,13 +44,52 @@ void GwmPropertyGTDRTab::updateUI()
     if (!mLayerItem)
         return;
     GwmBandwidthWeight weight = mLayerItem->bandwidth();
+    QList<GwmBandwidthWeight*> weights = mLayerItem->bandwidths();
     ui->lblKernelFunction->setText(GwmBandwidthWeight::KernelFunctionTypeNameMapper.name(weight.kernel()));
     ui->lblBandwidthType->setText(weight.adaptive() ? tr("Adaptive") : tr("Fixed"));
-    if (weight.adaptive())
+
+    // GTDR的带宽是多维的
+    if (weights.size() > 1)
     {
-        QString bwSizeString = QString("%1 (number of nearest neighbours)").arg(int(weight.bandwidth()));
+        QStringList bwSizeStrings;
+        for (int i = 0; i < weights.size(); ++i)
+        {
+            auto* bw = mLayerItem->bandwidths()[i];
+            QString varName = i < mLayerItem->indepVar().size()
+                                  ? mLayerItem->indepVar()[i].name
+                                  : QString("Dim_%1").arg(i);
+            if(weight.adaptive()){
+                bwSizeStrings << QString("%1").arg(int(bw->bandwidth()));}
+            else{
+                bwSizeStrings << QString("%1").arg(bw->bandwidth(), 0, 'f',2);
+            };
+        }
+
+        QString bwSizeString = weight.adaptive()?
+                                   QString("%1 (number of nearest neighbours)").arg(bwSizeStrings.join(", ")) :
+                                   bwSizeStrings.join(", ");
         ui->lblBandwidthSize->setText(bwSizeString);
+    }else if (mLayerItem->bandwidth())
+    {
+        // 单个带宽值的显示逻辑
+        if (weight.adaptive())
+        {
+            QString bwSizeString = QString("%1 (number of nearest neighbours)").arg(int(weight.bandwidth()));
+            ui->lblBandwidthSize->setText(bwSizeString);
+        }else{
+            QString bwSizeString = QString("%1").arg(weight.bandwidth(), 0, 'f', 2);
+            ui->lblBandwidthSize->setText(bwSizeString);
+        }
     }
+
+    // if (weight.adaptive())
+    // {
+    //     QString bwSizeString = QString("%1 (number of nearest neighbours)").arg(int(weight.bandwidth()));
+    //     ui->lblBandwidthSize->setText(bwSizeString);
+    // }else{
+    //     QString bwSizeString = QString("%1").arg(weight.bandwidth(), 0, 'f', 2);
+    //     ui->lblBandwidthSize->setText(bwSizeString);
+    // }
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
     if (true)
     {

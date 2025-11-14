@@ -69,6 +69,11 @@ public:
         return mBandwidth;
     }
 
+    QList<GwmBandwidthWeight*> bandwidths() const
+    {
+        return mBandwidths;
+    }
+
 protected:
 
     int mDataPointsSize;
@@ -79,6 +84,7 @@ protected:
     arma::mat mBetas;
 
     GwmBandwidthWeight* mBandwidth;
+    QList<GwmBandwidthWeight*> mBandwidths;//因为gtdr带宽是多维的，理论上只用它而不用mBandwidth
 
     QList<QPair<QList<GwmVariable>, double> > mModelSelModels;
     QList<QPair<double, double> > mBandwidthSelScores;

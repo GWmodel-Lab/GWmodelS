@@ -1,4 +1,4 @@
-#include "gwmlayergtdritem.h"
+﻿#include "gwmlayergtdritem.h"
 #include "gwmlayergroupitem.h"
 
 
@@ -9,6 +9,65 @@ GwmLayerGTDRItem::GwmLayerGTDRItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
     {
         auto taskMeta = taskThread->meta();
         mBandwidth = new GwmBandwidthWeight(taskMeta.weightBandwidthSize, taskMeta.weightBandwidthAdaptive, GwmBandwidthWeight::KernelFunctionType(taskMeta.weightBandwidthKernel));
+
+        const auto& sws = taskThread->algorithm().spatialWeights();
+        mBandwidths.clear();
+        mBandwidths.reserve(sws.size());
+        for(int i = 0; i < sws.size(); ++i){
+            // 如果无法获取，使用 taskMeta 的默认值
+            auto* appBw = new GwmBandwidthWeight(
+                taskMeta.weightBandwidthSize,
+                taskMeta.weightBandwidthAdaptive,
+                static_cast<GwmBandwidthWeight::KernelFunctionType>(taskMeta.weightBandwidthKernel)
+                );
+            mBandwidths.append(appBw);
+        };
+
+        // 获取优化后的带宽值（如果有优化）
+        if (taskMeta.bandwidthAuto)
+        {
+            // update mBandwidth
+            if (!sws.empty())
+            {
+                auto* optimizedBw = sws[0].weight<gwm::BandwidthWeight>();
+                if (optimizedBw)
+                {
+                    // 更新为优化后的带宽值
+                    mBandwidth->setBandwidth(optimizedBw->bandwidth());
+                    mBandwidth->setAdaptive(optimizedBw->adaptive());
+                    mBandwidth->setKernel(static_cast<GwmBandwidthWeight::KernelFunctionType>(optimizedBw->kernel()));
+                    isBandwidthOptimized = true;
+                }
+            }
+            // update mBandwidths
+            mBandwidths.clear();
+            mBandwidths.reserve(sws.size());
+            for(int i = 0; i < sws.size(); ++i){
+                // 从 taskMeta 获取初始值，或从优化后的 spatialWeight 获取
+                auto* libBw = sws[i].weight<gwm::BandwidthWeight>();
+                if (libBw)
+                {
+                    // 创建应用层的带宽权重对象
+                    auto* appBw = new GwmBandwidthWeight(
+                        libBw->bandwidth(),
+                        libBw->adaptive(),
+                        static_cast<GwmBandwidthWeight::KernelFunctionType>(libBw->kernel())
+                        );
+                    mBandwidths.append(appBw);
+                }
+                else
+                {
+                    // 如果无法获取，使用 taskMeta 的默认值
+                    auto* appBw = new GwmBandwidthWeight(
+                        taskMeta.weightBandwidthSize,
+                        taskMeta.weightBandwidthAdaptive,
+                        static_cast<GwmBandwidthWeight::KernelFunctionType>(taskMeta.weightBandwidthKernel)
+                        );
+                    mBandwidths.append(appBw);
+                }
+            }
+        }
+
         mDataPointsSize = taskMeta.layer->featureCount();
         mDepVar = taskMeta.dependentVariable;
         mIndepVars = taskMeta.independentVariables;
@@ -29,6 +88,14 @@ GwmLayerGTDRItem::~GwmLayerGTDRItem()
 {
     if (mBandwidth)
         delete mBandwidth;
+
+    // 释放 mBandwidths 中的所有对象
+    for (auto* bw : mBandwidths)
+    {
+        if (bw)
+            delete bw;
+    }
+    mBandwidths.clear();
 }
 
 int GwmLayerGTDRItem::childNumber()
