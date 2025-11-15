@@ -1,7 +1,8 @@
-#ifndef GWMGTDROPTIONSDIALOG_H
+﻿#ifndef GWMGTDROPTIONSDIALOG_H
 #define GWMGTDROPTIONSDIALOG_H
 
 #include <QDialog>
+#include <QItemSelectionModel>
 #include "Model/gwmlayergroupitem.h"
 #include "Model/gwmalgorithmmetagtdr.h"
 #include <qgsvectorlayer.h>
@@ -10,6 +11,7 @@
 #include "TaskThread/gwmgtdrtaskthread.h"
 #include "TaskThread/iparallelable.h"
 #include "SpatialWeight/gwmdistance.h"
+#include "Model/gwmgtdrparameterspecifiedoptionsmodel.h"
 
 namespace Ui {
 class GwmGTDROptionsDialog;
@@ -70,6 +72,18 @@ public:
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
+private:
+    GwmGTDRParameterSpecifiedOptionsModel* mParameterSpecifiedOptionsModel = nullptr;
+    QItemSelectionModel* mParameterSpecifiedOptionsSelectionModel = nullptr;
+
+public slots:
+    // ... 现有槽函数 ...
+    void onSelectedIndenpendentVariablesChanged();
+    void onSpecifiedParameterCurrentChanged(const QModelIndex& current, const QModelIndex& previous);
+    void onBwSizeAdaptiveSizeChanged(int size);
+    void onBwSizeFixedSizeChanged(double size);
+    void onBwKernelFunctionChanged(int index);
+
 };
 
 

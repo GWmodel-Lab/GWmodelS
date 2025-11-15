@@ -46,7 +46,25 @@ GwmGTDRTaskThread::GwmGTDRTaskThread(const GwmAlgorithmMetaGTDR& meta) : mMeta(m
         //BandwidthWeight bandwidth(meta.weightBandwidthSize, meta.weightBandwidthAdaptive, meta.weightBandwidthKernel);
         //spatials.push_back(SpatialWeight(&bandwidth, &distance));
 
-        auto bw = std::make_unique<BandwidthWeight>(meta.weightBandwidthSize, meta.weightBandwidthAdaptive, meta.weightBandwidthKernel);
+        // 获取该维度的初始带宽值和核函数类型
+        // 如果列表不为空，使用列表中的值；否则使用单个默认值（向后兼容）
+        double bwSize;
+        gwm::BandwidthWeight::KernelFunctionType kernel;
+
+        if (i < meta.weightBandwidthSizes.size() && i < meta.weightBandwidthKernels.size())
+        {
+            // 使用列表中的值（每个维度不同）
+            bwSize = meta.weightBandwidthSizes[i];
+            kernel = meta.weightBandwidthKernels[i];
+        }
+        else
+        {
+            // 向后兼容：如果列表为空，使用单个默认值
+            bwSize = meta.weightBandwidthSize;
+            kernel = meta.weightBandwidthKernel;
+        }
+
+        auto bw = std::make_unique<BandwidthWeight>(bwSize, meta.weightBandwidthAdaptive, kernel);
         auto dist = std::make_unique<OneDimDistance>();
 
         BandwidthWeight* bwRaw = bw.get();
@@ -193,6 +211,14 @@ void GwmGTDRTaskThread::run()
                          .arg(eps, 0, 'g', 6).arg(step).arg(maxIter));
         // 创建优化器
         gwm::GTDRBandwidthOptimizer optimizer(bandwidths);
+        // emit message(tr("Kernels before optimization:"));
+        // for(int i=0; i<bandwidths.size(); ++i){
+        //     emit message(tr("  Dimension %1: addr=%2, kernel=%3, bandwidth=%4")
+        //                      .arg(i+1)
+        //                      .arg(reinterpret_cast<quintptr>(bandwidths[i]), 0, 16)  // 打印地址
+        //                      .arg(bandwidths[i]->kernel())
+        //                      .arg(bandwidths[i]->bandwidth()));
+        // }
         // 执行优化
         QElapsedTimer timer;
         timer.start();
@@ -206,6 +232,15 @@ void GwmGTDRTaskThread::run()
                 eps,                  // eps
                 step                  // step
                 );
+
+            // emit message(tr("Kernels after optimization:"));
+            // for(int i=0; i<bandwidths.size(); ++i){
+            //     emit message(tr("  Dimension %1: addr=%2, kernel=%3, bandwidth=%4")
+            //                      .arg(i+1)
+            //                      .arg(reinterpret_cast<quintptr>(bandwidths[i]), 0, 16)  // 打印地址
+            //                      .arg(bandwidths[i]->kernel())
+            //                      .arg(bandwidths[i]->bandwidth()));
+            // }
 
             qint64 elapsed = timer.elapsed();
 
@@ -550,15 +585,15 @@ void GwmGTDRTaskThread::createResultLayer(CreateResultLayerData data)
     mResultLayer->commitChanges();
 
     // test code
-    emit message(tr("[GTDR] result fields=%1, features=%2")
-    .arg(mResultLayer->fields().count())
-    .arg(int(mResultLayer->featureCount())));
-    // 打印前两条要素的前5个属性，避免UI阻塞
-    int cnt = 0;
-    for (auto it = mResultLayer->getFeatures(); cnt < 2 && it.nextFeature(f); ++cnt) {
-        QStringList vals;
-        for (int k = 0; k < std::min(5, mResultLayer->fields().count()); ++k)
-            vals << f.attribute(k).toString();
-        emit message(tr("[GTDR] feat%1 attrs: %2").arg(cnt).arg(vals.join(",")));
-    }
+    // emit message(tr("[GTDR] result fields=%1, features=%2")
+    // .arg(mResultLayer->fields().count())
+    // .arg(int(mResultLayer->featureCount())));
+    // // 打印前两条要素的前5个属性，避免UI阻塞
+    // int cnt = 0;
+    // for (auto it = mResultLayer->getFeatures(); cnt < 2 && it.nextFeature(f); ++cnt) {
+    //     QStringList vals;
+    //     for (int k = 0; k < std::min(5, mResultLayer->fields().count()); ++k)
+    //         vals << f.attribute(k).toString();
+    //     emit message(tr("[GTDR] feat%1 attrs: %2").arg(cnt).arg(vals.join(",")));
+    // }
 }

@@ -1374,8 +1374,9 @@ void GwmApp::onGTDRBtnClicked()
     }
     if (gtdrOptionDialog->exec() == QDialog::Accepted)
     {
-        GwmGTDRTaskThread* gtdrTaskThread = new GwmGTDRTaskThread(gtdrOptionDialog->meta());
         gtdrOptionDialog->updateFields();
+        GwmGTDRTaskThread* gtdrTaskThread = new GwmGTDRTaskThread(gtdrOptionDialog->meta());
+        //gtdrOptionDialog->updateFields();
         GwmLayerGroupItem* selectedItem = gtdrOptionDialog->selectedLayer();
         const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gtdrTaskThread);

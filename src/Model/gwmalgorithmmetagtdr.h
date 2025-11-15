@@ -1,4 +1,4 @@
-#ifndef GWMALGORITHMMETAGTDR
+﻿#ifndef GWMALGORITHMMETAGTDR
 #define GWMALGORITHMMETAGTDR
 
 #include <string>
@@ -38,6 +38,10 @@ struct GwmAlgorithmMetaGTDR
     double bandwidthOptimizeEps = 1e-6;
     std::size_t bandwidthOptimizeMaxIter = 500;
     double bandwidthOptimizeStep = 0.1;
+
+    //Weight(multidimensional)
+    QList<double> weightBandwidthSizes;
+    QList<gwm::BandwidthWeight::KernelFunctionType> weightBandwidthKernels;
 };
 
 

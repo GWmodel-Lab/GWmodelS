@@ -1,4 +1,4 @@
-#include "gwmgtdroptionsdialog.h"
+﻿#include "gwmgtdroptionsdialog.h"
 #include "ui_gwmgtdroptionsdialog.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
@@ -35,12 +35,25 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     ui->mDepVarComboBox->setCurrentIndex(-1);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::onDepVarChanged);
 
+    //自变量选择部分
+    mParameterSpecifiedOptionsModel = new GwmGTDRParameterSpecifiedOptionsModel(this);
+    mParameterSpecifiedOptionsSelectionModel = new QItemSelectionModel(mParameterSpecifiedOptionsModel, this);
+    ui->lsvParameterSpecifiedParameterList->setModel(mParameterSpecifiedOptionsModel);
+    ui->lsvParameterSpecifiedParameterList->setSelectionModel(mParameterSpecifiedOptionsSelectionModel);
+    // 连接信号
+    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGTDROptionsDialog::onSelectedIndenpendentVariablesChanged);
+    connect(mParameterSpecifiedOptionsSelectionModel, &QItemSelectionModel::currentChanged, this, &GwmGTDROptionsDialog::onSpecifiedParameterCurrentChanged);
+
     //带宽类型选择部分
     QButtonGroup* bwTypeBtnGroup = new QButtonGroup(this);
     bwTypeBtnGroup->addButton(ui->mBwTypeAdaptiveRadio);
     bwTypeBtnGroup->addButton(ui->mBwTypeFixedRadio);
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onFixedRadioToggled);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onVariableRadioToggled);
+    
+    QButtonGroup* bwSizeTypeBtnGroup = new QButtonGroup(this);
+    bwSizeTypeBtnGroup->addButton(ui->mBwSizeAutomaticRadio);
+    bwSizeTypeBtnGroup->addButton(ui->mBwSizeCustomizeRadio);
     connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onBwSizeAutomaticToggled);
     connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onBwSizeCustomizeToggled);
 
@@ -78,11 +91,16 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    // connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    // connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    // connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    // connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    // connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGTDROptionsDialog::onBwSizeFixedSizeChanged);
+    connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::onBwSizeFixedSizeChanged);
+    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::onBwSizeAdaptiveSizeChanged);
+    connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::onBwSizeAdaptiveSizeChanged);
+    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::onBwKernelFunctionChanged);
     connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mThetaValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
@@ -101,6 +119,7 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     ui->mBwSizeFixedSize->setMaximum(DBL_MAX);
     ui->mDistTypeCRSRadio->setChecked(true);
     ui->mBwTypeAdaptiveRadio->setChecked(true);
+    ui->mBwSizeAutomaticRadio->setChecked(true);
     ui->mBwSizeSettingStack->setEnabled(ui->mBwSizeCustomizeRadio->isChecked());
     updateFieldsAndEnable();
 }
@@ -300,6 +319,123 @@ void GwmGTDROptionsDialog::onVariableRadioToggled(bool checked)
     ui->mBwSizeSettingStack->setCurrentIndex(0);
 }
 
+void GwmGTDROptionsDialog::onSelectedIndenpendentVariablesChanged()
+{
+    // 同步独立变量到列表（类似 MultiscaleGWR）
+    mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector->selectedIndepVarModel());
+
+    // 如果有项目，选中第一个
+    if (mParameterSpecifiedOptionsModel->rowCount() > 0)
+    {
+        QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
+        mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
+    }
+}
+
+void GwmGTDROptionsDialog::onSpecifiedParameterCurrentChanged(const QModelIndex& current, const QModelIndex& previous)
+{
+    // 可以在这里更新右侧编辑控件（如果需要）
+    // GTDR 可能不需要，因为可以直接在列表中编辑
+    // Q_UNUSED(current);
+    // Q_UNUSED(previous);
+
+    // 启用/禁用编辑控件（只有当选中有效项时才启用）
+    bool isValid = current.isValid();
+    ui->mBwSizeSettingStack->setEnabled(isValid && ui->mBwSizeCustomizeRadio->isChecked());
+    ui->mBwKernelFunctionCombo->setEnabled(isValid);
+
+    if (!isValid)
+        return;
+
+    // 获取当前选中变量对应的参数选项
+    GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(current);
+    if (!option)
+        return;
+
+    // 更新右侧编辑控件，显示当前选中变量的参数
+    // 注意：带宽值的单位转换
+    if (ui->mBwTypeAdaptiveRadio->isChecked())
+    {
+        // Adaptive 模式：直接显示数值（不需要单位转换，因为 adaptive 是数量）
+        ui->mBwSizeAdaptiveSize->setValue(int(option->initialBandwidthSize));
+    }
+    else if (ui->mBwTypeFixedRadio->isChecked())
+    {
+        // Fixed 模式：需要根据单位转换
+        // 假设默认单位是米，需要根据实际单位转换
+        double value = option->initialBandwidthSize;
+        QList<double> units = { 1.0, 1000.0, 1609.344 };  // 米、千米、英里
+        // 尝试找到合适的单位和值
+        int unitIndex = 0;
+        if (value >= 1000.0 && value < 1000000.0)
+        {
+            unitIndex = 1;  // 千米
+            value = value / 1000.0;
+        }
+        else if (value >= 1609.344)
+        {
+            unitIndex = 2;  // 英里
+            value = value / 1609.344;
+        }
+        ui->mBwSizeFixedSize->setValue(value);
+        ui->mBwSizeFixedUnit->setCurrentIndex(unitIndex);
+    }
+
+    // 更新核函数类型
+    ui->mBwKernelFunctionCombo->setCurrentIndex(static_cast<int>(option->kernel));
+}
+
+void GwmGTDROptionsDialog::onBwSizeAdaptiveSizeChanged(int size)
+{
+    // 获取当前选中的变量
+    QModelIndex currentIndex = mParameterSpecifiedOptionsSelectionModel->currentIndex();
+    if (!currentIndex.isValid())
+        return;
+
+    GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(currentIndex);
+    if (!option)
+        return;
+
+    // 更新该变量的初始带宽值
+    // Adaptive 模式：需要考虑单位
+    QList<double> units = { 1, 10, 100, 1000 };
+    double bandwidthValue = size * units[ui->mBwSizeAdaptiveUnit->currentIndex()];
+    option->initialBandwidthSize = bandwidthValue;
+}
+
+void GwmGTDROptionsDialog::onBwSizeFixedSizeChanged(double size)
+{
+    // 获取当前选中的变量
+    QModelIndex currentIndex = mParameterSpecifiedOptionsSelectionModel->currentIndex();
+    if (!currentIndex.isValid())
+        return;
+
+    GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(currentIndex);
+    if (!option)
+        return;
+
+    // 更新该变量的初始带宽值
+    // Fixed 模式：需要考虑单位
+    QList<double> units = { 1.0, 1000.0, 1609.344 };  // 米、千米、英里
+    double bandwidthValue = size * units[ui->mBwSizeFixedUnit->currentIndex()];
+    option->initialBandwidthSize = bandwidthValue;
+}
+
+void GwmGTDROptionsDialog::onBwKernelFunctionChanged(int index)
+{
+    // 获取当前选中的变量
+    QModelIndex currentIndex = mParameterSpecifiedOptionsSelectionModel->currentIndex();
+    if (!currentIndex.isValid())
+        return;
+
+    GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(currentIndex);
+    if (!option)
+        return;
+
+    // 更新该变量的核函数类型
+    option->kernel = static_cast<gwm::BandwidthWeight::KernelFunctionType>(index);
+}
+
 double GwmGTDROptionsDialog::bandwidthSize(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
@@ -427,6 +563,35 @@ void GwmGTDROptionsDialog::updateFields()
     else
     {
         mAlgorithmMeta.weightBandwidthSize = bandwidthSize();
+    }
+
+    // 读取每个维度的初始带宽值和核函数类型
+    mAlgorithmMeta.weightBandwidthSizes.clear();
+    mAlgorithmMeta.weightBandwidthKernels.clear();
+
+    for (int i = 0; i < mParameterSpecifiedOptionsModel->rowCount(); ++i)
+    {
+        GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(i);
+        if (option)
+        {
+            mAlgorithmMeta.weightBandwidthSizes.append(option->initialBandwidthSize);
+            mAlgorithmMeta.weightBandwidthKernels.append(option->kernel);
+        }
+    }
+
+    // 向后兼容：如果列表为空，使用单个默认值
+    if (mAlgorithmMeta.weightBandwidthSizes.isEmpty())
+    {
+        // 使用当前 UI 中的值作为默认值
+        mAlgorithmMeta.weightBandwidthSize = bandwidthSize();
+        mAlgorithmMeta.weightBandwidthKernel = bandwidthKernelFunction();
+    }
+    else
+    {
+        // 如果列表不为空，也更新单个值（用于向后兼容或作为默认值）
+        // 可以选择使用第一个值，或者保持当前 UI 中的值
+        mAlgorithmMeta.weightBandwidthSize = mAlgorithmMeta.weightBandwidthSizes.first();
+        mAlgorithmMeta.weightBandwidthKernel = mAlgorithmMeta.weightBandwidthKernels.first();
     }
 
     mAlgorithmMeta.hatmatrix = ui->mHatmatrixCheckBox->isChecked();

@@ -15,10 +15,23 @@ GwmLayerGTDRItem::GwmLayerGTDRItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
         mBandwidths.reserve(sws.size());
         for(int i = 0; i < sws.size(); ++i){
             // 如果无法获取，使用 taskMeta 的默认值
+            // auto* appBw = new GwmBandwidthWeight(
+            //     taskMeta.weightBandwidthSize,
+            //     taskMeta.weightBandwidthAdaptive,
+            //     static_cast<GwmBandwidthWeight::KernelFunctionType>(taskMeta.weightBandwidthKernel)
+            //     );
+            // mBandwidths.append(appBw);
+            double metaBwSize = (i < taskMeta.weightBandwidthSizes.size())
+                                    ? taskMeta.weightBandwidthSizes[i]
+                                    : taskMeta.weightBandwidthSize;
+            gwm::BandwidthWeight::KernelFunctionType metaKernel = (i < taskMeta.weightBandwidthKernels.size())
+                                                                      ? taskMeta.weightBandwidthKernels[i]
+                                                                      : taskMeta.weightBandwidthKernel;
+
             auto* appBw = new GwmBandwidthWeight(
-                taskMeta.weightBandwidthSize,
+                metaBwSize,  // 使用每个维度对应的带宽值
                 taskMeta.weightBandwidthAdaptive,
-                static_cast<GwmBandwidthWeight::KernelFunctionType>(taskMeta.weightBandwidthKernel)
+                static_cast<GwmBandwidthWeight::KernelFunctionType>(metaKernel)  // 使用每个维度对应的核函数
                 );
             mBandwidths.append(appBw);
         };
