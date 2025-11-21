@@ -70,6 +70,10 @@
 #include "gwmgwpcaoptionsdialog.h"
 #include "Model/gwmlayergwpcaitem.h"
 
+#include "gwmswimoptionsdialog.h"
+#include "TaskThread/gwmswimtaskthread.h"
+#include "PropertyPanelTabs/gwmpropertyswimtab.h"
+
 #include "gwmcoordtranssettingdialog.h"
 #include "gwmgwroptionsdialog.h"
 #include "gwmcsvtodatdialog.h"
@@ -205,7 +209,7 @@ void GwmApp::setupMenus()
 //    connect(ui->actionGlyph_Plot, &QAction::triggered, this, &GwmApp::developingMessageBox);
 //    connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::developingMessageBox);
 //    connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
-//    connect(ui->actionSWIM, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionSWIM, &QAction::triggered, this, &GwmApp::onSWIMBtnClicked);
 //    connect(ui->actionFlow_Visualization, &QAction::triggered, this, &GwmApp::developingMessageBox);
     //about信号槽连接
 //    connect(ui->actionInformation, &QAction::triggered, this, [&]()
@@ -1846,4 +1850,37 @@ void GwmApp::closeEvent( QCloseEvent * event )
        if(result==QMessageBox::Cancel)
            event->ignore();
     }
+}
+
+void GwmApp::onSWIMBtnClicked()
+{
+    GwmSWIMTaskThread* swimTaskThread = new GwmSWIMTaskThread();
+    GwmSWIMOptionsDialog* swimOptionDialog = new GwmSWIMOptionsDialog(this);
+    
+    if (swimOptionDialog->exec() == QDialog::Accepted)
+    {
+        swimOptionDialog->setTaskThread(swimTaskThread);
+        
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(swimTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            // 创建属性面板显示结果
+            GwmPropertySWIMTab* swimPropertyTab = new GwmPropertySWIMTab(nullptr, swimTaskThread);
+            swimPropertyTab->setTaskThread(swimTaskThread);
+            
+            // 显示属性面板
+            mPropertyPanel->setCurrentWidget(swimPropertyTab);
+            mPropertyPanel->show();
+        }
+        else
+        {
+            delete swimTaskThread;
+        }
+    }
+    else
+    {
+        delete swimTaskThread;
+    }
+    
+    delete swimOptionDialog;
 }
