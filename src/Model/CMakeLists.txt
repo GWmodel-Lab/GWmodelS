@@ -1,4 +1,4 @@
-get_filename_component(SRC_SUBFOLDER_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+﻿get_filename_component(SRC_SUBFOLDER_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 set(SOURCES_SUBFOLDER
     gwmlayerattributeitem.cpp
@@ -12,6 +12,7 @@ set(SOURCES_SUBFOLDER
     gwmlayergwcorrelationitem.cpp
     gwmlayergwaverageitem.cpp
     gwmlayergtdritem.cpp
+    gwmlayergwdaitem.cpp
     gwmlayeritem.cpp
     gwmlayeritemmodel.cpp
     gwmlayermultiscalegwritem.cpp
@@ -39,6 +40,7 @@ set(HEADERS_SUBFOLDER
     gwmlayergwcorrelationitem.h
     gwmlayergwaverageitem.h
     gwmlayergtdritem.h
+    gwmlayergwdaitem.h
     gwmlayeritem.h
     gwmlayeritemmodel.h
     gwmlayermultiscalegwritem.h

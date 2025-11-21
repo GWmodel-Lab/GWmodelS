@@ -1,4 +1,4 @@
-get_filename_component(SRC_SUBFOLDER_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+﻿get_filename_component(SRC_SUBFOLDER_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 set(SOURCES_SUBFOLDER
     gwmpropertycollinearitygwrtab.cpp
@@ -13,6 +13,7 @@ set(SOURCES_SUBFOLDER
     gwmpropertystatisticstab.cpp
     gwmpropertygwaveragetab.cpp
     gwmpropertygwcorrelationtab.cpp
+    gwmpropertygwdatab.cpp
 )
 
 set(HEADERS_SUBFOLDER
@@ -28,6 +29,7 @@ set(HEADERS_SUBFOLDER
     gwmpropertystatisticstab.h
     gwmpropertygwaveragetab.h
     gwmpropertygwcorrelationtab.h
+    gwmpropertygwdatab.h
     utils.h
 )
 
@@ -44,6 +46,7 @@ set(FORMS_SUBFOLDER
     gwmpropertystatisticstab.ui
     gwmpropertygwaveragetab.ui
     gwmpropertygwcorrelationtab.ui
+    gwmpropertygwdatab.ui
 )
 
 list(TRANSFORM SOURCES_SUBFOLDER PREPEND "${SRC_SUBFOLDER_NAME}/")

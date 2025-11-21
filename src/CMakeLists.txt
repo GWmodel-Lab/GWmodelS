@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR)
+﻿cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR)
 
 find_package(GDAL REQUIRED)
 if(NOT GDAL_FOUND)
@@ -136,6 +136,7 @@ set(SOURCES
     gwmprojcrssettingdialog.cpp
     gwmgwaverageoptionsdialog.cpp
     gwmgwcorrelationoptionsdialog.cpp
+    gwmgwdaoptionsdialog.cpp
 )
 
 set(HEADERS
@@ -170,6 +171,7 @@ set(HEADERS
     gwmprojcrssettingdialog.h
     gwmgwaverageoptionsdialog.h
     gwmgwcorrelationoptionsdialog.h
+    gwmgwdaoptionsdialog.h
 )
 
 set(FORMS
@@ -209,6 +211,7 @@ set(FORMS
     gwmprojcrssettingdialog.ui
     gwmgwaverageoptionsdialog.ui
     gwmgwcorrelationoptionsdialog.ui
+    gwmgwdaoptionsdialog.ui
 )
 
 add_subdirectory("./AttributeTable")

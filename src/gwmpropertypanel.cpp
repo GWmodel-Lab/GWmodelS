@@ -9,6 +9,7 @@
 #include "PropertyPanelTabs/gwmpropertycollinearitygwrtab.h"
 #include "PropertyPanelTabs/gwmpropertygwcorrelationtab.h"
 #include "PropertyPanelTabs/gwmpropertygwpcatab.h"
+#include "PropertyPanelTabs/gwmpropertygwdatab.h"
 
 GwmPropertyPanel::GwmPropertyPanel(QWidget *parent) :
     QTabWidget(parent),
@@ -130,6 +131,10 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
                     tabWidget = new GwmPropertyGWPCATab(this, static_cast<GwmLayerGWPCAItem*>(item));
                     (static_cast<GwmPropertyGWPCATab*>(tabWidget))->updateUI();
                     break;
+                case GwmLayerItem::GWDA:
+                    tabWidget = new GwmPropertyGWDATab(this, static_cast<GwmLayerGWDAItem*>(item));
+                    (static_cast<GwmPropertyGWDATab*>(tabWidget))->updateUI();
+                    break;
                 default:
                     break;
                 }
@@ -171,6 +176,9 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
                     break;
                 case GwmLayerItem::GWPCA:
                     (static_cast<GwmPropertyGWPCATab*>(tabWidget))->updateUI();
+                    break;
+                case GwmLayerItem::GWDA:
+                    (static_cast<GwmPropertyGWDATab*>(tabWidget))->updateUI();
                     break;
                 default:
                     break;

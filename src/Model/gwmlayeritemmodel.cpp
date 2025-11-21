@@ -143,6 +143,7 @@ bool GwmLayerItemModel::insertItem(int row, GwmLayerItem *item, const QModelInde
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
+        case GwmLayerItem::GWDA:
         {
             auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
             QgsProject::instance()->addMapLayer(vectorItem->layer());
@@ -218,6 +219,7 @@ bool GwmLayerItemModel::removeRows(int row, int count, const QModelIndex &parent
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
+        case GwmLayerItem::GWDA:
         {
             auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
             layers.append(vectorItem->layer());
@@ -276,6 +278,7 @@ GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
+        case GwmLayerItem::GWDA:
         {
             auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
             QgsProject::instance()->addMapLayer(vectorItem->layer());
@@ -334,6 +337,7 @@ bool GwmLayerItemModel::appentItem(GwmLayerItem *item, const QModelIndex &parent
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
+        case GwmLayerItem::GWDA:
         {
             auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
             QgsProject::instance()->addMapLayer(vectorItem->layer());
@@ -388,6 +392,7 @@ QList<GwmLayerItem *> GwmLayerItemModel::takeRows(int row, int count, const QMod
             case GwmLayerItem::CollinearityGWR:
             case GwmLayerItem::GTWR:
             case GwmLayerItem::GWPCA:
+            case GwmLayerItem::GWDA:
                 QgsProject::instance()->removeMapLayer(static_cast<GwmLayerVectorItem*>(item)->layer());
             default:
                 break;
@@ -486,6 +491,7 @@ QgsVectorLayer *GwmLayerItemModel::layerFromItem(GwmLayerItem* item) const
     case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
     case GwmLayerItem::GwmLayerItemType::GTWR:
     case GwmLayerItem::GwmLayerItemType::GWPCA:
+    case GwmLayerItem::GwmLayerItemType::GWDA:
         return ((GwmLayerOriginItem*)item)->layer();
     default:
         return nullptr;

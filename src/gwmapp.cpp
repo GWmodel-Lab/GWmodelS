@@ -1,4 +1,4 @@
-#include "gwmapp.h"
+﻿#include "gwmapp.h"
 #include "ui_gwmapp.h"
 
 #include <QMenuBar>
@@ -99,6 +99,9 @@
 
 #include "gwmprojcrssettingdialog.h"
 
+#include "gwmgwdaoptionsdialog.h"
+#include "TaskThread/gwmgwdataskthread.h"
+#include "Model/gwmlayergwdaitem.h"
 static bool cmpByText_(QAction *a, QAction *b)
 {
     return QString::localeAwareCompare(a->text(), b->text()) < 0;
@@ -197,6 +200,7 @@ void GwmApp::setupMenus()
     connect(ui->actionNew, &QAction::triggered,this,&GwmApp::onNewProject);
     connect(ui->action_SetProjCRS,&QAction::triggered,this,&GwmApp::onSetProjCRS);
     connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::onRobustGWPCABtnClicked);
+    connect(ui->actionGWDA, &QAction::triggered, this, &GwmApp::onGWDABtnClicked);
     //以下信号为暂未实现的功能
     connect(ui->actionGW_Averages, &QAction::triggered, this, &GwmApp::onGWAverageBtnClicked);
 //    connect(ui->actionGW_Covariance, &QAction::triggered, this, &GwmApp::developingMessageBox);
@@ -821,6 +825,7 @@ void GwmApp::onFeaturePanelCurrentChanged(const QModelIndex &current,const QMode
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
         case GwmLayerItem::GwmLayerItemType::GTWR:
         case GwmLayerItem::GwmLayerItemType::GWPCA:
+        case GwmLayerItem::GwmLayerItemType::GWDA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -882,6 +887,7 @@ void GwmApp::onSaveLayer()
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
         case GwmLayerItem::GwmLayerItemType::GTWR:
         case GwmLayerItem::GwmLayerItemType::GWPCA:
+        case GwmLayerItem::GwmLayerItemType::GWDA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -928,6 +934,7 @@ void GwmApp::onExportLayerAsCsv(const QModelIndex &index)
     case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
     case GwmLayerItem::GwmLayerItemType::GTWR:
     case GwmLayerItem::GwmLayerItemType::GWPCA:
+    case GwmLayerItem::GwmLayerItemType::GWDA:
         layerItem = ((GwmLayerVectorItem*)item);
         break;
     default:
@@ -980,6 +987,7 @@ void GwmApp::onExportLayer(QString filetype)
         case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
         case GwmLayerItem::GwmLayerItemType::GTWR:
         case GwmLayerItem::GwmLayerItemType::GWPCA:
+        case GwmLayerItem::GwmLayerItemType::GWDA:
             layerItem = ((GwmLayerVectorItem*)item);
             break;
         default:
@@ -1771,6 +1779,55 @@ void GwmApp::onRobustGWPCABtnClicked()
             }
         }
     }
+}
+
+void GwmApp::onGWDABtnClicked()
+{
+    GwmGWDATaskThread* gwdaTaskThread = new GwmGWDATaskThread();
+    GwmGWDAOptionsDialog* gwdaOptionDialog = new GwmGWDAOptionsDialog(mMapModel->rootChildren(), gwdaTaskThread);
+    QModelIndexList selectedIndexes = mFeaturePanel->selectionModel()->selectedIndexes();
+    for (QModelIndex selectedIndex : selectedIndexes)
+    {
+        GwmLayerItem* selectedItem = mMapModel->itemFromIndex(selectedIndex);
+        if (selectedItem->itemType() == GwmLayerItem::Group)
+        {
+            gwdaOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem));
+        }
+        else if (selectedItem->itemType() == GwmLayerItem::Origin)
+        {
+            gwdaOptionDialog->setSelectedLayer(static_cast<GwmLayerGroupItem*>(selectedItem->parentItem()));
+        }
+    }
+    if (gwdaOptionDialog->exec() == QDialog::Accepted)
+    {
+        // 这里可以添加后续处理逻辑，比如创建任务线程等
+        // 参考 onGTDRBtnClicked() 的完整实现
+
+        // 1. 传递参数到任务线程
+        gwdaOptionDialog->updateFields();
+
+        // 2. 获取选中的图层
+        GwmLayerGroupItem* selectedItem = gwdaOptionDialog->selectedLayer();
+        const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
+        
+        // 3. 创建并显示进度对话框（这会启动任务线程）
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(gwdaTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            // 4. 任务完成后的处理
+            QgsVectorLayer* resultLayer = gwdaTaskThread->resultLayer();
+            if (resultLayer)
+            {
+                QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
+                resultLayer0 = resultLayer->clone();
+                GwmLayerGWDAItem* gwdaItem = new GwmLayerGWDAItem(selectedItem, resultLayer0, gwdaTaskThread);
+                mMapModel->appentItem(gwdaItem, selectedIndex);
+                onShowLayerProperty(mMapModel->indexFromItem(gwdaItem));
+            }
+        }
+    }
+    delete gwdaOptionDialog;
+    delete gwdaTaskThread;
 }
 
 void GwmApp::populateLayoutsMenu(QMenu * menu)

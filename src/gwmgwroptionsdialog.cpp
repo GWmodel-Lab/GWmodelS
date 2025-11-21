@@ -1,4 +1,4 @@
-#include "gwmgwroptionsdialog.h"
+﻿#include "gwmgwroptionsdialog.h"
 #include "ui_gwmgwroptionsdialog.h"
 
 #include <QComboBox>
@@ -7,6 +7,8 @@
 #include <SpatialWeight/gwmcrsdistance.h>
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
+
+#include <qgsfields.h>
 
 #ifdef ENABLE_OpenMP
 #include <omp.h>

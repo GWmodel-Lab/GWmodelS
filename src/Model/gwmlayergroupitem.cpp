@@ -9,6 +9,7 @@
 #include "gwmlayergtdritem.h"
 #include "gwmlayergwaverageitem.h"
 #include "gwmlayergwcorrelationitem.h"
+#include "gwmlayergwdaitem.h"
 #include <qmessagebox.h>
 
 #include "gwmapp.h"
@@ -203,6 +204,7 @@ bool GwmLayerGroupItem::appendChildren(QList<GwmLayerItem *> items)
         case GwmLayerItemType::CollinearityGWR:
         case GwmLayerItemType::GWPCA:
         case GwmLayerItemType::GTWR:
+        case GwmLayerItemType::GWDA:
             mAnalyseChildren.append((GwmLayerVectorItem*)item);
             return true;
         default:
@@ -298,6 +300,9 @@ bool GwmLayerGroupItem::readXml(QDomNode &node)
                 break;
             case GwmLayerItemType::GWPCA:
                 analyseItem = new GwmLayerGWPCAItem(this);
+                break;
+            case GwmLayerItemType::GWDA:
+                analyseItem = new GwmLayerGWDAItem(this);
                 break;
             default:
                 analyseItem = new GwmLayerVectorItem(this);

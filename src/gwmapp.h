@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -155,6 +155,7 @@ public slots:
     void onLcrGWRBtnClicked();
     void onGTWRBtnClicked();
     void onGWPCABtnClicked();
+    void onGWDABtnClicked();
     void populateLayoutsMenu(QMenu *menu);
     void setProjCrsFromLayer(const QModelIndex &index);
     void onRobustGWPCABtnClicked();

@@ -33,7 +33,8 @@ public:
         GWPCA,
         GTWR,
         GWAverage,
-        GWCorrelation
+        GWCorrelation,
+        GWDA
     };
 
     static GwmEnumValueNameMapper<GwmLayerItemType> LayerItemTypeNameMapper;
