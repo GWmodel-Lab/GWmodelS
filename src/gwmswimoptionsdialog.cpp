@@ -29,7 +29,7 @@ GwmSWIMOptionsDialog::GwmSWIMOptionsDialog(QWidget *parent) :
     ui->mSwimModeComboBox->addItem(tr("Flow-Focused SWIM - Euclidean"), static_cast<int>(SWIMMode::FlowFocusedEuclidean));
     ui->mSwimModeComboBox->addItem(tr("Flow-Focused SWIM - SOP"), static_cast<int>(SWIMMode::FlowFocusedSOP));
     ui->mSwimModeComboBox->setCurrentIndex(0);
-    connect(ui->mSwimModeComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), 
+    connect(ui->mSwimModeComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             this, &GwmSWIMOptionsDialog::onSwimModeChanged);
 
     // CSV文件选择
@@ -71,11 +71,11 @@ GwmSWIMOptionsDialog::GwmSWIMOptionsDialog(QWidget *parent) :
     connect(ui->mCsvFilePathEdit, &QLineEdit::textChanged, this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), 
+    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged),
             this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), 
+    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
             this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), 
+    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
 
     ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
@@ -88,7 +88,7 @@ GwmSWIMOptionsDialog::GwmSWIMOptionsDialog(QWidget *parent) :
         connect(pair.second, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                 this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
     }
-    
+
     updateFieldsAndEnable();
 }
 
@@ -105,7 +105,7 @@ void GwmSWIMOptionsDialog::onCsvFileOpenClicked()
         ui->mCsvFilePathEdit->setText(fileName);
         if (!loadCsvHeaders(fileName))
         {
-            QMessageBox::warning(this, tr("tips"), tr("No csv header!Please check!"));
+            QMessageBox::warning(this, tr("error"), tr("NO CSV, please check!"));
             clearFieldMappingControls();
         }
         updateFieldsAndEnable();
@@ -285,14 +285,14 @@ void GwmSWIMOptionsDialog::setTaskThread(GwmSWIMTaskThread* taskThread)
         // 设置参数到TaskThread
         taskThread->setCsvFilePath(csvFilePath());
         taskThread->setSWIMMode(swimMode());
-        
+
         // 创建空间权重
         GwmBandwidthWeight* bandwidth = new GwmBandwidthWeight(
             bandwidthSize(),
             bandwidthType(),
             bandwidthKernelFunction()
-        );
-        
+            );
+
         // 注意：对于SWIM，我们使用自己的距离计算，这里创建一个默认的距离对象
         // 实际的距离计算在TaskThread中实现
         GwmDistance* distance = nullptr;
@@ -309,7 +309,7 @@ void GwmSWIMOptionsDialog::setTaskThread(GwmSWIMTaskThread* taskThread)
                 tempTotal,
                 distParams.toMap().value("p").toDouble(),
                 distParams.toMap().value("theta").toDouble()
-            );
+                );
             break;
         case GwmDistance::DistanceType::DMatDistance:
             distance = new GwmDMatDistance(tempTotal, distParams.toMap().value("file").toString());
@@ -318,12 +318,12 @@ void GwmSWIMOptionsDialog::setTaskThread(GwmSWIMTaskThread* taskThread)
             distance = new GwmCRSDistance(tempTotal, false);
             break;
         }
-        
+
         GwmSpatialWeight spatialWeight(bandwidth, distance);
         taskThread->setSpatialWeight(spatialWeight);
         taskThread->setFieldMapping(currentFieldMapping());
         taskThread->setFieldDelimiter(mDetectedDelimiter);
-        
+
         // 设置并行参数
         taskThread->setParallelType(parallelType());
         if (parallelType() == IParallelalbe::ParallelType::OpenMP)
@@ -348,13 +348,13 @@ void GwmSWIMOptionsDialog::updateFields()
 void GwmSWIMOptionsDialog::enableAccept()
 {
     bool enabled = true;
-    
+
     // 检查CSV文件路径
     if (ui->mCsvFilePathEdit->text().isEmpty())
     {
         enabled = false;
     }
-    
+
     // 检查带宽参数
     if (ui->mBwTypeFixedRadio->isChecked())
     {
@@ -366,7 +366,7 @@ void GwmSWIMOptionsDialog::enableAccept()
         if (ui->mBwSizeAdaptiveSize->value() <= 0)
             enabled = false;
     }
-    
+
     // 检查距离矩阵文件（如果使用DMat）
     if (ui->mDistTypeDmatRadio->isChecked())
     {
@@ -378,7 +378,7 @@ void GwmSWIMOptionsDialog::enableAccept()
     {
         enabled = false;
     }
-    
+
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(enabled);
 }
 

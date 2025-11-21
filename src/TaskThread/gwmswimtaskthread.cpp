@@ -48,7 +48,7 @@ int GwmSWIMTaskThread::parallelAbility() const
 {
     return IParallelalbe::SerialOnly
 #ifdef ENABLE_OpenMP
-        | IParallelalbe::OpenMP
+           | IParallelalbe::OpenMP
 #endif
         ;
 }
@@ -98,7 +98,7 @@ bool GwmSWIMTaskThread::isValid()
 void GwmSWIMTaskThread::run()
 {
     emit tick(0, 0);
-    
+
     // 步骤1: 加载CSV数据
     if (!checkCanceled())
     {
@@ -129,7 +129,7 @@ void GwmSWIMTaskThread::run()
             flowVolumeMat(i, 0) = mFlowDataList[i].flow_volume;
         }
         mResultList.push_back(qMakePair(QString("FlowVolume"), flowVolumeMat));
-        
+
         mResultList.push_back(qMakePair(QString("WeightMatrix"), mWeightMatrix));
         createResultLayer(mResultList);
         emit tick(100, 100);
@@ -169,15 +169,15 @@ bool GwmSWIMTaskThread::loadCsvData()
 
     mFlowDataList.clear();
     int lineNum = 1;
-    
+
     while (!in.atEnd())
     {
         QString line = in.readLine();
         lineNum++;
-        
+
         if (line.trimmed().isEmpty())
             continue;
-            
+
         GwmFlowData flowData;
         if (parseCsvLine(line, flowData))
         {
@@ -190,7 +190,7 @@ bool GwmSWIMTaskThread::loadCsvData()
     }
 
     file.close();
-    
+
     if (mFlowDataList.isEmpty())
     {
         print_error(tr("No valid data found in CSV file."));
@@ -204,7 +204,7 @@ bool GwmSWIMTaskThread::loadCsvData()
 bool GwmSWIMTaskThread::parseCsvLine(const QString& line, GwmFlowData& flowData)
 {
     QStringList fields = line.split(mFieldDelimiter, Qt::KeepEmptyParts);
-    
+
     auto readInt = [&](int index, int& target) -> bool {
         if (index < 0 || index >= fields.size()) return false;
         bool ok = false;
@@ -229,7 +229,7 @@ bool GwmSWIMTaskThread::parseCsvLine(const QString& line, GwmFlowData& flowData)
     if (!readDouble(mFieldMapping.originY, flowData.origin_y)) return false;
     if (!readDouble(mFieldMapping.destX, flowData.dest_x)) return false;
     if (!readDouble(mFieldMapping.destY, flowData.dest_y)) return false;
-    
+
     return true;
 }
 
@@ -237,10 +237,10 @@ double GwmSWIMTaskThread::calculateOriginDistance(int i, int j)
 {
     if (i < 0 || i >= mFlowDataList.size() || j < 0 || j >= mFlowDataList.size())
         return 0.0;
-        
+
     const GwmFlowData& flow1 = mFlowDataList[i];
     const GwmFlowData& flow2 = mFlowDataList[j];
-    
+
     double dx = flow1.origin_x - flow2.origin_x;
     double dy = flow1.origin_y - flow2.origin_y;
     return std::sqrt(dx * dx + dy * dy);
@@ -250,10 +250,10 @@ double GwmSWIMTaskThread::calculateDestDistance(int i, int j)
 {
     if (i < 0 || i >= mFlowDataList.size() || j < 0 || j >= mFlowDataList.size())
         return 0.0;
-        
+
     const GwmFlowData& flow1 = mFlowDataList[i];
     const GwmFlowData& flow2 = mFlowDataList[j];
-    
+
     double dx = flow1.dest_x - flow2.dest_x;
     double dy = flow1.dest_y - flow2.dest_y;
     return std::sqrt(dx * dx + dy * dy);
@@ -263,16 +263,16 @@ double GwmSWIMTaskThread::calculateFlowEuclideanDistance(int i, int j)
 {
     if (i < 0 || i >= mFlowDataList.size() || j < 0 || j >= mFlowDataList.size())
         return 0.0;
-        
+
     const GwmFlowData& flow1 = mFlowDataList[i];
     const GwmFlowData& flow2 = mFlowDataList[j];
-    
+
     // 四维欧氏距离: (xi, yi, xj, yj)
     double dx1 = flow1.origin_x - flow2.origin_x;
     double dy1 = flow1.origin_y - flow2.origin_y;
     double dx2 = flow1.dest_x - flow2.dest_x;
     double dy2 = flow1.dest_y - flow2.dest_y;
-    
+
     return std::sqrt(dx1 * dx1 + dy1 * dy1 + dx2 * dx2 + dy2 * dy2);
 }
 
@@ -288,7 +288,7 @@ double GwmSWIMTaskThread::kernelFunction(double distance, double bandwidth)
 {
     if (bandwidth <= 0.0)
         return 0.0;
-    
+
     // 高斯核函数
     double ratio = distance / bandwidth;
     return std::exp(-0.5 * ratio * ratio);
@@ -298,7 +298,7 @@ void GwmSWIMTaskThread::calculateWeightMatrix()
 {
     int n = mFlowDataList.size();
     mWeightMatrix = mat(n, n, fill::zeros);
-    
+
     switch (mSWIMMode)
     {
     case SWIMMode::OriginFocused:
@@ -319,12 +319,12 @@ void GwmSWIMTaskThread::calculateWeightMatrix()
 void GwmSWIMTaskThread::calculateOriginFocusedWeights()
 {
     int n = mFlowDataList.size();
-    
+
 #ifdef ENABLE_OpenMP
     if (mParallelType == IParallelalbe::ParallelType::OpenMP)
     {
         omp_set_num_threads(mOmpThreadNum);
-        #pragma omp parallel for
+#pragma omp parallel for
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < n; j++)
@@ -356,12 +356,12 @@ void GwmSWIMTaskThread::calculateOriginFocusedWeights()
 void GwmSWIMTaskThread::calculateDestinationFocusedWeights()
 {
     int n = mFlowDataList.size();
-    
+
 #ifdef ENABLE_OpenMP
     if (mParallelType == IParallelalbe::ParallelType::OpenMP)
     {
         omp_set_num_threads(mOmpThreadNum);
-        #pragma omp parallel for
+#pragma omp parallel for
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < n; j++)
@@ -393,12 +393,12 @@ void GwmSWIMTaskThread::calculateDestinationFocusedWeights()
 void GwmSWIMTaskThread::calculateFlowFocusedEuclideanWeights()
 {
     int n = mFlowDataList.size();
-    
+
 #ifdef ENABLE_OpenMP
     if (mParallelType == IParallelalbe::ParallelType::OpenMP)
     {
         omp_set_num_threads(mOmpThreadNum);
-        #pragma omp parallel for
+#pragma omp parallel for
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < n; j++)
@@ -430,12 +430,12 @@ void GwmSWIMTaskThread::calculateFlowFocusedEuclideanWeights()
 void GwmSWIMTaskThread::calculateFlowFocusedSOPWeights()
 {
     int n = mFlowDataList.size();
-    
+
 #ifdef ENABLE_OpenMP
     if (mParallelType == IParallelalbe::ParallelType::OpenMP)
     {
         omp_set_num_threads(mOmpThreadNum);
-        #pragma omp parallel for
+#pragma omp parallel for
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < n; j++)

@@ -127,7 +127,7 @@ private:
     QString mCsvFilePath;
     SWIMMode mSWIMMode = SWIMMode::OriginFocused;
     GwmSpatialWeight mSpatialWeight;
-    
+
     QList<GwmFlowData> mFlowDataList;
     mat mWeightMatrix;
     mat mFlowMatrix;
@@ -148,8 +148,8 @@ private:
 inline bool GwmSWIMFieldMapping::isComplete() const
 {
     return flowId >= 0 && originId >= 0 && destId >= 0 &&
-            flowVolume >= 0 && originValue >= 0 && destValue >= 0 &&
-            originX >= 0 && originY >= 0 && destX >= 0 && destY >= 0;
+           flowVolume >= 0 && originValue >= 0 && destValue >= 0 &&
+           originX >= 0 && originY >= 0 && destX >= 0 && destY >= 0;
 }
 
 inline bool GwmSWIMFieldMapping::isValid(int columnCount) const

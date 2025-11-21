@@ -34,14 +34,12 @@ private slots:
 private:
     Ui::GwmPropertySWIMTab *ui;
     GwmSWIMTaskThread* mTaskThread = nullptr;
-    
+
     QString mFilePath;
-    
+
     void displayFlowStatistics();
     void displayWeightMatrixInfo();
     void displaySWIMModeInfo();
 };
 
 #endif // GWMPROPERTYSWIMTAB_H
-
-

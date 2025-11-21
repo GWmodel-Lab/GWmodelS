@@ -38,10 +38,10 @@ void GwmPropertySWIMTab::updateUI()
 
     // 显示SWIM模式信息
     displaySWIMModeInfo();
-    
+
     // 显示流数据统计
     displayFlowStatistics();
-    
+
     // 显示权重矩阵信息
     displayWeightMatrixInfo();
 }
@@ -69,10 +69,10 @@ void GwmPropertySWIMTab::displaySWIMModeInfo()
         break;
     }
     ui->lblSWIMMode->setText(modeText);
-    
+
     // 显示CSV文件路径
     ui->lblCsvFilePath->setText(mTaskThread->csvFilePath());
-    
+
     // 显示流数据数量
     QList<GwmFlowData> flowData = mTaskThread->flowData();
     ui->lblFlowCount->setText(QString::number(flowData.size()));
@@ -118,10 +118,10 @@ void GwmPropertySWIMTab::displayFlowStatistics()
     // 填充流数据表格
     ui->tableFlowData->setRowCount(flowData.size());
     ui->tableFlowData->setColumnCount(10);
-    QStringList headers = QStringList() 
-        << tr("Flow ID") << tr("Origin ID") << tr("Dest ID") 
-        << tr("Flow Volume") << tr("Origin Value") << tr("Dest Value")
-        << tr("Origin X") << tr("Origin Y") << tr("Dest X") << tr("Dest Y");
+    QStringList headers = QStringList()
+                          << tr("Flow ID") << tr("Origin ID") << tr("Dest ID")
+                          << tr("Flow Volume") << tr("Origin Value") << tr("Dest Value")
+                          << tr("Origin X") << tr("Origin Y") << tr("Dest X") << tr("Dest Y");
     ui->tableFlowData->setHorizontalHeaderLabels(headers);
     ui->tableFlowData->horizontalHeader()->setStretchLastSection(true);
 
@@ -152,7 +152,7 @@ void GwmPropertySWIMTab::displayWeightMatrixInfo()
 
     // 显示权重矩阵基本信息
     ui->lblWeightMatrixSize->setText(QString("%1 x %2").arg(weightMatrix.n_rows).arg(weightMatrix.n_cols));
-    
+
     // 计算权重矩阵的统计信息
     double minWeight = weightMatrix.min();
     double maxWeight = weightMatrix.max();
@@ -182,7 +182,7 @@ void GwmPropertySWIMTab::on_btnSaveRes_clicked()
     }
 
     QTextStream out(&file);
-    
+
     // 写入流数据
     QList<GwmFlowData> flowData = mTaskThread->flowData();
     out << "flow_id,origin_id,dest_id,flow_volume,origin_value,dest_value,origin_x,origin_y,dest_x,dest_y\n";
@@ -228,7 +228,7 @@ void GwmPropertySWIMTab::on_btnExportWeightMatrix_clicked()
     }
 
     QTextStream out(&file);
-    
+
     // 写入权重矩阵（CSV格式）
     for (uword i = 0; i < weightMatrix.n_rows; i++)
     {
