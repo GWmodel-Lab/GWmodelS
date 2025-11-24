@@ -1,4 +1,4 @@
-#ifndef GWMGGWRALGORITHM_H
+﻿#ifndef GWMGGWRALGORITHM_H
 #define GWMGGWRALGORITHM_H
 
 #include "gwmbasicgwralgorithm.h"
@@ -57,7 +57,7 @@ struct GwmGLMDiagnostic
     }
 };
 
-class GwmGeneralizedGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public IOpenmpParallelable
+class GwmGeneralizedGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public gwm::IParallelizable, public gwm::IParallelOpenmpEnabled
 {
 public:
     enum Family
@@ -108,8 +108,8 @@ public:     // IRegressionAnalysis interface
 public:     // IParallelalbe interface
     int parallelAbility() const override;
 
-    ParallelType parallelType() const override;
-    void setParallelType(const ParallelType &type) override;
+    gwm::ParallelType parallelType() const override;
+    void setParallelType(const gwm::ParallelType &type) override;
 
 
 public:     // IOpenmpParallelable interface
@@ -152,6 +152,8 @@ private:
 
     double bandwidthSizeGGWRCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeGGWRCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight);
+    std::unique_ptr<gwm::GWRBasic> mGWRCore;
+
 #ifdef ENABLE_OpenMP
     double bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeGGWRCriterionAICOmp(GwmBandwidthWeight* bandwidthWeight);
@@ -220,9 +222,9 @@ protected:
     bool mIsAutoselectBandwidth = false;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial;
-    GwmGGWRBandwidthSizeSelector mBandwidthSizeSelector;
+    gwm::BandwidthSelector mBandwidthSizeSelector;
 
-    IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
+    gwm::ParallelType mParallelType = gwm::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
 
     GwmGeneralizedLinearModel* mGlm = nullptr;
@@ -315,15 +317,15 @@ inline void GwmGeneralizedGWRAlgorithm::setIsAutoselectBandwidth(bool value)
 
 inline int GwmGeneralizedGWRAlgorithm::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly
+    return gwm::SerialOnly
         #ifdef ENABLE_OpenMP
-            | IParallelalbe::OpenMP
+            | gwm::OpenMP
         #endif
-//            | IParallelalbe::CUDA
+//            | gwm::CUDA
             ;
 }
 
-inline IParallelalbe::ParallelType GwmGeneralizedGWRAlgorithm::parallelType() const
+inline gwm::ParallelType GwmGeneralizedGWRAlgorithm::parallelType() const
 {
     return mParallelType;
 }

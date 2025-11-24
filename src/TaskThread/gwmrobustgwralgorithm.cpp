@@ -1,4 +1,4 @@
-#include "gwmrobustgwralgorithm.h"
+﻿#include "gwmrobustgwralgorithm.h"
 
 #include <gsl/gsl_cdf.h>
 
@@ -8,7 +8,8 @@
 
 int GwmRobustGWRAlgorithm::treeChildCount = 0;
 
-GwmRobustGWRAlgorithm::GwmRobustGWRAlgorithm(): GwmBasicGWRAlgorithm()
+GwmRobustGWRAlgorithm::GwmRobustGWRAlgorithm(): GwmBasicGWRAlgorithm(),
+    mGWRCore(std::make_unique<gwm::GWRBasic>())
 {
 
 }
@@ -233,23 +234,23 @@ void GwmRobustGWRAlgorithm::createResultLayer(CreateResultLayerData data)
     mResultLayer->commitChanges();
 }
 
-void GwmRobustGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &type)
+void GwmRobustGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
     GwmBasicGWRAlgorithm::setParallelType(type);
     if (type & parallelAbility())
     {
         mParallelType = type;
         switch (type) {
-        case IParallelalbe::ParallelType::SerialOnly:
+        case gwm::ParallelType::SerialOnly:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
             break;
 #ifdef ENABLE_OpenMP
-        case IParallelalbe::ParallelType::OpenMP:
+        case gwm::ParallelType::OpenMP:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixOmp;
             break;
 #endif
 #ifdef ENABLE_CUDA
-        case IParallelalbe::ParallelType::CUDA:
+        case gwm::ParallelType::CUDA:
             mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixCuda;
             break;
 #endif

@@ -1,4 +1,4 @@
-#ifndef GWMLAYERGWPCAITEM_H
+﻿#ifndef GWMLAYERGWPCAITEM_H
 #define GWMLAYERGWPCAITEM_H
 
 #include "prefix.h"
@@ -35,7 +35,7 @@ public:
         return isBandwidthOptimized;
     }
 
-    QList<QPair<double, double> > bandwidthSelScores() const;
+    BandwidthCriterionList bandwidthSelScores() const;
 
 public:
     int mK = 0;
@@ -46,7 +46,7 @@ public:
     cube mScores;
     mat mVariance;
     GwmBandwidthWeight mWeight;
-    QList<QPair<double, double> > mBandwidthSelScores;
+    BandwidthCriterionList mBandwidthSelScores;
 
 };
 

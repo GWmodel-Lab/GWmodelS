@@ -1,4 +1,4 @@
-#include "gwmgeographicalweightedregressionalgorithm.h"
+﻿#include "gwmgeographicalweightedregressionalgorithm.h"
 #include <qpair.h>
 #include <SpatialWeight/gwmcrsdistance.h>
 using namespace arma;
@@ -49,11 +49,24 @@ void GwmGeographicalWeightedRegressionAlgorithm::initPoints()
     }
     else mRegressionPoints = mDataPoints;
     // 设置空间距离中的数据指针
-    if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
-        GwmCRSDistance* d = static_cast<GwmCRSDistance*>(mSpatialWeight.distance());
-        d->setDataPoints(&mDataPoints);
-        d->setFocusPoints(&mRegressionPoints);
+        if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
+        {
+            auto *d = mSpatialWeight.distance<gwm::CRSDistance>();
+            if (d)
+            {
+                d->makeParameter({ mRegressionPoints, mDataPoints });
+            }
+        }
+        else if (mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
+        {
+            auto *d2 = mSpatialWeight.distance<gwm::MinkwoskiDistance>();
+            if (d2)
+            {
+                d2->makeParameter({ mRegressionPoints, mDataPoints });
+            }
+        }
     }
 
 }

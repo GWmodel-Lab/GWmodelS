@@ -1,4 +1,4 @@
-#ifndef GWMLCRGWRTASKTHREAD_H
+﻿#ifndef GWMLCRGWRTASKTHREAD_H
 #define GWMLCRGWRTASKTHREAD_H
 
 #include <armadillo>
@@ -101,7 +101,7 @@ private:
 
     double mCnThresh;
 
-    GwmBandwidthSizeSelector selector;
+    gwm::BandwidthSelector selector;
 
     bool mHasHatmatix = false;
 
@@ -112,6 +112,8 @@ private:
     bool mIsAutoselectBandwidth = false;
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
+
+    std::unique_ptr<gwm::GWRBasic> mGWRCore;
 
 public:
     static int treeChildCount;
