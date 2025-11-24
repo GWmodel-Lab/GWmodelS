@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>700</width>
-    <height>750</height>
+    <height>847</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@
         <x>0</x>
         <y>0</y>
         <width>680</width>
-        <height>650</height>
+        <height>798</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -59,130 +59,174 @@
          </layout>
         </widget>
        </item>
-      <item>
-       <widget class="QGroupBox" name="groupBox_FieldMapping">
-        <property name="title">
-         <string>Field Mapping</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_FieldMapping">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_FlowIdField">
-           <property name="text">
-            <string>flow_id column:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="cbFlowIdField"/>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_OriginIdField">
-           <property name="text">
-            <string>origin_id column:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="cbOriginIdField"/>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_DestIdField">
-           <property name="text">
-            <string>dest_id column:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="cbDestIdField"/>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_FlowVolumeField">
-           <property name="text">
-            <string>flow_volume column:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QComboBox" name="cbFlowVolumeField"/>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_OriginValueField">
-           <property name="text">
-            <string>origin_value column:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QComboBox" name="cbOriginValueField"/>
-         </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="label_DestValueField">
-           <property name="text">
-            <string>dest_value column:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="QComboBox" name="cbDestValueField"/>
-         </item>
-         <item row="6" column="0">
-          <widget class="QLabel" name="label_OriginXField">
-           <property name="text">
-            <string>origin_x column:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="1">
-          <widget class="QComboBox" name="cbOriginXField"/>
-         </item>
-         <item row="7" column="0">
-          <widget class="QLabel" name="label_OriginYField">
-           <property name="text">
-            <string>origin_y column:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="1">
-          <widget class="QComboBox" name="cbOriginYField"/>
-         </item>
-         <item row="8" column="0">
-          <widget class="QLabel" name="label_DestXField">
-           <property name="text">
-            <string>dest_x column:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="1">
-          <widget class="QComboBox" name="cbDestXField"/>
-         </item>
-         <item row="9" column="0">
-          <widget class="QLabel" name="label_DestYField">
-           <property name="text">
-            <string>dest_y column:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="9" column="1">
-          <widget class="QComboBox" name="cbDestYField"/>
-         </item>
-        </layout>
-       </widget>
-      </item>
        <item>
         <widget class="QGroupBox" name="groupBox_Mode">
          <property name="title">
-          <string>SWIM Mode</string>
+          <string>Spatial Focus and Coordinates</string>
          </property>
-         <layout class="QFormLayout" name="formLayout_Mode">
+         <layout class="QVBoxLayout" name="verticalLayout_Mode">
+          <item>
+           <layout class="QFormLayout" name="formLayout_Mode">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_Mode">
+              <property name="text">
+               <string>Focus Type:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="mSwimModeComboBox"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_Coordinates">
+            <property name="title">
+             <string>Coordinate Columns</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_Coordinates">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_OriginX">
+               <property name="text">
+                <string>Origin X Coordinate:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="cbOriginXField"/>
+             </item>
+             <item row="0" column="2">
+              <widget class="QLabel" name="label_OriginY">
+               <property name="text">
+                <string>Origin Y Coordinate:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QComboBox" name="cbOriginYField"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_DestX">
+               <property name="text">
+                <string>Destination X Coordinate:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="cbDestXField"/>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLabel" name="label_DestY">
+               <property name="text">
+                <string>Destination Y Coordinate:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QComboBox" name="cbDestYField"/>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_FieldMapping">
+         <property name="title">
+          <string>Dependent Variable</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_FieldMapping">
           <item row="0" column="0">
-           <widget class="QLabel" name="label_Mode">
+           <widget class="QLabel" name="label_FlowVolumeField">
             <property name="text">
-             <string>Mode:</string>
+             <string>flow_volume (dependent):</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QComboBox" name="mSwimModeComboBox"/>
+           <widget class="QComboBox" name="cbFlowVolumeField"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_Independent">
+         <property name="title">
+          <string>Independent Variables</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_Independent">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_CandidateVars">
+            <property name="text">
+             <string>Candidate Variables</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_SelectedVars">
+            <property name="text">
+             <string>Selected Variables</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QListWidget" name="lwCandidateIndepVars">
+            <property name="selectionMode">
+             <enum>QAbstractItemView::ExtendedSelection</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <layout class="QVBoxLayout" name="verticalLayout_IndependentButtons">
+            <item>
+             <spacer name="verticalSpacerIndependentTop">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnAddIndependentVar">
+              <property name="text">
+               <string>&gt;&gt;</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnRemoveIndependentVar">
+              <property name="text">
+               <string>&lt;&lt;</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacerIndependentBottom">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="2">
+           <widget class="QListWidget" name="lwSelectedIndepVars">
+            <property name="selectionMode">
+             <enum>QAbstractItemView::ExtendedSelection</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -242,55 +286,162 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout_BwSize">
-            <item>
-             <widget class="QDoubleSpinBox" name="mBwSizeFixedSize">
-              <property name="minimum">
-               <double>0.000000000000000</double>
+           <layout class="QGridLayout" name="gridLayout_BwSize">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QRadioButton" name="mBwSizeAutomaticRadio">
+              <property name="text">
+               <string>Auto-selection</string>
               </property>
-              <property name="maximum">
-               <double>999999999.000000000000000</double>
-              </property>
-              <property name="value">
-               <double>1000.000000000000000</double>
+              <property name="checked">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
-            <item>
-             <widget class="QComboBox" name="mBwSizeFixedUnit">
-              <item>
-               <property name="text">
-                <string>Meters</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Kilometers</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="mBwSizeAdaptiveSize">
-              <property name="minimum">
+            <item row="0" column="1">
+             <widget class="QComboBox" name="mBwSizeAutomaticApprochCombo">
+              <property name="currentIndex">
                <number>1</number>
               </property>
-              <property name="maximum">
-               <number>999999</number>
-              </property>
-              <property name="value">
-               <number>50</number>
-              </property>
-              <property name="enabled">
-               <bool>false</bool>
+              <item>
+               <property name="text">
+                <string>CV</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>AICc</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QRadioButton" name="mBwSizeCustomizeRadio">
+              <property name="text">
+               <string>User-defined</string>
               </property>
              </widget>
             </item>
-            <item>
-             <widget class="QLabel" name="label_AdaptiveUnit">
-              <property name="text">
-               <string>Neighbors</string>
+            <item row="1" column="1">
+             <widget class="QStackedWidget" name="mBwSizeSettingStack">
+              <property name="currentIndex">
+               <number>0</number>
               </property>
+              <widget class="QWidget" name="pageBwAdaptive">
+               <layout class="QHBoxLayout" name="horizontalLayout_BwAdaptive">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QSpinBox" name="mBwSizeAdaptiveSize">
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>999999</number>
+                  </property>
+                  <property name="value">
+                   <number>50</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="mBwSizeAdaptiveUnit">
+                  <property name="maximumSize">
+                   <size>
+                    <width>80</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>x1</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>x10</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>x100</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>x1000</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="pageBwFixed">
+               <layout class="QHBoxLayout" name="horizontalLayout_BwFixed">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QDoubleSpinBox" name="mBwSizeFixedSize">
+                  <property name="minimum">
+                   <double>0.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>999999999.000000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1000.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="mBwSizeFixedUnit">
+                  <property name="maximumSize">
+                   <size>
+                    <width>80</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>m</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>km</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>mile</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
              </widget>
             </item>
            </layout>
@@ -339,15 +490,8 @@
          <property name="title">
           <string>Distance Metric</string>
          </property>
-         <layout class="QFormLayout" name="formLayout_Distance">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_DistType">
-            <property name="text">
-             <string>Distance Type:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_Distance">
+          <item>
            <layout class="QVBoxLayout" name="verticalLayout_DistType">
             <item>
              <widget class="QRadioButton" name="mDistTypeCRSRadio">
@@ -375,88 +519,127 @@
             </item>
            </layout>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_Theta">
-            <property name="text">
-             <string>Theta:</string>
+          <item>
+           <widget class="Line" name="line_Dist">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="mThetaValue">
-            <property name="maximum">
-             <double>360.000000000000000</double>
+          <item>
+           <widget class="QStackedWidget" name="mDistParamSettingStack">
+            <property name="currentIndex">
+             <number>0</number>
             </property>
-            <property name="value">
-             <double>0.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_P">
-            <property name="text">
-             <string>P:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="mPValue">
-            <property name="minimum">
-             <double>0.100000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>10.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>2.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_DmatFile">
-            <property name="text">
-             <string>Distance Matrix File:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout_Dmat">
-            <item>
-             <widget class="QLineEdit" name="mDistMatrixFileNameEdit">
-              <property name="enabled">
-               <bool>false</bool>
+            <widget class="QWidget" name="pageCRS"/>
+            <widget class="QWidget" name="pageMinkowski">
+             <layout class="QFormLayout" name="formLayout_Minkowski">
+              <property name="leftMargin">
+               <number>0</number>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="mDistMatrixFileOpenBtn">
-              <property name="text">
-               <string>Browse...</string>
+              <property name="topMargin">
+               <number>0</number>
               </property>
-              <property name="enabled">
-               <bool>false</bool>
+              <property name="rightMargin">
+               <number>0</number>
               </property>
-             </widget>
-            </item>
-           </layout>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_Theta">
+                <property name="text">
+                 <string>Theta:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QDoubleSpinBox" name="mThetaValue">
+                <property name="maximum">
+                 <double>360.000000000000000</double>
+                </property>
+                <property name="value">
+                 <double>0.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_P">
+                <property name="text">
+                 <string>P:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QDoubleSpinBox" name="mPValue">
+                <property name="minimum">
+                 <double>0.100000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>10.000000000000000</double>
+                </property>
+                <property name="value">
+                 <double>2.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="pageDmat">
+             <layout class="QFormLayout" name="formLayout_Dmat">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_DmatFile">
+                <property name="text">
+                 <string>Distance Matrix File:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <layout class="QHBoxLayout" name="horizontalLayout_Dmat">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QLineEdit" name="mDistMatrixFileNameEdit"/>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="mDistMatrixFileOpenBtn">
+                  <property name="text">
+                   <string>Browse...</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </widget>
           </item>
          </layout>
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_Parallel">
+        <widget class="QGroupBox" name="mCalcParallelGroup">
          <property name="title">
           <string>Parallel Calculation</string>
          </property>
-         <layout class="QFormLayout" name="formLayout_Parallel">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_ParallelType">
-            <property name="text">
-             <string>Parallel Type:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_Parallel">
+          <item>
            <layout class="QVBoxLayout" name="verticalLayout_Parallel">
             <item>
              <widget class="QRadioButton" name="mCalcParallelNoneRadio">
@@ -475,29 +658,97 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QRadioButton" name="mCalcParallelGPURadio">
+              <property name="text">
+               <string>GPU</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_ThreadNum">
-            <property name="text">
-             <string>Thread Number:</string>
+          <item>
+           <widget class="Line" name="line_Parallel">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="mThreadNum">
-            <property name="minimum">
-             <number>1</number>
+          <item>
+           <widget class="QStackedWidget" name="stackedWidget">
+            <property name="currentIndex">
+             <number>0</number>
             </property>
-            <property name="maximum">
-             <number>64</number>
-            </property>
-            <property name="value">
-             <number>4</number>
-            </property>
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
+            <widget class="QWidget" name="parallelPageNone">
+             <layout class="QVBoxLayout" name="verticalLayout_None">
+              <item>
+               <spacer name="verticalSpacerNone">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="parallelPageThreads">
+             <layout class="QFormLayout" name="formLayout_Threads">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_ThreadNum">
+                <property name="text">
+                 <string>Thread Number:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QSpinBox" name="mThreadNum">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>64</number>
+                </property>
+                <property name="value">
+                 <number>4</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="parallelPageGpu">
+             <layout class="QVBoxLayout" name="verticalLayout_Gpu">
+              <item>
+               <widget class="QLabel" name="label_GpuPlaceholder">
+                <property name="text">
+                 <string>GPU execution is not available.</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>
@@ -555,4 +806,3 @@
   </connection>
  </connections>
 </ui>
-

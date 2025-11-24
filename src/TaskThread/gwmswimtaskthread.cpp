@@ -1,11 +1,16 @@
 #include "gwmswimtaskthread.h"
 #include "SpatialWeight/gwmbandwidthweight.h"
 #include "SpatialWeight/gwmcrsdistance.h"
+#include <SpatialWeight/gwmminkwoskidistance.h>
 #include <QFile>
 #include <QTextStream>
 #include <QStringList>
 #include <QDebug>
 #include <cmath>
+#include "gwmapp.h"
+#include <armadillo>
+using namespace arma;
+
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
@@ -32,11 +37,9 @@ void GwmSWIMTaskThread::setSWIMMode(SWIMMode mode)
 void GwmSWIMTaskThread::setSpatialWeight(const GwmSpatialWeight& spatialWeight)
 {
     mSpatialWeight = spatialWeight;
-    // 从spatialWeight中提取带宽参数
     if (spatialWeight.weight())
     {
-        GwmBandwidthWeight* bw = dynamic_cast<GwmBandwidthWeight*>(spatialWeight.weight());
-        if (bw)
+        if (auto* bw = dynamic_cast<GwmBandwidthWeight*>(spatialWeight.weight()))
         {
             mBandwidth = bw->bandwidth();
             mBandwidthAdaptive = bw->adaptive();
@@ -71,6 +74,7 @@ void GwmSWIMTaskThread::setOmpThreadNum(const int threadNum)
 void GwmSWIMTaskThread::setFieldMapping(const GwmSWIMFieldMapping& mapping)
 {
     mFieldMapping = mapping;
+    mIndependentVarNames = mapping.independentVarNames;
 }
 
 void GwmSWIMTaskThread::setFieldDelimiter(QChar delimiter)
@@ -99,7 +103,7 @@ void GwmSWIMTaskThread::run()
 {
     emit tick(0, 0);
 
-    // 步骤1: 加载CSV数据
+    // Step 1: load CSV data
     if (!checkCanceled())
     {
         emit message(tr("Loading CSV data..."));
@@ -111,7 +115,7 @@ void GwmSWIMTaskThread::run()
         emit tick(20, 100);
     }
 
-    // 步骤2: 计算权重矩阵
+    // Step 2: compute weight matrix
     if (!checkCanceled())
     {
         emit message(tr("Calculating weight matrix..."));
@@ -119,7 +123,7 @@ void GwmSWIMTaskThread::run()
         emit tick(60, 100);
     }
 
-    // 步骤3: 创建结果图层
+    // Step 3: create result layers
     if (!checkCanceled())
     {
         emit message(tr("Creating result layer..."));
@@ -153,7 +157,7 @@ bool GwmSWIMTaskThread::loadCsvData()
     }
 
     QTextStream in(&file);
-    QString headerLine = in.readLine(); // 读取表头
+    QString headerLine = in.readLine();
     if (headerLine.isNull())
     {
         print_error(tr("CSV header is empty."));
@@ -161,6 +165,7 @@ bool GwmSWIMTaskThread::loadCsvData()
     }
 
     QStringList headers = headerLine.split(mFieldDelimiter, Qt::KeepEmptyParts);
+    
     if (!mFieldMapping.isValid(headers.size()))
     {
         print_error(tr("Field mapping exceeds available columns."));
@@ -179,7 +184,7 @@ bool GwmSWIMTaskThread::loadCsvData()
             continue;
 
         GwmFlowData flowData;
-        if (parseCsvLine(line, flowData))
+        if (parseCsvLine(line, flowData, mFlowDataList.size()))
         {
             mFlowDataList.append(flowData);
         }
@@ -201,7 +206,7 @@ bool GwmSWIMTaskThread::loadCsvData()
     return true;
 }
 
-bool GwmSWIMTaskThread::parseCsvLine(const QString& line, GwmFlowData& flowData)
+bool GwmSWIMTaskThread::parseCsvLine(const QString& line, GwmFlowData& flowData, int flowIndex)
 {
     QStringList fields = line.split(mFieldDelimiter, Qt::KeepEmptyParts);
 
@@ -219,16 +224,57 @@ bool GwmSWIMTaskThread::parseCsvLine(const QString& line, GwmFlowData& flowData)
         return ok;
     };
 
-    if (!readInt(mFieldMapping.flowId, flowData.flow_id)) return false;
-    if (!readInt(mFieldMapping.originId, flowData.origin_id)) return false;
-    if (!readInt(mFieldMapping.destId, flowData.dest_id)) return false;
+    flowData.flow_id = flowIndex;
+    flowData.origin_id = flowIndex;
+    flowData.dest_id = flowIndex;
+
     if (!readDouble(mFieldMapping.flowVolume, flowData.flow_volume)) return false;
-    if (!readDouble(mFieldMapping.originValue, flowData.origin_value)) return false;
-    if (!readDouble(mFieldMapping.destValue, flowData.dest_value)) return false;
-    if (!readDouble(mFieldMapping.originX, flowData.origin_x)) return false;
-    if (!readDouble(mFieldMapping.originY, flowData.origin_y)) return false;
-    if (!readDouble(mFieldMapping.destX, flowData.dest_x)) return false;
-    if (!readDouble(mFieldMapping.destY, flowData.dest_y)) return false;
+    if (mFieldMapping.originValue >= 0)
+    {
+        if (!readDouble(mFieldMapping.originValue, flowData.origin_value)) return false;
+    }
+    else
+    {
+        flowData.origin_value = 0.0;
+    }
+
+    if (mFieldMapping.destValue >= 0)
+    {
+        if (!readDouble(mFieldMapping.destValue, flowData.dest_value)) return false;
+    }
+    else
+    {
+        flowData.dest_value = 0.0;
+    }
+    if (mFieldMapping.requireOriginCoords)
+    {
+        if (!readDouble(mFieldMapping.originX, flowData.origin_x)) return false;
+        if (!readDouble(mFieldMapping.originY, flowData.origin_y)) return false;
+    }
+    else
+    {
+        flowData.origin_x = 0.0;
+        flowData.origin_y = 0.0;
+    }
+
+    if (mFieldMapping.requireDestCoords)
+    {
+        if (!readDouble(mFieldMapping.destX, flowData.dest_x)) return false;
+        if (!readDouble(mFieldMapping.destY, flowData.dest_y)) return false;
+    }
+    else
+    {
+        flowData.dest_x = 0.0;
+        flowData.dest_y = 0.0;
+    }
+
+    flowData.independent_values.clear();
+    for (int idx : mFieldMapping.independentVars)
+    {
+        double value = 0.0;
+        if (!readDouble(idx, value)) return false;
+        flowData.independent_values.append(value);
+    }
 
     return true;
 }
@@ -289,7 +335,6 @@ double GwmSWIMTaskThread::kernelFunction(double distance, double bandwidth)
     if (bandwidth <= 0.0)
         return 0.0;
 
-    // 高斯核函数
     double ratio = distance / bandwidth;
     return std::exp(-0.5 * ratio * ratio);
 }

@@ -7,11 +7,13 @@
 #include <armadillo>
 #include <QString>
 #include <QList>
+#include <QVector>
 #include <QMap>
+#include <QStringList>
+#include <QPair>
 
 using namespace arma;
 
-// SWIM数据流结构
 struct GwmFlowData
 {
     int flow_id;
@@ -24,22 +26,19 @@ struct GwmFlowData
     double origin_y;
     double dest_x;
     double dest_y;
+    QVector<double> independent_values;
 };
 
-// SWIM模式枚举
 enum class SWIMMode
 {
-    OriginFocused,      // 以起点为中心
-    DestinationFocused, // 以终点为中心
-    FlowFocusedEuclidean, // 以流动为中心 - 四维欧氏距离
-    FlowFocusedSOP      // 以流动为中心 - 轨迹距离(SOP)
+    OriginFocused,
+    DestinationFocused,
+    FlowFocusedEuclidean,
+    FlowFocusedSOP
 };
 
 struct GwmSWIMFieldMapping
 {
-    int flowId = -1;
-    int originId = -1;
-    int destId = -1;
     int flowVolume = -1;
     int originValue = -1;
     int destValue = -1;
@@ -47,6 +46,10 @@ struct GwmSWIMFieldMapping
     int originY = -1;
     int destX = -1;
     int destY = -1;
+    QList<int> independentVars;
+    QStringList independentVarNames;
+    bool requireOriginCoords = true;
+    bool requireDestCoords = true;
 
     bool isComplete() const;
     bool isValid(int columnCount) const;
@@ -63,19 +66,19 @@ public:
     explicit GwmSWIMTaskThread(QObject *parent = nullptr);
     ~GwmSWIMTaskThread();
 
-    // 数据设置
+    // Data configuration
     void setCsvFilePath(const QString& filePath);
     QString csvFilePath() const { return mCsvFilePath; }
 
-    // 模式设置
+    // Mode configuration
     void setSWIMMode(SWIMMode mode);
     SWIMMode swimMode() const { return mSWIMMode; }
 
-    // 空间权重设置
+    // Spatial weight configuration
     void setSpatialWeight(const GwmSpatialWeight& spatialWeight);
     GwmSpatialWeight spatialWeight() const { return mSpatialWeight; }
 
-    // 并行设置
+    // Parallel configuration
     int parallelAbility() const override;
     ParallelType parallelType() const override;
     void setParallelType(const ParallelType& type) override;
@@ -86,7 +89,7 @@ public:
     void setFieldDelimiter(QChar delimiter);
     QChar fieldDelimiter() const { return mFieldDelimiter; }
 
-    // 结果获取
+    // Result accessors
     mat weightMatrix() const { return mWeightMatrix; }
     mat flowMatrix() const { return mFlowMatrix; }
     QList<GwmFlowData> flowData() const { return mFlowDataList; }
@@ -100,27 +103,27 @@ protected:
     void run() override;
 
 private:
-    // 数据加载
+    // CSV helpers
     bool loadCsvData();
-    bool parseCsvLine(const QString& line, GwmFlowData& flowData);
+    bool parseCsvLine(const QString& line, GwmFlowData& flowData, int flowIndex);
 
-    // 距离计算
-    double calculateOriginDistance(int i, int j);  // 起点间距离
-    double calculateDestDistance(int i, int j);    // 终点间距离
-    double calculateFlowEuclideanDistance(int i, int j);  // 四维欧氏距离
-    double calculateFlowSOPDistance(int i, int j); // 轨迹距离(SOP)
+    // Distance helpers
+    double calculateOriginDistance(int i, int j);
+    double calculateDestDistance(int i, int j);
+    double calculateFlowEuclideanDistance(int i, int j);
+    double calculateFlowSOPDistance(int i, int j);
 
-    // 权重计算
+    // Weight helpers
     void calculateWeightMatrix();
     void calculateOriginFocusedWeights();
     void calculateDestinationFocusedWeights();
     void calculateFlowFocusedEuclideanWeights();
     void calculateFlowFocusedSOPWeights();
 
-    // 核函数
+    // Kernel helper
     double kernelFunction(double distance, double bandwidth);
 
-    // 结果创建
+    // Result helper
     void createResultLayer(CreateResultLayerData data);
 
 private:
@@ -133,34 +136,49 @@ private:
     mat mFlowMatrix;
     CreateResultLayerData mResultList;
 
-    // 并行参数
+    // Parallel parameters
     IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
 
-    // 带宽参数（从spatialWeight中获取）
+    // Bandwidth parameters
     double mBandwidth = 0.0;
     bool mBandwidthAdaptive = false;
 
     GwmSWIMFieldMapping mFieldMapping;
     QChar mFieldDelimiter = '\t';
+    QStringList mIndependentVarNames;
 };
 
 inline bool GwmSWIMFieldMapping::isComplete() const
 {
-    return flowId >= 0 && originId >= 0 && destId >= 0 &&
-           flowVolume >= 0 && originValue >= 0 && destValue >= 0 &&
-           originX >= 0 && originY >= 0 && destX >= 0 && destY >= 0;
+    if (flowVolume < 0) return false;
+    if (requireOriginCoords && (originX < 0 || originY < 0)) return false;
+    if (requireDestCoords && (destX < 0 || destY < 0)) return false;
+    if (independentVars.isEmpty()) return false;
+    return true;
 }
 
 inline bool GwmSWIMFieldMapping::isValid(int columnCount) const
 {
     if (!isComplete()) return false;
     if (columnCount < 0) return true;
-    QList<int> indices = {flowId, originId, destId, flowVolume, originValue,
-                          destValue, originX, originY, destX, destY};
-    for (int idx : indices)
+    auto checkIndex = [&](int idx) -> bool {
+        return idx >= 0 && idx < columnCount;
+    };
+    if (!checkIndex(flowVolume)) return false;
+    if (requireOriginCoords)
     {
-        if (idx < 0 || idx >= columnCount) return false;
+        if (!checkIndex(originX) || !checkIndex(originY)) return false;
+    }
+    if (requireDestCoords)
+    {
+        if (!checkIndex(destX) || !checkIndex(destY)) return false;
+    }
+    if (originValue >= 0 && !checkIndex(originValue)) return false;
+    if (destValue >= 0 && !checkIndex(destValue)) return false;
+    for (int idx : independentVars)
+    {
+        if (!checkIndex(idx)) return false;
     }
     return true;
 }
