@@ -51,8 +51,22 @@ void GwmGeographicalWeightedRegressionAlgorithm::initPoints()
     // 设置空间距离中的数据指针
     if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
-        gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
-        d->makeParameter({ mDataPoints, mDataPoints });
+        if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
+        {
+            auto *d = mSpatialWeight.distance<gwm::CRSDistance>();
+            if (d)
+            {
+                d->makeParameter({ mRegressionPoints, mDataPoints });
+            }
+        }
+        else if (mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
+        {
+            auto *d2 = mSpatialWeight.distance<gwm::MinkwoskiDistance>();
+            if (d2)
+            {
+                d2->makeParameter({ mRegressionPoints, mDataPoints });
+            }
+        }
     }
 
 }

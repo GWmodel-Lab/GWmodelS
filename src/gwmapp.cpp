@@ -1321,7 +1321,7 @@ void GwmApp::onGWRNewBtnClicked()
     spatialWeight.setWeight(gwm::BandwidthWeight(36, true, gwm::BandwidthWeight::Gaussian));
     algorithm->setSpatialWeight(spatialWeight);
     algorithm->setIsAutoselectBandwidth(true);
-    algorithm->setBandwidthSelectionCriterionType(GwmBasicGWRAlgorithm::CV);
+    algorithm->setBandwidthSelectionCriterionType(gwm::GWRBasic::CV);
     algorithm->setHasHatMatrix(true);
     algorithm->setHasFTest(true);
 

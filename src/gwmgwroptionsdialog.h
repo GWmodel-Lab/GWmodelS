@@ -51,7 +51,7 @@ public:
     QString crsRotateP();
     bool bandwidthType();
     double bandwidthSize();
-    GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType bandwidthSelectionApproach();
+    gwm::GWRBasic::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
     gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     QVariant distanceSourceParameters();
