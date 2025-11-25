@@ -1063,7 +1063,6 @@ void GwmApp::onMapSelectionChanged(QgsMapLayer *mapLayer)
 
     QgsVectorLayer* layer = static_cast<QgsVectorLayer*>(mapLayer);
 
-    // 移除旧的橡皮条
     QList<QgsRubberBand*> rubbers0 = mMapLayerRubberDict[layer];
     if (rubbers0.size() > 0)
     {
@@ -1074,7 +1073,6 @@ void GwmApp::onMapSelectionChanged(QgsMapLayer *mapLayer)
     }
     rubbers0.clear();
 
-    //添加新的橡皮条
     QgsFeatureList selectedFeatures = layer->selectedFeatures();
     for (QgsFeature feature : selectedFeatures)
     {
@@ -1864,13 +1862,14 @@ void GwmApp::onSWIMBtnClicked()
         GwmProgressDialog* progressDlg = new GwmProgressDialog(swimTaskThread);
         if (progressDlg->exec() == QDialog::Accepted)
         {
-            // 创建属性面板显示结果
-            GwmPropertySWIMTab* swimPropertyTab = new GwmPropertySWIMTab(nullptr, swimTaskThread);
-            swimPropertyTab->setTaskThread(swimTaskThread);
-            
-            // 显示属性面板
-            mPropertyPanel->setCurrentWidget(swimPropertyTab);
-            mPropertyPanel->show();
+            GwmPropertySWIMTab* swimPropertyTab = new GwmPropertySWIMTab(mPropertyPanel, swimTaskThread);
+            if (swimPropertyTab)
+            {
+                swimPropertyTab->updateUI();
+                int tabIndex = mPropertyPanel->addTab(swimPropertyTab, tr("SWIM Result"));
+                mPropertyPanel->setCurrentIndex(tabIndex);
+                mPropertyPanel->show();
+            }
         }
         else
         {

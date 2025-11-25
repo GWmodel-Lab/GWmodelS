@@ -8,7 +8,6 @@
 #include <QAction>
 #include <QTableWidget>
 
-#include "gwmplot.h"
 #include "TaskThread/gwmswimtaskthread.h"
 
 namespace Ui {
@@ -37,9 +36,17 @@ private:
 
     QString mFilePath;
 
+    void displayModelConfiguration();
+    void displayWeightingScheme();
+    void displayDistanceMetric();
+    void displayParallelInfo();
     void displayFlowStatistics();
     void displayWeightMatrixInfo();
-    void displaySWIMModeInfo();
+    void populateFlowTable();
+
+    QString swimModeText(SWIMMode mode) const;
+    QString fieldName(int columnIndex) const;
+    void resetDistanceParameterLabels();
 };
 
 #endif // GWMPROPERTYSWIMTAB_H

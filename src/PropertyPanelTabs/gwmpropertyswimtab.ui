@@ -27,11 +27,11 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QGroupBox" name="groupBox_Mode">
+        <widget class="QGroupBox" name="groupBox_Config">
          <property name="title">
-          <string>SWIM Mode Information</string>
+          <string>SWIM Configuration</string>
          </property>
-         <layout class="QFormLayout" name="formLayout_Mode">
+         <layout class="QFormLayout" name="formLayout_Config">
           <item row="0" column="0">
            <widget class="QLabel" name="label_Mode">
             <property name="text">
@@ -69,6 +69,196 @@
           </item>
           <item row="2" column="1">
            <widget class="QLabel" name="lblFlowCount">
+            <property name="text">
+             <string>-</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_DependentField">
+            <property name="text">
+             <string>Dependent Field:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="lblDependentField">
+            <property name="text">
+             <string>-</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_IndepFields">
+            <property name="text">
+             <string>Independent Fields:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLabel" name="lblIndependentVars">
+            <property name="text">
+             <string>-</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_Weighting">
+         <property name="title">
+          <string>Weighting Scheme</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_Weighting">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_Kernel">
+            <property name="text">
+             <string>Kernel Function:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="lblKernelFunction">
+            <property name="text">
+             <string>-</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_BwType">
+            <property name="text">
+             <string>Bandwidth Type:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="lblBandwidthType">
+            <property name="text">
+             <string>-</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_BwSize">
+            <property name="text">
+             <string>Bandwidth Size:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="lblBandwidthSize">
+            <property name="text">
+             <string>-</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_Distance">
+         <property name="title">
+          <string>Distance Metric</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_Distance">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_DistanceMetric">
+            <property name="text">
+             <string>Metric:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="lblDistanceMetric">
+            <property name="text">
+             <string>-</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="lblDistanceParam1Title">
+            <property name="text">
+             <string>Parameter 1:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="lblDistanceParam1">
+            <property name="text">
+             <string>-</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="lblDistanceParam2Title">
+            <property name="text">
+             <string>Parameter 2:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="lblDistanceParam2">
+            <property name="text">
+             <string>-</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="lblDistanceFileTitle">
+            <property name="text">
+             <string>Matrix File:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="lblDistanceFilePath">
+            <property name="text">
+             <string>-</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_Parallel">
+         <property name="title">
+          <string>Parallel Calculation</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_Parallel">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_ParallelType">
+            <property name="text">
+             <string>Mode:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="lblParallelType">
+            <property name="text">
+             <string>-</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_ParallelDetail">
+            <property name="text">
+             <string>Detail:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="lblParallelDetail">
             <property name="text">
              <string>-</string>
             </property>

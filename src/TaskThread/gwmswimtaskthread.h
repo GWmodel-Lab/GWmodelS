@@ -61,6 +61,7 @@ class GwmSWIMTaskThread : public GwmTaskThread, public IOpenmpParallelable
 
 public:
     typedef QList<QPair<QString, mat> > CreateResultLayerData;
+    using DistanceFunction = double (GwmSWIMTaskThread::*)(int, int) const;
 
 public:
     explicit GwmSWIMTaskThread(QObject *parent = nullptr);
@@ -94,6 +95,8 @@ public:
     mat flowMatrix() const { return mFlowMatrix; }
     QList<GwmFlowData> flowData() const { return mFlowDataList; }
     CreateResultLayerData resultList() const { return mResultList; }
+    QStringList csvHeaders() const { return mCsvHeaders; }
+    int ompThreadNum() const { return mOmpThreadNum; }
 
     QString name() const override { return tr("SWIM"); }
 
@@ -108,20 +111,25 @@ private:
     bool parseCsvLine(const QString& line, GwmFlowData& flowData, int flowIndex);
 
     // Distance helpers
-    double calculateOriginDistance(int i, int j);
-    double calculateDestDistance(int i, int j);
-    double calculateFlowEuclideanDistance(int i, int j);
-    double calculateFlowSOPDistance(int i, int j);
+    double calculateOriginDistance(int i, int j) const;
+    double calculateDestDistance(int i, int j) const;
+    double calculateFlowEuclideanDistance(int i, int j) const;
+    double calculateFlowSOPDistance(int i, int j) const;
 
     // Weight helpers
     void calculateWeightMatrix();
-    void calculateOriginFocusedWeights();
-    void calculateDestinationFocusedWeights();
-    void calculateFlowFocusedEuclideanWeights();
-    void calculateFlowFocusedSOPWeights();
 
     // Kernel helper
     double kernelFunction(double distance, double bandwidth);
+    double applyKernel(double distance, double bandwidth) const;
+    double resolveAdaptiveBandwidth(const QVector<double>& distances) const;
+    DistanceFunction distanceFunctionForMode() const;
+    QVector<double> collectDistances(int focusIndex, DistanceFunction func) const;
+    void fillWeightMatrix(DistanceFunction func);
+
+    // Regression helpers
+    bool prepareRegressionMatrices();
+    void performLocalRegression();
 
     // Result helper
     void createResultLayer(CreateResultLayerData data);
@@ -130,11 +138,17 @@ private:
     QString mCsvFilePath;
     SWIMMode mSWIMMode = SWIMMode::OriginFocused;
     GwmSpatialWeight mSpatialWeight;
+    QStringList mCsvHeaders;
 
     QList<GwmFlowData> mFlowDataList;
     mat mWeightMatrix;
     mat mFlowMatrix;
     CreateResultLayerData mResultList;
+    mat mDesignMatrix;
+    vec mResponseVector;
+    mat mLocalBetas;
+    vec mFittedValues;
+    vec mResiduals;
 
     // Parallel parameters
     IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
@@ -143,6 +157,8 @@ private:
     // Bandwidth parameters
     double mBandwidth = 0.0;
     bool mBandwidthAdaptive = false;
+    GwmBandwidthWeight::KernelFunctionType mKernelType = GwmBandwidthWeight::KernelFunctionType::Gaussian;
+    GwmBandwidthWeight::KernelFunction mKernelFunction = &GwmBandwidthWeight::GaussianKernelFunction;
 
     GwmSWIMFieldMapping mFieldMapping;
     QChar mFieldDelimiter = '\t';
