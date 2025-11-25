@@ -8,7 +8,7 @@
 
 #include "TaskThread/gwmbandwidthsizeselector.h"
 
-class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidthSizeSelectable, public IMultivariableAnalysis, public IOpenmpParallelable
+class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidthSizeSelectable, public IGwmMultivariableAnalysis, public IOpenmpParallelable
 {
     Q_OBJECT
     enum BandwidthSelectionCriterionType

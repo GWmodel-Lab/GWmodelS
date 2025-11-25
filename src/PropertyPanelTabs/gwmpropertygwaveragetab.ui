@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GwmPropertyGWSSTab</class>
- <widget class="QWidget" name="GwmPropertyGWSSTab">
+ <class>GwmPropertyGWAverageTab</class>
+ <widget class="QWidget" name="GwmPropertyGWAverageTab">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -38,7 +38,7 @@
           </sizepolicy>
          </property>
          <property name="title">
-          <string>GWSS Information</string>
+          <string>GWAverage Information</string>
          </property>
          <layout class="QFormLayout" name="formLayout">
           <item row="0" column="0">

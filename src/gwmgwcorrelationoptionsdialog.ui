@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>gwmcorrelationdialog</class>
- <widget class="QDialog" name="gwmcorrelationdialog">
+ <class>GwmGWCorrelationOptionsDialog</class>
+ <widget class="QDialog" name="GwmGWCorrelationOptionsDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>847</width>
-    <height>951</height>
+    <width>900</width>
+    <height>900</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,8 +30,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>829</width>
-        <height>933</height>
+        <width>800</width>
+        <height>800</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -760,7 +760,7 @@
   <connection>
    <sender>btbOkCancle</sender>
    <signal>accepted()</signal>
-   <receiver>gwmcorrelationdialog</receiver>
+   <receiver>GwmGWCorrelationOptionsDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -776,7 +776,7 @@
   <connection>
    <sender>btbOkCancle</sender>
    <signal>rejected()</signal>
-   <receiver>gwmcorrelationdialog</receiver>
+   <receiver>GwmGWCorrelationOptionsDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

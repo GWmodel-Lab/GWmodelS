@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GwmPropertyGWCorrelationsTab</class>
- <widget class="QWidget" name="GwmPropertyGWCorrelationsTab">
+ <class>GwmPropertyGWCorrelationTab</class>
+ <widget class="QWidget" name="GwmPropertyGWCorrelationTab">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -29,6 +29,22 @@
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="text">
+          <string>GWCorrelation Information</string>
+         </property>
+         <property name="scaledContents">
+          <bool>false</bool>
+         </property>
+         <property name="margin">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="sizePolicy">

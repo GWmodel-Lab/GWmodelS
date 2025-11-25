@@ -146,8 +146,8 @@ public slots:
     void onFeaturePanelCurrentChanged(const QModelIndex &current, const QModelIndex &previous);
     void onShowCoordinateTransDlg(const QModelIndex &index);
     void onGWRBtnClicked();
-    void onGWSSBtnClicked();
-    void onGWaverageBtnClicked();
+    void onGTDRBtnClicked();
+    void onGWAverageBtnClicked();
     void onGWRNewBtnClicked();
     void onScalableGWRBtnClicked();
     void onMultiscaleGWRBtnClicked();

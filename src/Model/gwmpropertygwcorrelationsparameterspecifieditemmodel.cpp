@@ -1,6 +1,6 @@
 #include "gwmpropertygwcorrelationsparameterspecifieditemmodel.h"
 
-GwmPropertyGWCorrelationsParameterSpecifiedItemModel::GwmPropertyGWCorrelationsParameterSpecifiedItemModel(GwmLayerGWSSItem* layerItem,QObject *parent)
+GwmPropertyGWCorrelationsParameterSpecifiedItemModel::GwmPropertyGWCorrelationsParameterSpecifiedItemModel(GwmLayerGWCorrelationItem* layerItem,QObject *parent)
     : QAbstractItemModel(parent)
 {
     QList<GwmVariable> mVariables = layerItem->variables();

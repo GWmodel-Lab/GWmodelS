@@ -1,5 +1,5 @@
-#include "gwmgwssoptionsdialog.h"
-#include "ui_gwmgwssoptionsdialog.h"
+#include "gwmgtdroptionsdialog.h"
+#include "ui_gwmgtdroptionsdialog.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
@@ -13,10 +13,11 @@
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
 
-GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemList, QWidget *parent) :
+GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemList, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::GwmGWSSOptionsDialog),
-    mMapLayerList(originItemList)
+    ui(new Ui::GwmGTDROptionsDialog),
+    mMapLayerList(originItemList),
+    mDepVarModel(new GwmVariableItemModel)
 {
     ui->setupUi(this);
 
@@ -28,14 +29,18 @@ GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemL
 
 
     //连接图层选择部分信号
-    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWSSOptionsDialog::layerChanged);
+    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::layerChanged);
+
+    //因变量选择部分
+    ui->mDepVarComboBox->setCurrentIndex(-1);
+    connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::onDepVarChanged);
 
     //带宽类型选择部分
     QButtonGroup* bwTypeBtnGroup = new QButtonGroup(this);
     bwTypeBtnGroup->addButton(ui->mBwTypeAdaptiveRadio);
     bwTypeBtnGroup->addButton(ui->mBwTypeFixedRadio);
-    connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::onFixedRadioToggled);
-    connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::onVariableRadioToggled);
+    connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onFixedRadioToggled);
+    connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onVariableRadioToggled);
 
 
     //距离计算部分
@@ -43,10 +48,10 @@ GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemL
     distanceSettingBtnGroup->addButton(ui->mDistTypeCRSRadio);
     distanceSettingBtnGroup->addButton(ui->mDistTypeDmatRadio);
     distanceSettingBtnGroup->addButton(ui->mDistTypeMinkowskiRadio);
-    connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::onDistTypeCRSToggled);
-    connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::onDistTypeMinkowskiToggled);
-    connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::onDistTypeDmatToggled);
-    connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &GwmGWSSOptionsDialog::onDmatFileOpenClicked);
+    connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onDistTypeCRSToggled);
+    connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onDistTypeMinkowskiToggled);
+    connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onDistTypeDmatToggled);
+    connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &GwmGTDROptionsDialog::onDmatFileOpenClicked);
 
     //并行参数设置部分
     QButtonGroup* calcParallelTypeBtnGroup = new QButtonGroup(this);
@@ -57,37 +62,38 @@ GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemL
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);    
-    connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::onMultithreadingRadioToggled);
+    connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onMultithreadingRadioToggled);
 #else
     ui->mCalcParallelMultithreadRadio->setEnabled(false);
 #endif
-    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::onNoneRadioToggled);
-    //    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::onGPURadioToggled);
+    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onNoneRadioToggled);
+    //    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onGPURadioToggled);
     ui->mCalcParallelGPURadio->hide();
 
     //更新线程参数信息
-    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mThetaValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mPValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mDistMatrixFileNameEdit, &QLineEdit::textChanged, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
-    connect(ui->mQuantileCheckBox, &QAbstractButton::toggle, this, &GwmGWSSOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mThetaValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mPValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistTypeDmatRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistMatrixFileNameEdit, &QLineEdit::textChanged, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mDistMatrixFileOpenBtn, &QAbstractButton::clicked, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mHatmatrixCheckBox, &QAbstractButton::toggle, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
 
     ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
     ui->mBwSizeFixedSize->setMaximum(DBL_MAX);
@@ -95,12 +101,12 @@ GwmGWSSOptionsDialog::GwmGWSSOptionsDialog(QList<GwmLayerGroupItem*> originItemL
     updateFieldsAndEnable();
 }
 
-GwmGWSSOptionsDialog::~GwmGWSSOptionsDialog()
+GwmGTDROptionsDialog::~GwmGTDROptionsDialog()
 {
     delete ui;
 }
 
-bool GwmGWSSOptionsDialog::isNumeric(QVariant::Type type)
+bool GwmGTDROptionsDialog::isNumeric(QVariant::Type type)
 {
     switch (type)
     {
@@ -115,17 +121,17 @@ bool GwmGWSSOptionsDialog::isNumeric(QVariant::Type type)
     }
 }
 
-GwmLayerGroupItem *GwmGWSSOptionsDialog::selectedLayer() const
+GwmLayerGroupItem *GwmGTDROptionsDialog::selectedLayer() const
 {
     return mSelectedLayer;
 }
 
-void GwmGWSSOptionsDialog::setSelectedLayer(GwmLayerGroupItem *selectedLayer)
+void GwmGTDROptionsDialog::setSelectedLayer(GwmLayerGroupItem *selectedLayer)
 {
     mSelectedLayer = selectedLayer;
 }
 
-void GwmGWSSOptionsDialog::layerChanged(int index)
+void GwmGTDROptionsDialog::layerChanged(int index)
 {
     ui->mIndepVarSelector->layerChanged(mMapLayerList[index]->originChild()->layer());
     if (mSelectedLayer)
@@ -133,20 +139,42 @@ void GwmGWSSOptionsDialog::layerChanged(int index)
         mSelectedLayer = nullptr;
     }
     mSelectedLayer =  mMapLayerList[index];
+    QgsFields fieldList = mSelectedLayer->originChild()->layer()->fields();
+    ui->mDepVarComboBox->clear();
     ui->mIndepVarSelector->onDepVarChanged("");
+    mDepVarModel->clear();
+    for (int i = 0; i < fieldList.size(); i++)
+    {
+        QgsField field = fieldList[i];
+        if (isNumeric(field.type()))
+        {
+            GwmVariable item;
+            item.name = field.name();
+            item.type = field.type();
+            item.index = i;
+            item.isNumeric = field.isNumeric();
+            mDepVarModel->append(item);
+            ui->mDepVarComboBox->addItem(field.name());
+        }
+    }
 }
 
-QString GwmGWSSOptionsDialog::crsRotateTheta()
+void GwmGTDROptionsDialog::onDepVarChanged(const int index)
+{
+    ui->mIndepVarSelector->onDepVarChanged(ui->mDepVarComboBox->itemText(index));
+}
+
+QString GwmGTDROptionsDialog::crsRotateTheta()
 {
     return ui->mThetaValue->text();
 }
 
-QString GwmGWSSOptionsDialog::crsRotateP()
+QString GwmGTDROptionsDialog::crsRotateP()
 {
     return ui->mPValue->text();
 }
 
-bool GwmGWSSOptionsDialog::bandwidthType()
+bool GwmGTDROptionsDialog::bandwidthType()
 {
     if(ui->mBwTypeFixedRadio->isChecked()){
         return false;
@@ -157,7 +185,7 @@ bool GwmGWSSOptionsDialog::bandwidthType()
     else return false;
 }
 
-IParallelalbe::ParallelType GwmGWSSOptionsDialog::approachType()
+IParallelalbe::ParallelType GwmGTDROptionsDialog::approachType()
 {
     if(ui->mCalcParallelNoneRadio->isChecked()){
         return IParallelalbe::ParallelType::SerialOnly;
@@ -172,21 +200,21 @@ IParallelalbe::ParallelType GwmGWSSOptionsDialog::approachType()
 }
 
 
-void GwmGWSSOptionsDialog::onNoneRadioToggled(bool checked)
+void GwmGTDROptionsDialog::onNoneRadioToggled(bool checked)
 {
     if(checked){
         ui->stackedWidget->setCurrentIndex(0);
     }
 }
 
-void GwmGWSSOptionsDialog::onMultithreadingRadioToggled(bool checked)
+void GwmGTDROptionsDialog::onMultithreadingRadioToggled(bool checked)
 {
     if(checked){
         ui->stackedWidget->setCurrentIndex(1);
     }
 }
 
-void GwmGWSSOptionsDialog::onGPURadioToggled(bool checked)
+void GwmGTDROptionsDialog::onGPURadioToggled(bool checked)
 {
     if(checked){
         ui->stackedWidget->setCurrentIndex(2);
@@ -194,19 +222,19 @@ void GwmGWSSOptionsDialog::onGPURadioToggled(bool checked)
 }
 
 
-GwmDistance::DistanceType GwmGWSSOptionsDialog::distanceSourceType()
+GwmDistance::DistanceType GwmGTDROptionsDialog::distanceSourceType()
 {
     if (ui->mDistTypeCRSRadio->isChecked())
-        return GwmDistance::DistanceType::CRSDistance;
+        return GwmDistance::DistanceType::OneDimDistance;
     else if (ui->mDistTypeDmatRadio->isChecked())
         return GwmDistance::DistanceType::DMatDistance;
     else if (ui->mDistTypeMinkowskiRadio->isChecked())
         return GwmDistance::DistanceType::MinkwoskiDistance;
     else
-        return GwmDistance::DistanceType::CRSDistance;
+        return GwmDistance::DistanceType::OneDimDistance;
 }
 
-QVariant GwmGWSSOptionsDialog::distanceSourceParameters()
+QVariant GwmGTDROptionsDialog::distanceSourceParameters()
 {
     if (ui->mDistTypeDmatRadio->isChecked())
     {
@@ -222,42 +250,42 @@ QVariant GwmGWSSOptionsDialog::distanceSourceParameters()
 
     else return QVariant();
 }
-void GwmGWSSOptionsDialog::onDistTypeCRSToggled(bool checked)
+void GwmGTDROptionsDialog::onDistTypeCRSToggled(bool checked)
 {
     if (checked)
         ui->mDistParamSettingStack->setCurrentIndex(0);
 }
 
-void GwmGWSSOptionsDialog::onDistTypeMinkowskiToggled(bool checked)
+void GwmGTDROptionsDialog::onDistTypeMinkowskiToggled(bool checked)
 {
     if (checked)
         ui->mDistParamSettingStack->setCurrentIndex(1);
 }
 
-void GwmGWSSOptionsDialog::onDistTypeDmatToggled(bool checked)
+void GwmGTDROptionsDialog::onDistTypeDmatToggled(bool checked)
 {
     if (checked)
         ui->mDistParamSettingStack->setCurrentIndex(2);
     ui->mCalcParallelGroup->setEnabled(!checked);
 }
 
-void GwmGWSSOptionsDialog::onDmatFileOpenClicked()
+void GwmGTDROptionsDialog::onDmatFileOpenClicked()
 {
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open Dmat File"), tr(""), tr("Dmat File (*.dmat)"));
     ui->mDistMatrixFileNameEdit->setText(filePath);
 }
 
-void GwmGWSSOptionsDialog::onFixedRadioToggled(bool checked)
+void GwmGTDROptionsDialog::onFixedRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(1);
 }
 
-void GwmGWSSOptionsDialog::onVariableRadioToggled(bool checked)
+void GwmGTDROptionsDialog::onVariableRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(0);
 }
 
-double GwmGWSSOptionsDialog::bandwidthSize(){
+double GwmGTDROptionsDialog::bandwidthSize(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
         QList<double> unit = { 1, 10, 100, 1000 };
@@ -271,13 +299,13 @@ double GwmGWSSOptionsDialog::bandwidthSize(){
 }
 
 
-gwm::BandwidthWeight::KernelFunctionType GwmGWSSOptionsDialog::bandwidthKernelFunction()
+gwm::BandwidthWeight::KernelFunctionType GwmGTDROptionsDialog::bandwidthKernelFunction()
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
     return gwm::BandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
-QVariant GwmGWSSOptionsDialog::parallelParameters()
+QVariant GwmGTDROptionsDialog::parallelParameters()
 {
     if (ui->mCalcParallelGPURadio->isChecked())
     {
@@ -293,13 +321,13 @@ QVariant GwmGWSSOptionsDialog::parallelParameters()
     }
 }
 
-void GwmGWSSOptionsDialog::updateFieldsAndEnable()
+void GwmGTDROptionsDialog::updateFieldsAndEnable()
 {
     this->updateFields();
     this->enableAccept();
 }
 
-void GwmGWSSOptionsDialog::updateFields()
+void GwmGTDROptionsDialog::updateFields()
 {
     QgsVectorLayer* dataLayer;
     // 图层设置
@@ -312,14 +340,19 @@ void GwmGWSSOptionsDialog::updateFields()
     {
         return;
     }
+    
 
+    if (ui->mDepVarComboBox->currentIndex() > -1)
+    {
+        mAlgorithmMeta.dependentVariable = mDepVarModel->item(ui->mDepVarComboBox->currentIndex());
+    }
 
     GwmVariableItemModel* selectedIndepVarModel = ui->mIndepVarSelector->selectedIndepVarModel();
     if (selectedIndepVarModel)
     {
         if (selectedIndepVarModel->rowCount() > 0)
         {
-            mAlgorithmMeta.variables = selectedIndepVarModel->attributeItemList();
+            mAlgorithmMeta.independentVariables = selectedIndepVarModel->attributeItemList();
         }
     }
 
@@ -343,8 +376,8 @@ void GwmGWSSOptionsDialog::updateFields()
     }
     else
     {
-        mAlgorithmMeta.distanceType = gwm::Distance::DistanceType::CRSDistance;
-        mAlgorithmMeta.distanceCrsGeographic = dataLayer->crs().isGeographic();
+        mAlgorithmMeta.distanceType = gwm::Distance::DistanceType::OneDimDistance;
+        // mAlgorithmMeta.distanceCrsGeographic = dataLayer->crs().isGeographic();
     }
 
     // 并行设置
@@ -366,11 +399,11 @@ void GwmGWSSOptionsDialog::updateFields()
         mAlgorithmMeta.parallelType = gwm::ParallelType::SerialOnly;
     }
 
-    mAlgorithmMeta.quantile = ui->mQuantileCheckBox->isChecked();
+    mAlgorithmMeta.hatmatrix = ui->mHatmatrixCheckBox->isChecked();
 
 }
 
-void GwmGWSSOptionsDialog::enableAccept()
+void GwmGTDROptionsDialog::enableAccept()
 {
     QString error;
     if (mAlgorithmMeta.validate(error))
@@ -385,5 +418,6 @@ void GwmGWSSOptionsDialog::enableAccept()
         ui->btbOkCancle->setStandardButtons(QDialogButtonBox::Cancel);
     }
 }
+
 
 
