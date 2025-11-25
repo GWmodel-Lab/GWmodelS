@@ -54,11 +54,6 @@ public:
     bool bandwidthType();
     IParallelalbe::ParallelType approachType();
     double bandwidthSize();
-<<<<<<< HEAD
-//    GwmGWRTaskThread::BandwidthSelectionApproach bandwidthSelectionApproach();
-//    QString bandWidthUnit();
-=======
->>>>>>> origin/master
     gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     GwmDistance::DistanceType distanceSourceType();
     QVariant distanceSourceParameters();
@@ -67,6 +62,7 @@ public:
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
+
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
