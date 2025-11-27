@@ -5,10 +5,12 @@
 #include <QComboBox>
 #include <QDebug>
 #include <QFile>
+#include <QFileInfo>
 #include <QTextStream>
 #include <QMessageBox>
 #include <QListWidget>
 #include <QPushButton>
+#include <QSettings>
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
@@ -432,6 +434,17 @@ void GwmSWIMOptionsDialog::setTaskThread(GwmSWIMTaskThread* taskThread)
         taskThread->setFieldMapping(currentFieldMapping());
         taskThread->setFieldDelimiter(mDetectedDelimiter);
 
+        bool useAutoBandwidth = ui->mBwSizeAutomaticRadio->isChecked();
+        taskThread->setUseBandwidthAuto(useAutoBandwidth);
+        if (useAutoBandwidth)
+        {
+            GwmSWIMTaskThread::BandwidthSelectionCriterionType criterionType =
+                ui->mBwSizeAutomaticApprochCombo->currentIndex() == 0
+                ? GwmSWIMTaskThread::BandwidthSelectionCriterionType::CV
+                : GwmSWIMTaskThread::BandwidthSelectionCriterionType::AICc;
+            taskThread->setBandwidthSelectionCriterion(criterionType);
+        }
+
         taskThread->setParallelType(parallelType());
         if (parallelType() == IParallelalbe::ParallelType::OpenMP)
         {
@@ -761,8 +774,8 @@ GwmSWIMFieldMapping GwmSWIMOptionsDialog::currentFieldMapping() const
     mapping.originY = columnFromCombo(ui->cbOriginYField);
     mapping.destX = columnFromCombo(ui->cbDestXField);
     mapping.destY = columnFromCombo(ui->cbDestYField);
-    mapping.requireOriginCoords = modeNeedsOriginCoords();
-    mapping.requireDestCoords = modeNeedsDestCoords();
+    mapping.requireOriginCoords = true;
+    mapping.requireDestCoords = true;
     mapping.originValue = findHeaderIndex(QStringLiteral("origin_value"));
     mapping.destValue = findHeaderIndex(QStringLiteral("dest_value"));
     mapping.independentVars = selectedIndependentVariableColumns();
@@ -832,38 +845,27 @@ int GwmSWIMOptionsDialog::findHeaderIndex(const QString& name) const
 
 bool GwmSWIMOptionsDialog::modeNeedsOriginCoords() const
 {
-    if (!hasValidSwimMode()) return false;
-    SWIMMode mode = swimMode();
-    return mode == SWIMMode::OriginFocused
-            || mode == SWIMMode::FlowFocusedEuclidean
-            || mode == SWIMMode::FlowFocusedSOP;
+    Q_UNUSED(this);
+    return true;
 }
 
 bool GwmSWIMOptionsDialog::modeNeedsDestCoords() const
 {
-    if (!hasValidSwimMode()) return false;
-    SWIMMode mode = swimMode();
-    return mode == SWIMMode::DestinationFocused
-            || mode == SWIMMode::FlowFocusedEuclidean
-            || mode == SWIMMode::FlowFocusedSOP;
+    Q_UNUSED(this);
+    return true;
 }
 
 void GwmSWIMOptionsDialog::updateCoordinateControlState()
 {
-    bool needOrigin = modeNeedsOriginCoords();
-    bool needDest = modeNeedsDestCoords();
-    auto updateCombo = [&](QComboBox* combo, bool needed)
+    auto enableCombo = [](QComboBox* combo)
     {
-        if (!combo) return;
-        combo->setEnabled(needed);
-        if (!needed)
-        {
-            combo->setCurrentIndex(0);
-        }
+        if (combo)
+            combo->setEnabled(true);
     };
-    updateCombo(ui->cbOriginXField, needOrigin);
-    updateCombo(ui->cbOriginYField, needOrigin);
-    updateCombo(ui->cbDestXField, needDest);
-    updateCombo(ui->cbDestYField, needDest);
+    enableCombo(ui->cbOriginXField);
+    enableCombo(ui->cbOriginYField);
+    enableCombo(ui->cbDestXField);
+    enableCombo(ui->cbDestYField);
 }
+
 

@@ -7,12 +7,16 @@
 #include <QMenu>
 #include <QAction>
 #include <QTableWidget>
+#include <QLabel>
+#include <limits>
 
 #include "TaskThread/gwmswimtaskthread.h"
 
 namespace Ui {
 class GwmPropertySWIMTab;
 }
+
+class GwmPlot;
 
 class GwmPropertySWIMTab : public QWidget
 {
@@ -31,22 +35,47 @@ private slots:
     void on_btnExportWeightMatrix_clicked();
 
 private:
+    struct OlsResult
+    {
+        QStringList names;
+        QVector<double> estimates;
+        QVector<double> stdErrors;
+        QVector<double> tValues;
+        double rss = std::numeric_limits<double>::quiet_NaN();
+        double aic = std::numeric_limits<double>::quiet_NaN();
+        double aicc = std::numeric_limits<double>::quiet_NaN();
+        double rSquared = std::numeric_limits<double>::quiet_NaN();
+        double adjRSquared = std::numeric_limits<double>::quiet_NaN();
+        bool valid = false;
+    };
+
     Ui::GwmPropertySWIMTab *ui;
     GwmSWIMTaskThread* mTaskThread = nullptr;
 
     QString mFilePath;
+    OlsResult mCachedOlsResult;
+    bool mHasCachedOls = false;
+    GwmPlot* mBandwidthPlot = nullptr;
 
-    void displayModelConfiguration();
-    void displayWeightingScheme();
-    void displayDistanceMetric();
-    void displayParallelInfo();
-    void displayFlowStatistics();
-    void displayWeightMatrixInfo();
-    void populateFlowTable();
+    void displayGlobalDiagnostics();
+    void populateGlobalCoefficients();
+    void displaySwimCalibrationInfo();
+    void populateSwimCoefficients();
+    void displaySwimDiagnostics();
+    void updateBandwidthSelectionView();
 
-    QString swimModeText(SWIMMode mode) const;
-    QString fieldName(int columnIndex) const;
-    void resetDistanceParameterLabels();
+    void setLabelText(QLabel* label, const QString& text);
+    void setupTableHeaders(QTableWidget* table,
+                           const QStringList& headers);
+    void populateEmptyTableMessage(QTableWidget* table,
+                                   const QString& message);
+    void adjustTableToContents(QTableWidget* table) const;
+    QString kernelDescription() const;
+    QString distanceDescription() const;
+    QString focusTypeDescription() const;
+    OlsResult computeGlobalOls(bool& ok) const;
+    QString formatNumber(double value, int precision = 4) const;
+    double calculateQuantile(const QVector<double>& sortedValues, double quantile) const;
 };
 
 #endif // GWMPROPERTYSWIMTAB_H

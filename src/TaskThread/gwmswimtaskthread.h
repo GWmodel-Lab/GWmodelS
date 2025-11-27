@@ -4,6 +4,7 @@
 #include "TaskThread/gwmtaskthread.h"
 #include "TaskThread/iparallelable.h"
 #include "SpatialWeight/gwmspatialweight.h"
+#include "TaskThread/gwmbandwidthsizeselector.h"
 #include <armadillo>
 #include <QString>
 #include <QList>
@@ -11,6 +12,7 @@
 #include <QMap>
 #include <QStringList>
 #include <QPair>
+#include <limits>
 
 using namespace arma;
 
@@ -55,6 +57,18 @@ struct GwmSWIMFieldMapping
     bool isValid(int columnCount) const;
 };
 
+struct GwmSWIMDiagnostics
+{
+    int dataPoints = 0;
+    double effectiveParameters = std::numeric_limits<double>::quiet_NaN();
+    double effectiveDof = std::numeric_limits<double>::quiet_NaN();
+    double aic = std::numeric_limits<double>::quiet_NaN();
+    double aicc = std::numeric_limits<double>::quiet_NaN();
+    double rss = std::numeric_limits<double>::quiet_NaN();
+    double rSquared = std::numeric_limits<double>::quiet_NaN();
+    double adjRSquared = std::numeric_limits<double>::quiet_NaN();
+};
+
 class GwmSWIMTaskThread : public GwmTaskThread, public IOpenmpParallelable
 {
     Q_OBJECT
@@ -62,6 +76,12 @@ class GwmSWIMTaskThread : public GwmTaskThread, public IOpenmpParallelable
 public:
     typedef QList<QPair<QString, mat> > CreateResultLayerData;
     using DistanceFunction = double (GwmSWIMTaskThread::*)(int, int) const;
+
+    enum class BandwidthSelectionCriterionType
+    {
+        AICc,
+        CV
+    };
 
 public:
     explicit GwmSWIMTaskThread(QObject *parent = nullptr);
@@ -78,6 +98,9 @@ public:
     // Spatial weight configuration
     void setSpatialWeight(const GwmSpatialWeight& spatialWeight);
     GwmSpatialWeight spatialWeight() const { return mSpatialWeight; }
+
+    void setUseBandwidthAuto(bool enabled);
+    void setBandwidthSelectionCriterion(BandwidthSelectionCriterionType type);
 
     // Parallel configuration
     int parallelAbility() const override;
@@ -97,6 +120,8 @@ public:
     CreateResultLayerData resultList() const { return mResultList; }
     QStringList csvHeaders() const { return mCsvHeaders; }
     int ompThreadNum() const { return mOmpThreadNum; }
+    GwmSWIMDiagnostics diagnostics() const { return mDiagnostics; }
+    BandwidthCriterionList bandwidthTrace() const { return mBandwidthTrace; }
 
     QString name() const override { return tr("SWIM"); }
 
@@ -134,6 +159,15 @@ private:
     // Result helper
     void createResultLayer(CreateResultLayerData data);
 
+    bool selectBandwidthAutomatically();
+    void applyBandwidthFromWeight(const GwmBandwidthWeight* weight);
+    QVector<double> buildAdaptiveBandwidthCandidates(int flowCount) const;
+    QVector<double> buildFixedBandwidthCandidates(const QVector<double>& distances) const;
+    double evaluateBandwidthForValue(double candidate);
+    double evaluateBandwidthCriterion() const;
+    double currentRSS() const;
+    void updateDiagnostics();
+
 private:
     QString mCsvFilePath;
     SWIMMode mSWIMMode = SWIMMode::OriginFocused;
@@ -163,6 +197,12 @@ private:
     GwmSWIMFieldMapping mFieldMapping;
     QChar mFieldDelimiter = '\t';
     QStringList mIndependentVarNames;
+
+    bool mUseBandwidthAuto = false;
+    BandwidthSelectionCriterionType mBandwidthCriterionType = BandwidthSelectionCriterionType::AICc;
+    GwmSWIMDiagnostics mDiagnostics;
+    BandwidthCriterionList mBandwidthTrace;
+    vec mShat;  // Hat matrix trace statistics: [tr(S), tr(S^T * S)]
 };
 
 inline bool GwmSWIMFieldMapping::isComplete() const

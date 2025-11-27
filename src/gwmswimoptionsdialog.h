@@ -89,7 +89,6 @@ private:
     bool modeNeedsOriginCoords() const;
     bool modeNeedsDestCoords() const;
     void updateCoordinateControlState();
-
 private:
     QStringList mCsvHeaders;
     QChar mDetectedDelimiter = '\t';

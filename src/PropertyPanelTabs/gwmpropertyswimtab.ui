@@ -21,441 +21,390 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>780</width>
-        <height>850</height>
+        <width>763</width>
+        <height>1097</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QGroupBox" name="groupBox_Config">
+        <widget class="QGroupBox" name="groupBox_Global">
          <property name="title">
-          <string>SWIM Configuration</string>
+          <string>Results of Global Regression</string>
          </property>
-         <layout class="QFormLayout" name="formLayout_Config">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_Mode">
-            <property name="text">
-             <string>Mode:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="lblSWIMMode">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_CSV">
-            <property name="text">
-             <string>CSV File:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="lblCsvFilePath">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_FlowCount">
-            <property name="text">
-             <string>Flow Count:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="lblFlowCount">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_DependentField">
-            <property name="text">
-             <string>Dependent Field:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="lblDependentField">
-            <property name="text">
-             <string>-</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_IndepFields">
-            <property name="text">
-             <string>Independent Fields:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLabel" name="lblIndependentVars">
-            <property name="text">
-             <string>-</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_Weighting">
-         <property name="title">
-          <string>Weighting Scheme</string>
-         </property>
-         <layout class="QFormLayout" name="formLayout_Weighting">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_Kernel">
-            <property name="text">
-             <string>Kernel Function:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="lblKernelFunction">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_BwType">
-            <property name="text">
-             <string>Bandwidth Type:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="lblBandwidthType">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_BwSize">
-            <property name="text">
-             <string>Bandwidth Size:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="lblBandwidthSize">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_Distance">
-         <property name="title">
-          <string>Distance Metric</string>
-         </property>
-         <layout class="QFormLayout" name="formLayout_Distance">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_DistanceMetric">
-            <property name="text">
-             <string>Metric:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="lblDistanceMetric">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="lblDistanceParam1Title">
-            <property name="text">
-             <string>Parameter 1:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="lblDistanceParam1">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="lblDistanceParam2Title">
-            <property name="text">
-             <string>Parameter 2:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="lblDistanceParam2">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="lblDistanceFileTitle">
-            <property name="text">
-             <string>Matrix File:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="lblDistanceFilePath">
-            <property name="text">
-             <string>-</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_Parallel">
-         <property name="title">
-          <string>Parallel Calculation</string>
-         </property>
-         <layout class="QFormLayout" name="formLayout_Parallel">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_ParallelType">
-            <property name="text">
-             <string>Mode:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="lblParallelType">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_ParallelDetail">
-            <property name="text">
-             <string>Detail:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="lblParallelDetail">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_FlowStats">
-         <property name="title">
-          <string>Flow Statistics</string>
-         </property>
-         <layout class="QFormLayout" name="formLayout_FlowStats">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_MinVolume">
-            <property name="text">
-             <string>Min Flow Volume:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="lblMinFlowVolume">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_MaxVolume">
-            <property name="text">
-             <string>Max Flow Volume:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="lblMaxFlowVolume">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_AvgVolume">
-            <property name="text">
-             <string>Average Flow Volume:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="lblAvgFlowVolume">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_TotalVolume">
-            <property name="text">
-             <string>Total Flow Volume:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="lblTotalFlowVolume">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_AvgOrigin">
-            <property name="text">
-             <string>Average Origin Value:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLabel" name="lblAvgOriginValue">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_AvgDest">
-            <property name="text">
-             <string>Average Destination Value:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QLabel" name="lblAvgDestValue">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_WeightMatrix">
-         <property name="title">
-          <string>Weight Matrix Information</string>
-         </property>
-         <layout class="QFormLayout" name="formLayout_Weight">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_WeightSize">
-            <property name="text">
-             <string>Matrix Size:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="lblWeightMatrixSize">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_MinWeight">
-            <property name="text">
-             <string>Min Weight:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="lblMinWeight">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_MaxWeight">
-            <property name="text">
-             <string>Max Weight:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="lblMaxWeight">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_MeanWeight">
-            <property name="text">
-             <string>Mean Weight:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="lblMeanWeight">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_SumWeight">
-            <property name="text">
-             <string>Sum Weight:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLabel" name="lblSumWeight">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_FlowData">
-         <property name="title">
-          <string>Flow Data Table</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <layout class="QVBoxLayout" name="verticalLayout_Global">
           <item>
-           <widget class="QTableWidget" name="tableFlowData">
-            <property name="alternatingRowColors">
-             <bool>true</bool>
+           <widget class="QGroupBox" name="groupBox_GlobalDiagnostic">
+            <property name="title">
+             <string>Diagnostic Information</string>
             </property>
-            <property name="selectionMode">
-             <enum>QAbstractItemView::SingleSelection</enum>
+            <layout class="QFormLayout" name="formLayout_GlobalDiag">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_GlobalAIC">
+               <property name="text">
+                <string>AIC:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="lblGlobalAIC">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_GlobalAICc">
+               <property name="text">
+                <string>AICc:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="lblGlobalAICc">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_GlobalRSS">
+               <property name="text">
+                <string>Residual sum of squares:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="lblGlobalRSS">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_GlobalRSquared">
+               <property name="text">
+                <string>R-squared value:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="lblGlobalRSquared">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="label_GlobalAdjRSquared">
+               <property name="text">
+                <string>Adjusted R-squared value:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QLabel" name="lblGlobalAdjRSquared">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_GlobalCoefficients">
+            <property name="title">
+             <string>Summary of OLS Coefficient Estimates</string>
             </property>
-            <property name="selectionBehavior">
-             <enum>QAbstractItemView::SelectRows</enum>
+            <layout class="QVBoxLayout" name="verticalLayout_GlobalTable">
+             <item>
+              <widget class="QTableWidget" name="tableGlobalCoefficients">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="editTriggers">
+                <set>QAbstractItemView::NoEditTriggers</set>
+               </property>
+               <property name="alternatingRowColors">
+                <bool>true</bool>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::NoSelection</enum>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_SwimResults">
+         <property name="title">
+          <string>Results of SWIM</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_Swim">
+          <item>
+           <widget class="QGroupBox" name="groupBox_Calibration">
+            <property name="title">
+             <string>Model Calibration Information</string>
             </property>
+            <layout class="QFormLayout" name="formLayout_Calibration">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_CalibrationFocusType">
+              <property name="text">
+               <string>Focus type:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="lblCalibrationFocusType">
+              <property name="text">
+               <string>-</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+              <widget class="QLabel" name="label_CalibrationKernel">
+               <property name="text">
+                <string>Kernel function:</string>
+               </property>
+              </widget>
+             </item>
+            <item row="1" column="1">
+              <widget class="QLabel" name="lblCalibrationKernel">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+            <item row="2" column="0">
+              <widget class="QLabel" name="label_CalibrationAdaptive">
+               <property name="text">
+                <string>Adaptive:</string>
+               </property>
+              </widget>
+             </item>
+            <item row="2" column="1">
+              <widget class="QLabel" name="lblCalibrationAdaptive">
+               <property name="text">
+                <string>-</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            <item row="3" column="0">
+              <widget class="QLabel" name="label_CalibrationPoints">
+               <property name="text">
+                <string>Regression points:</string>
+               </property>
+              </widget>
+             </item>
+            <item row="3" column="1">
+              <widget class="QLabel" name="lblCalibrationRegressionPoints">
+               <property name="text">
+                <string>-</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            <item row="4" column="0">
+              <widget class="QLabel" name="label_CalibrationDistance">
+               <property name="text">
+                <string>Distance metric:</string>
+               </property>
+              </widget>
+             </item>
+            <item row="4" column="1">
+              <widget class="QLabel" name="lblCalibrationDistanceMetric">
+               <property name="text">
+                <string>-</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_SwimCoefficients">
+            <property name="title">
+             <string>Summary of SWIM Coefficient Estimates</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_SwimTable">
+             <item>
+              <widget class="QTableWidget" name="tableSwimCoefficients">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="editTriggers">
+                <set>QAbstractItemView::NoEditTriggers</set>
+               </property>
+               <property name="alternatingRowColors">
+                <bool>true</bool>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::NoSelection</enum>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_SwimDiagnostic">
+            <property name="title">
+             <string>Diagnostic Information</string>
+            </property>
+            <layout class="QFormLayout" name="formLayout_SwimDiag">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_SwimDataPoints">
+               <property name="text">
+                <string>Number of data points:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="lblSwimDataPoints">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_SwimEffectiveParams">
+               <property name="text">
+                <string>Effective number of parameters:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="lblSwimEffectiveParams">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_SwimEffectiveDof">
+               <property name="text">
+                <string>Effective degrees of freedom:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="lblSwimEffectiveDof">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_SwimAIC">
+               <property name="text">
+                <string>AIC:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="lblSwimAIC">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="label_SwimAICc">
+               <property name="text">
+                <string>AICc:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QLabel" name="lblSwimAICc">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="0">
+              <widget class="QLabel" name="label_SwimRSS">
+               <property name="text">
+                <string>Residual sum of squares:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QLabel" name="lblSwimRSS">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="0">
+              <widget class="QLabel" name="label_SwimRSquared">
+               <property name="text">
+                <string>R-square value:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="1">
+              <widget class="QLabel" name="lblSwimRSquared">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="0">
+              <widget class="QLabel" name="label_SwimAdjRSquared">
+               <property name="text">
+                <string>Adjusted R-square value:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="1">
+              <widget class="QLabel" name="lblSwimAdjRSquared">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_BandwidthView">
+            <property name="title">
+             <string>Bandwidth Selection View</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_Bandwidth">
+             <item>
+              <widget class="QLabel" name="lblBandwidthPlotPlaceholder">
+               <property name="text">
+                <string>Bandwidth Selection View (Line chart)</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
@@ -501,5 +450,3 @@
  <resources/>
  <connections/>
 </ui>
-
-

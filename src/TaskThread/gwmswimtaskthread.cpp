@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <cmath>
 #include <algorithm>
+#include <array>
 #include <limits>
 #include "gwmapp.h"
 #include <armadillo>
@@ -40,15 +41,17 @@ void GwmSWIMTaskThread::setSWIMMode(SWIMMode mode)
 void GwmSWIMTaskThread::setSpatialWeight(const GwmSpatialWeight& spatialWeight)
 {
     mSpatialWeight = spatialWeight;
-    mKernelType = GwmBandwidthWeight::KernelFunctionType::Gaussian;
-    mKernelFunction = &GwmBandwidthWeight::GaussianKernelFunction;
-    if (auto* bw = mSpatialWeight.weight<GwmBandwidthWeight>())
-    {
-        mBandwidth = bw->bandwidth();
-        mBandwidthAdaptive = bw->adaptive();
-        mKernelType = bw->kernel();
-        mKernelFunction = GwmBandwidthWeight::Kernel[mKernelType];
-    }
+    applyBandwidthFromWeight(mSpatialWeight.weight<GwmBandwidthWeight>());
+}
+
+void GwmSWIMTaskThread::setUseBandwidthAuto(bool enabled)
+{
+    mUseBandwidthAuto = enabled;
+}
+
+void GwmSWIMTaskThread::setBandwidthSelectionCriterion(BandwidthSelectionCriterionType type)
+{
+    mBandwidthCriterionType = type;
 }
 
 int GwmSWIMTaskThread::parallelAbility() const
@@ -78,6 +81,8 @@ void GwmSWIMTaskThread::setOmpThreadNum(const int threadNum)
 void GwmSWIMTaskThread::setFieldMapping(const GwmSWIMFieldMapping& mapping)
 {
     mFieldMapping = mapping;
+    mFieldMapping.requireOriginCoords = true;
+    mFieldMapping.requireDestCoords = true;
     mIndependentVarNames = mapping.independentVarNames;
 }
 
@@ -127,78 +132,49 @@ void GwmSWIMTaskThread::run()
     qDebug() << "[GwmSWIMTaskThread::run] Starting SWIM calculation";
     emit tick(0, 0);
     mResultList.clear();
+    mDiagnostics = GwmSWIMDiagnostics();
+    mBandwidthTrace.clear();
 
     // Step 1: load CSV data
     if (!checkCanceled())
     {
         emit message(tr("Loading CSV data..."));
-        qDebug() << "[GwmSWIMTaskThread::run] Step 1: Loading CSV data";
         if (!loadCsvData())
         {
-            qDebug() << "[GwmSWIMTaskThread::run] ERROR: Failed to load CSV data";
             emit error(tr("Failed to load CSV data."));
             return;
         }
-        qDebug() << "[GwmSWIMTaskThread::run] CSV data loaded successfully";
-        qDebug() << "[GwmSWIMTaskThread::run] Flow data count:" << mFlowDataList.size();
-        qDebug() << "[GwmSWIMTaskThread::run] CSV headers count:" << mCsvHeaders.size();
-        
         if (!prepareRegressionMatrices())
         {
-            qDebug() << "[GwmSWIMTaskThread::run] ERROR: Failed to prepare regression matrices";
             emit error(tr("Failed to prepare regression matrices."));
             return;
         }
-        qDebug() << "[GwmSWIMTaskThread::run] Regression matrices prepared";
-        qDebug() << "[GwmSWIMTaskThread::run] Design matrix size:" << mDesignMatrix.n_rows << "x" << mDesignMatrix.n_cols;
-        qDebug() << "[GwmSWIMTaskThread::run] Response vector size:" << mResponseVector.n_elem;
         emit tick(20, 100);
+    }
+
+    if (!checkCanceled() && mUseBandwidthAuto)
+    {
+        emit message(tr("Automatically selecting bandwidth..."));
+        if (!selectBandwidthAutomatically())
+        {
+            emit error(tr("Failed to select bandwidth automatically."));
+            return;
+        }
     }
 
     // Step 2: compute weight matrix
     if (!checkCanceled())
     {
         emit message(tr("Calculating weight matrix..."));
-        qDebug() << "[GwmSWIMTaskThread::run] Step 2: Calculating weight matrix";
-        qDebug() << "[GwmSWIMTaskThread::run] Bandwidth:" << mBandwidth << "Adaptive:" << mBandwidthAdaptive;
-        qDebug() << "[GwmSWIMTaskThread::run] SWIM Mode:" << static_cast<int>(mSWIMMode);
         calculateWeightMatrix();
-        qDebug() << "[GwmSWIMTaskThread::run] Weight matrix calculated";
-        qDebug() << "[GwmSWIMTaskThread::run] Weight matrix size:" << mWeightMatrix.n_rows << "x" << mWeightMatrix.n_cols;
-        if (mWeightMatrix.n_rows > 0 && mWeightMatrix.n_cols > 0)
-        {
-            qDebug() << "[GwmSWIMTaskThread::run] Weight matrix min:" << mWeightMatrix.min();
-            qDebug() << "[GwmSWIMTaskThread::run] Weight matrix max:" << mWeightMatrix.max();
-            qDebug() << "[GwmSWIMTaskThread::run] Weight matrix mean:" << mean(mean(mWeightMatrix));
-            qDebug() << "[GwmSWIMTaskThread::run] Weight matrix sum:" << accu(mWeightMatrix);
-        }
         emit tick(60, 100);
     }
 
     if (!checkCanceled())
     {
         emit message(tr("Fitting local regression models..."));
-        qDebug() << "[GwmSWIMTaskThread::run] Step 3: Fitting local regression models";
         performLocalRegression();
-        qDebug() << "[GwmSWIMTaskThread::run] Local regression completed";
-        if (mFittedValues.n_elem > 0)
-        {
-            qDebug() << "[GwmSWIMTaskThread::run] Fitted values count:" << mFittedValues.n_elem;
-            qDebug() << "[GwmSWIMTaskThread::run] Fitted values min:" << mFittedValues.min();
-            qDebug() << "[GwmSWIMTaskThread::run] Fitted values max:" << mFittedValues.max();
-            qDebug() << "[GwmSWIMTaskThread::run] Fitted values mean:" << mean(mFittedValues);
-        }
-        if (mResiduals.n_elem > 0)
-        {
-            qDebug() << "[GwmSWIMTaskThread::run] Residuals count:" << mResiduals.n_elem;
-            qDebug() << "[GwmSWIMTaskThread::run] Residuals min:" << mResiduals.min();
-            qDebug() << "[GwmSWIMTaskThread::run] Residuals max:" << mResiduals.max();
-            qDebug() << "[GwmSWIMTaskThread::run] Residuals mean:" << mean(mResiduals);
-        }
-        if (mLocalBetas.n_rows > 0 && mLocalBetas.n_cols > 0)
-        {
-            qDebug() << "[GwmSWIMTaskThread::run] Local betas size:" << mLocalBetas.n_rows << "x" << mLocalBetas.n_cols;
-        }
+        updateDiagnostics();
         emit tick(80, 100);
     }
 
@@ -206,31 +182,21 @@ void GwmSWIMTaskThread::run()
     if (!checkCanceled())
     {
         emit message(tr("Creating result layer..."));
-        qDebug() << "[GwmSWIMTaskThread::run] Step 4: Creating result layer";
         mat observed = mat(mResponseVector);
         mat fitted = mat(mFittedValues);
         mat residuals = mat(mResiduals);
-        qDebug() << "[GwmSWIMTaskThread::run] Creating result data structures";
-        qDebug() << "[GwmSWIMTaskThread::run] Observed matrix size:" << observed.n_rows << "x" << observed.n_cols;
-        qDebug() << "[GwmSWIMTaskThread::run] Fitted matrix size:" << fitted.n_rows << "x" << fitted.n_cols;
-        qDebug() << "[GwmSWIMTaskThread::run] Residuals matrix size:" << residuals.n_rows << "x" << residuals.n_cols;
         
         mResultList.push_back(qMakePair(QStringLiteral("FlowVolume"), observed));
         mResultList.push_back(qMakePair(QStringLiteral("FittedFlow"), fitted));
         mResultList.push_back(qMakePair(QStringLiteral("Residual"), residuals));
         if (!mLocalBetas.empty())
         {
-            qDebug() << "[GwmSWIMTaskThread::run] Adding coefficients to result list";
             mResultList.push_back(qMakePair(QStringLiteral("Coefficients"), mLocalBetas));
         }
-        qDebug() << "[GwmSWIMTaskThread::run] Adding weight matrix to result list";
         mResultList.push_back(qMakePair(QStringLiteral("WeightMatrix"), mWeightMatrix));
-        qDebug() << "[GwmSWIMTaskThread::run] Result list size:" << mResultList.size();
         
         createResultLayer(mResultList);
-        qDebug() << "[GwmSWIMTaskThread::run] Result layer created";
         emit tick(100, 100);
-        qDebug() << "[GwmSWIMTaskThread::run] Calculation completed successfully";
         emit success();
     }
 }
@@ -306,13 +272,11 @@ bool GwmSWIMTaskThread::prepareRegressionMatrices()
     if (mFlowDataList.isEmpty())
     {
         print_error(tr("No flow data available for regression."));
-        qDebug() << "[GwmSWIMTaskThread::prepareRegressionMatrices] ERROR: Flow data list is empty";
         return false;
     }
 
     int n = mFlowDataList.size();
     int indepCount = mFieldMapping.independentVars.size();
-    qDebug() << "[GwmSWIMTaskThread::prepareRegressionMatrices] Preparing matrices with" << n << "records and" << indepCount << "independent variables";
     
     mDesignMatrix = mat(n, indepCount + 1, fill::ones);
     mResponseVector = vec(n, fill::zeros);
@@ -327,7 +291,6 @@ bool GwmSWIMTaskThread::prepareRegressionMatrices()
             print_error(tr("Flow record %1 does not contain %2 independent variables.")
                         .arg(i)
                         .arg(indepCount));
-            qDebug() << "[GwmSWIMTaskThread::prepareRegressionMatrices] ERROR: Flow record" << i << "has" << flow.independent_values.size() << "independent values, expected" << indepCount;
             return false;
         }
 
@@ -336,15 +299,6 @@ bool GwmSWIMTaskThread::prepareRegressionMatrices()
         {
             mDesignMatrix(i, j + 1) = flow.independent_values[j];
         }
-    }
-
-    qDebug() << "[GwmSWIMTaskThread::prepareRegressionMatrices] Matrices prepared successfully";
-    qDebug() << "[GwmSWIMTaskThread::prepareRegressionMatrices] Design matrix:" << mDesignMatrix.n_rows << "x" << mDesignMatrix.n_cols;
-    qDebug() << "[GwmSWIMTaskThread::prepareRegressionMatrices] Response vector:" << mResponseVector.n_elem << "elements";
-    if (n > 0)
-    {
-        qDebug() << "[GwmSWIMTaskThread::prepareRegressionMatrices] Sample response value[0]:" << mResponseVector(0);
-
     }
 
     return true;
@@ -390,27 +344,10 @@ bool GwmSWIMTaskThread::parseCsvLine(const QString& line, GwmFlowData& flowData,
     {
         flowData.dest_value = 0.0;
     }
-    if (mFieldMapping.requireOriginCoords)
-    {
-        if (!readDouble(mFieldMapping.originX, flowData.origin_x)) return false;
-        if (!readDouble(mFieldMapping.originY, flowData.origin_y)) return false;
-    }
-    else
-    {
-        flowData.origin_x = 0.0;
-        flowData.origin_y = 0.0;
-    }
-
-    if (mFieldMapping.requireDestCoords)
-    {
-        if (!readDouble(mFieldMapping.destX, flowData.dest_x)) return false;
-        if (!readDouble(mFieldMapping.destY, flowData.dest_y)) return false;
-    }
-    else
-    {
-        flowData.dest_x = 0.0;
-        flowData.dest_y = 0.0;
-    }
+    if (!readDouble(mFieldMapping.originX, flowData.origin_x)) return false;
+    if (!readDouble(mFieldMapping.originY, flowData.origin_y)) return false;
+    if (!readDouble(mFieldMapping.destX, flowData.dest_x)) return false;
+    if (!readDouble(mFieldMapping.destY, flowData.dest_y)) return false;
 
     flowData.independent_values.clear();
     for (int idx : mFieldMapping.independentVars)
@@ -579,13 +516,11 @@ QVector<double> GwmSWIMTaskThread::collectDistances(int focusIndex, DistanceFunc
 void GwmSWIMTaskThread::fillWeightMatrix(DistanceFunction func)
 {
     int n = mFlowDataList.size();
-    qDebug() << "[GwmSWIMTaskThread::fillWeightMatrix] Filling weight matrix for" << n << "flows";
     
     for (int i = 0; i < n; ++i)
     {
         if (checkCanceled())
         {
-            qDebug() << "[GwmSWIMTaskThread::fillWeightMatrix] Calculation canceled at flow" << i;
             return;
         }
 
@@ -594,11 +529,6 @@ void GwmSWIMTaskThread::fillWeightMatrix(DistanceFunction func)
         if (bw <= 0.0)
         {
             bw = std::numeric_limits<double>::epsilon();
-        }
-
-        if (i == 0 || i == n - 1)
-        {
-            qDebug() << "[GwmSWIMTaskThread::fillWeightMatrix] Flow" << i << "bandwidth:" << bw << "distance range:" << *std::min_element(distances.begin(), distances.end()) << "-" << *std::max_element(distances.begin(), distances.end());
         }
 
         for (int j = 0; j < n; ++j)
@@ -611,60 +541,303 @@ void GwmSWIMTaskThread::fillWeightMatrix(DistanceFunction func)
             progress(i, n);
         }
     }
-    
-    qDebug() << "[GwmSWIMTaskThread::fillWeightMatrix] Weight matrix filled completely";
 }
 
 void GwmSWIMTaskThread::calculateWeightMatrix()
 {
     int n = mFlowDataList.size();
-    qDebug() << "[GwmSWIMTaskThread::calculateWeightMatrix] Starting weight matrix calculation";
-    qDebug() << "[GwmSWIMTaskThread::calculateWeightMatrix] Flow data count:" << n;
-    qDebug() << "[GwmSWIMTaskThread::calculateWeightMatrix] Bandwidth:" << mBandwidth << "Adaptive:" << mBandwidthAdaptive;
+    qDebug() << "[GwmSWIMTaskThread::calculateWeightMatrix] n=" << n
+             << "bandwidth=" << mBandwidth
+             << "adaptive=" << mBandwidthAdaptive;
     
     mWeightMatrix = mat(n, n, fill::zeros);
-    qDebug() << "[GwmSWIMTaskThread::calculateWeightMatrix] Weight matrix initialized:" << mWeightMatrix.n_rows << "x" << mWeightMatrix.n_cols;
     
     DistanceFunction func = distanceFunctionForMode();
-    qDebug() << "[GwmSWIMTaskThread::calculateWeightMatrix] Distance function selected for mode:" << static_cast<int>(mSWIMMode);
-    
     fillWeightMatrix(func);
-    qDebug() << "[GwmSWIMTaskThread::calculateWeightMatrix] Weight matrix filled";
 }
 
 void GwmSWIMTaskThread::createResultLayer(CreateResultLayerData data)
 {
-    qDebug() << "[GwmSWIMTaskThread::createResultLayer] Creating result layer";
-    qDebug() << "[GwmSWIMTaskThread::createResultLayer] Result data count:" << data.size();
-    for (int i = 0; i < data.size(); ++i)
-    {
-        qDebug() << "[GwmSWIMTaskThread::createResultLayer] Result" << i << ":" << data[i].first << "size:" << data[i].second.n_rows << "x" << data[i].second.n_cols;
-    }
+    qDebug() << "[GwmSWIMTaskThread::createResultLayer] Creating result layer, item count:" << data.size();
     print_message(tr("Result layer creation not yet implemented."));
-    qDebug() << "[GwmSWIMTaskThread::createResultLayer] Result layer creation completed (placeholder)";
+}
+
+bool GwmSWIMTaskThread::selectBandwidthAutomatically()
+{
+    mBandwidthTrace.clear();
+    GwmBandwidthWeight* baseWeight = mSpatialWeight.weight<GwmBandwidthWeight>();
+    if (!baseWeight)
+    {
+        print_error(tr("Spatial weight is not configured correctly."));
+        return false;
+    }
+
+    const int flowCount = mFlowDataList.size();
+    if (flowCount == 0)
+    {
+        print_error(tr("No flow records available for bandwidth selection."));
+        return false;
+    }
+
+    DistanceFunction func = distanceFunctionForMode();
+    QVector<double> sampleDistances = collectDistances(0, func);
+
+    QVector<double> candidates = baseWeight->adaptive()
+            ? buildAdaptiveBandwidthCandidates(flowCount)
+            : buildFixedBandwidthCandidates(sampleDistances);
+
+    auto addCandidate = [&](double value)
+    {
+        if (value <= 0.0 || !std::isfinite(value))
+            return;
+        bool exists = std::any_of(candidates.begin(), candidates.end(), [value](double v){
+            return std::abs(v - value) < 1e-9;
+        });
+        if (!exists)
+            candidates.append(value);
+    };
+
+    addCandidate(baseWeight->bandwidth());
+    if (candidates.isEmpty())
+    {
+        print_error(tr("Failed to build bandwidth candidate set."));
+        return false;
+    }
+
+    double bestMetric = std::numeric_limits<double>::max();
+    double bestBandwidth = baseWeight->bandwidth() > 0.0 ? baseWeight->bandwidth() : candidates.first();
+
+    for (double candidate : candidates)
+    {
+        double metric = evaluateBandwidthForValue(candidate);
+        mBandwidthTrace.append(qMakePair(candidate, metric));
+        if (metric < bestMetric)
+        {
+            bestMetric = metric;
+            bestBandwidth = candidate;
+        }
+
+        if (checkCanceled())
+            break;
+    }
+
+    baseWeight->setBandwidth(bestBandwidth);
+    applyBandwidthFromWeight(baseWeight);
+
+    qDebug() << "[GwmSWIMTaskThread::selectBandwidthAutomatically] Best bandwidth"
+             << bestBandwidth << "criterion=" << bestMetric;
+
+    return true;
+}
+
+void GwmSWIMTaskThread::applyBandwidthFromWeight(const GwmBandwidthWeight* weight)
+{
+    if (!weight)
+        return;
+    mBandwidth = weight->bandwidth();
+    mBandwidthAdaptive = weight->adaptive();
+    mKernelType = weight->kernel();
+    mKernelFunction = GwmBandwidthWeight::Kernel[mKernelType];
+}
+
+QVector<double> GwmSWIMTaskThread::buildAdaptiveBandwidthCandidates(int flowCount) const
+{
+    QVector<double> candidates;
+    if (flowCount <= 0)
+        return candidates;
+
+    int minNeighbors = std::max(10, mFieldMapping.independentVars.size() + 2);
+    minNeighbors = std::min(minNeighbors, flowCount);
+    int maxNeighbors = flowCount;
+    int steps = std::min(6, maxNeighbors - minNeighbors + 1);
+    if (steps <= 0)
+    {
+        candidates.append(static_cast<double>(minNeighbors));
+        return candidates;
+    }
+
+    for (int i = 0; i < steps; ++i)
+    {
+        double ratio = steps == 1 ? 0.0 : static_cast<double>(i) / (steps - 1);
+        int value = static_cast<int>(std::round(minNeighbors + ratio * (maxNeighbors - minNeighbors)));
+        value = std::clamp(value, 1, flowCount);
+        bool exists = std::any_of(candidates.begin(), candidates.end(), [value](double v){
+            return std::abs(v - value) < 1e-9;
+        });
+        if (!exists)
+            candidates.append(static_cast<double>(value));
+    }
+
+    return candidates;
+}
+
+QVector<double> GwmSWIMTaskThread::buildFixedBandwidthCandidates(const QVector<double>& distances) const
+{
+    QVector<double> positive;
+    positive.reserve(distances.size());
+    for (double d : distances)
+    {
+        if (std::isfinite(d) && d > 0.0)
+            positive.append(d);
+    }
+
+    QVector<double> candidates;
+    if (positive.isEmpty())
+        return candidates;
+
+    std::sort(positive.begin(), positive.end());
+    static const std::array<double, 6> quantiles = {0.2, 0.35, 0.5, 0.65, 0.8, 0.95};
+    for (double q : quantiles)
+    {
+        int idx = positive.size() == 1
+                ? 0
+                : static_cast<int>(std::round(q * (positive.size() - 1)));
+        idx = std::clamp(idx, 0, positive.size() - 1);
+        double value = positive[idx];
+        if (value <= 0.0)
+            continue;
+        bool exists = std::any_of(candidates.begin(), candidates.end(), [value](double v){
+            return std::abs(v - value) < 1e-9;
+        });
+        if (!exists)
+            candidates.append(value);
+    }
+
+    return candidates;
+}
+
+double GwmSWIMTaskThread::evaluateBandwidthForValue(double candidate)
+{
+    if (candidate <= 0.0 || !std::isfinite(candidate))
+        return std::numeric_limits<double>::max();
+
+    double savedBandwidth = mBandwidth;
+    mBandwidth = candidate;
+
+    calculateWeightMatrix();
+    if (checkCanceled())
+    {
+        mBandwidth = savedBandwidth;
+        return std::numeric_limits<double>::max();
+    }
+
+    performLocalRegression();
+    double metric = evaluateBandwidthCriterion();
+    mBandwidth = savedBandwidth;
+    if (!std::isfinite(metric))
+        metric = std::numeric_limits<double>::max();
+    return metric;
+}
+
+double GwmSWIMTaskThread::evaluateBandwidthCriterion() const
+{
+    double rss = currentRSS();
+    if (!std::isfinite(rss))
+        return std::numeric_limits<double>::max();
+
+    const int n = mFlowDataList.size();
+    if (n <= 0)
+        return std::numeric_limits<double>::max();
+
+    if (mBandwidthCriterionType == BandwidthSelectionCriterionType::CV)
+    {
+        return rss / n;
+    }
+
+    const int k = mFieldMapping.independentVars.size() + 1;
+    if (n <= k + 1)
+        return std::numeric_limits<double>::max();
+
+    double sigma2 = rss / n;
+    if (sigma2 <= 0.0)
+        sigma2 = std::numeric_limits<double>::min();
+
+    const double pi = 3.14159265358979323846;
+    double aic = n * std::log(sigma2) + n * (1.0 + std::log(2.0 * pi));
+    double aicc = aic + (2.0 * k * (k + 1.0)) / (n - k - 1.0);
+    return aicc;
+}
+
+double GwmSWIMTaskThread::currentRSS() const
+{
+    if (mResiduals.n_elem == 0)
+        return std::numeric_limits<double>::quiet_NaN();
+    return dot(mResiduals, mResiduals);
+}
+
+void GwmSWIMTaskThread::updateDiagnostics()
+{
+    mDiagnostics = GwmSWIMDiagnostics();
+    mDiagnostics.dataPoints = static_cast<int>(mResponseVector.n_elem);
+    const int n = mDiagnostics.dataPoints;
+    
+    double rss = currentRSS();
+    mDiagnostics.rss = rss;
+
+    // Calculate effective number of parameters and effective degrees of freedom
+    // using hat matrix trace statistics (following GWR methodology)
+    double trS = mShat(0);  // tr(S) - trace of hat matrix
+    double trStS = mShat(1);  // tr(S^T * S) - trace of hat matrix squared (approximated)
+    
+    // Effective number of parameters: enp = 2 * tr(S) - tr(S^T * S)
+    mDiagnostics.effectiveParameters = 2.0 * trS - trStS;
+    
+    // Effective degrees of freedom: edf = n - 2 * tr(S) + tr(S^T * S)
+    mDiagnostics.effectiveDof = static_cast<double>(n) - 2.0 * trS + trStS;
+
+    if (n > 0 && std::isfinite(rss))
+    {
+        // Use effective degrees of freedom for variance estimation
+        double sigma2 = std::isfinite(mDiagnostics.effectiveDof) && mDiagnostics.effectiveDof > 0.0
+            ? rss / mDiagnostics.effectiveDof
+            : rss / static_cast<double>(n);
+        
+        if (sigma2 > 0.0 && std::isfinite(sigma2))
+        {
+            const double pi = 3.14159265358979323846;
+            // AIC = n * log(sigma^2) + n * (1 + log(2*pi)) + 2 * enp
+            mDiagnostics.aic = n * std::log(sigma2) + n * (1.0 + std::log(2.0 * pi)) + 2.0 * mDiagnostics.effectiveParameters;
+            
+            // AICc = AIC + 2 * enp * (enp + 1) / (n - enp - 1)
+            if (std::isfinite(mDiagnostics.effectiveParameters) && n - mDiagnostics.effectiveParameters - 1 > 0)
+            {
+                mDiagnostics.aicc = mDiagnostics.aic + (2.0 * mDiagnostics.effectiveParameters * (mDiagnostics.effectiveParameters + 1.0)) 
+                    / (n - mDiagnostics.effectiveParameters - 1.0);
+            }
+        }
+    }
+
+    if (n > 0 && mResponseVector.n_elem == static_cast<uword>(n) && std::isfinite(rss))
+    {
+        vec centeredY = mResponseVector - mean(mResponseVector);
+        double tss = dot(centeredY, centeredY);
+        if (tss > 0.0)
+        {
+            mDiagnostics.rSquared = 1.0 - rss / tss;
+            // Adjusted R-squared using effective degrees of freedom
+            if (std::isfinite(mDiagnostics.effectiveDof) && mDiagnostics.effectiveDof > 1.0)
+            {
+                mDiagnostics.adjRSquared = 1.0 - (1.0 - mDiagnostics.rSquared) * (n - 1.0) / (mDiagnostics.effectiveDof - 1.0);
+            }
+        }
+    }
 }
 
 void GwmSWIMTaskThread::performLocalRegression()
 {
-    qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Starting local regression";
-    
     if (mDesignMatrix.n_rows == 0 || mWeightMatrix.n_rows == 0)
     {
         print_message(tr("Skipping regression because matrices are empty."));
-        qDebug() << "[GwmSWIMTaskThread::performLocalRegression] ERROR: Matrices are empty";
-        qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Design matrix:" << mDesignMatrix.n_rows << "x" << mDesignMatrix.n_cols;
-        qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Weight matrix:" << mWeightMatrix.n_rows << "x" << mWeightMatrix.n_cols;
         return;
     }
 
     int n = static_cast<int>(mDesignMatrix.n_rows);
     int p = static_cast<int>(mDesignMatrix.n_cols);
-    qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Regression parameters: n=" << n << "p=" << p;
     
     mLocalBetas = mat(n, p, fill::zeros);
     mFittedValues = vec(n, fill::zeros);
     mResiduals = vec(n, fill::zeros);
-    qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Result matrices initialized";
+    mShat = vec(2, fill::zeros);  // [tr(S), tr(S^T * S)]
 
     int successCount = 0;
     int skipCount = 0;
@@ -673,7 +846,6 @@ void GwmSWIMTaskThread::performLocalRegression()
     {
         if (checkCanceled())
         {
-            qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Calculation canceled at iteration" << i;
             return;
         }
 
@@ -693,12 +865,14 @@ void GwmSWIMTaskThread::performLocalRegression()
         mat XtWX = Xw.t() * Xw;
         vec XtWy = Xw.t() * yw;
 
-        vec beta;
-        bool solved = solve(beta, XtWX, XtWy, solve_opts::fast + solve_opts::likely_sympd);
+        mat XtWXInv;
+        bool solved = solve(XtWXInv, XtWX, eye(p, p), solve_opts::fast + solve_opts::likely_sympd);
         if (!solved)
         {
-            beta = pinv(XtWX) * XtWy;
+            XtWXInv = pinv(XtWX);
         }
+
+        vec beta = XtWXInv * XtWy;
 
         if (beta.n_elem == static_cast<uword>(p))
         {
@@ -706,22 +880,48 @@ void GwmSWIMTaskThread::performLocalRegression()
             mFittedValues(i) = dot(mDesignMatrix.row(i), beta);
             mResiduals(i) = mResponseVector(i) - mFittedValues(i);
             successCount++;
+
+            // Calculate hat matrix diagonal element s_ii for this observation
+            // Following GWR implementation:
+            // ci = (X^T * W_i * X)^(-1) * X^T * W_i  (p x n matrix)
+            // si = X_i * ci  (1 x n row vector, hat matrix row i)
+            // s_ii = si(i)  (diagonal element)
+            rowvec X_i = mDesignMatrix.row(i);
+            
+            // ci = XtWXInv * Xw.t(), where Xw.t() = X^T * W_i (for observation i)
+            // Xw is (n x p) where each row j is sqrt(w_ij) * X_j
+            // Xw.t() is (p x n) where each column j is sqrt(w_ij) * X_j^T
+            mat ci = XtWXInv * Xw.t();  // (p x n)
+            
+            // si = X_i * ci, hat matrix row i (1 x n)
+            rowvec si = X_i * ci;
+            
+            // s_ii is the i-th element of si (diagonal element)
+            double s_ii = si(i);
+            
+            // Accumulate hat matrix trace statistics
+            if (std::isfinite(s_ii))
+            {
+                mShat(0) += s_ii;  // tr(S) = sum of diagonal elements
+                // tr(S^T * S) = sum_i sum_j s_ij^2
+                // For row i: sum_j s_ij^2 = dot(si, si) = sum(si % si)
+                double trStS_row = as_scalar(si * si.t());  // dot(si, si) = sum(si % si)
+                if (std::isfinite(trStS_row))
+                {
+                    mShat(1) += trStS_row;
+                }
+            }
         }
 
         if (i % 100 == 0)
         {
             progress(i, n);
-            if (i == 0 || i == n - 1)
-            {
-                qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Progress:" << i << "/" << n << "Success:" << successCount << "Skip:" << skipCount;
-            }
         }
     }
     
-    qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Regression completed";
-    qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Success count:" << successCount << "Skip count:" << skipCount;
-    qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Local betas size:" << mLocalBetas.n_rows << "x" << mLocalBetas.n_cols;
-    qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Fitted values size:" << mFittedValues.n_elem;
-    qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Residuals size:" << mResiduals.n_elem;
+    qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Completed. success=" << successCount
+             << "skip=" << skipCount
+             << "tr(S)=" << mShat(0)
+             << "tr(S^T*S)=" << mShat(1);
 }
 
