@@ -44,7 +44,11 @@ GwmPropertyGGWRTab::GwmPropertyGGWRTab(QWidget *parent,GwmLayerGGWRItem* item) :
         {
             ui->grpDiagnostic->hide();
         }
-        ui->grpFTest->hide();
+        //ui->grpFTest->hide();
+        if (!item->fTest())  // 修改：从硬编码隐藏改为条件隐藏
+        {
+            ui->grpFTest->hide();
+        }
     }
 }
 
@@ -85,7 +89,7 @@ void GwmPropertyGGWRTab::updateUI()
     }
     if (true)
     {
-        ui->lblDistanceMetric->setText(tr("Edclidean distance metric is used."));
+        ui->lblDistanceMetric->setText(tr("Euclidean distance metric is used."));
     }
     ui->lblFamily->setText(familyTypeNameDict[mLayerItem->family()]);
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
@@ -135,9 +139,62 @@ void GwmPropertyGGWRTab::updateUI()
     if(mLayerItem->bandwidthOptimized())
     {
 
-        BandwidthCriterionList bwScores = mLayerItem->bandwidthSelScores();
-        QVariant data = QVariant::fromValue(bwScores);
+        gwm::BandwidthCriterionList bwScores = mLayerItem->bandwidthSelScores();
+        qDebug() << "bwScores size:" << bwScores.size();
+        QVector<QPair<double,double>> qlist;
+        for (const auto &item : bwScores)
+            qlist.append(qMakePair(item.first, item.second));
+        QVariant data = QVariant::fromValue(qlist);
         GwmBandwidthSizeSelector::PlotBandwidthResult(data, mBandwidthSelPlot);
+    }
+
+    // 添加 F-test 结果显示
+    if (mLayerItem->fTest())
+    {
+        GwmGeneralizedGWRAlgorithm::FTestResultPack fTestResults = mLayerItem->GGWRFTestResult();
+        QStandardItemModel* model = new QStandardItemModel(4, 5);
+        model->setHorizontalHeaderLabels(
+            QStringList() << ""
+                          << tr("Statistics")
+                          << tr("Numerator DF")
+                          << tr("Denominator DF")
+                          << QStringLiteral("Pr(>)"));
+        ui->trvFTest->setModel(model);
+        GwmFTestResult f1 = fTestResults.f1,
+            f2 = fTestResults.f2,
+            f4 = fTestResults.f4;
+        QList<GwmFTestResult> f3 = fTestResults.f3;
+        // F1
+        model->setItem(0, 0, new QStandardItem(tr("F1 test")));
+        model->setItem(0, 1, new QStandardItem(QString("%1").arg(f1.s, 0, 'f', 4)));
+        model->setItem(0, 2, new QStandardItem(QString("%1").arg(f1.df1, 0, 'f', 4)));
+        model->setItem(0, 3, new QStandardItem(QString("%1").arg(f1.df2, 0, 'f', 4)));
+        model->setItem(0, 4, new QStandardItem(QString("%1").arg(f1.p, 0, 'f', 4)));
+        // F2
+        model->setItem(1, 0, new QStandardItem(tr("F2 test")));
+        model->setItem(1, 1, new QStandardItem(QString("%1").arg(f2.s, 0, 'f', 4)));
+        model->setItem(1, 2, new QStandardItem(QString("%1").arg(f2.df1, 0, 'f', 4)));
+        model->setItem(1, 3, new QStandardItem(QString("%1").arg(f2.df2, 0, 'f', 4)));
+        model->setItem(1, 4, new QStandardItem(QString("%1").arg(f2.p, 0, 'f', 4)));
+        // F4
+        model->setItem(3, 0, new QStandardItem(tr("F4 test")));
+        model->setItem(3, 1, new QStandardItem(QString("%1").arg(f4.s, 0, 'f', 4)));
+        model->setItem(3, 2, new QStandardItem(QString("%1").arg(f4.df1, 0, 'f', 4)));
+        model->setItem(3, 3, new QStandardItem(QString("%1").arg(f4.df2, 0, 'f', 4)));
+        model->setItem(3, 4, new QStandardItem(QString("%1").arg(f4.p, 0, 'f', 4)));
+        // F3
+        QStandardItem* f3Item = new QStandardItem(tr("F3 test"));
+        model->setItem(2, 0, f3Item);
+        QList<GwmVariable> indepVars = mLayerItem->indepVars();
+        for (int i = 0; i < f3.size(); i++)
+        {
+            QString name = i == 0 ? tr("Intercept") : indepVars[i - 1].name;
+            f3Item->appendRow(new QStandardItem(name));
+            f3Item->setChild(i, 1, new QStandardItem(QString("%1").arg(f3[i].s, 0, 'f', 4)));
+            f3Item->setChild(i, 2, new QStandardItem(QString("%1").arg(f3[i].df1, 0, 'f', 4)));
+            f3Item->setChild(i, 3, new QStandardItem(QString("%1").arg(f3[i].df2, 0, 'f', 4)));
+            f3Item->setChild(i, 4, new QStandardItem(QString("%1").arg(f3[i].p, 0, 'f', 4)));
+        }
     }
 }
 

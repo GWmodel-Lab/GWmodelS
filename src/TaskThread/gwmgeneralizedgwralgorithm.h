@@ -76,6 +76,7 @@ public:
     static void initTolUnitDict();
     static GwmEnumValueNameMapper<Family> FamilyValueNameMapper;
 
+    // may not be used
     typedef double (GwmGeneralizedGWRAlgorithm::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
     typedef mat (GwmGeneralizedGWRAlgorithm::*GGWRRegressionFunction)(const mat& x, const vec& y);
     typedef mat (GwmGeneralizedGWRAlgorithm::*CalWtFunction)(const mat& x, const vec& y,mat w);
@@ -84,6 +85,25 @@ public:
 
 
 public:
+    struct FTestResultPack
+    {
+        GwmFTestResult f1;
+        GwmFTestResult f2;
+        QList<GwmFTestResult> f3;
+        GwmFTestResult f4;
+    };
+
+    struct FTestParameters
+    {
+        int nDp = 0;
+        int nVar = 0;
+        double trS = 0.0;
+        double trStS = 0.0;
+        double gwrRSS = 0.0;
+        double trQ = 0.0;
+        double trQtQ = 0.0;
+    };
+
     GwmGeneralizedGWRAlgorithm();
 
     void setCanceled(bool canceled) override;
@@ -95,6 +115,13 @@ public:     // IBandwidthSizeSelectable interface
     double criterion(GwmBandwidthWeight* bandwidthWeight) override
     {
         return (this->*mBandwidthSelectCriterionFunction)(bandwidthWeight);
+    }
+
+public:
+    double criterionLib(gwm::BandwidthWeight* bandwidthWeight){
+        double criterionValue = 0.0;
+        mGGWRCore->getCriterion(bandwidthWeight, criterionValue);
+        return criterionValue;
     }
 
 
@@ -147,12 +174,20 @@ protected:
     void CalGLMModel(const mat& x, const vec& y);
 
     void createResultLayer(CreateResultLayerData data,QString name = QStringLiteral("_GGWR"));
+    void fTest(GwmGeneralizedGWRAlgorithm::FTestParameters params);
+    vec calcDiagBSerial(int i);
 
 private:
 
     double bandwidthSizeGGWRCriterionCVSerial(GwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeGGWRCriterionAICSerial(GwmBandwidthWeight* bandwidthWeight);
-    std::unique_ptr<gwm::GWRBasic> mGWRCore;
+    //std::unique_ptr<gwm::GWRBasic> mGWRCore;
+    std::unique_ptr<gwm::GWRGeneralized> mGGWRCore;
+
+    gwm::GWRGeneralized::Family convertFamily(Family family);
+    gwm::GWRGeneralized::BandwidthSelectionCriterionType convertCriterionType(BandwidthSelectionCriterionType type);
+    GwmGGWRDiagnostic convertDiagnostic(const gwm::GWRGeneralizedDiagnostic& kernel);
+    GwmGLMDiagnostic convertGLMDiagnostic(const gwm::GLMDiagnostic& kernel);
 
 #ifdef ENABLE_OpenMP
     double bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthWeight* bandwidthWeight);
@@ -186,6 +221,10 @@ public:
     bool hasHatMatrix() const;
     void setHasHatMatrix(bool value);
 
+    bool hasFTest() const;
+    void setHasFTest(bool value);
+    GwmGeneralizedGWRAlgorithm::FTestResultPack fTestResult() const;
+
     //子节点命名记录标
     static int treeChildCount;
 
@@ -197,11 +236,13 @@ protected:
     int mMaxiter;
 
     bool mHasHatMatrix = true;
+    bool mHasFTest = false;
 
     mat mBetasSE;
 
     vec mShat;
     mat mS;
+    vec mQDiag;
     double mGwDev;
 
     mat mWtMat1;
@@ -210,6 +251,7 @@ protected:
     GwmGGWRDiagnostic mDiagnostic;
     GwmGLMDiagnostic mGLMDiagnostic;
     CreateResultLayerData mResultList;
+    gwm::BandwidthCriterionList criterionList;
 
     mat mWt2;
     mat myAdj;
@@ -228,6 +270,11 @@ protected:
     int mOmpThreadNum = 8;
 
     GwmGeneralizedLinearModel* mGlm = nullptr;
+
+    GwmFTestResult mF1TestResult;
+    GwmFTestResult mF2TestResult;
+    QList<GwmFTestResult> mF3TestResult;
+    GwmFTestResult mF4TestResult;
 };
 
 
@@ -277,7 +324,7 @@ inline void GwmGeneralizedGWRAlgorithm::setMaxiter(int maxiter){
 
 inline BandwidthCriterionList GwmGeneralizedGWRAlgorithm::bandwidthSelectorCriterions() const
 {
-    return mBandwidthSizeSelector.bandwidthCriterion();
+    return criterionList;//mBandwidthSizeSelector.bandwidthCriterion();
 }
 
 inline bool GwmGeneralizedGWRAlgorithm::hasHatMatrix() const
@@ -333,6 +380,21 @@ inline gwm::ParallelType GwmGeneralizedGWRAlgorithm::parallelType() const
 inline void GwmGeneralizedGWRAlgorithm::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
+}
+
+inline bool GwmGeneralizedGWRAlgorithm::hasFTest() const
+{
+    return mHasFTest;
+}
+
+inline void GwmGeneralizedGWRAlgorithm::setHasFTest(bool value)
+{
+    mHasFTest = value;
+}
+
+inline GwmGeneralizedGWRAlgorithm::FTestResultPack GwmGeneralizedGWRAlgorithm::fTestResult() const
+{
+    return { mF1TestResult, mF2TestResult, mF3TestResult, mF4TestResult };
 }
 
 #endif // GWMGGWRALGORITHM_H
