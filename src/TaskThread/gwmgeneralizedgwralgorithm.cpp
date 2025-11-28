@@ -1467,59 +1467,48 @@ void GwmGeneralizedGWRAlgorithm::fTest(FTestParameters params)
             vk2(i) = (1.0 / nDp) * det(trans(betasi - betasJndp) * betasi);
         }
 
-        // 注意：对于 GGWR，calcDiagB 方法可能需要不同的实现
-        // 这里简化处理，可能需要根据实际情况调整
+        // 参考 BasicGWR 的实现，简化错误处理
         for (int i = 0; i < nVar && !checkCanceled(); i++)
         {
-            // 简化版本：使用近似值
-            // 完整实现需要类似 BasicGWR 的 calcDiagB 方法
-            //double g1 = lDelta1 / nVar;  // 简化假设
-            //double g2 = lDelta2 / (nVar * nVar);  // 简化假设
-            //double numdf = g1 * g1 / g2;
-            //GwmFTestResult f3i;
-            //f3i.s = (vk2(i) / g1) / sigma2delta1;
-            //f3i.df1 = numdf;
-            //f3i.df2 = f1.df1;
-            //f3i.p = gsl_cdf_fdist_Q(f3i.s, numdf, f1.df1);
-            //f3.append(f3i);
-            //emit tick(3 + i, nVar + 3);
-
             vec diagB = calcDiagBSerial(i);
-            if (diagB(0) == DBL_MAX || diagB(1) == DBL_MAX)
+            if (!checkCanceled())
             {
-                // 如果计算失败，跳过这个变量
+                // 如果返回 DBL_MAX，说明计算失败，跳过该变量
+                if (diagB(0) == DBL_MAX || diagB(1) == DBL_MAX)
+                {
+                    GwmFTestResult f3i;
+                    f3i.s = 0.0;
+                    f3i.df1 = 0.0;
+                    f3i.df2 = 0.0;
+                    f3i.p = 1.0;
+                    f3.append(f3i);
+                    continue;
+                }
+                
+                double g1 = diagB(0);
+                double g2 = diagB(1);
+                double numdf = g1 * g1 / g2;
+                
+                // 检查计算结果的有效性
+                if (g1 <= 0 || g2 <= 0 || numdf <= 0 || !isfinite(numdf))
+                {
+                    GwmFTestResult f3i;
+                    f3i.s = 0.0;
+                    f3i.df1 = 0.0;
+                    f3i.df2 = 0.0;
+                    f3i.p = 1.0;
+                    f3.append(f3i);
+                    continue;
+                }
+                
                 GwmFTestResult f3i;
-                f3i.s = 0.0;
-                f3i.df1 = 0.0;
-                f3i.df2 = 0.0;
-                f3i.p = 1.0;
+                f3i.s = (vk2(i) / g1) / sigma2delta1;
+                f3i.df1 = numdf;
+                f3i.df2 = f1.df1;
+                f3i.p = gsl_cdf_fdist_Q(f3i.s, numdf, f1.df1);
                 f3.append(f3i);
-                continue;
+                emit tick(3 + i, nVar + 3);
             }
-            
-            double g1 = diagB(0);
-            double g2 = diagB(1);
-            double numdf = g1 * g1 / g2;
-            
-            if (g1 <= 0 || g2 <= 0 || numdf <= 0)
-            {
-                // 如果计算结果无效，跳过这个变量
-                GwmFTestResult f3i;
-                f3i.s = 0.0;
-                f3i.df1 = 0.0;
-                f3i.df2 = 0.0;
-                f3i.p = 1.0;
-                f3.append(f3i);
-                continue;
-            }
-            
-            GwmFTestResult f3i;
-            f3i.s = (vk2(i) / g1) / sigma2delta1;
-            f3i.df1 = numdf;
-            f3i.df2 = f1.df1;
-            f3i.p = gsl_cdf_fdist_Q(f3i.s, numdf, f1.df1);
-            f3.append(f3i);
-            emit tick(3 + i, nVar + 3);
         }
     }
 
@@ -1545,6 +1534,7 @@ void GwmGeneralizedGWRAlgorithm::fTest(FTestParameters params)
 
 
 // 计算 F3 Test 所需的 diagB（针对 GGWR）
+// 参考 BasicGWR 的实现，使用 inv_sympd 提高数值稳定性
 vec GwmGeneralizedGWRAlgorithm::calcDiagBSerial(int i)
 {
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
@@ -1555,12 +1545,20 @@ vec GwmGeneralizedGWRAlgorithm::calcDiagBSerial(int i)
     for (arma::uword j = 0; j < nDp && !checkCanceled(); j++)
     {
         vec wj = mWtMat2.col(j);
-        mat xtw = trans(mX % ((wj % mWt2) * wspan));
+        vec weights = wj % mWt2;
+        
+        // 检查权重有效性
+        if (sum(weights) < 1e-10 || any(weights < 0) || !weights.is_finite())
+        {
+            emit error("Invalid weights in calcDiagB (first loop).");
+            return { DBL_MAX, DBL_MAX };
+        }
+        
+        mat xtw = trans(mX % (weights * wspan));
         try {
-            mat xtwx = xtw * mX;
-            mat xtwx_inv = inv(xtwx);
-            mat C = xtwx_inv * xtw;  // C 矩阵
-            c += C.col(i);  // 累加第 i 列
+            // 使用 inv_sympd 替代 pinv，与 BasicGWR 保持一致
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            c += C.col(i);
         } catch (...) {
             emit error("Matrix seems to be singular in calcDiagB (first loop).");
             return { DBL_MAX, DBL_MAX };
@@ -1571,12 +1569,20 @@ vec GwmGeneralizedGWRAlgorithm::calcDiagBSerial(int i)
     for (arma::uword k = 0; k < nDp && !checkCanceled(); k++)
     {
         vec wk = mWtMat2.col(k);
-        mat xtw = trans(mX % ((wk % mWt2) * wspan));
+        vec weights = wk % mWt2;
+        
+        // 检查权重有效性
+        if (sum(weights) < 1e-10 || any(weights < 0) || !weights.is_finite())
+        {
+            emit error("Invalid weights in calcDiagB (second loop).");
+            return { DBL_MAX, DBL_MAX };
+        }
+        
+        mat xtw = trans(mX % (weights * wspan));
         try {
-            mat xtwx = xtw * mX;
-            mat xtwx_inv = inv(xtwx);
-            mat C = xtwx_inv * xtw;  // C 矩阵
-            vec b = C.col(i);  // 第 i 列
+            // 使用 inv_sympd 替代 pinv，与 BasicGWR 保持一致
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            vec b = C.col(i);
             diagB += (b % b - (1.0 / nDp) * (b % c));
         } catch (...) {
             emit error("Matrix seems to be singular in calcDiagB (second loop).");
