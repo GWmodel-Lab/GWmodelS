@@ -45,6 +45,7 @@ void GwmBasicGWRAlgorithm::setCanceled(bool canceled)
 {
     // mBandwidthSizeSelector.setCanceled(canceled);
     // mSpatialWeight.distance()->setCanceled(canceled);
+    qDebug() << "bandwidthauto2";
     return GwmTaskThread::setCanceled(canceled);
 }
 
@@ -96,7 +97,6 @@ void GwmBasicGWRAlgorithm::run()
         // 点位初始化
         emit message(QString(tr("Setting data points")) + (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
         initPoints();
-        mGWRCore->setCoords(mDataPoints);
     }
 
     // 优选模型
@@ -123,15 +123,14 @@ void GwmBasicGWRAlgorithm::run()
         // 初始化
         emit message(QString(tr("Setting X and Y.")));
         initXY(mX, mY, mDepVar, mIndepVars);
+        mGWRCore->setCoords(mDataPoints);
         mGWRCore->setDependentVariable(mY);
         mGWRCore->setIndependentVariables(mX);
         mGWRCore->setSpatialWeight(mSpatialWeight);
         mGWRCore->setHasHatMatrix(mHasHatMatrix);
         mGWRCore->setBandwidthSelectionCriterion(mBandwidthSelectionCriterionType);
         mGWRCore->setIsAutoselectBandwidth(mIsAutoselectBandwidth);
-        mGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
     }
-
 
     // 优选带宽
     if (!checkCanceled() && !hasRegressionLayer())
@@ -139,27 +138,22 @@ void GwmBasicGWRAlgorithm::run()
         if (mIsAutoselectBandwidth)
         {
             emit message(QString(tr("Automatically selecting bandwidth ...")));
-
             mGWRCore->setParallelType(mParallelType);
 
             mGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
             mBetas = mGWRCore->fit();
 
             gwm::BandwidthWeight* bw = mGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
-
             if (bw && !checkCanceled())
             {
                 mSpatialWeight.setWeight(bw);
 
                 criterionList = mGWRCore->bandwidthSelectionCriterionList();
-                // mBandwidthSizeSelector.bandwidthCriterion() = criterionList;
-                // QVariant data = QVariant::fromValue(criterionList);
                 QVector<QPair<double,double>> qlist;
                 for (const auto &item : criterionList)
                     qlist.append(qMakePair(item.first, item.second));
                 QVariant data = QVariant::fromValue(qlist);
                 emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
-                // QVariant data = QVariant::fromValue(mBandwidthSizeSelector.bandwidthCriterion());
             }
             std::cout << "mBetas = \n" << mBetas << std::endl;
         }
@@ -167,7 +161,6 @@ void GwmBasicGWRAlgorithm::run()
         {
             mGWRCore->setParallelType(mParallelType);
             mBetas = mGWRCore->fit();
-
         }
 
         qDebug() << "regression end";
@@ -229,6 +222,9 @@ void GwmBasicGWRAlgorithm::run()
             double trQtQ = DBL_MAX;
             if (isStoreS())
             {
+                mS = mGWRCore->s();
+                qDebug() << "nDp=" << nDp;
+                qDebug() << "mS.n_rows=" << mS.n_rows << " mS.n_cols=" << mS.n_cols;
                 mat EmS = eye(nDp, nDp) - mS;
                 mat Q = trans(EmS) * EmS;
                 trQtQ = sum(diagvec(trans(Q) * Q));
@@ -249,6 +245,7 @@ void GwmBasicGWRAlgorithm::run()
                 fTestParams.gwrRSS = sum(res % res);
                 fTest(fTestParams);
             }
+            qDebug() << "step3";
         }
     }
     else
@@ -1429,7 +1426,7 @@ bool GwmBasicGWRAlgorithm::isValid()
 
         if (!mIsAutoselectBandwidth)
         {
-            GwmBandwidthWeight* bw = mSpatialWeight.weight<GwmBandwidthWeight>();
+            gwm::BandwidthWeight* bw = mSpatialWeight.weight<gwm::BandwidthWeight>();
             if (bw->adaptive() && bw->bandwidth() <= mIndepVars.size())
                 return false;
         }
@@ -1533,10 +1530,6 @@ void GwmBasicGWRAlgorithm::setBandwidthSelectionCriterionType(const gwm::GWRBasi
 
 void GwmBasicGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    emit message("setParallelType1");
-    qDebug()<<"setParallelType1";
     mParallelType = type;
     mGWRCore->setParallelType(type);
-    emit message("setParallelType2");
-    qDebug()<<"setParallelType2";
 }

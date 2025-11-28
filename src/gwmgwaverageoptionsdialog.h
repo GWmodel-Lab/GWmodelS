@@ -63,6 +63,7 @@ public:
     void updateFields();
     void enableAccept();
 
+
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
 };
