@@ -74,9 +74,8 @@ void GwmPropertyGGWRTab::updateUI()
     }
     else
     {
-        QString bwSizeString = QString("%1 %2")
-                .arg(weight.bandwidth(), 0, 'f', 12)
-                .arg(weight.bandwidth());
+        QString bwSizeString = QString("%1")
+                .arg(weight.bandwidth(), 0, 'f', 6);
         ui->lblBandwidthSize->setText(bwSizeString);
     }
     if (mLayerItem->regressionPointGiven())
