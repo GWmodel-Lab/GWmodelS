@@ -18,6 +18,7 @@ GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector,
         mGLMDiagnostic = taskThread->getGLMDiagnostic();
         hasFTest = taskThread->hasFTest();
         mGGWRFTestResults = taskThread->fTestResult();
+        mFamily = taskThread->getFamily();
     }
 }
 
