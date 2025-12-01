@@ -70,6 +70,8 @@
     <addaction name="action_GPKG"/>
     <addaction name="separator"/>
     <addaction name="action_CSV"/>
+    <addaction name="separator"/>
+    <addaction name="actionFlow_data"/>
    </widget>
    <widget class="QMenu" name="menuGWSS">
     <property name="title">

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GwmFlowDataDialog</class>
+ <widget class="QDialog" name="GwmFlowDataDialog">
+  <property name="windowTitle">
+   <string>Import Flow Data</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="basicGroupBox">
+     <property name="title">
+      <string>Basic Information</string>
+     </property>
+     <layout class="QFormLayout" name="formLayoutBasic">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelFile">
+        <property name="text">
+         <string>CSV file:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QHBoxLayout" name="filePathLayout">
+        <item>
+         <widget class="QLineEdit" name="filePathEdit"/>
+        </item>
+        <item>
+         <widget class="QToolButton" name="browseButton">
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelLayerName">
+        <property name="text">
+         <string>Layer name:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="layerNameEdit"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelEncoding">
+        <property name="text">
+         <string>Text encoding:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="encodingCombo"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelDelimiter">
+        <property name="text">
+         <string>Field delimiter:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QComboBox" name="delimiterCombo"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="labelCrs">
+        <property name="text">
+         <string>Coordinate reference system:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QgsProjectionSelectionWidget" name="crsSelector"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="mappingGroupBox">
+     <property name="title">
+      <string>Field mapping (coordinates are required, flow is optional)</string>
+     </property>
+     <layout class="QFormLayout" name="formLayoutMapping">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelFlowVolume">
+        <property name="text">
+         <string>Flow volume (optional):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="flowVolumeCombo"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelOriginX">
+        <property name="text">
+         <string>Origin X (required):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="originXCombo"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelOriginY">
+        <property name="text">
+         <string>Origin Y (required):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="originYCombo"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelDestX">
+        <property name="text">
+         <string>Destination X (required):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QComboBox" name="destXCombo"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="labelDestY">
+        <property name="text">
+         <string>Destination Y (required):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QComboBox" name="destYCombo"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="statusLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsProjectionSelectionWidget</class>
+   <extends>QWidget</extends>
+   <header>qgsprojectionselectionwidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
+
+

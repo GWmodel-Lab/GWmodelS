@@ -34,6 +34,7 @@
 #include <qgslayoutmanager.h>
 
 #include "gwmopenxyeventlayerdialog.h"
+#include "gwmflowdatadialog.h"
 #include "gwmprogressdialog.h"
 #include "gwmcoordtranssettingdialog.h"
 #include "TaskThread/gwmcoordtransthread.h"
@@ -207,7 +208,7 @@ void GwmApp::setupMenus()
     connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::gwmcorrelation);
 //    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::developingMessageBox);
 //    connect(ui->actionGlyph_Plot, &QAction::triggered, this, &GwmApp::developingMessageBox);
-//    connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::onFlowDataImport);
 //    connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
     connect(ui->actionSWIM, &QAction::triggered, this, &GwmApp::onSWIMBtnClicked);
 //    connect(ui->actionFlow_Visualization, &QAction::triggered, this, &GwmApp::developingMessageBox);
@@ -387,6 +388,25 @@ void GwmApp::onOpenFileImportCsv()
     dialog->show();
 }
 
+void GwmApp::onFlowDataImport()
+{
+    GwmFlowDataDialog dialog(this);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        QgsVectorLayer* layer = dialog.takeResultLayer();
+        if (layer && layer->isValid())
+        {
+            addLayerToModel(layer);
+            onMapModelChanged();
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Flow data"), tr("Failed to create a valid flow layer."));
+            delete layer;
+        }
+    }
+}
+
 void GwmApp::onCsvToDat()
 {
     GwmCsvToDatDialog* csvtodatDlg = new GwmCsvToDatDialog();
@@ -482,7 +502,13 @@ void GwmApp::setupFeaturePanel()
     mFeaturePanel = ui->featurePanel;
     mFeaturePanel->setMapModel(mMapModel);
     // 连接信号槽
-    connect(mFeaturePanel, &GwmFeaturePanel::showAttributeTableSignal,this, &GwmApp::onShowAttributeTable);
+    qDebug() << "[GwmApp::setupFeaturePanel] connecting showAttributeTableSignal";
+    connect(mFeaturePanel, &GwmFeaturePanel::showAttributeTableSignal,
+            this, [this](const QModelIndex& idx)
+    {
+        qDebug() << "[GwmApp] received showAttributeTableSignal, forwarding to onShowAttributeTable";
+        this->onShowAttributeTable(idx);
+    });
     connect(mFeaturePanel, &GwmFeaturePanel::zoomToLayerSignal, this, &GwmApp::onZoomToLayer);
     connect(mFeaturePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &GwmApp::onShowLayerProperty);
     connect(mFeaturePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &GwmApp::onFeaturePanelRowOrderChanged);
@@ -1178,7 +1204,6 @@ void GwmApp::onFeaturePanelRowOrderChanged(int from, int dest)
     mMapCanvas->refresh();
 }
 
-// 属性表
 void GwmApp::onShowAttributeTable(const QModelIndex &index)
 {
     // qDebug() << 123;

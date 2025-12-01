@@ -116,6 +116,7 @@ set(SOURCES
     gwmgtwroptionsdialog.cpp
     gwmgwpcaoptionsdialog.cpp
     gwmgwroptionsdialog.cpp
+    gwmflowdatadialog.cpp
     gwmgtdroptionsdialog.cpp
     gwmindepvarselectorwidget.cpp
     gwmlcrgwroptionsdialog.cpp
@@ -151,6 +152,7 @@ set(HEADERS
     gwmgtwroptionsdialog.h
     gwmgwpcaoptionsdialog.h
     gwmgwroptionsdialog.h
+    gwmflowdatadialog.h
     gwmgtdroptionsdialog.h
     gwmindepvarselectorwidget.h
     gwmlcrgwroptionsdialog.h
@@ -178,6 +180,7 @@ set(FORMS
     gwmapp.ui
     gwmcoordtranssettingdialog.ui
     gwmcsvtodatdialog.ui
+    gwmflowdatadialog.ui
     gwmfeaturepanel.ui
     gwmggwroptionsdialog.ui
     gwmgtwroptionsdialog.ui
