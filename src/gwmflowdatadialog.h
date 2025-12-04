@@ -63,8 +63,12 @@ private:
     QComboBox* mFlowVolumeCombo = nullptr;
     QComboBox* mOriginXCombo = nullptr;
     QComboBox* mOriginYCombo = nullptr;
+    QComboBox* mOriginZCombo = nullptr;
+    QComboBox* mOriginMCombo = nullptr;
     QComboBox* mDestXCombo = nullptr;
     QComboBox* mDestYCombo = nullptr;
+    QComboBox* mDestZCombo = nullptr;
+    QComboBox* mDestMCombo = nullptr;
     QComboBox* mOriginValueCombo = nullptr;
     QComboBox* mDestValueCombo = nullptr;
 

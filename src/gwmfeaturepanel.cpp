@@ -56,9 +56,10 @@ void GwmFeaturePanel::setupUi()
     this->setModel(mMapModel);
     this->setDragEnabled(true);
     this->setAcceptDrops(true);
-    // 设置上下文菜单
+
     this->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, &QTreeView::customContextMenuRequested, this, &GwmFeaturePanel::showContextMenu);
+    connect(this, &QTreeView::customContextMenuRequested,
+            this, &GwmFeaturePanel::showContextMenu);
 }
 
 //void GwmFeaturePanel::customContextMenuRequested(const QPoint &pos)
@@ -68,9 +69,10 @@ void GwmFeaturePanel::setupUi()
 
 void GwmFeaturePanel::showContextMenu(const QPoint &pos)
 {
-
+    qDebug() << "[GwmFeaturePanel::showContextMenu] pos:" << pos;
     QModelIndex index = this->indexAt(pos);
-    // qDebug() << index;
+    qDebug() << "[GwmFeaturePanel::showContextMenu] index valid:" << index.isValid()
+             << "row:" << index.row() << "col:" << index.column();
     if (index.isValid())
     {
         GwmLayerItem* item = (mMapModel->itemFromIndex(index));

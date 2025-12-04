@@ -24,6 +24,8 @@
 #include <qgslinesymbol.h>
 #include <qgssinglesymbolrenderer.h>
 #include <qgsarrowsymbollayer.h>
+#include <qgsgraduatedsymbolrenderer.h>
+#include <QColor>
 
 namespace
 {
@@ -41,8 +43,8 @@ GwmFlowDataDialog::GwmFlowDataDialog(QWidget* parent) :
     ui->setupUi(this);
 
     // Map internal pointers to ui widgets for reuse in existing logic
-    mFilePathEdit   = ui->filePathEdit;
-    mBrowseButton   = ui->browseButton;
+    mFilePathEdit   = ui->fileNameEdit;
+    mBrowseButton   = ui->fileNameOpenFileDialogBtn;
     mLayerNameEdit  = ui->layerNameEdit;
     mEncodingCombo  = ui->encodingCombo;
     mDelimiterCombo = ui->delimiterCombo;
@@ -59,8 +61,12 @@ GwmFlowDataDialog::GwmFlowDataDialog(QWidget* parent) :
     mFlowVolumeCombo = ui->flowVolumeCombo;
     mOriginXCombo    = ui->originXCombo;
     mOriginYCombo    = ui->originYCombo;
+    mOriginZCombo    = ui->originZCombo;
+    mOriginMCombo    = ui->originMCombo;
     mDestXCombo      = ui->destXCombo;
     mDestYCombo      = ui->destYCombo;
+    mDestZCombo      = ui->destZCombo;
+    mDestMCombo      = ui->destMCombo;
 
     // No explicit origin/destination attribute combos; all extra columns are kept automatically.
     mOriginValueCombo = nullptr;
@@ -194,8 +200,12 @@ void GwmFlowDataDialog::clearFieldControls()
     resetCombo(mFlowVolumeCombo);
     resetCombo(mOriginXCombo);
     resetCombo(mOriginYCombo);
+    resetCombo(mOriginZCombo);
+    resetCombo(mOriginMCombo);
     resetCombo(mDestXCombo);
     resetCombo(mDestYCombo);
+    resetCombo(mDestZCombo);
+    resetCombo(mDestMCombo);
     if (mOriginValueCombo) resetCombo(mOriginValueCombo);
     if (mDestValueCombo) resetCombo(mDestValueCombo);
 }
@@ -290,8 +300,12 @@ void GwmFlowDataDialog::populateFieldCombos()
     setupCombo(mFlowVolumeCombo, QStringLiteral("flow_volume"));
     setupCombo(mOriginXCombo, QStringLiteral("origin_x"));
     setupCombo(mOriginYCombo, QStringLiteral("origin_y"));
+    setupCombo(mOriginZCombo, QStringLiteral("origin_z"));
+    setupCombo(mOriginMCombo, QStringLiteral("origin_m"));
     setupCombo(mDestXCombo, QStringLiteral("dest_x"));
     setupCombo(mDestYCombo, QStringLiteral("dest_y"));
+    setupCombo(mDestZCombo, QStringLiteral("dest_z"));
+    setupCombo(mDestMCombo, QStringLiteral("dest_m"));
     setupCombo(mOriginValueCombo, QStringLiteral("origin_value"));
     setupCombo(mDestValueCombo, QStringLiteral("dest_value"));
 
@@ -533,6 +547,9 @@ bool GwmFlowDataDialog::buildLayer()
 
     int featureCount = 0;
     int skipped = 0;
+    double minFlow = std::numeric_limits<double>::max();
+    double maxFlow = std::numeric_limits<double>::lowest();
+    bool hasFlowStats = false;
     while (!stream.atEnd())
     {
         QString line = stream.readLine();
@@ -559,6 +576,16 @@ bool GwmFlowDataDialog::buildLayer()
             {
                 ++skipped;
                 continue;
+            }
+            if (!hasFlowStats)
+            {
+                minFlow = maxFlow = flowVolume;
+                hasFlowStats = true;
+            }
+            else
+            {
+                minFlow = std::min(minFlow, flowVolume);
+                maxFlow = std::max(maxFlow, flowVolume);
             }
         }
 
@@ -615,15 +642,59 @@ bool GwmFlowDataDialog::buildLayer()
     }
 
     // Apply arrow symbology so each flow is rendered with an arrow along its line.
-    std::unique_ptr<QgsLineSymbol> lineSymbol = std::make_unique<QgsLineSymbol>();
-    lineSymbol->setOpacity(0.3);
-    QgsArrowSymbolLayer* arrowLayer = new QgsArrowSymbolLayer();
-    // Use basic head geometry; avoid newer API not available in this QGIS version.
-    arrowLayer->setHeadLength(3.0);
-    arrowLayer->setHeadThickness(1.5);
-    lineSymbol->changeSymbolLayer(0, arrowLayer);
-    QgsSingleSymbolRenderer* renderer = new QgsSingleSymbolRenderer(lineSymbol.release());
-    layer->setRenderer(renderer);
+    if (hasFlowStats && maxFlow > minFlow)
+    {
+        // Build graduated renderer based on flow_volume to vary arrow color (yellow -> red).
+        const int classCount = 5;
+        const double range = maxFlow - minFlow;
+        const double step = range / classCount;
+
+        QList<QgsRendererRange> ranges;
+        for (int i = 0; i < classCount; ++i)
+        {
+            double lower = (i == 0) ? minFlow : (minFlow + i * step);
+            double upper = (i == classCount - 1) ? maxFlow : (minFlow + (i + 1) * step);
+
+            std::unique_ptr<QgsLineSymbol> sym = std::make_unique<QgsLineSymbol>();
+            sym->setOpacity(0.3);
+
+            // 计算 0~1 的插值比例，用于颜色插值：0=黄色(255,255,0), 1=红色(255,0,0)
+            double t = (classCount == 1) ? 0.0 : static_cast<double>(i) / (classCount - 1);
+            int r = 255;
+            int g = static_cast<int>(255.0 * (1.0 - t));
+            int b = 0;
+            QColor color(r, g, b);
+            sym->setColor(color);
+
+            QgsArrowSymbolLayer* arrow = new QgsArrowSymbolLayer();
+            // Basic head geometry; avoid newer API not available in this QGIS version.
+            arrow->setHeadLength(3.0);
+            arrow->setHeadThickness(1.5);
+            arrow->setColor(color);
+            sym->changeSymbolLayer(0, arrow);
+
+            QString label = QString("%1 - %2").arg(lower).arg(upper);
+            ranges.append(QgsRendererRange(lower, upper, sym.release(), label));
+        }
+
+        QgsGraduatedSymbolRenderer* gradRenderer =
+                new QgsGraduatedSymbolRenderer(QStringLiteral("flow_volume"), ranges);
+        gradRenderer->setMode(QgsGraduatedSymbolRenderer::EqualInterval);
+        layer->setRenderer(gradRenderer);
+    }
+    else
+    {
+        // No flow volume selected or stats available: use single arrow symbol.
+        std::unique_ptr<QgsLineSymbol> lineSymbol = std::make_unique<QgsLineSymbol>();
+        lineSymbol->setOpacity(0.3);
+        QgsArrowSymbolLayer* arrowLayer = new QgsArrowSymbolLayer();
+        // Use basic head geometry; avoid newer API not available in this QGIS version.
+        arrowLayer->setHeadLength(3.0);
+        arrowLayer->setHeadThickness(1.5);
+        lineSymbol->changeSymbolLayer(0, arrowLayer);
+        QgsSingleSymbolRenderer* renderer = new QgsSingleSymbolRenderer(lineSymbol.release());
+        layer->setRenderer(renderer);
+    }
 
     if (featureCount == 0)
     {
