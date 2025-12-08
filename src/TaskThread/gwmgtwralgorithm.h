@@ -1,4 +1,4 @@
-#ifndef GWMGTWRALGORITHM_H
+﻿#ifndef GWMGTWRALGORITHM_H
 #define GWMGTWRALGORITHM_H
 
 #include <QObject>
@@ -7,6 +7,8 @@
 #include "TaskThread/iregressionanalysis.h"
 #include "TaskThread/gwmbandwidthsizeselector.h"
 #include "TaskThread/iparallelable.h"
+
+#include <gwmodel.h>
 
 class GwmGTWRAlgorithm : public GwmSpatialTemporalMonoscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable, public IOpenmpParallelable
 {
@@ -173,6 +175,16 @@ protected:
     int mOmpThreadNum;
 
     bool mHasHatMatrix = true;
+
+    // below are variables and functions added for library functions
+private:
+    std::unique_ptr<gwm::GTWR> mGTWRCore;
+
+    gwm::BandwidthCriterionList mCriterionList;
+    gwm::RegressionDiagnostic mDiagnostic0;
+public:
+    gwm::SpatialWeight convertSpatialWeight();
+    void updateLocalSpatialWeight(gwm::BandwidthWeight* bw);
 };
 
 inline GwmVariable GwmGTWRAlgorithm::dependentVariable() const
@@ -197,6 +209,11 @@ inline void GwmGTWRAlgorithm::setIndependentVariables(const QList<GwmVariable> &
 
 inline GwmDiagnostic GwmGTWRAlgorithm::diagnostic() const
 {
+    if (mGTWRCore)
+    {
+        gwm::RegressionDiagnostic diag = mGTWRCore->diagnostic();
+        return { diag.RSS, diag.AIC, diag.AICc, diag.ENP, diag.EDF, diag.RSquare, diag.RSquareAdjust };
+    }
     return mDiagnostic;
 }
 
@@ -288,7 +305,8 @@ inline mat GwmGTWRAlgorithm::betas() const
 
 inline BandwidthCriterionList GwmGTWRAlgorithm::bandwidthSelectorCriterions() const
 {
-    return mBandwidthSizeSelector.bandwidthCriterion();
+    //return mBandwidthSizeSelector.bandwidthCriterion();
+    return mCriterionList;
 }
 
 inline int GwmGTWRAlgorithm::parallelAbility() const
@@ -308,6 +326,10 @@ inline IParallelalbe::ParallelType GwmGTWRAlgorithm::parallelType() const
 inline void GwmGTWRAlgorithm::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
+    if (mGTWRCore)
+    {
+        mGTWRCore->setOmpThreadNum(threadNum);
+    }
 }
 
 

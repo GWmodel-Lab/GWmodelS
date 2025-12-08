@@ -1,4 +1,4 @@
-#ifndef GWMGTWROPTIONSDIALOG_H
+﻿#ifndef GWMGTWROPTIONSDIALOG_H
 #define GWMGTWROPTIONSDIALOG_H
 
 #include <QDialog>
@@ -44,6 +44,7 @@ public slots:
     void onDistTypeMinkowskiToggled(bool checked);
     void onDistTypeDmatToggled(bool checked);
     void onDmatFileOpenClicked();
+    void onLambdaChanged(double value);
 
 
 public:

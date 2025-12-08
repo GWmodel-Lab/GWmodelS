@@ -1,4 +1,4 @@
-#include "gwmpropertygtwrtab.h"
+﻿#include "gwmpropertygtwrtab.h"
 #include "ui_gwmpropertygtwrtab.h"
 
 #include <armadillo>
@@ -65,9 +65,8 @@ void GwmPropertyGTWRTab::updateUI()
     }
     else
     {
-        QString bwSizeString = QString("%1 %2")
-                .arg(weight.bandwidth(), 0, 'f', 12)
-                .arg(weight.bandwidth());
+        QString bwSizeString = QString("%1")
+                .arg(weight.bandwidth(), 0, 'f', 6);
         ui->lblBandwidthSize->setText(bwSizeString);
     }
     if (mLayerItem->regressionPointGiven())
@@ -80,7 +79,7 @@ void GwmPropertyGTWRTab::updateUI()
     }
     if (true)
     {
-        ui->lblDistanceMetric->setText(tr("Edclidean distance metric is used."));
+        ui->lblDistanceMetric->setText(tr("Euclidean distance metric is used."));
     }
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
 
@@ -124,7 +123,12 @@ void GwmPropertyGTWRTab::updateUI()
     if(mLayerItem->bandwidthOptimized())
     {
         BandwidthCriterionList bwScores = mLayerItem->bandwidthSelScores();
-        QVariant data = QVariant::fromValue(bwScores);
+        //QVariant data = QVariant::fromValue(bwScores);
+        //GwmBandwidthSizeSelector::PlotBandwidthResult(data, mBandwidthSelPlot);
+        QVector<QPair<double,double>> qlist;
+        for (const auto &item : bwScores)
+            qlist.append(qMakePair(item.first, item.second));
+        QVariant data = QVariant::fromValue(qlist);
         GwmBandwidthSizeSelector::PlotBandwidthResult(data, mBandwidthSelPlot);
     }
 }

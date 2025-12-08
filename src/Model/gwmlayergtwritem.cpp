@@ -13,7 +13,9 @@ GwmLayerGTWRItem::GwmLayerGTWRItem(GwmLayerItem* parent, QgsVectorLayer* vector,
         mDiagnostic = taskThread->diagnostic();
         mBetas = mat(taskThread->betas());
         isBandwidthOptimized = taskThread->isAutoselectBandwidth();
-        mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();
+        //mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();
+        gwm::BandwidthCriterionList gwmList = taskThread->bandwidthSelectorCriterions();
+        mBandwidthSelScores = BandwidthCriterionList(gwmList.begin(), gwmList.end());
         hasHatmatrix = taskThread->hasHatMatrix();
         isRegressionPointGiven = !(taskThread->regressionLayer() == nullptr);
     }
