@@ -66,7 +66,7 @@ private:
 
     RegressionHatmatrix mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
 
-    std::unique_ptr<gwm::GWRBasic> mGWRCore;
+    std::unique_ptr<gwm::GWRRobust> mRGWRCore;
 
 public:
     static int treeChildCount;
