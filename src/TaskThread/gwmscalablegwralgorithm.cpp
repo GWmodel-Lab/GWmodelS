@@ -136,7 +136,8 @@ GwmDiagnostic GwmScalableGWRAlgorithm::CalcDiagnostic(const vec &y, const mat &x
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-GwmScalableGWRAlgorithm::GwmScalableGWRAlgorithm() : GwmGeographicalWeightedRegressionAlgorithm()
+GwmScalableGWRAlgorithm::GwmScalableGWRAlgorithm() : GwmGeographicalWeightedRegressionAlgorithm(),
+    mSGWRCore(std::make_unique<gwm::GWRScalable>())
 {
 
 }
@@ -151,41 +152,36 @@ void GwmScalableGWRAlgorithm::run()
         emit message(tr("Initilizing points, matrix and neighours..."));
         initPoints();
         initXY(mX, mY, mDepVar, mIndepVars);
-        findDataPointNeighbours();
+        mSGWRCore->setCoords(mDataPoints);
+        mSGWRCore->setDependentVariable(mY);
+        mSGWRCore->setIndependentVariables(mX);
+        mSGWRCore->setSpatialWeight(mSpatialWeight);
+        mSGWRCore->setParameterOptimizeCriterion(mParameterOptimizeCriterion0);
+        mSGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+        // findDataPointNeighbours();
     }
 
-    // 修正带宽
-    GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
-    arma::uword nDp = mX.n_rows, nBw = bandwidth->bandwidth();
-    if (nBw >= nDp && !checkCanceled())
+    qDebug() << "Bandwidth:" << mSpatialWeight.weight<gwm::BandwidthWeight>()->bandwidth();
+    qDebug() << "Before mSGWRCore->fit()";
+    arma::mat betas = mSGWRCore->fit();
+    qDebug() << "After mSGWRCore->fit(), betas size:" << betas.n_rows << betas.n_cols;
+    qDebug() << "Betas matrix:";
+    for (arma::uword i = 0; i < betas.n_rows; ++i)
     {
-        nBw = nDp - 1;
-        bandwidth->setBandwidth(nBw);
+        QString line;
+        for (arma::uword j = 0; j < betas.n_cols; ++j)
+        {
+            line += QString::number(betas(i, j), 'f', 6) + " ";
+        }
+        qDebug().noquote() << line;
     }
+
     if(!checkCanceled())
     {
-    // 解算模型
-        emit tick(0, 0);
-        double band0 = 0.0;
-        switch (bandwidth->kernel())
-        {
-        case GwmBandwidthWeight::KernelFunctionType::Gaussian:
-            band0 = median(mDpNNDists.col(qMin<uword>(50, nBw) - 1)) / sqrt(3);
-            mG0 = exp(-pow(mDpNNDists / band0, 2));
-            break;
-        case GwmBandwidthWeight::KernelFunctionType::Exponential:
-            band0 = median(mDpNNDists.col(qMin<uword>(50, nBw) - 1)) / 3;
-            mG0 = exp(-pow(mDpNNDists / band0, 2));
-            break;
-        default:
-            return;
-        }
-        emit message(tr("Scalable GWR preparing..."));
-        prepare();
-
         emit message(tr("Scalable GWR optimizing..."));
         double b_tilde = 1.0, alpha = 0.01;
-        mCV = optimize(mMx0, mMy0, b_tilde, alpha);
+        // mCV = optimize(mMx0, mMy0, b_tilde, alpha);
+        mCV = mSGWRCore->cv();
         if (mCV < DBL_MAX && !checkCanceled())
         {
             emit message(tr("Scalable GWR calibrating..."));
@@ -193,28 +189,28 @@ void GwmScalableGWRAlgorithm::run()
             mPenalty = alpha * alpha;
             if (!hasRegressionLayer() && !checkCanceled())
             {
-                mBetas = regressionHatmatrixSerial(mX, mY);
-                mDiagnostic = CalcDiagnostic(mY, mX, mBetas, mShat);
-                double trS = mShat(0), trStS = mShat(1);
-                double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+                mBetas = betas;
+                // mDiagnostic = CalcDiagnostic(mY, mX, mBetas, mShat);
+                mDiagnostic0 = mSGWRCore->diagnostic();
+                // arma::uword nDp = mX.n_rows;
+                // double sigmaHat = mDiagnostic0.RSS / (nDp - 2 * trS + trStS);
                 vec yhat = sum(mX % mBetas, 1);
                 vec residual = mY - yhat;
-                mBetasSE = sqrt(sigmaHat * mBetasSE);
-                mat betasTV = mBetas / mBetasSE;
+
                 createResultLayer({
                     qMakePair(QString("%1"), mBetas),
                     qMakePair(QString("y"), mY),
                     qMakePair(QString("yhat"), yhat),
-                    qMakePair(QString("residual"), residual),
-                    qMakePair(QString("%1_SE"), mBetasSE),
-                    qMakePair(QString("%1_TV"), betasTV)
+                    qMakePair(QString("residual"), residual)
+                    // qMakePair(QString("%1_SE"), mBetasSE),
+                    // qMakePair(QString("%1_TV"), betasTV)
                 });
             }
             else
             {
                 if(!checkCanceled())
                 {
-                   mBetas = regressionSerial(mX, mY);
+                   mBetas = betas;
                 }
                 if (hasRegressionLayerXY && mHasPredict && !checkCanceled())
                 {
@@ -253,7 +249,7 @@ void GwmScalableGWRAlgorithm::run()
 
 void GwmScalableGWRAlgorithm::findDataPointNeighbours()
 {
-    GwmBandwidthWeight* bandwidth = mDpSpatialWeight.weight<GwmBandwidthWeight>();
+    gwm::BandwidthWeight* bandwidth = mDpSpatialWeight.weight<gwm::BandwidthWeight>();
     uword nDp = mDataPoints.n_rows, nBw = bandwidth->bandwidth() < nDp ? bandwidth->bandwidth() : nDp;
     if (mParameterOptimizeCriterion == ParameterOptimizeCriterionType::CV)
     {
@@ -303,7 +299,7 @@ mat GwmScalableGWRAlgorithm::findNeighbours(const gwm::SpatialWeight &spatialWei
     return dists.t();
 }
 
-double scagwr_loocv_multimin_function(const gsl_vector* vars, void* params)
+double scagwr_loocv_multimin_function0(const gsl_vector* vars, void* params)
 {
     double b_tilde = gsl_vector_get(vars, 0), alpha = gsl_vector_get(vars, 1);
     vec target = { b_tilde, alpha };
@@ -315,7 +311,7 @@ double scagwr_loocv_multimin_function(const gsl_vector* vars, void* params)
     return GwmScalableGWRAlgorithm::Loocv(target, *x, *y, bw, polynomial, *Mx0, *My0);
 }
 
-double scagwr_aic_multimin_function(const gsl_vector* vars, void* params)
+double scagwr_aic_multimin_function0(const gsl_vector* vars, void* params)
 {
     double b_tilde = gsl_vector_get(vars, 0), alpha = gsl_vector_get(vars, 1);
     vec target = { b_tilde, alpha };
@@ -338,7 +334,7 @@ double GwmScalableGWRAlgorithm::optimize(const mat &Mx0, const mat &My0, double&
     gsl_vector_set(step, 0, 0.01);
     gsl_vector_set(step, 1, 0.01);
     LoocvParams params = { &mX, &mY, (int)bandwidth->bandwidth(), mPolynomial, &Mx0, &My0 };
-    gsl_multimin_function function = { mParameterOptimizeCriterion == CV ? &scagwr_loocv_multimin_function : &scagwr_aic_multimin_function, 2, &params };
+    gsl_multimin_function function = { mParameterOptimizeCriterion == CV ? &scagwr_loocv_multimin_function0 : &scagwr_aic_multimin_function0, 2, &params };
     double cv = DBL_MAX;
     int status = gsl_multimin_fminimizer_set(minizer, &function, target, step);
     if (status == GSL_SUCCESS && !checkCanceled())
@@ -637,8 +633,22 @@ void GwmScalableGWRAlgorithm::initPoints()
     GwmGeographicalWeightedRegressionAlgorithm::initPoints();
     if (mDpSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mDpSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
     {
-        gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
-        d->makeParameter({ mDataPoints, mDataPoints });
+        if (mDpSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
+        {
+            auto* d = mDpSpatialWeight.distance<gwm::CRSDistance>();
+            if (d)
+            {
+                d->makeParameter({ mDataPoints, mDataPoints });
+            }
+        }
+        else if (mDpSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
+        {
+            auto* d2 = mDpSpatialWeight.distance<gwm::MinkwoskiDistance>();
+            if (d2)
+            {
+                d2->makeParameter({ mDataPoints, mDataPoints });
+            }
+        }
     }
 }
 
@@ -763,8 +773,8 @@ bool GwmScalableGWRAlgorithm::isValid()
 {
     if (GwmGeographicalWeightedRegressionAlgorithm::isValid())
     {
-        GwmBandwidthWeight* bandwidth = mSpatialWeight.weight<GwmBandwidthWeight>();
-        if (!(bandwidth->kernel() == GwmBandwidthWeight::Gaussian || bandwidth->kernel() == GwmBandwidthWeight::Exponential))
+        gwm::BandwidthWeight* bandwidth = mSpatialWeight.weight<gwm::BandwidthWeight>();
+        if (!(bandwidth->kernel() == gwm::BandwidthWeight::Gaussian || bandwidth->kernel() == gwm::BandwidthWeight::Exponential))
             return false;
 
         if (bandwidth->bandwidth() <= mIndepVars.size())
