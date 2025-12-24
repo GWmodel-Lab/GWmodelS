@@ -53,41 +53,25 @@ void GwmPropertyGTDRTab::updateUI()
     ui->lblKernelFunction->hide();
     ui->lblBandwidthSize->hide();
 
-
-    // GTDR的带宽是多维的
-    // if (weights.size() > 1)
-    // {
-    //     QStringList bwSizeStrings;
-    //     for (int i = 0; i < weights.size(); ++i)
-    //     {
-    //         auto* bw = mLayerItem->bandwidths()[i];
-    //         QString varName = i < mLayerItem->indepVar().size()
-    //                               ? mLayerItem->indepVar()[i].name
-    //                               : QString("Dim_%1").arg(i);
-    //         if(weight.adaptive()){
-    //             bwSizeStrings << QString("%1").arg(int(bw->bandwidth()));}
-    //         else{
-    //             bwSizeStrings << QString("%1").arg(bw->bandwidth(), 0, 'f',2);
-    //         };
-    //     }
-
-    //     QString bwSizeString = weight.adaptive()?
-    //                                QString("%1 (number of nearest neighbours)").arg(bwSizeStrings.join(", ")) :
-    //                                bwSizeStrings.join(", ");
-    //     ui->lblBandwidthSize->setText(bwSizeString);
-    // }else if (mLayerItem->bandwidth())
-    // {
-    //     // 单个带宽值的显示逻辑
-    //     if (weight.adaptive())
-    //     {
-    //         QString bwSizeString = QString("%1 (number of nearest neighbours)").arg(int(weight.bandwidth()));
-    //         ui->lblBandwidthSize->setText(bwSizeString);
-    //     }else{
-    //         QString bwSizeString = QString("%1").arg(weight.bandwidth(), 0, 'f', 2);
-    //         ui->lblBandwidthSize->setText(bwSizeString);
-    //     }
-    // }
-
+    if (mLayerItem->isBandwidthOptimizationSuccessful())
+    {
+        ui->label_5->hide();
+        ui->lblBandwidthOptFail->hide();  // 优化成功，隐藏警告
+    }
+    else
+    {
+        // 只有在启用自动优化但优化失败时才显示
+        if (mLayerItem->bandwidthOptimized())
+        {
+            ui->lblBandwidthOptFail->setText(tr("Bandwidth optimization failed, using initial bandwidths."));
+            ui->lblBandwidthOptFail->show();  // 优化失败，显示警告
+        }
+        else
+        {
+            ui->label_5->hide();
+            ui->lblBandwidthOptFail->hide();  // 没有优化，隐藏标签
+        }
+    }
 
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
     if (true)
@@ -112,6 +96,7 @@ void GwmPropertyGTDRTab::updateUI()
     // set bandwidth parameters
     // QList<GwmBandwidthWeight*> weights = mLayerItem->bandwidths();
     QList<GwmVariable> indepVars = mLayerItem->indepVar();
+    QList<GwmVariable> weightingVars = mLayerItem->weightingVar();
     int nDims = weights.size();
 
     if (nDims > 0)
@@ -125,7 +110,7 @@ void GwmPropertyGTDRTab::updateUI()
         
         // 设置表头
         QStringList headers = QStringList() 
-            << tr("Indep. Var.") 
+            << tr("Dimen.") 
             << tr("Bandwidth") 
             << tr("Kernel");
         ui->tbwBandwidthParameters->setHorizontalHeaderLabels(headers);
@@ -140,11 +125,11 @@ void GwmPropertyGTDRTab::updateUI()
             if (!bw)
                 continue;
             
-            // 第1列：自变量名称
+            // 第1列：权重维度
             QString varName;
-            if (i < indepVars.size())
+            if (i < weightingVars.size())
             {
-                varName = indepVars[i].name;
+                varName = weightingVars[i].name;
             }
             else
             {
@@ -193,9 +178,9 @@ void GwmPropertyGTDRTab::updateUI()
         ui->tbwBandwidthParameters->setRowCount(0);
         ui->tbwBandwidthParameters->setColumnCount(3);
         QStringList headers = QStringList() 
-            << tr("Indep. Var.") 
+            << tr("Dimen.") 
             << tr("Bandwidth") 
-            << tr("Kernel Function");
+            << tr("Kernel");
         ui->tbwBandwidthParameters->setHorizontalHeaderLabels(headers);
     }
 

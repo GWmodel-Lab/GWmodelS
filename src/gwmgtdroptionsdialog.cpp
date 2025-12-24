@@ -42,6 +42,7 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     ui->lsvParameterSpecifiedParameterList->setSelectionModel(mParameterSpecifiedOptionsSelectionModel);
     // 连接信号
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGTDROptionsDialog::onSelectedIndenpendentVariablesChanged);
+    connect(ui->mIndepVarSelector_2, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGTDROptionsDialog::onSelectedWeightingVariablesChanged);
     connect(mParameterSpecifiedOptionsSelectionModel, &QItemSelectionModel::currentChanged, this, &GwmGTDROptionsDialog::onSpecifiedParameterCurrentChanged);
 
     //带宽类型选择部分
@@ -157,6 +158,7 @@ void GwmGTDROptionsDialog::setSelectedLayer(GwmLayerGroupItem *selectedLayer)
 void GwmGTDROptionsDialog::layerChanged(int index)
 {
     ui->mIndepVarSelector->layerChanged(mMapLayerList[index]->originChild()->layer());
+    ui->mIndepVarSelector_2->layerChanged(mMapLayerList[index]->originChild()->layer());
     if (mSelectedLayer)
     {
         mSelectedLayer = nullptr;
@@ -165,6 +167,7 @@ void GwmGTDROptionsDialog::layerChanged(int index)
     QgsFields fieldList = mSelectedLayer->originChild()->layer()->fields();
     ui->mDepVarComboBox->clear();
     ui->mIndepVarSelector->onDepVarChanged("");
+    ui->mIndepVarSelector_2->onDepVarChanged("");
     mDepVarModel->clear();
     for (int i = 0; i < fieldList.size(); i++)
     {
@@ -180,11 +183,115 @@ void GwmGTDROptionsDialog::layerChanged(int index)
             ui->mDepVarComboBox->addItem(field.name());
         }
     }
+
+        // 为权重变量选择器添加空间坐标选项
+        GwmVariableItemModel* weightingVarModel = ui->mIndepVarSelector_2->indepVarModel();
+        QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+        if (weightingVarModel && layer->wkbType() != QgsWkbTypes::NoGeometry)
+        {
+            // 检查是否已经添加了坐标选项（避免重复添加）
+            for (int i = weightingVarModel->rowCount() - 1; i >= 0; i--)
+            {
+                GwmVariable var = weightingVarModel->item(i);
+                if (var.name == QStringLiteral("__X_COORD__") || var.name == QStringLiteral("__Y_COORD__"))
+                {
+                    weightingVarModel->remove(i);
+                }
+            }
+
+            // 添加坐标选项（使用特殊命名约定）
+            GwmVariable yCoordVar;
+            yCoordVar.name = QStringLiteral("__Y_COORD__");  // 特殊命名约定
+            yCoordVar.type = QVariant::Double;
+            yCoordVar.index = -2;  // 使用 -2 标识为 Y 坐标
+            yCoordVar.isNumeric = true;
+            weightingVarModel->insert(0, yCoordVar);
+            //weightingVarModel->append(yCoordVar);
+
+            GwmVariable xCoordVar;
+            xCoordVar.name = QStringLiteral("__X_COORD__");  // 特殊命名约定
+            xCoordVar.type = QVariant::Double;
+            xCoordVar.index = -1;  // 使用 -1 标识为 X 坐标
+            xCoordVar.isNumeric = true;
+            weightingVarModel->insert(0, xCoordVar);
+            //weightingVarModel->append(xCoordVar);
+
+
+
+        }
+
+    GwmVariableItemModel* selectedWeightingVarModel = ui->mIndepVarSelector_2->selectedIndepVarModel();
+    if (selectedWeightingVarModel && selectedWeightingVarModel->rowCount() > 0)
+    {
+        mParameterSpecifiedOptionsModel->syncWithAttributes(selectedWeightingVarModel);
+        if (mParameterSpecifiedOptionsModel->rowCount() > 0)
+        {
+            QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
+            mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
+        }
+    }
+
 }
 
 void GwmGTDROptionsDialog::onDepVarChanged(const int index)
 {
     ui->mIndepVarSelector->onDepVarChanged(ui->mDepVarComboBox->itemText(index));
+    ui->mIndepVarSelector_2->onDepVarChanged(ui->mDepVarComboBox->itemText(index));
+
+    // 为权重变量选择器重新添加空间坐标选项（因为 onDepVarChanged 会清空列表）
+    QgsVectorLayer* layer = mSelectedLayer ? mSelectedLayer->originChild()->layer() : nullptr;
+    if (layer && layer->wkbType() != QgsWkbTypes::NoGeometry)
+    {
+        GwmVariableItemModel* weightingVarModel = ui->mIndepVarSelector_2->indepVarModel();
+        if (weightingVarModel)
+        {
+            // 检查是否已经添加了坐标选项（避免重复添加）
+            bool hasXCoord = false;
+            bool hasYCoord = false;
+            for (int i = 0; i < weightingVarModel->rowCount(); i++)
+            {
+                GwmVariable var = weightingVarModel->item(i);
+                if (var.name == QStringLiteral("__X_COORD__"))
+                    hasXCoord = true;
+                if (var.name == QStringLiteral("__Y_COORD__"))
+                    hasYCoord = true;
+            }
+
+            // 添加 X 坐标选项
+            if (!hasXCoord)
+            {
+                GwmVariable xCoordVar;
+                xCoordVar.name = QStringLiteral("__X_COORD__");
+                xCoordVar.type = QVariant::Double;
+                xCoordVar.index = -1;
+                xCoordVar.isNumeric = true;
+                weightingVarModel->append(xCoordVar);
+            }
+
+            // 添加 Y 坐标选项
+            if (!hasYCoord)
+            {
+                GwmVariable yCoordVar;
+                yCoordVar.name = QStringLiteral("__Y_COORD__");
+                yCoordVar.type = QVariant::Double;
+                yCoordVar.index = -2;
+                yCoordVar.isNumeric = true;
+                weightingVarModel->append(yCoordVar);
+            }
+        }
+    }
+
+    // 新增：因变量变化后，重新同步参数列表（基于权重变量）
+    GwmVariableItemModel* selectedWeightingVarModel = ui->mIndepVarSelector_2->selectedIndepVarModel();
+    if (selectedWeightingVarModel && selectedWeightingVarModel->rowCount() > 0)
+    {
+        mParameterSpecifiedOptionsModel->syncWithAttributes(selectedWeightingVarModel);
+        if (mParameterSpecifiedOptionsModel->rowCount() > 0)
+        {
+            QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
+            mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
+        }
+    }
 }
 
 QString GwmGTDROptionsDialog::crsRotateTheta()
@@ -322,7 +429,7 @@ void GwmGTDROptionsDialog::onVariableRadioToggled(bool checked)
 void GwmGTDROptionsDialog::onSelectedIndenpendentVariablesChanged()
 {
     // 同步独立变量到列表（类似 MultiscaleGWR）
-    mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector->selectedIndepVarModel());
+    // mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector->selectedIndepVarModel());
 
     // 如果有项目，选中第一个
     if (mParameterSpecifiedOptionsModel->rowCount() > 0)
@@ -330,6 +437,26 @@ void GwmGTDROptionsDialog::onSelectedIndenpendentVariablesChanged()
         QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
         mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
     }
+}
+
+void GwmGTDROptionsDialog::onSelectedWeightingVariablesChanged()
+{
+    // 权重变量变化时的处理
+    // 可以在这里添加额外的逻辑，比如更新参数列表等
+    // 如果需要为权重变量也创建参数列表，可以参考 onSelectedIndenpendentVariablesChanged 的实现
+    
+    // 同步独立变量到列表（类似 MultiscaleGWR）
+    mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector_2->selectedIndepVarModel());
+
+    // 如果有项目，选中第一个
+    if (mParameterSpecifiedOptionsModel->rowCount() > 0)
+    {
+        QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
+        mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
+    }
+
+    // 触发更新验证
+    updateFieldsAndEnable();
 }
 
 void GwmGTDROptionsDialog::onSpecifiedParameterCurrentChanged(const QModelIndex& current, const QModelIndex& previous)
@@ -505,6 +632,24 @@ void GwmGTDROptionsDialog::updateFields()
         {
             mAlgorithmMeta.independentVariables = selectedIndepVarModel->attributeItemList();
         }
+    }
+
+    GwmVariableItemModel* selectedWeightingVarModel = ui->mIndepVarSelector_2->selectedIndepVarModel();
+    if (selectedWeightingVarModel)
+    {
+        if (selectedWeightingVarModel->rowCount() > 0)
+        {
+            mAlgorithmMeta.weightingVariables = selectedWeightingVarModel->attributeItemList();
+        }
+        else
+        {
+            // 如果没有选择权重变量，清空列表
+            mAlgorithmMeta.weightingVariables.clear();
+        }
+    }
+    else
+    {
+        mAlgorithmMeta.weightingVariables.clear();
     }
 
     mAlgorithmMeta.weightType = gwm::Weight::BandwidthWeight;

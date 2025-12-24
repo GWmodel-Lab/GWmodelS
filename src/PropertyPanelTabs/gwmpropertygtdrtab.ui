@@ -55,7 +55,7 @@
         <x>0</x>
         <y>0</y>
         <width>403</width>
-        <height>779</height>
+        <height>806</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -120,6 +120,20 @@
           </item>
           <item row="2" column="1">
            <widget class="QLabel" name="lblDistanceMetric">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Warning:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="lblBandwidthOptFail">
             <property name="text">
              <string/>
             </property>

@@ -13,14 +13,16 @@ int GwmGTDRTaskThread::treeChildCount = 0;
 
 GwmGTDRTaskThread::GwmGTDRTaskThread()
 {
-    mGTDRCore = std::make_unique<gwm::GTDR>();
+    //mGTDRCore = std::make_unique<gwm::GTDR>();
+    isOptSuccess = false;
 
 }
 
 GwmGTDRTaskThread::GwmGTDRTaskThread(const GwmAlgorithmMetaGTDR& meta) : mMeta(meta)
 {
 
-    mGTDRCore = std::make_unique<gwm::GTDR>();
+    //mGTDRCore = std::make_unique<gwm::GTDR>();
+    isOptSuccess = false;
 
     // Check parameter
     QString metaError;
@@ -33,8 +35,12 @@ GwmGTDRTaskThread::GwmGTDRTaskThread(const GwmAlgorithmMetaGTDR& meta) : mMeta(m
     mIndepVars = meta.independentVariables;
     mDepVar = meta.dependentVariable;
 
+    if(mMeta.weightingVariables.isEmpty()){
+        emit error(tr("Weighting variables are empty."));
+    }
+
     // Spatial Weight
-    uword nDim = mIndepVars.size();
+    uword nDim = meta.weightingVariables.size();
     std::vector<SpatialWeight> spatials;
     mBandwidthHolders.clear();
     mDistanceHolders.clear();
@@ -90,19 +96,97 @@ GwmGTDRTaskThread::GwmGTDRTaskThread(const GwmAlgorithmMetaGTDR& meta) : mMeta(m
     // delete distance;
 }
 
+void GwmGTDRTaskThread::initWeightingVariables(mat& weightingData, const QList<GwmVariable>& weightingVars)
+{
+    int nDp = mLayer->featureCount();
+    int nWeightingVars = weightingVars.size();
+    weightingData = mat(nDp, nWeightingVars, arma::fill::zeros);
+
+    QgsFeatureIterator iterator = mLayer->getFeatures();
+    QgsFeature f;
+    bool ok = false;
+
+    for (int i = 0; iterator.nextFeature(f); i++)
+    {
+        for (int k = 0; k < nWeightingVars; k++)
+        {
+            const GwmVariable& var = weightingVars[k];
+
+            // 检查是否为空间坐标（使用特殊命名约定）
+            if (var.name == QStringLiteral("__X_COORD__"))
+            {
+                // 提取 X 坐标
+                if (f.hasGeometry() && !f.geometry().isEmpty())
+                {
+                    QgsPointXY centroPoint = f.geometry().centroid().asPoint();
+                    weightingData(i, k) = centroPoint.x();
+                }
+                else
+                {
+                    emit error(tr("Feature %1 has no geometry for X coordinate extraction.").arg(i));
+                }
+            }
+            else if (var.name == QStringLiteral("__Y_COORD__"))
+            {
+                // 提取 Y 坐标
+                if (f.hasGeometry() && !f.geometry().isEmpty())
+                {
+                    QgsPointXY centroPoint = f.geometry().centroid().asPoint();
+                    weightingData(i, k) = centroPoint.y();
+                }
+                else
+                {
+                    emit error(tr("Feature %1 has no geometry for Y coordinate extraction.").arg(i));
+                }
+            }
+            else
+            {
+                // 普通属性变量
+                double v = f.attribute(var.name).toDouble(&ok);
+                if (ok)
+                {
+                    weightingData(i, k) = v;
+                }
+                else
+                {
+                    emit error(tr("Weighting variable '%1' value cannot convert to a number. Set to 0.").arg(var.name));
+                }
+            }
+        }
+    }
+}
+
 void GwmGTDRTaskThread::run()
 {
     emit tick(0, 0);
+    if(!checkCanceled())
+    {
+        emit message(tr("Establishing coordinate matrix."));
+        initWeightingVariables(mWeightingData, mMeta.weightingVariables);
+
+        // 创建时空-变量坐标矩阵
+        int nDp = mLayer->featureCount();
+        int nWeightingVars = mMeta.weightingVariables.size();
+        arma::mat virtualCoords(nDp, nWeightingVars, arma::fill::zeros);
+        // 填充默认值
+        for (int i = 0; i < nDp; i++)
+        {
+            for (int j = 0; j < nWeightingVars; j++)
+            {
+                virtualCoords(i, j) = 0;
+            }
+        }
+        mAlgorithm.setCoords(virtualCoords);
+        emit message(tr("Virtual coordinates set: %1 rows x %2 cols (matching weighting variables)").arg(nDp).arg(nWeightingVars));
+    }
     if (!checkCanceled())
     {
         emit message(tr("Extracting data and coordinates."));
         mAlgorithm.setCoords(initPoints(mLayer));
-        emit message(tr("1"));
         initXY(mX, mY, mDepVar, mIndepVars);
-        emit message(tr("2"));
         mAlgorithm.setIndependentVariables(mX);
         mAlgorithm.setDependentVariable(mY);
-        emit message(tr("variable set"));
+        emit message(tr("variables set"));
 
         //set parameters for OneDimDistance: Each dimension has its own dependent variable column
         const auto& sws = mAlgorithm.spatialWeights();
@@ -110,21 +194,26 @@ void GwmGTDRTaskThread::run()
             emit error(tr("GTDR invalid: spatialWeights empty before parameterization."));
             return;
         }
-        // mX 列0是截距，从列1开始对应各自变量
-        if (mX.n_cols < 2 || sws.size() != size_t(mX.n_cols - 1)) {
-            emit message(tr("[WARN] spatialWeights size (%1) != indep columns (%2)")
-                         .arg(sws.size()).arg(mX.n_cols - 1));
+        if (sws.size() != mWeightingData.n_cols)
+        {
+            emit error(tr("GTDR invalid: spatialWeights size (%1) != weighting variables count (%2)")
+                      .arg(sws.size()).arg(mWeightingData.n_cols));
+            return;
         }
-        arma::uword p = mX.n_cols >= 1 ? mX.n_cols - 1 : 0;
-        for (arma::uword k = 0; k < p && k < sws.size(); ++k) {
+
+        emit message(tr("Setting distance parameters using weighting variables..."));
+        for (arma::uword k = 0; k < sws.size() && k < mWeightingData.n_cols; ++k)
+        {
             auto* od = sws[k].distance<gwm::OneDimDistance>();
             if (!od) {
                 emit error(tr("GTDR invalid: spatialWeights[%1] is not OneDimDistance.").arg(int(k)));
                 return;
             }
-            arma::vec col = mX.col(k + 1);  // 自变量第k列（跳过截距列）
-            // focus 和 data 都使用该列（计算一维距离 |x_i - x_j|）
+            // 使用权重变量的第k列来设置距离参数
+            arma::vec col = mWeightingData.col(k);
             od->makeParameter({ col, col });
+            emit message(tr("Distance parameter set for weighting variable: %1")
+                        .arg(mMeta.weightingVariables[k].name));
         }
     }
 
@@ -133,43 +222,12 @@ void GwmGTDRTaskThread::run()
     {
         // Bandwidth size selection
         emit message(tr("Automatically selecting bandwidth..."));
-
         vector<gwm::BandwidthWeight*> vecBandwidthWeight0 ;
-
-        // 1. Prepare data
-        mGTDRCore->setCoords(mAlgorithm.coords());
-        mGTDRCore->setDependentVariable(mY);
-        mGTDRCore->setIndependentVariables(mX);
-
-        // 2. Copy spatial weight
-        std::vector<gwm::SpatialWeight> tempSpatialWeights = mAlgorithm.spatialWeights();
-        mGTDRCore->setSpatialWeights(tempSpatialWeights);//
-
-        const auto& sws = mGTDRCore->spatialWeights();
-        for (size_t i = 0; i < sws.size() && i < mX.n_cols - 1; ++i)
-        {
-            auto* od = sws[i].distance<gwm::OneDimDistance>();
-            if (od)
-            {
-                arma::vec col = mX.col(i + 1);
-                od->makeParameter({ col, col });
-            }
-        }
-        //mGTDRCore->setSpatialWeights(tempSpatialWeights);
-
-        // 3. Set other parameters of GTDR
-        mGTDRCore->setParallelType(mMeta.parallelType);
-        if (mMeta.parallelType == gwm::ParallelType::OpenMP)
-        {
-            mGTDRCore->setOmpThreadNum(mMeta.parallelOmpThreads);
-        }
-        mGTDRCore->setHasHatMatrix(mMeta.hatmatrix);
-        mGTDRCore->setBandwidthCriterionType(mMeta.bandwidthCriterionType);
-        mGTDRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+        mAlgorithm.setBandwidthCriterionType(mMeta.bandwidthCriterionType);
 
         // 4. 收集所有维度的带宽权重指针
         std::vector<gwm::BandwidthWeight*> bandwidths;
-        //const auto& sws = mGTDRCore->spatialWeights();
+        const auto& sws = mAlgorithm.spatialWeights();
         for (const auto& sw : sws)
         {
             auto* bw = sw.weight<gwm::BandwidthWeight>();
@@ -199,7 +257,6 @@ void GwmGTDRTaskThread::run()
         // 5. 创建优化器并执行优化
         emit message(tr("Initializing GTDRBandwidthOptimizer for %1 dimensions...").arg(bandwidths.size()));
 
-        // 参数验证和调整
         double eps = std::max(1e-4, mMeta.bandwidthOptimizeEps);  // 最小 1e-4
         double step = (mMeta.bandwidthOptimizeStep > 0 && mMeta.bandwidthOptimizeStep <= 0.5)
                           ? mMeta.bandwidthOptimizeStep
@@ -209,72 +266,78 @@ void GwmGTDRTaskThread::run()
                              : 500;
         emit message(tr("Optimization parameters: eps=%1, step=%2, maxIter=%3")
                          .arg(eps, 0, 'g', 6).arg(step).arg(maxIter));
-        // 创建优化器
+        // 优化
         gwm::GTDRBandwidthOptimizer optimizer(bandwidths);
-        // emit message(tr("Kernels before optimization:"));
-        // for(int i=0; i<bandwidths.size(); ++i){
-        //     emit message(tr("  Dimension %1: addr=%2, kernel=%3, bandwidth=%4")
-        //                      .arg(i+1)
-        //                      .arg(reinterpret_cast<quintptr>(bandwidths[i]), 0, 16)  // 打印地址
-        //                      .arg(bandwidths[i]->kernel())
-        //                      .arg(bandwidths[i]->bandwidth()));
-        // }
-        // 执行优化
         QElapsedTimer timer;
         timer.start();
 
         try
         {
             int resultCode = optimizer.optimize(
-                mGTDRCore.get(),      // GTDR 实例
+                &mAlgorithm,      // GTDR 实例
                 mX.n_rows,            // featureCount
                 maxIter,              // maxIter
                 eps,                  // eps
                 step                  // step
                 );
-
-            // emit message(tr("Kernels after optimization:"));
-            // for(int i=0; i<bandwidths.size(); ++i){
-            //     emit message(tr("  Dimension %1: addr=%2, kernel=%3, bandwidth=%4")
-            //                      .arg(i+1)
-            //                      .arg(reinterpret_cast<quintptr>(bandwidths[i]), 0, 16)  // 打印地址
-            //                      .arg(bandwidths[i]->kernel())
-            //                      .arg(bandwidths[i]->bandwidth()));
-            // }
-
             qint64 elapsed = timer.elapsed();
 
             if (resultCode == 0)  // GSL_SUCCESS
             {
+                isOptSuccess = true;
                 emit message(tr("Bandwidth optimization completed successfully in %1 ms").arg(elapsed));
-
-                // 6. 获取优化后的带宽值并更新到 mAlgorithm
-                const auto& optimizedSws = mGTDRCore->spatialWeights();
-                auto& algorithmSws = mAlgorithm.spatialWeights();
-
-                for (size_t i = 0; i < optimizedSws.size() && i < algorithmSws.size(); ++i)
+                const auto& sws = mAlgorithm.spatialWeights();
+                for (size_t i = 0; i < sws.size(); ++i)
                 {
-                    auto* optimizedBw = optimizedSws[i].weight<gwm::BandwidthWeight>();
-                    auto* algorithmBw = algorithmSws[i].weight<gwm::BandwidthWeight>();
-
-                    if (optimizedBw && algorithmBw)
+                    auto* bw = sws[i].weight<gwm::BandwidthWeight>();
+                    if (bw)
                     {
-                        // 将优化后的带宽值复制到 mAlgorithm
-                        algorithmBw->setBandwidth(optimizedBw->bandwidth());
-
-                        QString varName = i < mIndepVars.size()
-                                              ? mIndepVars[i].name
-                                              : QString("Dimension_%1").arg(i);
+                        QString varName = i < mMeta.weightingVariables.size()
+                        ? mMeta.weightingVariables[i].name
+                        : QString("Dimension_%1").arg(i);
 
                         emit message(tr("Dimension %1 (%2): optimized bandwidth = %3")
-                                         .arg(i).arg(varName).arg(optimizedBw->bandwidth()));
+                                         .arg(i).arg(varName).arg(bw->bandwidth()));
                     }
                 }
             }
             else
             {
+                isOptSuccess = false;
                 emit error(tr("Bandwidth optimization failed with code: %1").arg(resultCode));
-                // 可以继续使用初始带宽值
+                const auto& sws = mAlgorithm.spatialWeights();
+                for (size_t i = 0; i < sws.size(); ++i)
+                {
+                    auto* bw = sws[i].weight<gwm::BandwidthWeight>();
+                    if (bw)
+                    {
+                        //bw->setBandwidth(100);// 继续使用初始带宽值(这里需要实时更新)
+
+                        // 直接使用 bandwidths 中的当前值（优化器最后一次尝试的值）
+                        double currentBw = bandwidths[i]->bandwidth();
+
+                        // 验证值的有效性
+                        double lower = bw->adaptive() ? (mMeta.weightingVariables.size() + 1) : 0.0;
+                        double upper = bw->adaptive() ? mX.n_rows : sws[i].distance()->maxDistance();
+
+                        if (currentBw <= lower || currentBw >= upper || !isfinite(currentBw))
+                        {
+                            // 如果值无效，使用合理的默认值
+                            currentBw = bw->adaptive()
+                                            ? std::round(std::max(20.0, upper * 0.618))
+                                            : upper * 0.618;
+                            bw->setBandwidth(currentBw);
+                        }
+                        // 如果值有效，不需要设置（已经是当前值）
+
+                        QString varName = i < mMeta.weightingVariables.size()
+                                              ? mMeta.weightingVariables[i].name
+                                              : QString("Dimension_%1").arg(i);
+
+                        emit message(tr("Dimension %1 (%2): using initial bandwidth: %3 (optimization failed)")
+                                         .arg(i).arg(varName).arg(bw->bandwidth()));
+                    }
+                }
             }
         }
         catch (const std::exception& e)
@@ -282,107 +345,27 @@ void GwmGTDRTaskThread::run()
             emit error(tr("Bandwidth optimization exception: %1").arg(e.what()));
         }
 
-        // 7. 关闭库内部优化（因为我们已经手动优化了）
+        // 7. 关闭库内部优化
         mAlgorithm.setEnableBandwidthOptimize(false);
 
-        // 
-        // mAlgorithm.fit();
-        // emit message(tr("Fit completed."));
-
-        // 获取优化后的带宽值
-        // const auto& sws = mAlgorithm.spatialWeights();
-        // for (size_t i = 0; i < sws.size(); ++i)
-        // {
-        //     auto* bw = sws[i].weight<gwm::BandwidthWeight>();
-        //     if (bw) {
-        //         emit message(tr("Dimension %1: optimized bandwidth = %2")
-        //                          .arg(i).arg(bw->bandwidth()));
-        //     }
-        // }
-    }else{
+    }
+    else
+    {
         emit message(tr("Bandwidth size defined."));
         mAlgorithm.setEnableBandwidthOptimize(false);
-        // mAlgorithm.fit();
-        // emit message(tr("Fit completed."));
+
     }
 
     // Run algorithm;
-    if (checkCanceled()) return;
+    if (checkCanceled()) return;   
     try
-    {
-        //mAlgorithm.setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
-        //if(!mAlgorithm.isValid())
-        //{
-        //    emit error(tr("GTDR invalid: check X/Y/coords/spatialWeights consistency."));
-        //    return;
-        //}
-        // 1) 基本维度检查
-        // emit message(tr("[DBG] X shape: %1, %2").arg(mX.n_rows).arg(mX.n_cols));
-        // emit message(tr("[DBG] Y shape: %1").arg(mY.n_rows));
-        // arma::mat coords = mAlgorithm.coords();
-        // emit message(tr("[DBG] coords shape: %1, %2").arg(coords.n_rows).arg(coords.n_cols));
-
-        // if (mX.n_rows == 0 || mY.n_rows == 0 || coords.n_rows == 0) {
-        //     emit error(tr("GTDR invalid: X/Y/coords empty."));
-        //     return;
-        // }
-        // if (mX.n_rows != mY.n_rows || mX.n_rows != coords.n_rows) {
-        //     emit error(tr("GTDR invalid: X/Y/coords row-size mismatch: X=%1, Y=%2, C=%3")
-        //                .arg(mX.n_rows).arg(mY.n_rows).arg(coords.n_rows));
-        //     return;
-        // }
-        // 2) 空间权重检查
-        //     const auto& sws = mAlgorithm.spatialWeights();
-        //     emit message(QString("[DBG] spatialWeights count: %1").arg(sws.size()));
-        //     if (sws.empty()) {
-        //         emit error(tr("GTDR invalid: spatialWeights empty."));
-        //         return;
-        //     }
-        // 一般 GTDR 用“每个维度一个权重”，这里检查数量与自变量个数的一致性
-        //     if (sws.size() != size_t(mIndepVars.size())) {
-        //         emit message(QString("[WARN] spatialWeights size (%1) != indepVars size (%2)")
-        //                      .arg(sws.size()).arg(mIndepVars.size()));
-        //     }
-        //     bool hasNull = false;
-        //     for (size_t i = 0; i < sws.size(); ++i) {
-        //         bool wok = sws[i].weight() != nullptr;
-        //         bool dok = sws[i].distance() != nullptr;
-        //         emit message(QString("[DBG] sw[%1]: weight=%2, distance=%3")
-        //                      .arg(int(i)).arg(wok ? "ok" : "NULL").arg(dok ? "ok" : "NULL"));
-        //         if (!wok || !dok) hasNull = true;
-        //     }
-        //     if (hasNull) {
-        //         emit error(tr("GTDR invalid: some spatialWeights have NULL weight/distance."));
-        //         return;
-        //     }
-        // 3) 取一个样本点尝试生成权重向量，排除 distance/weight 内部再用到空指针
-        /**/
-        // try {
-        //     const SpatialWeight& sw0 = sws.front();
-        //     arma::vec w0 = sw0.weightVector(0);    // 若这里抛异常/崩溃，distance/weight 内部还在引用空对象
-        //     emit message(QString("[DBG] sw[0].weightVector(0) len=%1, first=%2")
-        //                  .arg(w0.n_rows).arg(w0.n_rows ? w0(0) : 0.0, 0, 'g', 10));
-        // } catch (const std::exception& ex) {
-        //     emit error(QString("GTDR invalid: weightVector test failed: %1").arg(ex.what()));
-        //     return;
-        // } catch (...) {
-        //     emit error(tr("GTDR invalid: weightVector test failed: unknown exception."));
-        //     return;
-        // }
-        // 4) lib 层面的 isValid() 兜底
-        //if (!mAlgorithm.isValid()) {
-        //    emit error(tr("GTDR invalid: check X/Y/coords/spatialWeights consistency."));
-        //    return;
-        //}
-        //检查结束
-        
+    { 
         mAlgorithm.fit();
-        emit message(tr("fit"));
+        emit message(tr("fit."));
+        
         mDiagnostic=mAlgorithm.diagnostic();
-        emit message(tr("diagnostic"));
         mBetas = mAlgorithm.betas();
         mBetasSE = mAlgorithm.betasSE();
-
         int nDp = mX.n_rows;
         vec shat = mAlgorithm.sHat();
         double trs = shat(0);
@@ -449,20 +432,20 @@ mat GwmGTDRTaskThread::initPoints(QgsVectorLayer* layer)
 
 void GwmGTDRTaskThread::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
 {
-    emit message(tr("10"));
+    //emit message(tr("10"));
     int nDp = mLayer->featureCount(), nVar = indepVars.size() + 1;
     // Data layer and X,Y
-    emit message(tr("11"));
+    //emit message(tr("11"));
     x = mat(nDp, nVar, fill::zeros);
     y = vec(nDp, fill::zeros);
-    emit message(tr("11"));
+    //emit message(tr("11"));
     QgsFeatureIterator iterator = mLayer->getFeatures();
     QgsFeature f;
     bool ok = false;
-    emit message(tr("12"));
+    //emit message(tr("12"));
     for (int i = 0; iterator.nextFeature(f); i++)
     {
-    emit message(tr("13"));
+    //emit message(tr("13"));
         double vY = f.attribute(depVar.name).toDouble(&ok);
         if (ok)
         {
@@ -477,7 +460,7 @@ void GwmGTDRTaskThread::initXY(mat &x, mat &y, const GwmVariable &depVar, const 
         }
         else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
     }
-    emit message(tr("13"));
+    //emit message(tr("13"));
 
     
     // if (hasRegressionLayer())

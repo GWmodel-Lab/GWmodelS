@@ -84,9 +84,11 @@ GwmLayerGTDRItem::GwmLayerGTDRItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
         mDataPointsSize = taskMeta.layer->featureCount();
         mDepVar = taskMeta.dependentVariable;
         mIndepVars = taskMeta.independentVariables;
+        mWeightingVars = taskMeta.weightingVariables;
         hasHatmatrix = taskThread->hasHatMatrix();
         mBetas = mat(taskThread->betas());
         mDiagnostic = taskThread->diagnostic();
+        mIsBandwidthOptimizationSuccessful = taskThread->isOptSuccess;
         // isBandwidthOptimized = taskThread->isAutoselectBandwidth();
         // mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();
         // isRegressionPointGiven = !(taskThread->regressionLayer() == nullptr);
@@ -94,6 +96,7 @@ GwmLayerGTDRItem::GwmLayerGTDRItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
     else
     {
         mBandwidth = new GwmBandwidthWeight();
+        mIsBandwidthOptimizationSuccessful = false;
     }
 }
 

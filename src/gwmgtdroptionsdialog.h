@@ -77,13 +77,12 @@ private:
     QItemSelectionModel* mParameterSpecifiedOptionsSelectionModel = nullptr;
 
 public slots:
-    // ... 现有槽函数 ...
     void onSelectedIndenpendentVariablesChanged();
+    void onSelectedWeightingVariablesChanged();
     void onSpecifiedParameterCurrentChanged(const QModelIndex& current, const QModelIndex& previous);
     void onBwSizeAdaptiveSizeChanged(int size);
     void onBwSizeFixedSizeChanged(double size);
     void onBwKernelFunctionChanged(int index);
-
 };
 
 

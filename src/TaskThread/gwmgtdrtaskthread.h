@@ -68,6 +68,7 @@ protected:  // QThread interface
 protected:
     mat initPoints(QgsVectorLayer* layer);
     void initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars);
+    void initWeightingVariables(mat& weightingData, const QList<GwmVariable>& weightingVars);
 
 protected:  // GwmSpatialMonoscaleAlgorithm interface
     void createResultLayer(CreateResultLayerData data);
@@ -87,9 +88,11 @@ protected:
     mat mBetas;
     mat mBetasSE;
 
+    mat mWeightingData;
+
     // GwmDiagnostic mDiagnostic;
     gwm::RegressionDiagnostic mDiagnostic;
-    std::unique_ptr<gwm::GTDR> mGTDRCore;
+    //std::unique_ptr<gwm::GTDR> mGTDRCore;
 
     gwm::GTDR mAlgorithm;
     QgsVectorLayer* mLayer = nullptr;
@@ -99,6 +102,7 @@ protected:
 
 public:
     static int treeChildCount;
+    bool isOptSuccess;
 private:
     std::vector<std::unique_ptr<gwm::BandwidthWeight>> mBandwidthHolders;
     std::vector<std::unique_ptr<gwm::OneDimDistance>> mDistanceHolders;

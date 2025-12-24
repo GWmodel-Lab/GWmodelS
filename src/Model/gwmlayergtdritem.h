@@ -30,6 +30,8 @@ public:
 
     bool bandwidthOptimized() const {return isBandwidthOptimized;};
 
+    bool isBandwidthOptimizationSuccessful() const {return mIsBandwidthOptimizationSuccessful;};
+
     bool hatmatrix() const {return hasHatmatrix;};
 
     // bool fTest() const;
@@ -64,6 +66,11 @@ public:
         return mIndepVars;
     }
 
+    QList<GwmVariable> weightingVar() const
+    {
+        return mWeightingVars;
+    }
+
     GwmBandwidthWeight* bandwidth() const
     {
         return mBandwidth;
@@ -79,6 +86,7 @@ protected:
     int mDataPointsSize;
     GwmVariable mDepVar;
     QList<GwmVariable> mIndepVars;
+    QList<GwmVariable> mWeightingVars;
     GwmBandwidthWeight mWeight;
     GwmDiagnostic mDiagnostic;
     arma::mat mBetas;
@@ -94,6 +102,7 @@ protected:
     bool isModelOptimized;
     bool isBandwidthOptimized;
     bool hasHatmatrix;
+    bool mIsBandwidthOptimizationSuccessful;
     // bool hasFTest;
     // bool hasols;
 

@@ -11,6 +11,8 @@ struct GwmAlgorithmMetaGTDR
     QgsVectorLayer* layer = nullptr;
     QList<GwmVariable> independentVariables;
     GwmVariable dependentVariable;
+
+    QList<GwmVariable> weightingVariables;  // 用于计算权重的变量
     // Weight
     gwm::Weight::WeightType weightType = gwm::Weight::BandwidthWeight;
     double weightBandwidthSize = DBL_MAX;
