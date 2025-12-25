@@ -174,7 +174,7 @@ void GwmPropertyScalableGWRTab::on_btnSaveRes_clicked()
               out << "**********************************************" << Qt::endl;
               out << "" << Qt::endl;
 
-              out << "  Summary of GWR Coefficient Estimates"<< Qt::endl;
+              out << "  Summary of SGWR Coefficient Estimates"<< Qt::endl;
               out << "----------------------------------------------"<< Qt::endl;
               for(int i = 0 ; i < 6 ; i++){
                   out << ui->tbwCoefficient->horizontalHeaderItem(i)->text();
