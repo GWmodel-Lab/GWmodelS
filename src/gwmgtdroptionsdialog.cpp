@@ -17,7 +17,8 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     QDialog(parent),
     ui(new Ui::GwmGTDROptionsDialog),
     mMapLayerList(originItemList),
-    mDepVarModel(new GwmVariableItemModel)
+    mDepVarModel(new GwmVariableItemModel),
+    mPreviousTimeStampVarName(QString())
 {
     ui->setupUi(this);
 
@@ -44,6 +45,13 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGTDROptionsDialog::onSelectedIndenpendentVariablesChanged);
     connect(ui->mIndepVarSelector_2, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGTDROptionsDialog::onSelectedWeightingVariablesChanged);
     connect(mParameterSpecifiedOptionsSelectionModel, &QItemSelectionModel::currentChanged, this, &GwmGTDROptionsDialog::onSpecifiedParameterCurrentChanged);
+
+    // 初始化时间戳选择器
+    ui->mTimeStampCombo->addItem(QStringLiteral("(None)"));  // 添加"无"选项
+    ui->mTimeStampCombo->setCurrentIndex(0);  // 默认选择"无"
+    // 连接时间戳选择器的信号
+    connect(ui->mTimeStampCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), 
+            this, &GwmGTDROptionsDialog::onTimeStampChanged);
 
     //带宽类型选择部分
     QButtonGroup* bwTypeBtnGroup = new QButtonGroup(this);
@@ -220,6 +228,40 @@ void GwmGTDROptionsDialog::layerChanged(int index)
 
         }
 
+    // GwmVariableItemModel* selectedWeightingVarModel = ui->mIndepVarSelector_2->selectedIndepVarModel();
+    // if (selectedWeightingVarModel && selectedWeightingVarModel->rowCount() > 0)
+    // {
+    //     mParameterSpecifiedOptionsModel->syncWithAttributes(selectedWeightingVarModel);
+    //     if (mParameterSpecifiedOptionsModel->rowCount() > 0)
+    //     {
+    //         QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
+    //         mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
+    //     }
+    // }
+
+    // 更新时间戳选择器
+    ui->mTimeStampCombo->clear();
+    ui->mTimeStampCombo->addItem(QStringLiteral("(None)"));  // 添加"无"选项
+    
+    if (mSelectedLayer)
+    {
+        QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+        QgsFields fieldList = layer->fields();
+        
+        // 添加所有数值型变量到时间戳选择器
+        for (int i = 0; i < fieldList.size(); i++)
+        {
+            QgsField field = fieldList[i];
+            if (isNumeric(field.type()))
+            {
+                ui->mTimeStampCombo->addItem(field.name());
+            }
+        }
+    }
+    
+    ui->mTimeStampCombo->setCurrentIndex(0);  // 默认选择"无"
+    
+    // 同步参数列表（基于权重变量）
     GwmVariableItemModel* selectedWeightingVarModel = ui->mIndepVarSelector_2->selectedIndepVarModel();
     if (selectedWeightingVarModel && selectedWeightingVarModel->rowCount() > 0)
     {
@@ -237,6 +279,60 @@ void GwmGTDROptionsDialog::onDepVarChanged(const int index)
 {
     ui->mIndepVarSelector->onDepVarChanged(ui->mDepVarComboBox->itemText(index));
     ui->mIndepVarSelector_2->onDepVarChanged(ui->mDepVarComboBox->itemText(index));
+
+    // 更新时间戳选择器，排除因变量
+    QString currentDepVarName;
+    if (index >= 0)
+    {
+        currentDepVarName = ui->mDepVarComboBox->itemText(index);
+    }
+    
+    // 保存当前选择的时间戳（如果存在）
+    int currentTimeStampIndex = ui->mTimeStampCombo->currentIndex();
+    QString currentTimeStampName;
+    if (currentTimeStampIndex > 0)
+    {
+        currentTimeStampName = ui->mTimeStampCombo->itemText(currentTimeStampIndex);
+    }
+    
+    // 重新填充时间戳选择器
+    ui->mTimeStampCombo->clear();
+    ui->mTimeStampCombo->addItem(QStringLiteral("(None)"));
+    
+    if (mSelectedLayer)
+    {
+        QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+        QgsFields fieldList = layer->fields();
+        
+        for (int i = 0; i < fieldList.size(); i++)
+        {
+            QgsField field = fieldList[i];
+            if (isNumeric(field.type()) && field.name() != currentDepVarName)
+            {
+                ui->mTimeStampCombo->addItem(field.name());
+            }
+        }
+    }
+    
+    // 恢复之前的选择（如果仍然存在）
+    if (!currentTimeStampName.isEmpty())
+    {
+        int newIndex = ui->mTimeStampCombo->findText(currentTimeStampName);
+        if (newIndex >= 0)
+        {
+            ui->mTimeStampCombo->setCurrentIndex(newIndex);
+        }
+        else
+        {
+            // 如果之前选择的时间戳变成了因变量，重置为"无"
+            ui->mTimeStampCombo->setCurrentIndex(0);
+            mPreviousTimeStampVarName.clear();
+        }
+    }
+    else
+    {
+        ui->mTimeStampCombo->setCurrentIndex(0);
+    }
 
     // 为权重变量选择器重新添加空间坐标选项（因为 onDepVarChanged 会清空列表）
     QgsVectorLayer* layer = mSelectedLayer ? mSelectedLayer->originChild()->layer() : nullptr;
@@ -281,17 +377,80 @@ void GwmGTDROptionsDialog::onDepVarChanged(const int index)
         }
     }
 
-    // 新增：因变量变化后，重新同步参数列表（基于权重变量）
-    GwmVariableItemModel* selectedWeightingVarModel = ui->mIndepVarSelector_2->selectedIndepVarModel();
-    if (selectedWeightingVarModel && selectedWeightingVarModel->rowCount() > 0)
+    // 处理时间戳变量：如果当前选择了时间戳，需要从权重变量列表中移除
+    int timeStampIndex = ui->mTimeStampCombo->currentIndex();
+    QString currentTimeStampVarName;
+    if (timeStampIndex > 0)
     {
-        mParameterSpecifiedOptionsModel->syncWithAttributes(selectedWeightingVarModel);
-        if (mParameterSpecifiedOptionsModel->rowCount() > 0)
+        currentTimeStampVarName = ui->mTimeStampCombo->itemText(timeStampIndex);
+    }
+    
+    // 如果之前有选择时间戳变量，将其添加回列表（如果需要）
+    if (!mPreviousTimeStampVarName.isEmpty() && mPreviousTimeStampVarName != currentTimeStampVarName)
+    {
+        GwmVariableItemModel* weightingVarModel = ui->mIndepVarSelector_2->indepVarModel();
+        if (weightingVarModel)
         {
-            QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
-            mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
+            // 检查是否已经存在
+            bool alreadyExists = false;
+            for (int i = 0; i < weightingVarModel->rowCount(); i++)
+            {
+                GwmVariable var = weightingVarModel->item(i);
+                if (var.name == QStringLiteral("__X_COORD__") || var.name == QStringLiteral("__Y_COORD__"))
+                    continue;
+                if (var.name == mPreviousTimeStampVarName)
+                {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+            
+            // 如果不存在，添加回去
+            if (!alreadyExists && mSelectedLayer)
+            {
+                QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+                QgsFields fieldList = layer->fields();
+                for (int i = 0; i < fieldList.size(); i++)
+                {
+                    if (fieldList[i].name() == mPreviousTimeStampVarName && isNumeric(fieldList[i].type()))
+                    {
+                        GwmVariable var;
+                        var.name = fieldList[i].name();
+                        var.type = fieldList[i].type();
+                        var.index = i;
+                        var.isNumeric = fieldList[i].isNumeric();
+                        weightingVarModel->append(var);
+                        break;
+                    }
+                }
+            }
         }
     }
+    
+    // 如果当前选择了时间戳，从权重变量列表中移除
+    if (!currentTimeStampVarName.isEmpty())
+    {
+        GwmVariableItemModel* weightingVarModel = ui->mIndepVarSelector_2->indepVarModel();
+        if (weightingVarModel)
+        {
+            for (int i = weightingVarModel->rowCount() - 1; i >= 0; i--)
+            {
+                GwmVariable var = weightingVarModel->item(i);
+                if (var.name == QStringLiteral("__X_COORD__") || var.name == QStringLiteral("__Y_COORD__"))
+                    continue;
+                if (var.name == currentTimeStampVarName)
+                {
+                    weightingVarModel->remove(i);
+                    break;
+                }
+            }
+        }
+    }
+    
+    mPreviousTimeStampVarName = currentTimeStampVarName;
+
+    // 使用新的同步方法
+    syncParameterListWithTimeStamp();
 }
 
 QString GwmGTDROptionsDialog::crsRotateTheta()
@@ -440,23 +599,9 @@ void GwmGTDROptionsDialog::onSelectedIndenpendentVariablesChanged()
 }
 
 void GwmGTDROptionsDialog::onSelectedWeightingVariablesChanged()
-{
-    // 权重变量变化时的处理
-    // 可以在这里添加额外的逻辑，比如更新参数列表等
-    // 如果需要为权重变量也创建参数列表，可以参考 onSelectedIndenpendentVariablesChanged 的实现
-    
-    // 同步独立变量到列表（类似 MultiscaleGWR）
-    mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector_2->selectedIndepVarModel());
-
-    // 如果有项目，选中第一个
-    if (mParameterSpecifiedOptionsModel->rowCount() > 0)
-    {
-        QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
-        mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
-    }
-
-    // 触发更新验证
-    updateFieldsAndEnable();
+{   
+    // 使用新的同步方法，包括时间戳
+    syncParameterListWithTimeStamp();
 }
 
 void GwmGTDROptionsDialog::onSpecifiedParameterCurrentChanged(const QModelIndex& current, const QModelIndex& previous)
@@ -563,6 +708,152 @@ void GwmGTDROptionsDialog::onBwKernelFunctionChanged(int index)
     option->kernel = static_cast<gwm::BandwidthWeight::KernelFunctionType>(index);
 }
 
+void GwmGTDROptionsDialog::onTimeStampChanged(int index)
+{
+    // 获取权重变量列表模型（所有可用的变量）
+    GwmVariableItemModel* weightingVarModel = ui->mIndepVarSelector_2->indepVarModel();
+    if (!weightingVarModel)
+        return;
+    
+    // 获取当前选中的时间戳变量名（如果选择了"无"，则为空）
+    QString currentTimeStampVarName;
+    if (index > 0)  // index 0 是 "(None)"
+    {
+        currentTimeStampVarName = ui->mTimeStampCombo->itemText(index);
+    }
+
+    // 如果之前有选择时间戳变量，将其添加回权重变量列表
+    if (!mPreviousTimeStampVarName.isEmpty() && mPreviousTimeStampVarName != currentTimeStampVarName)
+    {
+        // 检查该变量是否已经在列表中（避免重复）
+        bool alreadyExists = false;
+        for (int i = 0; i < weightingVarModel->rowCount(); i++)
+        {
+            GwmVariable var = weightingVarModel->item(i);
+            // 跳过特殊命名的坐标变量
+            if (var.name == QStringLiteral("__X_COORD__") || var.name == QStringLiteral("__Y_COORD__"))
+                continue;
+            if (var.name == mPreviousTimeStampVarName)
+            {
+                alreadyExists = true;
+                break;
+            }
+        }
+        
+        // 如果不存在，从图层字段中查找并添加
+        if (!alreadyExists && mSelectedLayer)
+        {
+            QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+            QgsFields fieldList = layer->fields();
+            for (int i = 0; i < fieldList.size(); i++)
+            {
+                if (fieldList[i].name() == mPreviousTimeStampVarName && isNumeric(fieldList[i].type()))
+                {
+                    GwmVariable var;
+                    var.name = fieldList[i].name();
+                    var.type = fieldList[i].type();
+                    var.index = i;
+                    var.isNumeric = fieldList[i].isNumeric();
+                    weightingVarModel->append(var);
+                    break;
+                }
+            }
+        }
+    }
+
+    // 如果当前选择了某个变量作为时间戳，从权重变量列表中移除
+    if (!currentTimeStampVarName.isEmpty())
+    {
+        // 从后往前遍历，移除时间戳变量
+        for (int i = weightingVarModel->rowCount() - 1; i >= 0; i--)
+        {
+            GwmVariable var = weightingVarModel->item(i);
+            // 跳过特殊命名的坐标变量
+            if (var.name == QStringLiteral("__X_COORD__") || var.name == QStringLiteral("__Y_COORD__"))
+                continue;
+                
+            // 如果当前变量是时间戳变量，从列表中移除
+            if (var.name == currentTimeStampVarName)
+            {
+                weightingVarModel->remove(i);
+                break;  // 找到并移除后退出循环
+            }
+        }
+    }
+
+    // 更新之前的时间戳变量名
+    mPreviousTimeStampVarName = currentTimeStampVarName;
+
+    // 触发权重变量选择器的更新（这会导致参数列表同步）
+    // 但我们需要手动触发参数列表的同步，因为时间戳不在权重变量列表中
+    syncParameterListWithTimeStamp();
+}
+
+// 新增辅助方法：同步参数列表（包括时间戳）
+void GwmGTDROptionsDialog::syncParameterListWithTimeStamp()
+{
+    // 先同步权重变量
+    mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector_2->selectedIndepVarModel());
+    
+    // 如果选择了时间戳，添加"TIMESTAMP"项到参数列表
+    int timeStampIndex = ui->mTimeStampCombo->currentIndex();
+    if (timeStampIndex > 0)  // 如果选择了某个变量作为时间戳
+    {
+        // 检查是否已经存在"TIMESTAMP"项
+        bool hasTimeStamp = false;
+        for (int i = 0; i < mParameterSpecifiedOptionsModel->rowCount(); i++)
+        {
+            QModelIndex idx = mParameterSpecifiedOptionsModel->index(i, 0);
+            GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(idx);
+            if (option && option->attributeName == QStringLiteral("TIMESTAMP"))
+            {
+                hasTimeStamp = true;
+                break;
+            }
+        }
+        
+        // 如果不存在，添加"TIMESTAMP"项
+        if (!hasTimeStamp)
+        {
+            // 由于模型没有公开的添加方法，我们需要创建一个临时模型来包含TIMESTAMP
+            // 创建一个临时模型，包含所有权重变量和时间戳
+            GwmVariableItemModel* tempModel = new GwmVariableItemModel(this);
+            GwmVariableItemModel* weightingModel = ui->mIndepVarSelector_2->selectedIndepVarModel();
+            if (weightingModel)
+            {
+                for (int i = 0; i < weightingModel->rowCount(); i++)
+                {
+                    tempModel->append(weightingModel->item(i));
+                }
+            }
+            
+            // 添加TIMESTAMP虚拟变量
+            GwmVariable timeStampVar;
+            timeStampVar.name = QStringLiteral("TIMESTAMP");
+            timeStampVar.type = QVariant::Double;  // 时间戳通常是数值型
+            timeStampVar.index = -999;  // 使用特殊索引标识时间戳
+            timeStampVar.isNumeric = true;
+            tempModel->append(timeStampVar);
+            
+            // 使用临时模型同步参数列表
+            mParameterSpecifiedOptionsModel->syncWithAttributes(tempModel);
+            
+            // 清理临时模型
+            delete tempModel;
+        }
+    }
+    
+    // 如果有项目，选中第一个
+    if (mParameterSpecifiedOptionsModel->rowCount() > 0)
+    {
+        QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
+        mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
+    }
+    
+    // 触发更新验证
+    updateFieldsAndEnable();
+}
+
 double GwmGTDROptionsDialog::bandwidthSize(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
@@ -650,6 +941,36 @@ void GwmGTDROptionsDialog::updateFields()
     else
     {
         mAlgorithmMeta.weightingVariables.clear();
+    }
+
+    // 设置时间戳变量
+    int timeStampIndex = ui->mTimeStampCombo->currentIndex();
+    if (timeStampIndex > 0)  // 如果选择了某个变量作为时间戳
+    {
+        QString timeStampVarName = ui->mTimeStampCombo->itemText(timeStampIndex);
+        // 从图层字段中查找对应的变量
+        QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+        QgsFields fieldList = layer->fields();
+        for (int i = 0; i < fieldList.size(); i++)
+        {
+            if (fieldList[i].name() == timeStampVarName)
+            {
+                GwmVariable timeStampVar;
+                timeStampVar.name = fieldList[i].name();
+                timeStampVar.type = fieldList[i].type();
+                timeStampVar.index = i;
+                timeStampVar.isNumeric = fieldList[i].isNumeric();
+                mAlgorithmMeta.timeStampVariable = timeStampVar;  // 需要在 GwmAlgorithmMetaGTDR 中添加此字段
+                break;
+            }
+        }
+    }
+    else
+    {
+        // 如果没有选择时间戳，设置为空变量
+        mAlgorithmMeta.timeStampVariable = GwmVariable();  // 默认构造的空变量
+        mAlgorithmMeta.timeStampVariable.index = -1;  // 显式设置为 -1
+        mAlgorithmMeta.timeStampVariable.name = QString();  // 显式清空 name
     }
 
     mAlgorithmMeta.weightType = gwm::Weight::BandwidthWeight;

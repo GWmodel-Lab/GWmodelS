@@ -13,6 +13,7 @@ struct GwmAlgorithmMetaGTDR
     GwmVariable dependentVariable;
 
     QList<GwmVariable> weightingVariables;  // 用于计算权重的变量
+    GwmVariable timeStampVariable;
     // Weight
     gwm::Weight::WeightType weightType = gwm::Weight::BandwidthWeight;
     double weightBandwidthSize = DBL_MAX;

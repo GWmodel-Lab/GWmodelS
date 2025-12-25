@@ -34,6 +34,7 @@ private:
     bool isNumeric(QVariant::Type type);
     GwmBandwidthWeight* mBandwidth;
     GwmAlgorithmMetaGTDR mAlgorithmMeta;
+    QString mPreviousTimeStampVarName;
 
 public slots:
     void layerChanged(const int index);
@@ -69,6 +70,7 @@ public:
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
+    void syncParameterListWithTimeStamp();
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
@@ -83,6 +85,7 @@ public slots:
     void onBwSizeAdaptiveSizeChanged(int size);
     void onBwSizeFixedSizeChanged(double size);
     void onBwKernelFunctionChanged(int index);
+    void onTimeStampChanged(int index);
 };
 
 

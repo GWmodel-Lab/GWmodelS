@@ -85,6 +85,7 @@ GwmLayerGTDRItem::GwmLayerGTDRItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
         mDepVar = taskMeta.dependentVariable;
         mIndepVars = taskMeta.independentVariables;
         mWeightingVars = taskMeta.weightingVariables;
+        mTimeStampVar = taskMeta.timeStampVariable;
         hasHatmatrix = taskThread->hasHatMatrix();
         mBetas = mat(taskThread->betas());
         mDiagnostic = taskThread->diagnostic();

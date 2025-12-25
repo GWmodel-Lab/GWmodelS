@@ -71,6 +71,11 @@ public:
         return mWeightingVars;
     }
 
+    GwmVariable timeStampVar() const
+    {
+        return mTimeStampVar;
+    }
+
     GwmBandwidthWeight* bandwidth() const
     {
         return mBandwidth;
@@ -87,6 +92,7 @@ protected:
     GwmVariable mDepVar;
     QList<GwmVariable> mIndepVars;
     QList<GwmVariable> mWeightingVars;
+    GwmVariable mTimeStampVar; 
     GwmBandwidthWeight mWeight;
     GwmDiagnostic mDiagnostic;
     arma::mat mBetas;
