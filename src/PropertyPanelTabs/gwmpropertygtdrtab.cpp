@@ -74,6 +74,20 @@ void GwmPropertyGTDRTab::updateUI()
     }
 
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
+
+    // 设置时间戳标签
+    GwmVariable timeStampVar = mLayerItem->timeStampVar();
+    if (!timeStampVar.name.isEmpty() && timeStampVar.index >= 0)
+    {
+        ui->lblTimeStamp->setText(timeStampVar.name);
+        ui->lblTimeStamp->show();  // 如果有时间戳，显示标签
+    }
+    else
+    {
+        ui->lblTimeStamp->setText(QString());
+        ui->lblTimeStamp->hide();  // 如果没有时间戳，隐藏标签
+    }
+
     if (true)
     {
         ui->lblDistanceMetric->setText(tr("Euclidean distance metric is used."));
@@ -117,6 +131,16 @@ void GwmPropertyGTDRTab::updateUI()
         
         // 获取带宽类型（所有维度应该使用相同的类型）
         bool isAdaptive = weights[0] ? weights[0]->adaptive() : false;
+
+        // 获取时间戳变量（用于判断最后一个维度是否为时间戳）
+        GwmVariable timeStampVar = mLayerItem->timeStampVar();
+        bool hasTimeStamp = !timeStampVar.name.isEmpty() && timeStampVar.index >= 0;
+        int timeStampDimIndex = -1;  // 时间戳维度的索引
+        if (hasTimeStamp)
+        {
+            // 时间戳维度是最后一个维度（权重变量数量之后）
+            timeStampDimIndex = weightingVars.size();
+        }
         
         // 填充表格数据
         for (int i = 0; i < nDims; ++i)
@@ -127,7 +151,12 @@ void GwmPropertyGTDRTab::updateUI()
             
             // 第1列：权重维度
             QString varName;
-            if (i < weightingVars.size())
+            if (i == timeStampDimIndex)
+            {
+                // 如果是时间戳维度，显示 "TIMESTAMP"
+                varName = QStringLiteral("TIMESTAMP");
+            }
+            else if (i < weightingVars.size())
             {
                 varName = weightingVars[i].name;
             }

@@ -41,17 +41,19 @@ GwmGTDRTaskThread::GwmGTDRTaskThread(const GwmAlgorithmMetaGTDR& meta) : mMeta(m
 
     // Spatial Weight
     uword nDim = meta.weightingVariables.size();
+    bool hasTimeStamp = !meta.timeStampVariable.name.isEmpty() && meta.timeStampVariable.index >= 0; // 检查时间戳是否存在（index >= 0 表示有效）
+    if (hasTimeStamp)
+    {
+        nDim++;  // 如果存在时间戳，增加一个维度
+    }
+
     std::vector<SpatialWeight> spatials;
     mBandwidthHolders.clear();
     mDistanceHolders.clear();
     mBandwidthHolders.reserve(nDim);
     mDistanceHolders.reserve(nDim);
-    for (size_t i = 0; i < nDim; i++)
+    for (size_t i = 0; i < meta.weightingVariables.size(); i++)
     {
-        //OneDimDistance distance;
-        //BandwidthWeight bandwidth(meta.weightBandwidthSize, meta.weightBandwidthAdaptive, meta.weightBandwidthKernel);
-        //spatials.push_back(SpatialWeight(&bandwidth, &distance));
-
         // 获取该维度的初始带宽值和核函数类型
         // 如果列表不为空，使用列表中的值；否则使用单个默认值（向后兼容）
         double bwSize;
@@ -80,6 +82,37 @@ GwmGTDRTaskThread::GwmGTDRTaskThread(const GwmAlgorithmMetaGTDR& meta) : mMeta(m
 
         spatials.emplace_back(bwRaw, distRaw);
     }
+    // 为时间戳创建空间权重（如果存在）
+    if (hasTimeStamp)
+    {
+        // 时间戳的带宽和核函数应该在参数列表的最后（因为TIMESTAMP项在最后）
+        double bwSize;
+        gwm::BandwidthWeight::KernelFunctionType kernel;
+        
+        size_t timeStampIndex = meta.weightingVariables.size();  // 时间戳在列表中的索引
+        if (timeStampIndex < meta.weightBandwidthSizes.size() && timeStampIndex < meta.weightBandwidthKernels.size())
+        {
+            bwSize = meta.weightBandwidthSizes[timeStampIndex];
+            kernel = meta.weightBandwidthKernels[timeStampIndex];
+        }
+        else
+        {
+            // 使用默认值
+            bwSize = meta.weightBandwidthSize;
+            kernel = meta.weightBandwidthKernel;
+        }
+        
+        auto bw = std::make_unique<BandwidthWeight>(bwSize, meta.weightBandwidthAdaptive, kernel);
+        auto dist = std::make_unique<OneDimDistance>();
+
+        BandwidthWeight* bwRaw = bw.get();
+        OneDimDistance* distRaw = dist.get();
+        mBandwidthHolders.push_back(std::move(bw));
+        mDistanceHolders.push_back(std::move(dist));
+
+        spatials.emplace_back(bwRaw, distRaw);
+    }
+
     mAlgorithm.setSpatialWeights(spatials);
     // Parallel
     mAlgorithm.setParallelType(meta.parallelType);
@@ -100,7 +133,12 @@ void GwmGTDRTaskThread::initWeightingVariables(mat& weightingData, const QList<G
 {
     int nDp = mLayer->featureCount();
     int nWeightingVars = weightingVars.size();
-    weightingData = mat(nDp, nWeightingVars, arma::fill::zeros);
+
+    // 检查是否有时间戳变量
+    bool hasTimeStamp = !mMeta.timeStampVariable.name.isEmpty() && mMeta.timeStampVariable.index >= 0;
+    int nTotalVars = nWeightingVars + (hasTimeStamp ? 1 : 0);
+
+    weightingData = mat(nDp, nTotalVars, arma::fill::zeros);
 
     QgsFeatureIterator iterator = mLayer->getFeatures();
     QgsFeature f;
@@ -153,6 +191,21 @@ void GwmGTDRTaskThread::initWeightingVariables(mat& weightingData, const QList<G
                 }
             }
         }
+
+        // 提取时间戳变量的数据（如果存在）
+        if (hasTimeStamp)
+        {
+            int timeStampCol = nWeightingVars;  // 时间戳在最后一列
+            double v = f.attribute(mMeta.timeStampVariable.name).toDouble(&ok);
+            if (ok)
+            {
+                weightingData(i, timeStampCol) = v;
+            }
+            else
+            {
+                emit error(tr("Time stamp variable '%1' value cannot convert to a number. Set to 0.").arg(mMeta.timeStampVariable.name));
+            }
+        }
     }
 }
 
@@ -166,12 +219,15 @@ void GwmGTDRTaskThread::run()
 
         // 创建时空-变量坐标矩阵
         int nDp = mLayer->featureCount();
+        bool hasTimeStamp = !mMeta.timeStampVariable.name.isEmpty() && mMeta.timeStampVariable.index >= 0;
         int nWeightingVars = mMeta.weightingVariables.size();
-        arma::mat virtualCoords(nDp, nWeightingVars, arma::fill::zeros);
+        int nTotalVars = nWeightingVars + (hasTimeStamp ? 1 : 0);
+
+        arma::mat virtualCoords(nDp, nTotalVars, arma::fill::zeros);
         // 填充默认值
         for (int i = 0; i < nDp; i++)
         {
-            for (int j = 0; j < nWeightingVars; j++)
+            for (int j = 0; j < nTotalVars; j++)
             {
                 virtualCoords(i, j) = 0;
             }
@@ -202,7 +258,9 @@ void GwmGTDRTaskThread::run()
         }
 
         emit message(tr("Setting distance parameters using weighting variables..."));
-        for (arma::uword k = 0; k < sws.size() && k < mWeightingData.n_cols; ++k)
+        bool hasTimeStamp = !mMeta.timeStampVariable.name.isEmpty() && mMeta.timeStampVariable.index >= 0;
+        int nWeightingVars = mMeta.weightingVariables.size();
+        for (arma::uword k = 0; k < nWeightingVars && k < mWeightingData.n_cols; ++k)
         {
             auto* od = sws[k].distance<gwm::OneDimDistance>();
             if (!od) {
@@ -214,6 +272,21 @@ void GwmGTDRTaskThread::run()
             od->makeParameter({ col, col });
             emit message(tr("Distance parameter set for weighting variable: %1")
                         .arg(mMeta.weightingVariables[k].name));
+        }
+
+        // 设置时间戳的距离参数（如果存在）
+        if (hasTimeStamp && sws.size() > nWeightingVars && mWeightingData.n_cols > nWeightingVars)
+        {
+            arma::uword timeStampIndex = nWeightingVars;
+            auto* od = sws[timeStampIndex].distance<gwm::OneDimDistance>();
+            if (!od) {
+                emit error(tr("GTDR invalid: spatialWeights[%1] (timestamp) is not OneDimDistance.").arg(int(timeStampIndex)));
+                return;
+            }
+            arma::vec col = mWeightingData.col(timeStampIndex);
+            od->makeParameter({ col, col });
+            emit message(tr("Distance parameter set for timestamp variable: %1")
+                        .arg(mMeta.timeStampVariable.name));
         }
     }
 
