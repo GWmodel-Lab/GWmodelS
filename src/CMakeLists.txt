@@ -225,7 +225,8 @@ add_subdirectory("./Validity")
 qt5_wrap_ui(FORMS_H ${FORMS})
 
 if(WIN32)
-    add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS})
+    add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS}
+    )
 endif(WIN32)
 
 if(UNIX AND NOT CYGWIN)

@@ -1,4 +1,4 @@
-﻿#ifndef GWMGWPCATASKTHREAD_H
+#ifndef GWMGWPCATASKTHREAD_H
 #define GWMGWPCATASKTHREAD_H
 
 #include <QObject>
@@ -7,8 +7,9 @@
 #include "TaskThread/iparallelable.h"
 
 #include "TaskThread/gwmbandwidthsizeselector.h"
+#include <gwmodel.h>
 
-class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidthSizeSelectable, public IGwmMultivariableAnalysis, public IOpenmpParallelable
+class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidthSizeSelectable, public IGwmMultivariableAnalysis, public IOpenmpParallelable, public gwm::IBandwidthSelectable
 {
     Q_OBJECT
     enum BandwidthSelectionCriterionType
@@ -20,9 +21,6 @@ class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidt
     typedef QList<QPair<QString, vec> > CreatePlotLayerData;
 
     typedef double (GwmGWPCATaskThread::*BandwidthSelectCriterionFunction)(GwmBandwidthWeight*);
-
-    typedef mat (GwmGWPCATaskThread::*PcaLoadingsSdevScoresFunction)(const mat& , cube& , mat& , cube& );
-    typedef mat (GwmGWPCATaskThread::*PcaLoadingsSdev)(const mat&, cube&, mat&);
 
 public:
     GwmGWPCATaskThread();
@@ -59,6 +57,8 @@ public:
     mat localPV() const;
 
     mat variance() const;
+    
+    mat sdev() const;
 
     cube loadings() const;
 
@@ -103,32 +103,20 @@ private:
     void initPoints();
     void initXY(mat& x, const QList<GwmVariable>& indepVars);
     void variableZscore(mat& x);
-    //void wpca(const mat &x, const vec &wt, double nu, double nv, mat &V, vec &S);
-    void wpca(const mat &x, const vec &wt, mat &V, vec &S);
-    void rwpca(const mat &x, const vec &wt, mat &coeff, vec &latent, double nu, double nv);
+    void calculateScores();
+
     void createResultLayer(CreateResultLayerData data,QList<QString> winvar);
     void createPlotLayer(CreatePlotLayerData data, QList<QString> varpc);
-    std::unique_ptr<gwm::GWRBasic> mGWRCore;
+    std::unique_ptr<gwm::GWPCA> mAlgorithm;
+    
+    // wpca函数保留，用于带宽选择（内核库的wpca是私有的，无法直接访问）
+    void wpca(const mat &x, const vec &wt, mat &V, vec &S);
 
-    mat pca(const mat& x, cube& loadings, mat& sdev, cube& scores)
-    {
-        return (this->*mPcaLoadingsSdevScoresFunction)(x , loadings, sdev, scores);
-    };
+    // Robust weighted PCA 函数
+    void rwpca(const mat &x, const vec &wt, mat &V, vec &S);
 
-    //实现不计算scores的pca
-    mat pca(const mat& x, cube& loadings, mat& variance)
-    {
-        return (this->*mPcaLoadingsSdevFunction)(x,loadings,variance);
-    }
-
-    mat pcaLoadingsSdevScoresSerial(const mat& x, cube& loadings, mat& stddev, cube& scores);
-#ifdef ENABLE_OpenMP
-    mat pcaLoadingsSdevScoresOmp(const mat& x, cube& loadings, mat& stddev, cube& scores);
-#endif
-    mat pcaLoadingsSdevSerial(const mat& x, cube& loadings, mat& stddev);
-#ifdef ENABLE_OpenMP
-    mat pcaLoadingsSdevOmp(const mat& x, cube& loadings, mat& stddev);
-#endif
+    // Robust GWPCA 求解函数
+    mat robustSolveSerial(const mat& x, cube& loadings, mat& sdev);
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
 #ifdef ENABLE_OpenMP
@@ -138,6 +126,9 @@ private:
     {
         return (this->*mBandwidthSelectCriterionFunction)(weight);
     }
+
+public:  // gwm::IBandwidthSelectable interface
+    gwm::Status getCriterion(gwm::BandwidthWeight* weight, double& criterion) override;
 
 private:
     QList<GwmVariable> mVariables;
@@ -157,17 +148,13 @@ private:
     IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
 
-    PcaLoadingsSdevScoresFunction mPcaLoadingsSdevScoresFunction = &GwmGWPCATaskThread::pcaLoadingsSdevScoresSerial;
-    PcaLoadingsSdev mPcaLoadingsSdevFunction = &GwmGWPCATaskThread::pcaLoadingsSdevSerial;
-
     mat mLocalPV;
     mat mVariance;
+    mat mSDev;
     cube mLoadings;
     cube mScores;
 
-    //用户选择是否Z-score标准化
     bool mZscore;
-    //用户选择是否计算scores
     bool mScoresCal;
 
 
@@ -186,6 +173,11 @@ private:
 inline mat GwmGWPCATaskThread::variance() const
 {
     return mVariance;
+}
+
+inline mat GwmGWPCATaskThread::sdev() const
+{
+    return mSDev;
 }
 
 inline int GwmGWPCATaskThread::parallelAbility() const

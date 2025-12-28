@@ -127,8 +127,11 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
                     (static_cast<GwmPropertyGWAverageTab*>(tabWidget))->updateUI();
                     break;
                 case GwmLayerItem::GWPCA:
+                    qDebug() << "[GwmPropertyPanel::addPropertyTab] Creating GWPCA property tab...";
                     tabWidget = new GwmPropertyGWPCATab(this, static_cast<GwmLayerGWPCAItem*>(item));
+                    qDebug() << "[GwmPropertyPanel::addPropertyTab] GWPCA property tab created, calling updateUI...";
                     (static_cast<GwmPropertyGWPCATab*>(tabWidget))->updateUI();
+                    qDebug() << "[GwmPropertyPanel::addPropertyTab] GWPCA property tab updateUI completed";
                     break;
                 default:
                     break;

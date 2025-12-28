@@ -1,4 +1,4 @@
-﻿#include "gwmapp.h"
+#include "gwmapp.h"
 #include "ui_gwmapp.h"
 
 #include <QMenuBar>
@@ -1059,7 +1059,6 @@ void GwmApp::onMapSelectionChanged(QgsMapLayer *mapLayer)
 
     QgsVectorLayer* layer = static_cast<QgsVectorLayer*>(mapLayer);
 
-    // 移除旧的橡皮条
     QList<QgsRubberBand*> rubbers0 = mMapLayerRubberDict[layer];
     if (rubbers0.size() > 0)
     {
@@ -1070,7 +1069,6 @@ void GwmApp::onMapSelectionChanged(QgsMapLayer *mapLayer)
     }
     rubbers0.clear();
 
-    //添加新的橡皮条
     QgsFeatureList selectedFeatures = layer->selectedFeatures();
     for (QgsFeature feature : selectedFeatures)
     {
@@ -1163,7 +1161,9 @@ void GwmApp::onMapModelChanged()
 
 void GwmApp::onShowLayerProperty(const QModelIndex &index)
 {
+    qDebug() << "[GwmApp::onShowLayerProperty] Called with index:" << index;
     mPropertyPanel->addPropertyTab(index);
+    qDebug() << "[GwmApp::onShowLayerProperty] addPropertyTab completed";
 }
 
 
@@ -1711,11 +1711,18 @@ void GwmApp::onGWPCABtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwpcaTaskThread->resultLayer();
+            qDebug() << "[GwmApp::onGWPCABtnClicked] Result layer obtained";
             QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
             resultLayer0 = resultLayer->clone();
+            qDebug() << "[GwmApp::onGWPCABtnClicked] Creating GwmLayerGWPCAItem...";
             GwmLayerGWPCAItem * gwrItem = new GwmLayerGWPCAItem(selectedItem, resultLayer0, gwpcaTaskThread);
+            qDebug() << "[GwmApp::onGWPCABtnClicked] GwmLayerGWPCAItem created";
             mMapModel->appentItem(gwrItem, selectedIndex);
-            onShowLayerProperty(mMapModel->indexFromItem(gwrItem));
+            qDebug() << "[GwmApp::onGWPCABtnClicked] Item appended to model";
+            QModelIndex itemIndex = mMapModel->indexFromItem(gwrItem);
+            qDebug() << "[GwmApp::onGWPCABtnClicked] Calling onShowLayerProperty...";
+            onShowLayerProperty(itemIndex);
+            qDebug() << "[GwmApp::onGWPCABtnClicked] onShowLayerProperty completed";
             if(gwpcaTaskThread->plotLayer()){
                 QgsVectorLayer* plotLayer = gwpcaTaskThread->plotLayer();
                 QgsVectorLayer* plotLayer0 = new QgsVectorLayer();
