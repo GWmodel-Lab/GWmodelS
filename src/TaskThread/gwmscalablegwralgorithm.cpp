@@ -7,6 +7,67 @@
 
 int GwmScalableGWRAlgorithm::treeChildCount = 0;
 
+// double GWRScalable::Loocv(
+//     const vec &target,
+//     const mat &x,
+//     const vec &y,
+//     uword poly,
+//     const mat &Mx0,
+//     const mat &My0)
+// {
+//     uword n = x.n_rows;
+//     uword k = x.n_cols;
+//     uword poly1 = poly + 1;
+
+//     double b = target(0) * target(0);
+//     double a = target(1) * target(1);
+
+//     /* ---- polynomial weights ---- */
+//     vec R0(poly1, fill::ones);
+//     R0(0) = b;
+//     for (uword p = 1; p < poly1; ++p)
+//         R0(p) = pow(b, p + 1);
+//     R0 /= sum(R0);
+
+//     double cv = 0.0;
+
+//     for (uword i = 0; i < n; ++i)
+//     {
+//         mat sumMx(k, k, fill::zeros);
+//         vec sumMy(k, fill::zeros);
+
+//         /* ---- leave i out ---- */
+//         for (uword j = 0; j < n; ++j)
+//         {
+//             if (j == i) continue;
+
+//             for (uword p = 0; p < poly1; ++p)
+//             {
+//                 double w = R0(p);
+
+//                 for (uword r = 0; r < k; ++r)
+//                 {
+//                     sumMy(r) += w * x(j, r) * y(j);
+
+//                     for (uword c = 0; c < k; ++c)
+//                         sumMx(r, c) += w * x(j, r) * x(j, c);
+//                 }
+//             }
+//         }
+
+//         /* ---- ridge stabilization ---- */
+//         sumMx += a * eye(k, k);
+
+//         mat beta;
+//         if (!solve(beta, sumMx, sumMy))
+//             return DBL_MAX;
+
+//         double yi_hat = dot(x.row(i), beta);
+//         cv += std::pow(y(i) - yi_hat, 2);
+//     }
+
+//     return cv;
+// }
 
 double GwmScalableGWRAlgorithm::Loocv(const vec &target, const mat &x, const vec &y, int bw, int poly, const mat &Mx0, const mat &My0)
 {
@@ -155,7 +216,9 @@ void GwmScalableGWRAlgorithm::run()
         mSGWRCore->setCoords(mDataPoints);
         mSGWRCore->setDependentVariable(mY);
         mSGWRCore->setIndependentVariables(mX);
+        mSGWRCore->setHasHatMatrix(true);
         mSGWRCore->setSpatialWeight(mSpatialWeight);
+        mSGWRCore->setPolynomial(mPolynomial);
         mSGWRCore->setParameterOptimizeCriterion(mParameterOptimizeCriterion0);
         mSGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
         // findDataPointNeighbours();
