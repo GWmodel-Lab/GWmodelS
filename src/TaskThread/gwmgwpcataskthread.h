@@ -153,6 +153,7 @@ private:
     mat mSDev;
     cube mLoadings;
     cube mScores;
+    cube mScoresFromKernel = cube();  // 从内核库获取的scores，用于对比
 
     bool mZscore;
     bool mScoresCal;
