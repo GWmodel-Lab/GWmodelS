@@ -1,4 +1,4 @@
-#include "gwmgwaverageoptionsdialog.h"
+﻿#include "gwmgwaverageoptionsdialog.h"
 #include "ui_gwmgwaverageoptionsdialog.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>

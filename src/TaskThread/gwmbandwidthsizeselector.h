@@ -1,4 +1,4 @@
-#ifndef GWMBANDWIDTHSIZESELECTOR_H
+﻿#ifndef GWMBANDWIDTHSIZESELECTOR_H
 #define GWMBANDWIDTHSIZESELECTOR_H
 
 #include <QMetaType>
@@ -6,7 +6,7 @@
 #include "SpatialWeight/gwmspatialweight.h"
 #include "SpatialWeight/gwmbandwidthweight.h"
 
-typedef  QList<QPair<double, double> >  BandwidthCriterionList;
+typedef std::vector<std::pair<double, double> >  BandwidthCriterionList;
 Q_DECLARE_METATYPE(BandwidthCriterionList)
 
 struct IBandwidthSizeSelectable

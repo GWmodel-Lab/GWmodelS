@@ -1,4 +1,4 @@
-#ifndef GWMGGWROPTIONSDIALOG_H
+﻿#ifndef GWMGGWROPTIONSDIALOG_H
 #define GWMGGWROPTIONSDIALOG_H
 
 #include <QDialog>
@@ -52,7 +52,7 @@ public:
     double bandwidthSize();
     GwmGeneralizedGWRAlgorithm::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
-    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
+    gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     QVariant distanceSourceParameters();
     QVariant parallelParameters();
     double epsilonSize();

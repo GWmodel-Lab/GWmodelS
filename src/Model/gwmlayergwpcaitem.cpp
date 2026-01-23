@@ -1,4 +1,4 @@
-#include "gwmlayergwpcaitem.h"
+﻿#include "gwmlayergwpcaitem.h"
 #include "gwmlayergroupitem.h"
 
 #include <QDir>
@@ -52,7 +52,7 @@ bool GwmLayerGWPCAItem::readXml(QDomNode &node)
                     {
                         double size = bandwidthNode.attribute("size").toDouble();
                         double criterion = bandwidthNode.attribute("criterion").toDouble();
-                        mBandwidthSelScores.append(qMakePair(size, criterion));
+                        mBandwidthSelScores.push_back(std::make_pair(size, criterion));
                     }
                 }
             }
@@ -168,7 +168,7 @@ GwmBandwidthWeight GwmLayerGWPCAItem::weight() const
     return mWeight;
 }
 
-QList<QPair<double, double> > GwmLayerGWPCAItem::bandwidthSelScores() const
+BandwidthCriterionList GwmLayerGWPCAItem::bandwidthSelScores() const
 {
     return mBandwidthSelScores;
 }

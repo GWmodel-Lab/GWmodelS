@@ -1,4 +1,4 @@
-#include "aboutdevelopers.h"
+﻿#include "aboutdevelopers.h"
 #include "ui_aboutdevelopers.h"
 
 aboutDevelopers::aboutDevelopers(QWidget *parent) :

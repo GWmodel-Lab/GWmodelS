@@ -1,4 +1,4 @@
-#ifndef GWMGWAVERAGEOPTIONSDIALOG_H
+﻿#ifndef GWMGWAVERAGEOPTIONSDIALOG_H
 #define GWMGWAVERAGEOPTIONSDIALOG_H
 
 #include <QDialog>
@@ -62,6 +62,7 @@ public:
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
+
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);

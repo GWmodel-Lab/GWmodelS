@@ -1,4 +1,4 @@
-#ifndef GWMLAYERSCALABLEGWRITEM_H
+﻿#ifndef GWMLAYERSCALABLEGWRITEM_H
 #define GWMLAYERSCALABLEGWRITEM_H
 
 #include "Model/gwmlayerbasicgwritem.h"
@@ -31,15 +31,18 @@ public:
 
     QList<GwmVariable> indepVars() const;
 
-    GwmBandwidthWeight weight() const;
+    gwm::BandwidthWeight weight() const;
 
     GwmDiagnostic diagnostic() const;
 
+    gwm::RegressionDiagnostic diagnostic0() const;
+
     arma::mat betas() const;
 
-    GwmDistance::DistanceType distanceType() const;
+    gwm::Distance::DistanceType distanceType() const;
 
     GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType parameterOptimizeCriterionType() const;
+    gwm::GWRScalable::BandwidthSelectionCriterionType parameterOptimizeCriterionType0() const;
 
     bool hasRegressionLayer() const;
 
@@ -49,11 +52,13 @@ private:
     int mDataPointsSize;
     GwmVariable mDepVar;
     QList<GwmVariable> mIndepVars;
-    GwmBandwidthWeight mWeight;
-    GwmDistance::DistanceType mDistanceType;
+    gwm::BandwidthWeight mWeight;
+    gwm::Distance::DistanceType mDistanceType;
     GwmDiagnostic mDiagnostic;
+    gwm::RegressionDiagnostic mDiagnostic0;
     arma::mat mBetas;
     GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType mParameterOptimizeCriterionType;
+    gwm::GWRScalable::BandwidthSelectionCriterionType mParameterOptimizeCriterionType0;
     bool mHasRegressionLayer = false;
     bool mHasPredict = false;
 
