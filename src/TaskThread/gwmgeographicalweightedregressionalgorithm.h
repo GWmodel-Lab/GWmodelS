@@ -1,4 +1,4 @@
-#ifndef GWMGEOGRAPHICALWEIGHTEDREGRESSIONALGORITHM_H
+﻿#ifndef GWMGEOGRAPHICALWEIGHTEDREGRESSIONALGORITHM_H
 #define GWMGEOGRAPHICALWEIGHTEDREGRESSIONALGORITHM_H
 
 #include <QObject>
@@ -102,6 +102,10 @@ public:     // IRegressionAnalysis interface
         return mDiagnostic;
     }
 
+    gwm::RegressionDiagnostic diagnostic0() const
+    {
+        return mDiagnostic0;
+    }
 public:
     bool hasRegressionLayer()
     {
@@ -125,6 +129,7 @@ protected:
     mat mBetas;
 
     GwmDiagnostic mDiagnostic;
+    gwm::RegressionDiagnostic mDiagnostic0;
 };
 
 inline QgsVectorLayer *GwmGeographicalWeightedRegressionAlgorithm::regressionLayer() const

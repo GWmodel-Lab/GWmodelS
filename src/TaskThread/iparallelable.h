@@ -1,4 +1,4 @@
-#ifndef IPARALLELABLE_H
+﻿#ifndef IPARALLELABLE_H
 #define IPARALLELABLE_H
 
 struct IParallelalbe

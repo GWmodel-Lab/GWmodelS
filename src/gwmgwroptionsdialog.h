@@ -1,4 +1,4 @@
-#ifndef GWMGWROPTIONSDIALOG_H
+﻿#ifndef GWMGWROPTIONSDIALOG_H
 #define GWMGWROPTIONSDIALOG_H
 
 #include <QDialog>
@@ -51,9 +51,9 @@ public:
     QString crsRotateP();
     bool bandwidthType();
     double bandwidthSize();
-    GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType bandwidthSelectionApproach();
+    gwm::GWRBasic::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
-    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
+    gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     QVariant distanceSourceParameters();
     QVariant parallelParameters();
 
