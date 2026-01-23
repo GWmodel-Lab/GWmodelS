@@ -24,6 +24,7 @@ set(SOURCES_SUBFOLDER
     gwmtaskthread.cpp
     gwmgwaveragetaskthread.cpp
     gwmgwcorrelationtaskthread.cpp
+    gwmswimtaskthread.cpp
 )
 
 set(HEADERS_SUBFOLDER
@@ -54,6 +55,7 @@ set(HEADERS_SUBFOLDER
     gwmtaskthread.h
     gwmgwaveragetaskthread.h
     gwmgwcorrelationtaskthread.h
+    gwmswimtaskthread.h
 )
 
 list(TRANSFORM SOURCES_SUBFOLDER PREPEND "${SRC_SUBFOLDER_NAME}/")

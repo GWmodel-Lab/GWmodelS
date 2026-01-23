@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GwmFlowDataDialog</class>
+ <widget class="QDialog" name="GwmFlowDataDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>405</width>
+    <height>472</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Import Flow Data</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="basicGroupBox">
+     <property name="title">
+      <string>Basic Information</string>
+     </property>
+     <layout class="QFormLayout" name="formLayoutBasic">
+      <property name="labelAlignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="filenameLabel">
+        <property name="text">
+         <string>File name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QHBoxLayout" name="filePathLayout">
+        <item>
+         <widget class="QLineEdit" name="fileNameEdit"/>
+        </item>
+        <item>
+         <widget class="QToolButton" name="fileNameOpenFileDialogBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="baseSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="layerNameLabel">
+        <property name="text">
+         <string>Layer name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="layerNameEdit"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="encodingLabel">
+        <property name="text">
+         <string>Encoding</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="encodingCombo">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maxVisibleItems">
+         <number>20</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelDelimiter">
+        <property name="text">
+         <string>Field delimiter</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QComboBox" name="delimiterCombo"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="mappingGroupBox">
+     <property name="title">
+      <string>Field mapping</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayoutMapping">
+      <item>
+       <layout class="QFormLayout" name="formLayoutFlow">
+        <item row="0" column="0">
+         <widget class="QLabel" name="labelFlowVolume">
+          <property name="text">
+           <string>Flow volume</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="flowVolumeCombo"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="originGroupBox">
+        <property name="title">
+         <string>Origin Coordinates</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayoutOrigin">
+         <item row="1" column="2">
+          <widget class="QLabel" name="labelOriginM">
+           <property name="text">
+            <string>Origin M</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QComboBox" name="originYCombo"/>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="originXCombo"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="labelOriginZ">
+           <property name="text">
+            <string>Origin Z </string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="labelOriginX">
+           <property name="text">
+            <string>Origin X</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="originZCombo"/>
+         </item>
+         <item row="1" column="3">
+          <widget class="QComboBox" name="originMCombo"/>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="labelOriginY">
+           <property name="text">
+            <string>Origin Y</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="destinationGroupBox">
+        <property name="title">
+         <string>Destination Coordinates</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayoutDest">
+         <item row="0" column="0">
+          <widget class="QLabel" name="labelDestX">
+           <property name="text">
+            <string>Destination X</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="destXCombo"/>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="labelDestY">
+           <property name="text">
+            <string>Destination Y</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QComboBox" name="destYCombo"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="labelDestZ">
+           <property name="text">
+            <string>Destination Z</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="destZCombo"/>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="labelDestM">
+           <property name="text">
+            <string>Destination M</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QComboBox" name="destMCombo"/>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <layout class="QFormLayout" name="formLayoutCrs">
+        <item row="0" column="0">
+         <widget class="QLabel" name="labelCrs">
+          <property name="text">
+           <string>Coordinate reference system:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QgsProjectionSelectionWidget" name="crsSelector" native="true"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="statusLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsProjectionSelectionWidget</class>
+   <extends>QWidget</extends>
+   <header>qgsprojectionselectionwidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

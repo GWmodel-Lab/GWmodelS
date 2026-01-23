@@ -13,6 +13,7 @@ set(SOURCES_SUBFOLDER
     gwmpropertystatisticstab.cpp
     gwmpropertygwaveragetab.cpp
     gwmpropertygwcorrelationtab.cpp
+    gwmpropertyswimtab.cpp
 )
 
 set(HEADERS_SUBFOLDER
@@ -28,6 +29,7 @@ set(HEADERS_SUBFOLDER
     gwmpropertystatisticstab.h
     gwmpropertygwaveragetab.h
     gwmpropertygwcorrelationtab.h
+    gwmpropertyswimtab.h
     utils.h
 )
 
@@ -44,6 +46,7 @@ set(FORMS_SUBFOLDER
     gwmpropertystatisticstab.ui
     gwmpropertygwaveragetab.ui
     gwmpropertygwcorrelationtab.ui
+    gwmpropertyswimtab.ui
 )
 
 list(TRANSFORM SOURCES_SUBFOLDER PREPEND "${SRC_SUBFOLDER_NAME}/")
