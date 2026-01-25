@@ -4,6 +4,9 @@
 #include <omp.h>
 #endif
 
+using namespace gwm;
+using namespace std;
+
 int GwmGWCorrelationTaskThread::treeChildCount = 0;
 
 GwmEnumValueNameMapper<GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType> GwmGWCorrelationTaskThread::BandwidthSelectionCriterionTypeNameMapper = {
@@ -22,7 +25,8 @@ vec GwmGWCorrelationTaskThread::del(vec x, int rowcount){
     return res;
 }
 
-GwmGWCorrelationTaskThread::GwmGWCorrelationTaskThread() : GwmSpatialMultiscaleAlgorithm()
+GwmGWCorrelationTaskThread::GwmGWCorrelationTaskThread() : GwmSpatialMultiscaleAlgorithm(),
+    mGWCorrCore(std::make_unique<gwm::GWCorrelation>())
 {
 
 }
@@ -66,43 +70,250 @@ void GwmGWCorrelationTaskThread::run()
     if(!checkCanceled())
     {
         // 点位初始化
+        emit message(QString(tr("Setting data points")) + ".");
         initPoints();
         // 初始化
-        initXY(mX,mY, mVariables,mVariablesY);
+        emit message(QString(tr("Setting X and Y.")));
+        initXY(mX, mY, mVariables, mVariablesY);
+        mGWCorrCore->setCoords(mDataPoints);
+        mGWCorrCore->setVariables1(mY);
+        mGWCorrCore->setVariables2(mX);
     }
+
     int nVar = mX.n_cols, nRp = mDataPoints.n_rows;
     int nVars = mX.n_cols * mY.n_cols;
     int nVarsY = mY.n_cols;
 
-    //带宽优选
-    for(uword i = 0 ; i<nVars && !checkCanceled();i++)
+    // 转换带宽初始化类型和选择方法
+    emit message(QString(tr("Bandwidth initialization.")));
+
+    // 检查数组大小
+    if (mBandwidthInitilize.size() < nVars)
     {
-        if(mBandwidthInitilize[i] == GwmMultiscaleGWRAlgorithm::Null)
-        {
-            mXi = mX.col(i/nVarsY);
-            mYi = mY.col((i+nVarsY)%nVarsY);
-            mBandwidthSelectCriterionFunction = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
-            mBandwidthSelectionCurrentIndex = i;
-            GwmBandwidthWeight* bw0 = bandwidth(i);
-            bool adaptive = bw0->adaptive();
-            selector.setBandwidth(bw0);
-            selector.setLower(adaptive ? 20 : 0.0);
-            selector.setUpper(adaptive ? mDataPoints.n_rows : mSpatialWeights[i].distance()->maxDistance());
-            GwmBandwidthWeight* bw = selector.optimize(this);
-            if(bw)
-            {
-                mSpatialWeights[i].setWeight(bw);
-            }
-        }
+        emit error(tr("BandwidthInitilize size (%1) is less than required (%2).").arg(mBandwidthInitilize.size()).arg(nVars));
+        return;
     }
-    (this->*mCalFunciton)();
-    CreateResultLayerData resultLayerData;
-    if(!checkCanceled())
+    if (mBandwidthSelectionApproach.size() < nVars)
     {
+        emit error(tr("BandwidthSelectionApproach size (%1) is less than required (%2).").arg(mBandwidthSelectionApproach.size()).arg(nVars));
+        return;
+    }
+
+    std::vector<gwm::GWCorrelation::BandwidthInitilizeType> bandwidthInitTypes;
+    std::vector<gwm::GWCorrelation::BandwidthSelectionCriterionType> bandwidthSelTypes;
+    for (int i = 0; i < nVars; i++)
+    {
+        if (mBandwidthInitilize[i] == GwmMultiscaleGWRAlgorithm::Null)
+            bandwidthInitTypes.push_back(gwm::GWCorrelation::BandwidthInitilizeType::Null);
+        else if (mBandwidthInitilize[i] == GwmMultiscaleGWRAlgorithm::Initial)
+            bandwidthInitTypes.push_back(gwm::GWCorrelation::BandwidthInitilizeType::Initial);
+        else
+            bandwidthInitTypes.push_back(gwm::GWCorrelation::BandwidthInitilizeType::Specified);
+
+        if (mBandwidthSelectionApproach[i] == GwmMultiscaleGWRAlgorithm::CV)
+            bandwidthSelTypes.push_back(gwm::GWCorrelation::BandwidthSelectionCriterionType::CV);
+        else
+            bandwidthSelTypes.push_back(gwm::GWCorrelation::BandwidthSelectionCriterionType::AIC);
+    }
+
+    // 转换空间权重
+    emit message(QString(tr("Setting spatial weights.")));
+    if (mSpatialWeights.size() < nVars)
+        {
+            emit error(tr("SpatialWeights size (%1) is less than required (%2).").arg(mSpatialWeights.size()).arg(nVars));
+            return;
+        }
+
+    std::vector<gwm::SpatialWeight> spatialWeights;
+        for (const auto& gwmSw : mSpatialWeights)
+        {
+            GwmBandwidthWeight* gwmBw = gwmSw.weight<GwmBandwidthWeight>();
+            if (!gwmBw) continue;
+
+            // 创建 BandwidthWeight
+            gwm::BandwidthWeight::KernelFunctionType kernelType =
+                static_cast<gwm::BandwidthWeight::KernelFunctionType>(gwmBw->kernel());
+            gwm::BandwidthWeight* bw = new gwm::BandwidthWeight(
+                gwmBw->bandwidth(),
+                gwmBw->adaptive(),
+                kernelType
+                );
+
+            // 创建 Distance
+            gwm::Distance* dist = nullptr;
+            if (gwmSw.distance()->type() == GwmDistance::CRSDistance) {
+                GwmCRSDistance* gwmCrsDist = gwmSw.distance<GwmCRSDistance>();
+                if (gwmCrsDist) {
+                    dist = new gwm::CRSDistance(gwmCrsDist->geographic());
+                }
+            }
+            else if (gwmSw.distance()->type() == GwmDistance::MinkwoskiDistance) {
+                GwmMinkwoskiDistance* gwmMinkDist = gwmSw.distance<GwmMinkwoskiDistance>();
+                if (gwmMinkDist) {
+                    dist = new gwm::MinkwoskiDistance(gwmMinkDist->poly(),gwmMinkDist->theta());
+                }
+            }
+            else if (gwmSw.distance()->type() == GwmDistance::DMatDistance) {
+                GwmDMatDistance* gwmDmatDist = gwmSw.distance<GwmDMatDistance>();
+                if (gwmDmatDist) {
+                    dist = new gwm::DMatDistance(gwmDmatDist->dMatFile().toStdString());
+                }
+            }
+
+            if (!dist) {
+                dist = new gwm::CRSDistance(); // 默认
+            }
+
+            // 创建 SpatialWeight
+            gwm::SpatialWeight sw(bw, dist);
+
+            // 设置距离参数（坐标数据已经在 initPoints 中准备好了）
+            if (dist->type() == gwm::Distance::CRSDistance) {
+                auto *d = sw.distance<gwm::CRSDistance>();
+                if (d) {
+                    d->makeParameter({ mDataPoints, mDataPoints });
+                }
+            }
+            else if (dist->type() == gwm::Distance::MinkwoskiDistance) {
+                auto *d2 = sw.distance<gwm::MinkwoskiDistance>();
+                if (d2) {
+                    d2->makeParameter({ mDataPoints, mDataPoints });
+                }
+            }
+
+            spatialWeights.push_back(sw);
+        }
+
+
+    emit message(QString(tr("Setting spatial weights.")));
+    if (spatialWeights.empty()) {
+        emit error(tr("No valid spatial weights found."));
+        return;
+    }
+    mGWCorrCore->setSpatialWeights(spatialWeights);
+
+    emit message(QString(tr("Setting parameters.")));
+    mGWCorrCore->setBandwidthInitilize(bandwidthInitTypes);
+    mGWCorrCore->setBandwidthSelectionApproach(bandwidthSelTypes);
+    mGWCorrCore->setParallelType(static_cast<gwm::ParallelType>(mParallelType));
+    mGWCorrCore->setOmpThreadNum(mOmpThreadNum);
+
+    // std::vector<gwm::SpatialWeight> a = mGWCorrCore->spatialWeights();
+    // gwm::BandwidthWeight bwa = a[0].weight<gwm::BandwidthWeight>();
+    // emit message(tr("-----------parameters of bwa-----------"));
+    // emit message(tr("size of a: %1").arg(a.size()));
+    // emit message(tr("bandwidth: %1").arg(bwa.bandwidth()));
+    // emit message(tr("adaptive: %1").arg(bwa.adaptive()));
+    // emit message(tr("kernel: %1").arg(bwa.kernel()));
+
+    // 设置 Telegram 用于进度报告
+    emit message(QString(tr("Setting Telegram")));
+    mGWCorrCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+
+    // 执行计算
+    bool isLib = false; //判断是否用库函数
+    if (!checkCanceled())
+    {
+        try{
+            emit message(QString(tr("Calculating GWCorrelation ...")));
+
+            emit message(tr("X cols = %1, Y cols = %2, nVars = %3")
+                             .arg(mX.n_cols).arg(mY.n_cols).arg(nVars));
+            emit message(tr("SpatialWeights size = %1").arg(spatialWeights.size()));
+            emit message(tr("BandwidthInit size = %1").arg(bandwidthInitTypes.size()));
+            emit message(tr("BandwidthSel size = %1").arg(bandwidthSelTypes.size()));
+
+            mGWCorrCore->run();
+
+            // update property tab
+            const std::vector<gwm::SpatialWeight>& gwmSws = mGWCorrCore->spatialWeights();
+            for(uword i = 0 ; i<nVars && !checkCanceled();i++)
+            {
+                gwm::SpatialWeight gwmSw = gwmSws[i];
+                gwm::BandwidthWeight* gwmBw = gwmSws[i].weight<gwm::BandwidthWeight>();
+
+                if (gwmBw)
+                {
+                    // 获取当前 GwmSpatialWeight 中的带宽权重
+                    GwmBandwidthWeight* currentBw = mSpatialWeights[i].weight<GwmBandwidthWeight>();
+                    if (currentBw)
+                    {
+                        // 创建新的 GwmBandwidthWeight，使用更新后的带宽值
+                        // 保持原有的 adaptive 和 kernel 设置
+                        GwmBandwidthWeight::KernelFunctionType kernelType =
+                            static_cast<GwmBandwidthWeight::KernelFunctionType>(gwmBw->kernel());
+
+                        GwmBandwidthWeight* newBw = new GwmBandwidthWeight(
+                            gwmBw->bandwidth(),
+                            gwmBw->adaptive(),
+                            kernelType
+                            );
+
+                        // 更新 mSpatialWeights 中的带宽权重
+                        mSpatialWeights[i].setWeight(newBw);
+                    }
+                }
+            }
+
+            isLib = true;
+        }catch(const std::exception& e){
+            emit message(tr("Library function failed, using old algorithm."));
+
+            for(uword i = 0 ; i<nVars && !checkCanceled();i++)
+            {
+                if(mBandwidthInitilize[i] == GwmMultiscaleGWRAlgorithm::Null)
+                {
+                    mXi = mX.col(i/nVarsY);
+                    mYi = mY.col((i+nVarsY)%nVarsY);
+                    mBandwidthSelectCriterionFunction = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
+                    mBandwidthSelectionCurrentIndex = i;
+                    GwmBandwidthWeight* bw0 = bandwidth(i);
+                    bool adaptive = bw0->adaptive();
+                    selector.setBandwidth(bw0);
+                    selector.setLower(adaptive ? 20 : 0.0);
+                    selector.setUpper(adaptive ? mDataPoints.n_rows : mSpatialWeights[i].distance()->maxDistance());
+                    GwmBandwidthWeight* bw = selector.optimize(this);
+                    if(bw)
+                    {
+                        mSpatialWeights[i].setWeight(bw);
+                    }
+                }
+            }
+            (this->*mCalFunciton)();
+        };
+
+    }
+
+    // 获取结果
+    CreateResultLayerData resultLayerData;
+    if (!checkCanceled())
+    {
+        if(isLib)
+        {
+            mCovmat = mGWCorrCore->localCov();
+            mCorrmat = mGWCorrCore->localCorr();
+            mSCorrmat = mGWCorrCore->localSCorr();
+            mLocalMean = mGWCorrCore->localMean();
+            mLVar = mGWCorrCore->localVar();
+        }
+
+        emit message(QString(tr("Getting Results.")));
         resultLayerData.push_back(qMakePair(QString("Cov"), mCovmat));
         resultLayerData.push_back(qMakePair(QString("Corr"), mCorrmat));
         resultLayerData.push_back(qMakePair(QString("Spearman_rho"), mSCorrmat));
     }
+
+    //带宽优选
+
+    // CreateResultLayerData resultLayerData;
+    // if(!checkCanceled())
+    // {
+    //     resultLayerData.push_back(qMakePair(QString("Cov"), mCovmat));
+    //     resultLayerData.push_back(qMakePair(QString("Corr"), mCorrmat));
+    //     resultLayerData.push_back(qMakePair(QString("Spearman_rho"), mSCorrmat));
+    // }
+
+
     if(!checkCanceled())
     {
         mResultList = resultLayerData;
@@ -462,3 +673,57 @@ void GwmGWCorrelationTaskThread::setSpatialWeights(const QList<GwmSpatialWeight>
 {
     GwmSpatialMultiscaleAlgorithm::setSpatialWeights(spatialWeights);
 }
+
+//below are functions for library function
+// 辅助函数：将 GwmSpatialWeight 转换为 gwm::SpatialWeight
+// gwm::SpatialWeight GwmGWCorrelationTaskThread::convertSpatialWeight(const GwmSpatialWeight& gwmSw, const arma::mat& coords)
+// {
+//     GwmBandwidthWeight* gwmBw = gwmSw.weight<GwmBandwidthWeight>();
+//     GwmDistance* gwmDist = gwmSw.distance();
+
+//     // 添加空指针检查
+//     if (!gwmBw)
+//     {
+//         throw std::runtime_error("GwmBandwidthWeight is null in convertSpatialWeight");
+//     }
+//     if (!gwmDist)
+//     {
+//         throw std::runtime_error("GwmDistance is null in convertSpatialWeight");
+//     }
+    
+//     // 转换 BandwidthWeight
+//     gwm::BandwidthWeight::KernelFunctionType kernelType = static_cast<gwm::BandwidthWeight::KernelFunctionType>(gwmBw->kernel());
+//     gwm::BandwidthWeight* bw = new gwm::BandwidthWeight(gwmBw->bandwidth(), gwmBw->adaptive(), kernelType);
+    
+//     // 转换 Distance - 使用 new 创建，SpatialWeight 会管理其生命周期
+//     gwm::Distance* dist = nullptr;
+//     if (gwmDist->type() == GwmDistance::CRSDistance)
+//     {
+//         GwmCRSDistance* crsDist = gwmSw.distance<GwmCRSDistance>();
+//         gwm::CRSDistance* gwmCrsDist = new gwm::CRSDistance(crsDist->geographic());
+//         gwmCrsDist->makeParameter({ coords, coords });
+//         dist = gwmCrsDist;
+//     }
+//     else if (gwmDist->type() == GwmDistance::MinkwoskiDistance)
+//     {
+//         GwmMinkwoskiDistance* minkDist = gwmSw.distance<GwmMinkwoskiDistance>();
+//         gwm::MinkwoskiDistance* gwmMinkDist = new gwm::MinkwoskiDistance(minkDist->poly(), minkDist->theta());
+//         gwmMinkDist->makeParameter({ coords, coords });
+//         dist = gwmMinkDist;
+//     }
+//     else if (gwmDist->type() == GwmDistance::DMatDistance)
+//     {
+//         GwmDMatDistance* dmatDist = gwmSw.distance<GwmDMatDistance>();
+//         gwm::DMatDistance* gwmDmatDist = new gwm::DMatDistance(dmatDist->dMatFile().toStdString());
+//         dist = gwmDmatDist;
+//     }
+//     else
+//     {
+//         // 默认使用 CRSDistance
+//         gwm::CRSDistance* gwmCrsDist = new gwm::CRSDistance(false);
+//         gwmCrsDist->makeParameter({ coords, coords });
+//         dist = gwmCrsDist;
+//     }
+    
+//     return gwm::SpatialWeight(bw, dist);
+// }
