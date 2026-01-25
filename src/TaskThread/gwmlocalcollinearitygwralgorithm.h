@@ -44,6 +44,8 @@ public:
     bool lambdaAdjust() const;
     void setLambdaAdjust(bool lambdaAdjust);
 
+    gwm::BandwidthCriterionList criterionList;
+
     GwmDiagnostic dialnostic() const{
         return mDiagnostic;
     }
@@ -59,9 +61,14 @@ public:
         return mIsAutoselectBandwidth;
     }
 
-    BandwidthCriterionList bandwidthSelectorCriterions() const
+    // BandwidthCriterionList bandwidthSelectorCriterions() const
+    // {
+    //     return selector.bandwidthCriterion();
+    // }
+
+    gwm::BandwidthCriterionList bandwidthSelectorCriterions() const
     {
-        return selector.bandwidthCriterion();
+        return criterionList;
     }
 
     BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
@@ -113,7 +120,7 @@ private:
 
     double bandwidthSizeCriterionCVSerial(GwmBandwidthWeight* weight);
 
-    std::unique_ptr<gwm::GWRBasic> mGWRCore;
+    std::unique_ptr<gwm::GWRLocalCollinearity> mLCGWRCore;
 
 public:
     static int treeChildCount;

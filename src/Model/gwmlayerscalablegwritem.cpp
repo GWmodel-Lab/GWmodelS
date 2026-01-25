@@ -11,12 +11,14 @@ GwmLayerScalableGWRItem::GwmLayerScalableGWRItem(GwmLayerItem* parent, QgsVector
         mWeight = gwm::BandwidthWeight(*static_cast<gwm::BandwidthWeight*>(taskThread->spatialWeight().weight()));
         mDistanceType = taskThread->spatialWeight().distance()->type();
         mDiagnostic = taskThread->diagnostic();
+        mDiagnostic0 = taskThread->diagnostic0();
         mBetas = mat(taskThread->betas());
         mPolynomial = taskThread->polynomial();
         mCV = taskThread->cv();
         mScale = taskThread->scale();
         mPenalty = taskThread->penalty();
         mParameterOptimizeCriterionType = taskThread->parameterOptimizeCriterion();
+        mParameterOptimizeCriterionType0 = taskThread->parameterOptimizeCriterion0();
         mHasRegressionLayer = taskThread->regressionLayer() != nullptr;
         mHasPredict = taskThread->hasPredict();
     }
@@ -135,7 +137,7 @@ bool GwmLayerScalableGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
         nodeAnalyse.setAttribute("cv", mCV);
         nodeAnalyse.setAttribute("scale", mScale);
         nodeAnalyse.setAttribute("penalty", mPenalty);
-        nodeAnalyse.setAttribute("parameterOptimizeCriterion", mParameterOptimizeCriterionType);
+        nodeAnalyse.setAttribute("parameterOptimizeCriterion", mParameterOptimizeCriterionType0);
         nodeAnalyse.setAttribute("hasRegressionLayer", mHasRegressionLayer);
         nodeAnalyse.setAttribute("hasPredict", mHasPredict);
 
@@ -227,6 +229,11 @@ GwmDiagnostic GwmLayerScalableGWRItem::diagnostic() const
     return mDiagnostic;
 }
 
+gwm::RegressionDiagnostic GwmLayerScalableGWRItem::diagnostic0() const
+{
+    return mDiagnostic0;
+}
+
 arma::mat GwmLayerScalableGWRItem::betas() const
 {
     return mBetas;
@@ -240,6 +247,11 @@ gwm::Distance::DistanceType GwmLayerScalableGWRItem::distanceType() const
 GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType GwmLayerScalableGWRItem::parameterOptimizeCriterionType() const
 {
     return mParameterOptimizeCriterionType;
+}
+
+gwm::GWRScalable::BandwidthSelectionCriterionType GwmLayerScalableGWRItem::parameterOptimizeCriterionType0() const
+{
+    return mParameterOptimizeCriterionType0;
 }
 
 bool GwmLayerScalableGWRItem::hasRegressionLayer() const

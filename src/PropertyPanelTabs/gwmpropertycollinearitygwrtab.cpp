@@ -92,7 +92,7 @@ void GwmPropertyCollinearityGWRTab::updateUI()
 
     //if (mLayerItem->hatmatrix())
     //{
-        GwmDiagnostic diagnostic = mLayerItem->diagnostic();
+        gwm::RegressionDiagnostic diagnostic = mLayerItem->diagnostic0();
         ui->lblENP->setText(QString("%1").arg(diagnostic.ENP, 0, 'f', 6));
         ui->lblEDF->setText(QString("%1").arg(diagnostic.EDF, 0, 'f', 6));
         ui->lblAIC->setText(QString("%1").arg(diagnostic.AIC, 0, 'f', 6));
@@ -138,8 +138,12 @@ void GwmPropertyCollinearityGWRTab::updateUI()
 
     if(mLayerItem->getIsBandwidthOptimized())
     {
-        BandwidthCriterionList bwScores = mLayerItem->bandwidthSelScores();
-        QVariant data = QVariant::fromValue(bwScores);
+        gwm::BandwidthCriterionList bwScores = mLayerItem->bandwidthSelScores();
+        qDebug() << "bwScores size:" << bwScores.size();
+        QVector<QPair<double,double>> qlist;
+        for (const auto &item : bwScores)
+            qlist.append(qMakePair(item.first, item.second));
+        QVariant data = QVariant::fromValue(qlist);
         GwmBandwidthSizeSelector::PlotBandwidthResult(data, mBandwidthSelPlot);
     }
 
@@ -246,7 +250,7 @@ void GwmPropertyCollinearityGWRTab::on_btnSaveRes_clicked()
           out << "" << Qt::endl;
           out << "**********************************************" << Qt::endl;
           out << "" << Qt::endl;
-          out << "  Summary of GWR Coefficient Estimates"<< Qt::endl;
+          out << "  Summary of LC-GWR Coefficient Estimates"<< Qt::endl;
           out << "----------------------------------------------"<< Qt::endl;
           for(int i = 0 ; i < 6 ; i++){
               out << ui->tbwCoefficient->horizontalHeaderItem(i)->text();

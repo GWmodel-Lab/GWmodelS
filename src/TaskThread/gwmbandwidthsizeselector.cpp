@@ -39,11 +39,47 @@ void GwmBandwidthSizeSelector::PlotBandwidthResult(QVariant data, QwtPlot *plot)
     plot->plotLayout()->setAlignCanvasToScales(true);
 
     QwtPlotCurve *curve = new QwtPlotCurve("curve");
-    curve->setPen(Qt::blue, 1.0, Qt::DashLine);
-    curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-    QwtSymbol *symbol = new QwtSymbol(QwtSymbol::Ellipse, QBrush(Qt::yellow), QPen(Qt::red, 0.5), QSize(5, 5));
-    curve->setSymbol(symbol);
-
+    //设置曲线颜色 粗细
+    curve->setPen(Qt::blue,1.0,Qt::DashLine);
+    //线条光滑化
+    curve->setRenderHint(QwtPlotItem::RenderAntialiased,true);
+    //设置样本点的颜色、大小
+    QwtSymbol *symbol = new QwtSymbol( QwtSymbol::Ellipse, QBrush( Qt::yellow ), QPen( Qt::red, 0.5 ), QSize( 5, 5) );
+    //添加样本点形状
+    curve->setSymbol( symbol );
+    //输入数据
+    QVector<QPair<double, double>> points;
+    points.reserve(result.size());
+    for (auto it = result.constBegin(); it != result.constEnd(); ++it)
+    {
+        points.append(qMakePair(it->first, it->second));
+    }
+    if (points.isEmpty())
+    {
+        plot->detachItems(QwtPlotItem::Rtti_PlotCurve);
+        plot->replot();
+        return;
+    }
+    std::sort(points.begin(), points.end(), [](const QPair<double, double>& a, const QPair<double, double>& b){
+        if (a.first == b.first)
+            return a.second < b.second;
+        return a.first < b.first;
+    });
+    QVector<double> xData;
+    QVector<double> yData;
+    xData.reserve(points.size());
+    yData.reserve(points.size());
+    for (const auto& pt : points)
+    {
+        xData.append(pt.first);
+        yData.append(pt.second);
+    }
+    QVector<double> xDataSorted(xData);
+    QVector<double> yDataSorted(yData);
+    std::sort(xDataSorted.begin(), xDataSorted.end());
+    std::sort(yDataSorted.begin(), yDataSorted.end());
+    plot->setAxisScale(QwtPlot::xBottom, xDataSorted.first(), xDataSorted.last());
+    plot->setAxisScale(QwtPlot::yLeft, yDataSorted.first(), yDataSorted.last());
     curve->setSamples(xData, yData);
     curve->attach(plot);
 

@@ -9,7 +9,7 @@
 int GwmRobustGWRAlgorithm::treeChildCount = 0;
 
 GwmRobustGWRAlgorithm::GwmRobustGWRAlgorithm(): GwmBasicGWRAlgorithm(),
-    mGWRCore(std::make_unique<gwm::GWRBasic>())
+    mRGWRCore(std::make_unique<gwm::GWRRobust>())
 {
 
 }
@@ -38,25 +38,46 @@ void GwmRobustGWRAlgorithm::run()
         initPoints();
         // 设置矩阵
         initXY(mX, mY, mDepVar, mIndepVars);
+        mRGWRCore->setCoords(mDataPoints);
+        mRGWRCore->setDependentVariable(mY);
+        mRGWRCore->setIndependentVariables(mX);
+        mRGWRCore->setSpatialWeight(mSpatialWeight);
+        mRGWRCore->setHasHatMatrix(mHasHatMatrix);
+        mRGWRCore->setFiltered(mFiltered);
+        mRGWRCore->setBandwidthSelectionCriterion(mBandwidthSelectionCriterionType);
+        mRGWRCore->setIsAutoselectBandwidth(mIsAutoselectBandwidth);
     }
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     mWeightMask = vec(nDp, fill::ones);
 
+
     if(!checkCanceled())
     {
         emit message("Regression ...");
-        mBetas = regression(mX,mY);
+        mRGWRCore->setParallelType(mParallelType);
+        mRGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+        mBetas = mRGWRCore->fit();
+        qDebug() << "mBetas:"; mBetas.print();
+    }
+
+    if(mOLS&&!checkCanceled()){
+        mOLSVar = CalOLS(mX,mY);
     }
 
     //诊断+结果图层
     if(mHasHatMatrix && !checkCanceled())
     {
-        mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mShat);
+        arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+        // mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mShat);
+        mDiagnostic0 = mRGWRCore->diagnostic();
+        mShat = mRGWRCore->sHat();
+        mBetasSE = mRGWRCore->betasSE();
         double trS = mShat(0), trStS = mShat(1);
         double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
         mBetasSE = sqrt(sigmaHat * mBetasSE);
         vec yhat = Fitted(mX, mBetas);
         vec res = mY - yhat;
+        mQDiag = mRGWRCore->qDiag();
         vec stu_res = res / sqrt(sigmaHat * mQDiag);
         mat betasTV = mBetas / mBetasSE;
         vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
@@ -87,6 +108,7 @@ void GwmRobustGWRAlgorithm::run()
             double trQtQ = DBL_MAX;
             if (isStoreS())
             {
+                mS = mRGWRCore->s();
                 mat EmS = eye(nDp, nDp) - mS;
                 mat Q = trans(EmS) * EmS;
                 trQtQ = sum(diagvec(trans(Q) * Q));
