@@ -121,7 +121,7 @@ GwmGGWROptionsDialog::GwmGGWROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     ui->mVariableAutoSelectionCheck->hide();
     ui->mModelSelAICThreshold->hide();
     ui->label_10->hide();
-    ui->cbxFTest->hide();
+    //ui->cbxFTest->hide();
 }
 
 GwmGGWROptionsDialog::~GwmGGWROptionsDialog()
@@ -504,6 +504,7 @@ void GwmGGWROptionsDialog::updateFields()
     }
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());
+    mTaskThread->setHasFTest(ui->cbxFTest->isChecked());
     //GGWR 参数设置
     mTaskThread->setTol(this->epsilonSize(),this->epsilonUnit());
     mTaskThread->setFamily(this->distributionFunction());

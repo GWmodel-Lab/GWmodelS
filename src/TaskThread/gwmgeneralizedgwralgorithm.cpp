@@ -27,9 +27,13 @@ QMap<QString, double> GwmGeneralizedGWRAlgorithm::TolUnitDict = {
 
 
 GwmGeneralizedGWRAlgorithm::GwmGeneralizedGWRAlgorithm() : GwmGeographicalWeightedRegressionAlgorithm(),
-    mGWRCore(std::make_unique<gwm::GWRBasic>())
+    mGGWRCore(std::make_unique<gwm::GWRGeneralized>())
 {
-
+    // Set default values
+    mFamily = Family::Poisson;
+    mTol = 1e-5;
+    mTolUnit = "e -5";
+    mMaxiter = 20;
 }
 
 void GwmGeneralizedGWRAlgorithm::setCanceled(bool canceled)
@@ -47,181 +51,448 @@ void GwmGeneralizedGWRAlgorithm::run()
         // 点位初始化
         emit message(QString(tr("Setting data points")) + (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
         initPoints();
+
+        mGGWRCore->setCoords(mDataPoints);
+
+        // 如果有回归图层
+        if(hasRegressionLayer())
+        {
+            mGGWRCore->setRegressionData(mRegressionPoints);
+            mGGWRCore->setHasRegressionData(true);
+        }
     }
     if(!checkCanceled())
     {
         // 初始化
         emit message(QString(tr("Setting X and Y.")));
         initXY(mX, mY, mDepVar, mIndepVars);
-    }
-    // 优选带宽
-    if (mIsAutoselectBandwidth && !checkCanceled())
-    {
-        emit message(QString(tr("Automatically selecting bandwidth ...")));
-        //emit tick(0, 0);
-        if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
-        {
-            gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
-            d->makeParameter({ mDataPoints, mDataPoints });
-        }
-        gwm::BandwidthWeight* bandwidthWeight0 = mSpatialWeight.weight<gwm::BandwidthWeight>();
-        mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
-        double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
-        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSpatialWeight.distance()->maxDistance();
-        mBandwidthSizeSelector.setLower(lower);
-        mBandwidthSizeSelector.setUpper(upper);
-        mGWRCore->setCoords(mDataPoints);
-        mGWRCore->setDependentVariable(mY);
-        mGWRCore->setIndependentVariables(mX);
-        mGWRCore->setSpatialWeight(mSpatialWeight);
-        gwm::BandwidthWeight* bandwidthWeight = !checkCanceled() ? mBandwidthSizeSelector.optimize(mGWRCore.get()) : nullptr;
-        if (bandwidthWeight && !checkCanceled())
-        {
-            mSpatialWeight.setWeight(bandwidthWeight);
-            // 绘图
-            QVariant data = QVariant::fromValue(mBandwidthSizeSelector.bandwidthCriterion());
-            emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
-        }
-        if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
-        {
-            gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
-            d->makeParameter({ mDataPoints, mDataPoints });
 
-        }
-    }
+        mGGWRCore->setDependentVariable(mY);
+        mGGWRCore->setIndependentVariables(mX);
+        mGGWRCore->setSpatialWeight(mSpatialWeight);
 
-    int nVar = mX.n_cols;
-    int nDp = mDataLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
-    if(!checkCanceled()) mBetas = mat(nVar, nRp, fill::zeros);
-    if (mHasHatMatrix && !checkCanceled())
-    {
-        mBetasSE = mat( nVar,nDp, fill::zeros);
-        mShat = vec(2,fill::zeros);
     }
-
-    emit message(tr("Calculating Distance Matrix..."));
-    mWtMat1 = mat(nDp,nDp,fill::zeros);
-    if(!checkCanceled()){
-        mWtMat2 = mat(nRp,nDp,fill::zeros);
-    }
-    if(mRegressionLayer && !checkCanceled()){
-        for(int i = 0; i < nRp && !checkCanceled(); i++){
-            vec weight = mSpatialWeight.weightVector(i);
-            mWtMat2.col(i) = weight;
-            emit tick(i, nRp);
-        }
-        if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
-        {
-            gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
-            d->makeParameter({ mDataPoints, mDataPoints });
-        }
-        for(int i = 0; i < nDp && !checkCanceled(); i++){
-            vec weight = mSpatialWeight.weightVector(i);
-            mWtMat1.col(i) = weight;
-            emit tick(i, nDp);
-        }
-    }
-    else{
-        for(int i = 0; i < nRp && !checkCanceled(); i++){
-            vec weight = mSpatialWeight.weightVector(i);
-            mWtMat2.col(i) = weight;
-            emit tick(i, nRp);
-        }
-        mWtMat1 = mWtMat2;
-    }
-
-    bool isAllCorrect = true;
     if(!checkCanceled())
     {
-        CalGLMModel(mX,mY);
-        mBetas = (this->*mGGWRRegressionFunction)(mX,mY);
+        //设置GGWR参数
+        emit message(tr("Setting parameters."));
+        mGGWRCore->setFamily(convertFamily(mFamily));
+        mGGWRCore->setTol(mTol);
+        mGGWRCore->setMaxiter(mMaxiter);
+        mGGWRCore->setHasHatMatrix(mHasHatMatrix);
+        mGGWRCore->setBandwidthSelectionCriterionType(convertCriterionType(mBandwidthSelectionCriterionType));
+        mGGWRCore->setIsAutoselectBandwidth(mIsAutoselectBandwidth);
+        mGGWRCore->setParallelType(mParallelType);
+        mGGWRCore->setOmpThreadNum(mOmpThreadNum);
+        mGGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
     }
-    if(checkCanceled())
+
+    // ========== 阶段4: 执行拟合 ==========
+
+    criterionList = mGGWRCore->bandwidthSelectorCriterions();
+    if (!checkCanceled() && !hasRegressionLayer())
     {
-        return;
-    }
+        if (mIsAutoselectBandwidth)
+        {
+            emit message(QString(tr("Automatically selecting bandwidth ...")));
+            mBetas = mGGWRCore->fit();
+            // if(mHasHatMatrix)
+            // {
+            //     arma::mat tempS;
+            //     mBetas = mGGWRCore->fit(mX, mY, mBetasSE, mShat, mQDiag, tempS);
+            // }
+            // else
+            // {
+            //     mBetas = mGGWRCore->fit();
+            // }
 
-    if(mHasHatMatrix && !checkCanceled()){
-        if(mFamily == Family::Poisson){
-            mat betasTV = mBetas / mBetasSE;
-            mBetas = trans(mBetas);
-            mBetasSE = trans(mBetasSE);
-            betasTV = trans(betasTV);
-            double trS = mShat(0);
-            double trStS = mShat(1);
+            gwm::BandwidthWeight* bw = mGGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
+            emit message(tr("bandwidth selected: %1").arg(bw->bandwidth()));
 
-            mat yhat = exp(Fitted(mX,mBetas));
-            mat res = mY - yhat;
+            if (bw && !checkCanceled())
+            {
+                mSpatialWeight.setWeight(bw);
+                criterionList = mGGWRCore->mBandwidthSelectionCriterionList;
 
-            //计算诊断信息
-            double AIC = mGwDev + 2 * trS;
-            double AICc = AIC + 2*trS*(trS+1)/(nDp-trS-1);
-            double R2 = 1 - mGwDev/(mGLMDiagnostic.NullDev);  // pseudo.R2 <- 1 - gw.dev/null.dev
-            vec vDiags(4);
-            vDiags(0) = AIC;
-            vDiags(1) = AICc;
-            vDiags(2) = mGwDev;
-            vDiags(3) = R2;
-            mDiagnostic = GwmGGWRDiagnostic(vDiags);
-
-            mResultList.push_back(qMakePair(QString("%1"), mBetas));
-            mResultList.push_back(qMakePair(QString("y"), mY));
-            mResultList.push_back(qMakePair(QString("yhat"), yhat));
-            mResultList.push_back(qMakePair(QString("residual"), res));
-            mResultList.push_back(qMakePair(QString("%1_SE"), mBetasSE));
-            mResultList.push_back(qMakePair(QString("%1_TV"), betasTV));
-        }
-        else{
-            mat n = vec(mY.n_rows,fill::ones);
-            mBetas = trans(mBetas);
-
-            double trS = mShat(0);
-            double trStS = mShat(1);
-
-            vec yhat = Fitted(mX,mBetas);
-            yhat = exp(yhat)/(1+exp(yhat));
-
-            vec res = mY - yhat;
-            vec Dev = log(1/( (mY-n+yhat) % (mY-n+yhat) ) );
-            double gwDev = sum(Dev);
-            vec residual2 = res % res;
-            double rss = sum(residual2);
-            for(int i = 0; i < nDp && !checkCanceled(); i++){
-                mBetasSE.col(i) = sqrt(mBetasSE.col(i));
-    //            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
+                // 绘图数据
+                QVector<QPair<double,double>> qlist;
+                for (const auto &item : criterionList)
+                    qlist.append(qMakePair(item.first, item.second));
+                QVariant data = QVariant::fromValue(qlist);
+                emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
             }
-            mBetasSE = trans(mBetasSE);
-            mat betasTV = mBetas / mBetasSE;
-
-            double AIC = gwDev + 2 * trS;
-            double AICc = AIC + 2*trS*(trS+1)/(nDp-trS-1);
-            double R2 = 1 - gwDev/(mGLMDiagnostic.NullDev);  // pseudo.R2 <- 1 - gw.dev/null.dev
-            vec vDiags(4);
-            vDiags(0) = AIC;
-            vDiags(1) = AICc;
-            vDiags(2) = gwDev;
-            vDiags(3) = R2;
-            mDiagnostic = GwmGGWRDiagnostic(vDiags);
-
-            mResultList.push_back(qMakePair(QString("%1"), mBetas));
-            mResultList.push_back(qMakePair(QString("y"), mY));
-            mResultList.push_back(qMakePair(QString("yhat"), yhat));
-            mResultList.push_back(qMakePair(QString("residual"), res));
-            mResultList.push_back(qMakePair(QString("%1_SE"), mBetasSE));
-            mResultList.push_back(qMakePair(QString("%1_TV"), betasTV));
+        }
+        else
+        {
+            emit message(QString(tr("Fitting GGWR model...")));
+            mBetas = mGGWRCore->fit();
         }
     }
-    else{
-        mBetas = trans(mBetas);
+    else if (!checkCanceled() && hasRegressionLayer())
+    {
+        emit message(QString(tr("Fitting GGWR model...")));
+        mBetas = mGGWRCore->fit();
+    }
+
+    // 优选带宽
+    // if (mIsAutoselectBandwidth && !checkCanceled())
+    // {
+    //     emit message(QString(tr("Automatically selecting bandwidth ...")));
+    //     //emit tick(0, 0);
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     {
+    //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+    //         d->makeParameter({ mDataPoints, mDataPoints });
+    //     }
+    //     gwm::BandwidthWeight* bandwidthWeight0 = mSpatialWeight.weight<gwm::BandwidthWeight>();
+    //     mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
+    //     double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
+    //     double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSpatialWeight.distance()->maxDistance();
+    //     mBandwidthSizeSelector.setLower(lower);
+    //     mBandwidthSizeSelector.setUpper(upper);
+
+    //     gwm::BandwidthWeight* bandwidthWeight = !checkCanceled() ? mBandwidthSizeSelector.optimize(mGGWRCore.get()) : nullptr;
+    //     emit message(tr("Bandwidth Selected: %1").arg(bandwidthWeight->bandwidth()));
+
+    //     // plot
+    //     if (bandwidthWeight && !checkCanceled())
+    //     {
+    //         mSpatialWeight.setWeight(bandwidthWeight);
+    //         // 绘图
+    //         QVariant data = QVariant::fromValue(mBandwidthSizeSelector.bandwidthCriterion());
+    //         emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
+    //     }
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     {
+    //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+    //         d->makeParameter({ mDataPoints, mDataPoints });
+
+    //     }
+    // }else if(!checkCanceled())
+    // {
+
+    // }
+
+    // 老算法
+    // int nVar = mX.n_cols;
+    // int nDp = mDataLayer->featureCount(), nRp = mRegressionLayer ? mRegressionLayer->featureCount() : nDp;
+    // if(!checkCanceled()) mBetas = mat(nVar, nRp, fill::zeros);
+    // if (mHasHatMatrix && !checkCanceled())
+    // {
+    //     mBetasSE = mat( nVar,nDp, fill::zeros);
+    //     mShat = vec(2,fill::zeros);
+    // }
+
+    // emit message(tr("Calculating Distance Matrix..."));
+    // mWtMat1 = mat(nDp,nDp,fill::zeros);
+    // if(!checkCanceled()){
+    //     mWtMat2 = mat(nRp,nDp,fill::zeros);
+    // }
+    // if(mRegressionLayer && !checkCanceled()){
+    //     for(int i = 0; i < nRp && !checkCanceled(); i++){
+    //         vec weight = mSpatialWeight.weightVector(i);
+    //         mWtMat2.col(i) = weight;
+    //         emit tick(i, nRp);
+    //     }
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     {
+    //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+    //         d->makeParameter({ mDataPoints, mDataPoints });
+    //     }
+    //     for(int i = 0; i < nDp && !checkCanceled(); i++){
+    //         vec weight = mSpatialWeight.weightVector(i);
+    //         mWtMat1.col(i) = weight;
+    //         emit tick(i, nDp);
+    //     }
+    // }
+    // else{
+    //     for(int i = 0; i < nRp && !checkCanceled(); i++){
+    //         vec weight = mSpatialWeight.weightVector(i);
+    //         mWtMat2.col(i) = weight;
+    //         emit tick(i, nRp);
+    //     }
+    //     mWtMat1 = mWtMat2;
+    // }
+
+    // bool isAllCorrect = true;
+    // if(!checkCanceled())
+    // {
+    //     CalGLMModel(mX,mY);
+    //     mBetas = (this->*mGGWRRegressionFunction)(mX,mY);
+    // }
+    // if(checkCanceled())
+    // {
+    //     return;
+    // }
+
+    // if(mHasHatMatrix && !checkCanceled()){
+    //     if(mFamily == Family::Poisson){
+    //         mat betasTV = mBetas / mBetasSE;
+    //         mBetas = trans(mBetas);
+    //         mBetasSE = trans(mBetasSE);
+    //         betasTV = trans(betasTV);
+    //         double trS = mShat(0);
+    //         double trStS = mShat(1);
+
+    //         mat yhat = exp(Fitted(mX,mBetas));
+    //         mat res = mY - yhat;
+
+    //         //计算诊断信息
+    //         double AIC = mGwDev + 2 * trS;
+    //         double AICc = AIC + 2*trS*(trS+1)/(nDp-trS-1);
+    //         double R2 = 1 - mGwDev/(mGLMDiagnostic.NullDev);  // pseudo.R2 <- 1 - gw.dev/null.dev
+    //         vec vDiags(4);
+    //         vDiags(0) = AIC;
+    //         vDiags(1) = AICc;
+    //         vDiags(2) = mGwDev;
+    //         vDiags(3) = R2;
+    //         mDiagnostic = GwmGGWRDiagnostic(vDiags);
+
+    //         mResultList.push_back(qMakePair(QString("%1"), mBetas));
+    //         mResultList.push_back(qMakePair(QString("y"), mY));
+    //         mResultList.push_back(qMakePair(QString("yhat"), yhat));
+    //         mResultList.push_back(qMakePair(QString("residual"), res));
+    //         mResultList.push_back(qMakePair(QString("%1_SE"), mBetasSE));
+    //         mResultList.push_back(qMakePair(QString("%1_TV"), betasTV));
+    //     }
+    //     else{
+    //         mat n = vec(mY.n_rows,fill::ones);
+    //         mBetas = trans(mBetas);
+
+    //         double trS = mShat(0);
+    //         double trStS = mShat(1);
+
+    //         vec yhat = Fitted(mX,mBetas);
+    //         yhat = exp(yhat)/(1+exp(yhat));
+
+    //         vec res = mY - yhat;
+    //         vec Dev = log(1/( (mY-n+yhat) % (mY-n+yhat) ) );
+    //         double gwDev = sum(Dev);
+    //         vec residual2 = res % res;
+    //         double rss = sum(residual2);
+    //         for(int i = 0; i < nDp && !checkCanceled(); i++){
+    //             mBetasSE.col(i) = sqrt(mBetasSE.col(i));
+    // //            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
+    //         }
+    //         mBetasSE = trans(mBetasSE);
+    //         mat betasTV = mBetas / mBetasSE;
+
+    //         double AIC = gwDev + 2 * trS;
+    //         double AICc = AIC + 2*trS*(trS+1)/(nDp-trS-1);
+    //         double R2 = 1 - gwDev/(mGLMDiagnostic.NullDev);  // pseudo.R2 <- 1 - gw.dev/null.dev
+    //         vec vDiags(4);
+    //         vDiags(0) = AIC;
+    //         vDiags(1) = AICc;
+    //         vDiags(2) = gwDev;
+    //         vDiags(3) = R2;
+    //         mDiagnostic = GwmGGWRDiagnostic(vDiags);
+
+    //         mResultList.push_back(qMakePair(QString("%1"), mBetas));
+    //         mResultList.push_back(qMakePair(QString("y"), mY));
+    //         mResultList.push_back(qMakePair(QString("yhat"), yhat));
+    //         mResultList.push_back(qMakePair(QString("residual"), res));
+    //         mResultList.push_back(qMakePair(QString("%1_SE"), mBetasSE));
+    //         mResultList.push_back(qMakePair(QString("%1_TV"), betasTV));
+    //     }
+    // }
+    // else{
+    //     mBetas = trans(mBetas);
+    //     mResultList.push_back(qMakePair(QString("%1"), mBetas));
+    // }
+
+
+
+    emit message(tr("get diagnostic info from new function..."));
+    if (mHasHatMatrix && !checkCanceled())
+    {
+        //uword nDp = mDataPoints.n_rows;
+
+        // 从内核库获取诊断信息
+        auto kernelDiag = mGGWRCore->getDiagnostic();
+        auto kernelGLMDiag = mGGWRCore->getGLMDiagnostic();
+        mDiagnostic = convertDiagnostic(kernelDiag);
+        mGLMDiagnostic = convertGLMDiagnostic(kernelGLMDiag);
+
+        // 获取Hat矩阵相关数据
+        // mShat = mGGWRCore->sHat();
+        // mBetasSE = mGGWRCore->betasSE();
+        // mQDiag = mGGWRCore->qDiag();
+
+        // ========== 计算 mBetasSE ==========
+        // 从 mBetas 反推 mWt2 和 myAdj，然后计算 mBetasSE
+        uword nDp = mDataPoints.n_rows;
+        uword nVar = mX.n_cols;
+        uword nRp = mGGWRCore->hasRegressionData() ? mRegressionPoints.n_rows : nDp;
+
+        // 初始化 mBetasSE等
+        mBetasSE = mat(nVar, nDp, fill::zeros);
+        mShat = vec(2, fill::zeros);
+        mQDiag = vec(nDp, fill::zeros);
+        bool isStoreS = (nDp <= 8192);
+        mS = mat(isStoreS ? nDp : 1, nDp, fill::zeros);  // 添加：初始化 mS
+
+        // 从 mBetas 计算 mu（拟合值）
+        vec nu = sum(mBetas % mX, 1);  // mBetas 格式是 (nDp, nVar)，需要转置
+        vec mu;
+        if (mFamily == Family::Poisson)
+        {
+            mu = exp(nu);
+            mWt2 = mu;  // Poisson: mWt2 = mu
+            myAdj = nu + (mY - mu) / mu;
+        }
+        else // Binomial
+        {
+            mu = exp(nu) / (1 + exp(nu));
+            vec n = vec(mY.n_rows, fill::ones);
+            mWt2 = n % mu % (1 - mu);  // Binomial: mWt2 = n * mu * (1 - mu)
+            myAdj = nu + (mY - mu) / (mu % (1 - mu));
+        }
+
+        // 计算 mBetasSE
+        // 注意：mBetas 格式是 (nDp, nVar)，需要转置为 (nVar, nRp) 用于计算
+        mat betasForCalc = trans(mBetas);  // 转置为 (nVar, nRp)
+
+        // 获取权重矩阵
+        mWtMat1 = mGGWRCore->getWtMat1();
+        mWtMat2 = mGGWRCore->getWtMat2();
+
+        for (uword i = 0; i < nDp && !checkCanceled(); i++)
+        {
+            try
+            {
+                vec wi = mWtMat2.col(i);
+                mat ci, s_ri;
+                vec gwsi = gwRegHatmatrix(mX, myAdj, wi % mWt2, i, ci, s_ri);
+
+                mat invwt2 = 1.0 / mWt2;
+                mat temp = mat(ci.n_rows, ci.n_cols);
+                for (uword j = 0; j < ci.n_rows; j++)
+                {
+                    temp.row(j) = ci.row(j) % trans(invwt2);
+                }
+                mBetasSE.col(i) = diag(temp * trans(ci));
+
+                mShat(0) += s_ri(0, i);
+                mShat(1) += det(s_ri * trans(s_ri));
+
+                // 添加：计算 mQDiag 和存储 mS
+                vec p = -trans(s_ri);
+                p(i) += 1.0;
+                mQDiag += p % p;
+                mS.row(isStoreS ? i : 0) = s_ri;
+
+                mBetasSE.col(i) = sqrt(mBetasSE.col(i));
+            }
+            catch (const std::exception& e)
+            {
+                emit error(e.what());
+            }
+        }
+
+        // 转置 mBetasSE 以匹配 mBetas 的格式
+        mBetasSE = trans(mBetasSE);  // 从 (nVar, nDp) 转为 (nDp, nVar)
+
+        // 计算拟合值和残差
+        vec yhat;
+        vec res;
+        mat betasTV;
+
+        if (mFamily == Family::Poisson)
+        {
+            yhat = exp(sum(mBetas % mX, 1));
+            res = mY - yhat;
+        }
+        else // Binomial
+        {
+            vec nu = sum(mBetas % mX, 1);
+            yhat = exp(nu) / (1 + exp(nu));
+            res = mY - yhat;
+        }
+
+        betasTV = mBetas / mBetasSE;
+
+        // 创建结果图层数据
+        mResultList.clear();
+        mResultList.push_back(qMakePair(QString("%1"), mBetas));
+        mResultList.push_back(qMakePair(QString("y"), mY));
+        mResultList.push_back(qMakePair(QString("yhat"), yhat));
+        mResultList.push_back(qMakePair(QString("residual"), res));
+        mResultList.push_back(qMakePair(QString("%1_SE"), mBetasSE));
+        mResultList.push_back(qMakePair(QString("%1_TV"), betasTV));
+
+        emit message(tr("update diagnostic success."));
+    }
+    else if (!checkCanceled())
+    {
+        // 没有Hat矩阵的情况
+        mResultList.clear();
         mResultList.push_back(qMakePair(QString("%1"), mBetas));
     }
+
+
+    // 添加 F-test 计算（在 createResultLayer 之前）
+    if (mHasHatMatrix && mHasFTest && !checkCanceled())
+    {
+        uword nDp = mDataPoints.n_rows;
+        double trQtQ = DBL_MAX;
+
+        // 计算 trQtQ
+        bool isStoreS = (nDp <= 8192);
+        if (isStoreS && mS.n_rows == nDp)
+        {
+            // 如果存储了完整的 S 矩阵，直接计算 trQtQ
+            mat EmS = eye(nDp, nDp) - mS;
+            mat Q = trans(EmS) * EmS;
+            trQtQ = sum(diagvec(trans(Q) * Q));
+        }
+        else
+        {
+            // 对于大数据集，需要迭代计算 trQtQ
+            // 这里简化处理：使用近似值或跳过 F-test
+            // 如果需要完整实现，可以参考 BasicGWR 的 calcTrQtQ 方法
+            trQtQ = DBL_MAX;  // 暂时设为最大值，表示无法计算
+        }
+
+        if (trQtQ < DBL_MAX && !checkCanceled())
+        {
+            FTestParameters fTestParams;
+            fTestParams.nDp = nDp;
+            fTestParams.nVar = mX.n_cols;
+            fTestParams.trS = mShat(0);
+            fTestParams.trStS = mShat(1);
+            fTestParams.trQ = sum(mQDiag);
+            fTestParams.trQtQ = trQtQ;
+
+            // 计算 GWR RSS
+            vec yhat;
+            if (mFamily == Family::Poisson)
+            {
+                yhat = exp(sum(mBetas % mX, 1));
+            }
+            else // Binomial
+            {
+                vec nu = sum(mBetas % mX, 1);
+                yhat = exp(nu) / (1 + exp(nu));
+            }
+            vec res = mY - yhat;
+            fTestParams.gwrRSS = sum(res % res);
+
+            fTest(fTestParams);
+        }
+        else if (mHasFTest)
+        {
+            // 如果无法计算 trQtQ，输出警告信息
+            emit message(tr("F-test cannot be calculated: trQtQ computation failed (data too large or S matrix not available)"));
+        }
+    }
+
     // Create Result Layer
     if(!checkCanceled())
     {
-        if (isAllCorrect)
-        {
-            createResultLayer(mResultList,QStringLiteral("_GGWR"));
-        }
+        // if (isAllCorrect)
+        // {
+        createResultLayer(mResultList,QStringLiteral("_GGWR"));
+        // }
         emit tick(100,100);
         emit success();
     }
@@ -1101,4 +1372,224 @@ bool GwmGeneralizedGWRAlgorithm::setFamily(Family family){
     };
     mCalWtFunction = mapper1[qMakePair(family, mParallelType)];
     return true;
+}
+
+// below is new functions
+
+// 转换 Family 枚举
+gwm::GWRGeneralized::Family GwmGeneralizedGWRAlgorithm::convertFamily(Family family)
+{
+    return (family == Family::Poisson) ?
+               gwm::GWRGeneralized::Family::Poisson :
+               gwm::GWRGeneralized::Family::Binomial;
+}
+
+// 转换 BandwidthSelectionCriterionType 枚举
+gwm::GWRGeneralized::BandwidthSelectionCriterionType GwmGeneralizedGWRAlgorithm::convertCriterionType(BandwidthSelectionCriterionType type)
+{
+    return (type == AIC) ?
+               gwm::GWRGeneralized::BandwidthSelectionCriterionType::AIC :
+               gwm::GWRGeneralized::BandwidthSelectionCriterionType::CV;
+}
+
+// 转换诊断信息
+GwmGGWRDiagnostic GwmGeneralizedGWRAlgorithm::convertDiagnostic(const gwm::GWRGeneralizedDiagnostic& kernel)
+{
+    GwmGGWRDiagnostic app;
+    app.RSS = kernel.RSS;
+    app.AIC = kernel.AIC;
+    app.AICc = kernel.AICc;
+    app.RSquare = kernel.RSquare;
+    return app;
+}
+
+// 转换GLM诊断信息
+GwmGLMDiagnostic GwmGeneralizedGWRAlgorithm::convertGLMDiagnostic(const gwm::GLMDiagnostic& kernel)
+{
+    GwmGLMDiagnostic app;
+    app.NullDev = kernel.NullDev;
+    app.Dev = kernel.Dev;
+    app.AIC = kernel.AIC;
+    app.AICc = kernel.AICc;
+    app.RSquare = kernel.RSquare;
+    return app;
+}
+
+// F-Test Calculation
+void GwmGeneralizedGWRAlgorithm::fTest(FTestParameters params)
+{
+    emit message("F Test");
+    GwmFTestResult f1, f2, f4;
+    QList<GwmFTestResult> f3;
+    double v1 = params.trS, v2 = params.trStS;
+    int nDp = params.nDp, nVar = params.nVar;
+    emit tick(0, nVar + 3);
+
+    double RSSg = params.gwrRSS;
+    vec betao = solve(mX, mY);
+    vec residual = mY - mX * betao;
+    double RSSo = sum(residual % residual);
+    double DFo = nDp - nVar;
+    double delta1 = 1.0 * nDp - 2 * v1 + v2;
+    double sigma2delta1 = RSSg / delta1;
+    double trQ = params.trQ, trQtQ = params.trQtQ;
+    double lDelta1 = trQ;
+    double lDelta2 = trQtQ;
+
+    // F1 Test
+    if(!checkCanceled())
+    {
+        f1.s = (RSSg/lDelta1)/(RSSo/DFo);
+        f1.df1 = lDelta1 * lDelta1 / lDelta2;
+        f1.df2 = DFo;
+        f1.p = gsl_cdf_fdist_P(f1.s, f1.df1, f1.df2);
+        emit tick(1, nVar + 3);
+    }
+
+    // F2 Test
+    if(!checkCanceled())
+    {
+        f2.s = ((RSSo-RSSg)/(DFo-lDelta1))/(RSSo/DFo);
+        f2.df1 = (DFo-lDelta1) * (DFo-lDelta1) / (DFo - 2 * lDelta1 + lDelta2);
+        f2.df2 = DFo;
+        f2.p = gsl_cdf_fdist_Q(f2.s, f2.df1, f2.df2);
+        emit tick(2, nVar + 3);
+    }
+
+    // F3 Test
+    if(!checkCanceled())
+    {
+        vec vk2(nVar, fill::zeros);
+        for (int i = 0; i < nVar && !checkCanceled(); i++)
+        {
+            vec betasi = mBetas.col(i);
+            vec betasJndp = vec(nDp, fill::ones) * (sum(betasi) * 1.0 / nDp);
+            vk2(i) = (1.0 / nDp) * det(trans(betasi - betasJndp) * betasi);
+        }
+
+        // 参考 BasicGWR 的实现，简化错误处理
+        for (int i = 0; i < nVar && !checkCanceled(); i++)
+        {
+            vec diagB = calcDiagBSerial(i);
+            if (!checkCanceled())
+            {
+                // 如果返回 DBL_MAX，说明计算失败，跳过该变量
+                if (diagB(0) == DBL_MAX || diagB(1) == DBL_MAX)
+                {
+                    GwmFTestResult f3i;
+                    f3i.s = 0.0;
+                    f3i.df1 = 0.0;
+                    f3i.df2 = 0.0;
+                    f3i.p = 1.0;
+                    f3.append(f3i);
+                    continue;
+                }
+                
+                double g1 = diagB(0);
+                double g2 = diagB(1);
+                double numdf = g1 * g1 / g2;
+                
+                // 检查计算结果的有效性
+                if (g1 <= 0 || g2 <= 0 || numdf <= 0 || !isfinite(numdf))
+                {
+                    GwmFTestResult f3i;
+                    f3i.s = 0.0;
+                    f3i.df1 = 0.0;
+                    f3i.df2 = 0.0;
+                    f3i.p = 1.0;
+                    f3.append(f3i);
+                    continue;
+                }
+                
+                GwmFTestResult f3i;
+                f3i.s = (vk2(i) / g1) / sigma2delta1;
+                f3i.df1 = numdf;
+                f3i.df2 = f1.df1;
+                f3i.p = gsl_cdf_fdist_Q(f3i.s, numdf, f1.df1);
+                f3.append(f3i);
+                emit tick(3 + i, nVar + 3);
+            }
+        }
+    }
+
+    // F4 Test
+    if(!checkCanceled())
+    {
+        f4.s = RSSg / RSSo;
+        f4.df1 = delta1;
+        f4.df2 = DFo;
+        f4.p = gsl_cdf_fdist_P(f4.s, f4.df1, f4.df2);
+        emit tick(nVar + 3, nVar + 3);
+    }
+
+    // 保存结果
+    if(!checkCanceled())
+    {
+        mF1TestResult = f1;
+        mF2TestResult = f2;
+        mF3TestResult = f3;
+        mF4TestResult = f4;
+    }
+}
+
+
+// 计算 F3 Test 所需的 diagB（针对 GGWR）
+// 参考 BasicGWR 的实现，使用 inv_sympd 提高数值稳定性
+vec GwmGeneralizedGWRAlgorithm::calcDiagBSerial(int i)
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
+    mat wspan(1, nVar, fill::ones);
+    
+    // 第一遍循环：计算 c（所有数据点的系数矩阵第 i 列的平均值）
+    for (arma::uword j = 0; j < nDp && !checkCanceled(); j++)
+    {
+        vec wj = mWtMat2.col(j);
+        vec weights = wj % mWt2;
+        
+        // 检查权重有效性
+        if (sum(weights) < 1e-10 || any(weights < 0) || !weights.is_finite())
+        {
+            emit error("Invalid weights in calcDiagB (first loop).");
+            return { DBL_MAX, DBL_MAX };
+        }
+        
+        mat xtw = trans(mX % (weights * wspan));
+        try {
+            // 使用 inv_sympd 替代 pinv，与 BasicGWR 保持一致
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            c += C.col(i);
+        } catch (...) {
+            emit error("Matrix seems to be singular in calcDiagB (first loop).");
+            return { DBL_MAX, DBL_MAX };
+        }
+    }
+    
+    // 第二遍循环：计算 diagB
+    for (arma::uword k = 0; k < nDp && !checkCanceled(); k++)
+    {
+        vec wk = mWtMat2.col(k);
+        vec weights = wk % mWt2;
+        
+        // 检查权重有效性
+        if (sum(weights) < 1e-10 || any(weights < 0) || !weights.is_finite())
+        {
+            emit error("Invalid weights in calcDiagB (second loop).");
+            return { DBL_MAX, DBL_MAX };
+        }
+        
+        mat xtw = trans(mX % (weights * wspan));
+        try {
+            // 使用 inv_sympd 替代 pinv，与 BasicGWR 保持一致
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            vec b = C.col(i);
+            diagB += (b % b - (1.0 / nDp) * (b % c));
+        } catch (...) {
+            emit error("Matrix seems to be singular in calcDiagB (second loop).");
+            return { DBL_MAX, DBL_MAX };
+        }
+    }
+    
+    diagB = 1.0 / nDp * diagB;
+    return { sum(diagB), sum(diagB % diagB) };
 }

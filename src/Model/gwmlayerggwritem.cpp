@@ -16,6 +16,9 @@ GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector,
         isRegressionPointGiven = !(taskThread->regressionLayer() == nullptr);
         mDiagnostic = taskThread->getDiagnostic();
         mGLMDiagnostic = taskThread->getGLMDiagnostic();
+        hasFTest = taskThread->hasFTest();
+        mGGWRFTestResults = taskThread->fTestResult();
+        mFamily = taskThread->getFamily();
     }
 }
 
@@ -109,4 +112,9 @@ GwmGLMDiagnostic GwmLayerGGWRItem::GLMdiagnostic() const
 GwmGeneralizedGWRAlgorithm::Family GwmLayerGGWRItem::family() const
 {
     return mFamily;
+}
+
+GwmGeneralizedGWRAlgorithm::FTestResultPack GwmLayerGGWRItem::GGWRFTestResult() const
+{
+    return mGGWRFTestResults;
 }
