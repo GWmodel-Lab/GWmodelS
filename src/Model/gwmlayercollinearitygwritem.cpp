@@ -11,6 +11,7 @@ GwmLayerCollinearityGWRItem::GwmLayerCollinearityGWRItem(GwmLayerItem* parent, Q
         mIndepVars = taskThread->independentVariables();
         mWeight = gwm::BandwidthWeight(*static_cast<gwm::BandwidthWeight*>(taskThread->spatialWeight().weight()));
         mDiagnostic = taskThread->dialnostic();
+        mDiagnostic0 = taskThread->diagnostic0();
         mBetas = mat(taskThread->betas());
         //mModelSelModels = taskThread->indepVarSelectorCriterions();
         isBandwidthOptimized = taskThread->isAutoselectBandwidth();
@@ -258,6 +259,11 @@ gwm::BandwidthWeight GwmLayerCollinearityGWRItem::weight() const
 GwmDiagnostic GwmLayerCollinearityGWRItem::diagnostic() const
 {
     return mDiagnostic;
+}
+
+gwm::RegressionDiagnostic GwmLayerCollinearityGWRItem::diagnostic0() const
+{
+    return mDiagnostic0;
 }
 
 arma::mat GwmLayerCollinearityGWRItem::betas() const

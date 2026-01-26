@@ -1,4 +1,4 @@
-#ifndef GWMMULTISCALEGWRTASKTHREAD_H
+﻿#ifndef GWMMULTISCALEGWRTASKTHREAD_H
 #define GWMMULTISCALEGWRTASKTHREAD_H
 
 #include "gwmbandwidthsizeselector.h"
@@ -6,6 +6,13 @@
 #include "iregressionanalysis.h"
 #include "iparallelable.h"
 #include "gwmbasicgwralgorithm.h"
+
+#include <armadillo>
+#include "gwmodel.h"
+
+//using namespace std;
+//using namespace gwm;
+//using namespace arma;
 
 class GwmMultiscaleGWRAlgorithm : public GwmSpatialMultiscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable, public IOpenmpParallelable
 {
@@ -250,6 +257,26 @@ private:
 
 public:
     static int treeChildCount;
+
+    // below are newly added for library fucntion
+private:
+    std::unique_ptr<gwm::GWRMultiscale> mMGWRCore;
+
+    gwm::SpatialWeight mInitSpatialWeightLib;
+public:
+    gwm::GWRMultiscale::BandwidthInitilizeType convertBandwidthInitType(
+        GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType type);
+    gwm::GWRMultiscale::BandwidthSelectionCriterionType convertCriterionType(
+        GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType type);
+    gwm::GWRMultiscale::BackFittingCriterionType convertBackFittingType(
+        GwmMultiscaleGWRAlgorithm::BackFittingCriterionType type);
+    GwmDiagnostic convertDiagnostic(const gwm::RegressionDiagnostic& diag);
+    gwm::BandwidthWeight::KernelFunctionType convertKernelType(
+        GwmBandwidthWeight::KernelFunctionType type);
+    GwmBandwidthWeight::KernelFunctionType convertKernelTypeBack(
+        gwm::BandwidthWeight::KernelFunctionType type);
+    gwm::SpatialWeight convertSpatialWeight(
+        const GwmSpatialWeight& gwmSw);
 };
 
 

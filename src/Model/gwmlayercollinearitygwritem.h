@@ -34,6 +34,8 @@ public:
 
     GwmDiagnostic diagnostic() const;
 
+    gwm::RegressionDiagnostic diagnostic0() const;
+
     arma::mat betas() const;
 
     BandwidthCriterionList bandwidthSelScores() const;
@@ -56,6 +58,7 @@ protected:
     QList<GwmVariable> mIndepVars;
     gwm::BandwidthWeight mWeight;
     GwmDiagnostic mDiagnostic;
+    gwm::RegressionDiagnostic mDiagnostic0;
     arma::mat mBetas;
     //QList<QPair<QList<GwmVariable>, double> > mModelSelModels;
     BandwidthCriterionList mBandwidthSelScores;

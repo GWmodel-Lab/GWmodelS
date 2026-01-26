@@ -116,6 +116,7 @@ set(SOURCES
     gwmgtwroptionsdialog.cpp
     gwmgwpcaoptionsdialog.cpp
     gwmgwroptionsdialog.cpp
+    gwmflowdatadialog.cpp
     gwmgtdroptionsdialog.cpp
     gwmindepvarselectorwidget.cpp
     gwmlcrgwroptionsdialog.cpp
@@ -136,6 +137,7 @@ set(SOURCES
     gwmprojcrssettingdialog.cpp
     gwmgwaverageoptionsdialog.cpp
     gwmgwcorrelationoptionsdialog.cpp
+    gwmswimoptionsdialog.cpp
 )
 
 set(HEADERS
@@ -150,6 +152,7 @@ set(HEADERS
     gwmgtwroptionsdialog.h
     gwmgwpcaoptionsdialog.h
     gwmgwroptionsdialog.h
+    gwmflowdatadialog.h
     gwmgtdroptionsdialog.h
     gwmindepvarselectorwidget.h
     gwmlcrgwroptionsdialog.h
@@ -170,12 +173,14 @@ set(HEADERS
     gwmprojcrssettingdialog.h
     gwmgwaverageoptionsdialog.h
     gwmgwcorrelationoptionsdialog.h
+    gwmswimoptionsdialog.h
 )
 
 set(FORMS
     gwmapp.ui
     gwmcoordtranssettingdialog.ui
     gwmcsvtodatdialog.ui
+    gwmflowdatadialog.ui
     gwmfeaturepanel.ui
     gwmggwroptionsdialog.ui
     gwmgtwroptionsdialog.ui
@@ -209,6 +214,7 @@ set(FORMS
     gwmprojcrssettingdialog.ui
     gwmgwaverageoptionsdialog.ui
     gwmgwcorrelationoptionsdialog.ui
+    gwmswimoptionsdialog.ui
 )
 
 add_subdirectory("./AttributeTable")

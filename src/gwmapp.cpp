@@ -34,6 +34,7 @@
 #include <qgslayoutmanager.h>
 
 #include "gwmopenxyeventlayerdialog.h"
+#include "gwmflowdatadialog.h"
 #include "gwmprogressdialog.h"
 #include "gwmcoordtranssettingdialog.h"
 #include "TaskThread/gwmcoordtransthread.h"
@@ -69,6 +70,10 @@
 
 #include "gwmgwpcaoptionsdialog.h"
 #include "Model/gwmlayergwpcaitem.h"
+
+#include "gwmswimoptionsdialog.h"
+#include "TaskThread/gwmswimtaskthread.h"
+#include "PropertyPanelTabs/gwmpropertyswimtab.h"
 
 #include "gwmcoordtranssettingdialog.h"
 #include "gwmgwroptionsdialog.h"
@@ -203,9 +208,9 @@ void GwmApp::setupMenus()
     connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::gwmcorrelation);
 //    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::developingMessageBox);
 //    connect(ui->actionGlyph_Plot, &QAction::triggered, this, &GwmApp::developingMessageBox);
-//    connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::onFlowDataImport);
 //    connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
-//    connect(ui->actionSWIM, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionSWIM, &QAction::triggered, this, &GwmApp::onSWIMBtnClicked);
 //    connect(ui->actionFlow_Visualization, &QAction::triggered, this, &GwmApp::developingMessageBox);
     //about信号槽连接
 //    connect(ui->actionInformation, &QAction::triggered, this, [&]()
@@ -383,6 +388,25 @@ void GwmApp::onOpenFileImportCsv()
     dialog->show();
 }
 
+void GwmApp::onFlowDataImport()
+{
+    GwmFlowDataDialog dialog(this);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        QgsVectorLayer* layer = dialog.takeResultLayer();
+        if (layer && layer->isValid())
+        {
+            addLayerToModel(layer);
+            onMapModelChanged();
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Flow data"), tr("Failed to create a valid flow layer."));
+            delete layer;
+        }
+    }
+}
+
 void GwmApp::onCsvToDat()
 {
     GwmCsvToDatDialog* csvtodatDlg = new GwmCsvToDatDialog();
@@ -479,7 +503,13 @@ void GwmApp::setupFeaturePanel()
     mFeaturePanel = ui->featurePanel;
     mFeaturePanel->setMapModel(mMapModel);
     // 连接信号槽
-    connect(mFeaturePanel, &GwmFeaturePanel::showAttributeTableSignal,this, &GwmApp::onShowAttributeTable);
+    qDebug() << "[GwmApp::setupFeaturePanel] connecting showAttributeTableSignal";
+    connect(mFeaturePanel, &GwmFeaturePanel::showAttributeTableSignal,
+            this, [this](const QModelIndex& idx)
+    {
+        qDebug() << "[GwmApp] received showAttributeTableSignal, forwarding to onShowAttributeTable";
+        this->onShowAttributeTable(idx);
+    });
     connect(mFeaturePanel, &GwmFeaturePanel::zoomToLayerSignal, this, &GwmApp::onZoomToLayer);
     connect(mFeaturePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &GwmApp::onShowLayerProperty);
     connect(mFeaturePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &GwmApp::onFeaturePanelRowOrderChanged);
@@ -1060,7 +1090,6 @@ void GwmApp::onMapSelectionChanged(QgsMapLayer *mapLayer)
 
     QgsVectorLayer* layer = static_cast<QgsVectorLayer*>(mapLayer);
 
-    // 移除旧的橡皮条
     QList<QgsRubberBand*> rubbers0 = mMapLayerRubberDict[layer];
     if (rubbers0.size() > 0)
     {
@@ -1071,7 +1100,6 @@ void GwmApp::onMapSelectionChanged(QgsMapLayer *mapLayer)
     }
     rubbers0.clear();
 
-    //添加新的橡皮条
     QgsFeatureList selectedFeatures = layer->selectedFeatures();
     for (QgsFeature feature : selectedFeatures)
     {
@@ -1177,7 +1205,6 @@ void GwmApp::onFeaturePanelRowOrderChanged(int from, int dest)
     mMapCanvas->refresh();
 }
 
-// 属性表
 void GwmApp::onShowAttributeTable(const QModelIndex &index)
 {
     // qDebug() << 123;
@@ -1339,7 +1366,7 @@ void GwmApp::onGWRNewBtnClicked()
     spatialWeight.setWeight(gwm::BandwidthWeight(36, true, gwm::BandwidthWeight::Gaussian));
     algorithm->setSpatialWeight(spatialWeight);
     algorithm->setIsAutoselectBandwidth(true);
-    algorithm->setBandwidthSelectionCriterionType(GwmBasicGWRAlgorithm::CV);
+    algorithm->setBandwidthSelectionCriterionType(gwm::GWRBasic::CV);
     algorithm->setHasHatMatrix(true);
     algorithm->setHasFTest(true);
 
@@ -1848,4 +1875,38 @@ void GwmApp::closeEvent( QCloseEvent * event )
        if(result==QMessageBox::Cancel)
            event->ignore();
     }
+}
+
+void GwmApp::onSWIMBtnClicked()
+{
+    GwmSWIMTaskThread* swimTaskThread = new GwmSWIMTaskThread();
+    GwmSWIMOptionsDialog* swimOptionDialog = new GwmSWIMOptionsDialog(this);
+    
+    if (swimOptionDialog->exec() == QDialog::Accepted)
+    {
+        swimOptionDialog->setTaskThread(swimTaskThread);
+        
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(swimTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            GwmPropertySWIMTab* swimPropertyTab = new GwmPropertySWIMTab(mPropertyPanel, swimTaskThread);
+            if (swimPropertyTab)
+            {
+                swimPropertyTab->updateUI();
+                int tabIndex = mPropertyPanel->addTab(swimPropertyTab, tr("SWIM Result"));
+                mPropertyPanel->setCurrentIndex(tabIndex);
+                mPropertyPanel->show();
+            }
+        }
+        else
+        {
+            delete swimTaskThread;
+        }
+    }
+    else
+    {
+        delete swimTaskThread;
+    }
+    
+    delete swimOptionDialog;
 }

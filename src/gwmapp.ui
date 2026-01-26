@@ -60,6 +60,7 @@
     <addaction name="action_GGWR"/>
     <addaction name="actionScalable_GWR"/>
     <addaction name="actionGTDR_2"/>
+    <addaction name="actionSWIM"/>
    </widget>
    <widget class="QMenu" name="menuLayer_Data">
     <property name="title">
@@ -70,6 +71,8 @@
     <addaction name="action_GPKG"/>
     <addaction name="separator"/>
     <addaction name="action_CSV"/>
+    <addaction name="separator"/>
+    <addaction name="actionFlow_data"/>
    </widget>
    <widget class="QMenu" name="menuGWSS">
     <property name="title">

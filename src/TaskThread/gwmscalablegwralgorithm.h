@@ -30,6 +30,7 @@ public:
 
 private:
     static GwmDiagnostic CalcDiagnostic(const vec& y, const mat& x, const mat& betas, const vec &shat);
+    std::unique_ptr<gwm::GWRScalable> mSGWRCore;
 
 
 public:
@@ -48,7 +49,9 @@ public:
     void setHasPredict(bool hasPredict);
 
     ParameterOptimizeCriterionType parameterOptimizeCriterion() const;
+    gwm::GWRScalable::BandwidthSelectionCriterionType parameterOptimizeCriterion0() const;
     void setParameterOptimizeCriterion(const ParameterOptimizeCriterionType &parameterOptimizeCriterion);
+    void setParameterOptimizeCriterion0(const gwm::GWRScalable::BandwidthSelectionCriterionType &parameterOptimizeCriterion);
 
 
 public:     // GwmTaskThread interface
@@ -98,6 +101,7 @@ private:
     gwm::SpatialWeight mDpSpatialWeight;
 
     ParameterOptimizeCriterionType mParameterOptimizeCriterion = ParameterOptimizeCriterionType::CV;
+    gwm::GWRScalable::BandwidthSelectionCriterionType mParameterOptimizeCriterion0 = gwm::GWRScalable::BandwidthSelectionCriterionType::CV;
 
     mat mG0;
     umat mDpNNIndex;
@@ -146,9 +150,19 @@ inline GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType GwmScalableGWRAlg
     return mParameterOptimizeCriterion;
 }
 
+inline gwm::GWRScalable::BandwidthSelectionCriterionType GwmScalableGWRAlgorithm::parameterOptimizeCriterion0() const
+{
+    return mParameterOptimizeCriterion0;
+}
+
 inline void GwmScalableGWRAlgorithm::setParameterOptimizeCriterion(const ParameterOptimizeCriterionType &parameterOptimizeCriterion)
 {
     mParameterOptimizeCriterion = parameterOptimizeCriterion;
+}
+
+inline void GwmScalableGWRAlgorithm::setParameterOptimizeCriterion0(const gwm::GWRScalable::BandwidthSelectionCriterionType &parameterOptimizeCriterion)
+{
+    mParameterOptimizeCriterion0 = parameterOptimizeCriterion;
 }
 
 #endif // GWMSCALABLEGWRTASKTHREAD_H

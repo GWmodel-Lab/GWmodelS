@@ -56,10 +56,10 @@ void GwmFeaturePanel::setupUi()
     this->setModel(mMapModel);
     this->setDragEnabled(true);
     this->setAcceptDrops(true);
-    // 设置上下文菜单
+
     this->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, &QTreeView::customContextMenuRequested, this, &GwmFeaturePanel::showContextMenu);
-    // 设置拖动指示器
+    connect(this, &QTreeView::customContextMenuRequested,
+            this, &GwmFeaturePanel::showContextMenu);
 }
 
 //void GwmFeaturePanel::customContextMenuRequested(const QPoint &pos)
@@ -69,9 +69,10 @@ void GwmFeaturePanel::setupUi()
 
 void GwmFeaturePanel::showContextMenu(const QPoint &pos)
 {
-    // 获取要素区列表索引值
+    qDebug() << "[GwmFeaturePanel::showContextMenu] pos:" << pos;
     QModelIndex index = this->indexAt(pos);
-    // qDebug() << index;
+    qDebug() << "[GwmFeaturePanel::showContextMenu] index valid:" << index.isValid()
+             << "row:" << index.row() << "col:" << index.column();
     if (index.isValid())
     {
         GwmLayerItem* item = (mMapModel->itemFromIndex(index));
@@ -79,7 +80,7 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
             return;
 
         QMenu *menu = new QMenu(this);
-        // 显示/隐藏
+
         QAction *pShow = new QAction(tr("Show/Hide"),this);
         menu->addAction(pShow);
         pShow->setCheckable(true);
@@ -94,7 +95,7 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
             menu->addAction(pRemove);
             connect(pRemove, &QAction::triggered, this, &GwmFeaturePanel::removeLayer);
 
-            // 上下移动
+
             QAction *pMoveUp = new QAction(tr("Move Up"), this);
             pMoveUp->setIcon(QIcon(QStringLiteral(":/images/themes/default/mActionCollapseTree.svg")));
             pMoveUp->setEnabled(mMapModel->canMoveUp(index));
@@ -108,7 +109,6 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
             connect(pMoveDown, &QAction::triggered, this, &GwmFeaturePanel::onSortUpBtnClicked);
         }
 
-        // 缩放到图层
         QAction *pZoom = new QAction(tr("Zoom to this layer"),this);
         pZoom->setIcon(QIcon(QStringLiteral(":/images/themes/default/mActionZoomToLayer.svg")));
         menu->addAction(pZoom);
@@ -137,10 +137,9 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
         menu->addAction(pSymbol);
         connect(pSymbol, &QAction::triggered,this, &GwmFeaturePanel::symbol);
 
-        // 导出是二级菜单
         QAction *pExport = new QAction(tr("Export"),this);
         // menu->addAction("导出");
-        // 二级菜单制作
+
         QMenu *subMenu = new QMenu(this);
         QAction *pESRI = new QAction("ESRI Shapefile",subMenu);
         subMenu->addAction(pESRI);
@@ -161,15 +160,12 @@ void GwmFeaturePanel::showContextMenu(const QPoint &pos)
 //        QAction *pXls = new QAction("Excel",subMenu);
 //        subMenu->addAction(pXls);
 //        connect(pXls, &QAction::triggered,this,&GwmFeaturePanel::excel);
-        // 设置二级菜单
         pExport->setMenu(subMenu);
 
-        // 显示属性
         QAction *pProperty = new QAction(tr("Property"),this);
         menu->addAction(pProperty);
         connect(pProperty, &QAction::triggered,this, &GwmFeaturePanel::layerProperty);
 
-        // QCursor::pos()让menu的位置在鼠标点击的的位置
         menu->addMenu(subMenu);
         menu->exec(QCursor::pos());
     }
@@ -222,7 +218,6 @@ void GwmFeaturePanel::removeLayer()
     }
 }
 
-// 缩放至图层
 void GwmFeaturePanel::zoomLayer()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
@@ -232,21 +227,18 @@ void GwmFeaturePanel::zoomLayer()
     }
 }
 
-// 属性表
 void GwmFeaturePanel::attributeTable()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
     emit showAttributeTableSignal(selected[0]);
 }
 
-// 投影到坐标系
 void GwmFeaturePanel::proj()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();
     emit showCoordinateTransDlg(selected[0]);
 }
 
-// 符号
 void GwmFeaturePanel::symbol()
 {
     QModelIndexList selected = this->selectionModel()->selectedIndexes();

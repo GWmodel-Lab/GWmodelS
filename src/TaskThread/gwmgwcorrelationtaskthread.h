@@ -1,4 +1,4 @@
-#ifndef GWMGWCORRELATIONTASKTHREAD_H
+﻿#ifndef GWMGWCORRELATIONTASKTHREAD_H
 #define GWMGWCORRELATIONTASKTHREAD_H
 
 #include <QObject>
@@ -225,6 +225,12 @@ protected:
 public:
     static int treeChildCount;
 
+    // below are variables for library function
+private:
+    std::unique_ptr<gwm::GWCorrelation> mGWCorrCore;
+public:
+    // static gwm::SpatialWeight convertSpatialWeight(const GwmSpatialWeight& gwmSw, const arma::mat& coords);
+    GwmBandwidthWeight::KernelFunctionType convertKernelTypeBack(gwm::BandwidthWeight::KernelFunctionType type);
 };
 
 

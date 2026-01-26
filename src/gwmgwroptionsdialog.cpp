@@ -386,14 +386,14 @@ double GwmGWROptionsDialog::bandwidthSize(){
     }
 }
 
-GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType GwmGWROptionsDialog::bandwidthSelectionApproach()
+gwm::GWRBasic::BandwidthSelectionCriterionType GwmGWROptionsDialog::bandwidthSelectionApproach()
 {
     switch (ui->mBwSizeAutomaticApprochCombo->currentIndex())
     {
     case 0:
-        return GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType::CV;
+        return gwm::GWRBasic::BandwidthSelectionCriterionType::CV;
     default:
-        return GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType::AIC;
+        return gwm::GWRBasic::BandwidthSelectionCriterionType::AIC;
     }
 }
 

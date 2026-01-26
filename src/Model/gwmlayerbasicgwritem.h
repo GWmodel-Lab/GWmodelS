@@ -27,6 +27,8 @@ public:
 
     GwmDiagnostic diagnostic() const;
 
+    gwm::RegressionDiagnostic diagnostic0() const;
+
     arma::mat betas() const;
 
     bool modelOptimized() const;
@@ -49,7 +51,7 @@ public:
 
     QList<QPair<QList<GwmVariable>, double> > modelSelModels() const;
 
-    BandwidthCriterionList bandwidthSelScores() const;
+    gwm::BandwidthCriterionList bandwidthSelScores() const;
 
     gwm::BandwidthWeight weight() const;
 
@@ -61,6 +63,7 @@ protected:
     QList<GwmVariable> mIndepVars;
     gwm::BandwidthWeight mWeight;
     GwmDiagnostic mDiagnostic;
+    gwm::RegressionDiagnostic mDiagnostic0;
     arma::mat mBetas;
     QList<QPair<QList<GwmVariable>, double> > mModelSelModels;
     BandwidthCriterionList mBandwidthSelScores;

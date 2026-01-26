@@ -12,13 +12,32 @@
 #include <qwt_legend.h>
 #include <qwt_legend_label.h>
 #include <qwt_column_symbol.h>
+#include <QDebug>
 
 void GwmBandwidthSizeSelector::PlotBandwidthResult(QVariant data, QwtPlot *plot)
 {
-    BandwidthCriterionList result = data.value<BandwidthCriterionList>();
-    //设置窗口属性
+    if (!data.canConvert<QVector<QPair<double,double>>>()) {
+        qDebug() << "Data cannot convert to QVector<QPair<double,double>>!";
+        return;
+    }
+
+    QVector<QPair<double,double>> result = data.value<QVector<QPair<double,double>>>();
+    qDebug() << "PlotBandwidthResult received size:" << result.size();
+
+    QVector<double> xData, yData;
+    for (int i = 0; i < result.size(); ++i) {
+        qDebug() << "Bandwidth:" << result[i].first << ", Criterion:" << result[i].second;
+        xData.push_back(result[i].first);
+        yData.push_back(result[i].second);
+    }
+
+    if (xData.isEmpty() || yData.isEmpty()) {
+        qDebug() << "xData or yData is empty!";
+        return;
+    }
+
     plot->plotLayout()->setAlignCanvasToScales(true);
-    //新建一个曲线对象
+
     QwtPlotCurve *curve = new QwtPlotCurve("curve");
     //设置曲线颜色 粗细
     curve->setPen(Qt::blue,1.0,Qt::DashLine);
@@ -29,29 +48,57 @@ void GwmBandwidthSizeSelector::PlotBandwidthResult(QVariant data, QwtPlot *plot)
     //添加样本点形状
     curve->setSymbol( symbol );
     //输入数据
+    QVector<QPair<double, double>> points;
+    points.reserve(result.size());
+    for (auto it = result.constBegin(); it != result.constEnd(); ++it)
+    {
+        points.append(qMakePair(it->first, it->second));
+    }
+    if (points.isEmpty())
+    {
+        plot->detachItems(QwtPlotItem::Rtti_PlotCurve);
+        plot->replot();
+        return;
+    }
+    std::sort(points.begin(), points.end(), [](const QPair<double, double>& a, const QPair<double, double>& b){
+        if (a.first == b.first)
+            return a.second < b.second;
+        return a.first < b.first;
+    });
     QVector<double> xData;
     QVector<double> yData;
-    for (const auto& p : result) {
-        xData.push_back(p.first);
-        yData.push_back(p.second);
+    xData.reserve(points.size());
+    yData.reserve(points.size());
+    for (const auto& pt : points)
+    {
+        xData.append(pt.first);
+        yData.append(pt.second);
     }
-    //设置X与Y坐标范围
-    //返回xData与yData最大最小值
-    //拷贝xData与yData并返回sort
-    QVector<double> xData_2(xData);
-    QVector<double> yData_2(yData);
-    //从小到大排序
-    std::sort(xData_2.begin(),xData_2.end());
-    std::sort(yData_2.begin(),yData_2.end());
-    plot->setAxisScale(QwtPlot::xBottom,xData_2[0],xData_2[xData.length()-1]);
-    plot->setAxisScale(QwtPlot::yLeft, yData_2[0], yData_2[yData.length()-1]);
-    //设置数据
-    curve->setSamples(xData,yData);
+    QVector<double> xDataSorted(xData);
+    QVector<double> yDataSorted(yData);
+    std::sort(xDataSorted.begin(), xDataSorted.end());
+    std::sort(yDataSorted.begin(), yDataSorted.end());
+    plot->setAxisScale(QwtPlot::xBottom, xDataSorted.first(), xDataSorted.last());
+    plot->setAxisScale(QwtPlot::yLeft, yDataSorted.first(), yDataSorted.last());
+    curve->setSamples(xData, yData);
     curve->attach(plot);
-    curve->setLegendAttribute(curve->LegendShowLine);
 
+    // 设置坐标轴范围
+    auto [xMinIt, xMaxIt] = std::minmax_element(xData.begin(), xData.end());
+    auto [yMinIt, yMaxIt] = std::minmax_element(yData.begin(), yData.end());
+    plot->setAxisScale(QwtPlot::xBottom, *xMinIt, *xMaxIt);
+    plot->setAxisScale(QwtPlot::yLeft, *yMinIt, *yMaxIt);
+
+    qDebug() << "x range:" << *xMinIt << "-" << *xMaxIt;
+    qDebug() << "y range:" << *yMinIt << "-" << *yMaxIt;
+
+    curve->setLegendAttribute(QwtPlotCurve::LegendShowLine);
     plot->replot();
+    qDebug() << "Plot replot done";
+
 }
+
+
 
 GwmBandwidthSizeSelector::GwmBandwidthSizeSelector()
 {

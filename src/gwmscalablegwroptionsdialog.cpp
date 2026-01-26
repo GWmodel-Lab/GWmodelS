@@ -364,9 +364,9 @@ void GwmScalableGWROptionsDialog::updateFields()
     // 参数设置
     mTaskThread->setPolynomial(ui->mPolynomialSpin->value());
     if (ui->cmbOptimizeCriterion->currentText() == "CV")
-        mTaskThread->setParameterOptimizeCriterion(GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType::CV);
+        mTaskThread->setParameterOptimizeCriterion0(gwm::GWRScalable::BandwidthSelectionCriterionType::CV);
     else
-        mTaskThread->setParameterOptimizeCriterion(GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType::AIC);
+        mTaskThread->setParameterOptimizeCriterion0(gwm::GWRScalable::BandwidthSelectionCriterionType::AIC);
 }
 
 void GwmScalableGWROptionsDialog::enableAccept()

@@ -12,6 +12,7 @@ GwmLayerBasicGWRItem::GwmLayerBasicGWRItem(GwmLayerItem* parent, QgsVectorLayer*
         mIndepVars = taskThread->independentVariables();
         mWeight = gwm::BandwidthWeight(*static_cast<gwm::BandwidthWeight*>(taskThread->spatialWeight().weight()));
         mDiagnostic = taskThread->diagnostic();
+        mDiagnostic0 = taskThread->diagnostic0();
         mBetas = mat(taskThread->betas());
         mModelSelModels = taskThread->indepVarSelectorCriterions();
         isBandwidthOptimized = taskThread->autoselectBandwidth();
@@ -473,6 +474,11 @@ GwmDiagnostic GwmLayerBasicGWRItem::diagnostic() const
     return mDiagnostic;
 }
 
+gwm::RegressionDiagnostic GwmLayerBasicGWRItem::diagnostic0() const
+{
+    return mDiagnostic0;
+}
+
 arma::mat GwmLayerBasicGWRItem::betas() const
 {
     return mBetas;
@@ -533,7 +539,7 @@ QList<QPair<QList<GwmVariable>, double> > GwmLayerBasicGWRItem::modelSelModels()
     return mModelSelModels;
 }
 
-BandwidthCriterionList GwmLayerBasicGWRItem::bandwidthSelScores() const
+gwm::BandwidthCriterionList GwmLayerBasicGWRItem::bandwidthSelScores() const
 {
     return mBandwidthSelScores;
 }

@@ -1,4 +1,4 @@
-#include "gwmmultiscalegwralgorithm.h"
+﻿#include "gwmmultiscalegwralgorithm.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
@@ -54,7 +54,8 @@ GwmDiagnostic GwmMultiscaleGWRAlgorithm::CalcDiagnostic(const mat &x, const vec 
 }
 
 GwmMultiscaleGWRAlgorithm::GwmMultiscaleGWRAlgorithm()
-    : GwmSpatialMultiscaleAlgorithm()
+    : GwmSpatialMultiscaleAlgorithm(),
+      mMGWRCore(std::make_unique<gwm::GWRMultiscale>())
 {
 }
 
@@ -106,111 +107,377 @@ GwmBasicGWRAlgorithm::OLSVar GwmMultiscaleGWRAlgorithm::CalOLS(const mat &x, con
 
 void GwmMultiscaleGWRAlgorithm::run()
 {
+    // for lib func
     if(!checkCanceled())
     {
+        emit message(QString(tr("Setting data points")) +
+                    (hasRegressionLayer() ? tr(" and regression points") : "") + ".");
         initPoints();
+    }
+
+    if(!checkCanceled())
+    {
+        emit message(QString(tr("Setting X and Y.")));
+        //initPoints();
         initXY(mX, mY, mDepVar, mIndepVars);
-    }
-    uword nDp = mX.n_rows, nVar = mX.n_cols;
 
-    // ********************************
-    // Centering and scaling predictors
-    // ********************************
-    mX0 = mX;
-    mY0 = mY;
-    for (uword i = 1; i < nVar && !checkCanceled(); i++)
-    {
-        if (mPreditorCentered[i])
+        // ========== 配置内核库 GWRMultiscale ==========
+
+        // 1. 设置基本数据
+        mMGWRCore->setCoords(mDataPoints);
+        mMGWRCore->setDependentVariable(mY);
+        mMGWRCore->setIndependentVariables(mX);
+        mMGWRCore->setHasIntercept(true);
+        mMGWRCore->setHasHatMatrix(mHasHatMatrix);
+
+        // 2. 转换并设置空间权重
+        std::vector<gwm::SpatialWeight> spatialWeights;
+        for (const auto& gwmSw : mSpatialWeights)
         {
-            mX.col(i) = mX.col(i) - mean(mX.col(i));
+            GwmBandwidthWeight* gwmBw = gwmSw.weight<GwmBandwidthWeight>();
+            if (!gwmBw) continue;
+
+            // 创建 BandwidthWeight
+            gwm::BandwidthWeight::KernelFunctionType kernelType = convertKernelType(gwmBw->kernel());
+            gwm::BandwidthWeight* bw = new gwm::BandwidthWeight(
+                gwmBw->bandwidth(),
+                gwmBw->adaptive(),
+                kernelType
+                );
+
+            // 创建 Distance
+            gwm::Distance* dist = nullptr;
+            if (gwmSw.distance()->type() == GwmDistance::CRSDistance) {
+                GwmCRSDistance* gwmCrsDist = gwmSw.distance<GwmCRSDistance>();
+                if (gwmCrsDist) {
+                    dist = new gwm::CRSDistance(gwmCrsDist->geographic());
+                }
+            }
+            else if (gwmSw.distance()->type() == GwmDistance::MinkwoskiDistance) {
+                GwmMinkwoskiDistance* gwmMinkDist = gwmSw.distance<GwmMinkwoskiDistance>();
+                if (gwmMinkDist) {
+                    dist = new gwm::MinkwoskiDistance(gwmMinkDist->poly(),gwmMinkDist->theta());
+                }
+            }
+            else if (gwmSw.distance()->type() == GwmDistance::DMatDistance) {
+                GwmDMatDistance* gwmDmatDist = gwmSw.distance<GwmDMatDistance>();
+                if (gwmDmatDist) {
+                    dist = new gwm::DMatDistance(gwmDmatDist->dMatFile().toStdString());
+                }
+            }
+
+            if (!dist) {
+                dist = new gwm::CRSDistance(); // 默认
+            }
+
+            // 创建 SpatialWeight
+            gwm::SpatialWeight sw(bw, dist);
+
+            // 设置距离参数（坐标数据已经在 initPoints 中准备好了）
+            if (dist->type() == gwm::Distance::CRSDistance) {
+                auto *d = sw.distance<gwm::CRSDistance>();
+                if (d) {
+                    d->makeParameter({ mRegressionPoints, mDataPoints });
+                }
+            }
+            else if (dist->type() == gwm::Distance::MinkwoskiDistance) {
+                auto *d2 = sw.distance<gwm::MinkwoskiDistance>();
+                if (d2) {
+                    d2->makeParameter({ mRegressionPoints, mDataPoints });
+                }
+            }
+
+            spatialWeights.push_back(sw);
         }
+        // 检查是否为空
+        if (spatialWeights.empty()) {
+            emit error(tr("No valid spatial weights found."));
+            return;
+        }
+        mMGWRCore->setSpatialWeights(spatialWeights);
+
+        // 3. 转换并设置带宽初始化类型
+        std::vector<gwm::GWRMultiscale::BandwidthInitilizeType> bwInitTypes;
+        for (auto type : mBandwidthInitilize)
+        {
+            bwInitTypes.push_back(convertBandwidthInitType(type));
+        }
+        mMGWRCore->setBandwidthInitilize(bwInitTypes);
+
+        // 4. 转换并设置带宽选择方法
+        std::vector<gwm::GWRMultiscale::BandwidthSelectionCriterionType> bwSelTypes;
+        for (auto type : mBandwidthSelectionApproach)
+        {
+            bwSelTypes.push_back(convertCriterionType(type));
+        }
+        mMGWRCore->setBandwidthSelectionApproach(bwSelTypes);
+
+        // 5. 设置预测变量中心化
+        std::vector<bool> predCentered(mPreditorCentered.begin(), mPreditorCentered.end());
+        mMGWRCore->setPreditorCentered(predCentered);
+
+        // 6. 设置其他参数
+        std::vector<double> bwThresholds(mBandwidthSelectThreshold.begin(),
+                                         mBandwidthSelectThreshold.end());
+        mMGWRCore->setBandwidthSelectThreshold(bwThresholds);
+        mMGWRCore->setBandwidthSelectRetryTimes(mBandwidthSelectRetryTimes);
+        mMGWRCore->setMaxIteration(mMaxIteration);
+        mMGWRCore->setCriterionType(convertBackFittingType(mCriterionType));
+        mMGWRCore->setCriterionThreshold(mCriterionThreshold);
+        mMGWRCore->setAdaptiveLower(mAdaptiveLower);
+
+        // 7. 设置并行类型
+        gwm::ParallelType parallelType = gwm::ParallelType::SerialOnly;
+        if (mParallelType == IParallelalbe::OpenMP)
+        {
+            parallelType = gwm::ParallelType::OpenMP;
+            mMGWRCore->setOmpThreadNum(mOmpThreadNum);
+        }
+        mMGWRCore->setParallelType(parallelType);
+
+        // 8. 设置初始空间权重(不需要)
+        // 9. 设置消息传递（如果需要）
+        mMGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
     }
 
-    // ***********************
-    // Intialize the bandwidth
-    // ***********************
-    mYi = mY;
-    for (uword i = 0; i < nVar && !checkCanceled(); i++)
+    // 10. 执行计算
+    if (!checkCanceled())
     {
-        if (mBandwidthInitilize[i] == BandwidthInitilizeType::Null)
+        emit message(tr("Running MGWR using core library..."));
+        try
         {
-            emit message(tr("Calculating the initial bandwidth for %1 ...").arg(i == 0 ? "Intercept" : mIndepVars[i-1].name));
-            mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
-            mBandwidthSelectionCurrentIndex = i;
-            mXi = mX.col(i);
-            GwmBandwidthWeight* bw0 = bandwidth(i);
-            bool adaptive = bw0->adaptive();
-            selector.setBandwidth(bw0);
-            selector.setLower(adaptive ? mAdaptiveLower : 0.0);
-            selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
-            GwmBandwidthWeight* bw = selector.optimize(this);
-            if (bw)
+            mBetas = mMGWRCore->fit();
+
+            std::vector<gwm::SpatialWeight> ws = mMGWRCore->spatialWeights();
+            // 确保数量匹配
+            if (ws.size() == mSpatialWeights.size())
             {
-                mSpatialWeights[i].setWeight(bw);
+                for (size_t i = 0; i < ws.size(); i++)
+                {
+                    gwm::BandwidthWeight* gwmBw = ws[i].weight<gwm::BandwidthWeight>();
+                    if (gwmBw)
+                    {
+                        // 从库的带宽权重中提取参数
+                        double bandwidth = gwmBw->bandwidth();
+                        bool adaptive = gwmBw->adaptive();
+                        gwm::BandwidthWeight::KernelFunctionType gwmKernel = gwmBw->kernel();
+
+                        // 转换为应用层的类型
+                        GwmBandwidthWeight::KernelFunctionType kernel = convertKernelTypeBack(gwmKernel);
+
+                        // 创建新的带宽权重对象
+                        GwmBandwidthWeight* newBw = new GwmBandwidthWeight(bandwidth, adaptive, kernel);
+
+                        // 更新 mSpatialWeights 中对应的权重
+                        mSpatialWeights[i].setWeight(newBw);
+                    }
+                }
+            }
+            else
+            {
+                emit error(tr("Spatial weights count mismatch after optimization."));
+            }
+
+            // 11. 获取结果
+            mDiagnostic = convertDiagnostic(mMGWRCore->diagnostic());
+            mRSS0 = mMGWRCore->diagnostic().RSS;
+
+            // 计算BetasSE和BetasTV（因为库函数不支持提供这两个数据）
+            if (mHasHatMatrix && !checkCanceled())
+            {
+                emit message(tr("Calculating standard errors and t-values..."));
+
+                uword nDp = mDataPoints.n_rows;
+                uword nVar = mX.n_cols;
+
+                // 初始化
+                mBetasSE = mat(nDp, nVar, fill::zeros);
+
+                // 计算残差和方差
+                vec yhat = sum(mBetas % mX, 1);
+                vec residual = mY - yhat;
+                double RSS = sum(residual % residual);
+
+                // 从诊断信息计算 sigmaHat
+                // EDF = n - 2*trS + trStS, ENP = 2*trS - trStS
+                double EDF = mDiagnostic.EDF;
+                double ENP = mDiagnostic.ENP;
+                double trS = (nDp - EDF + ENP) / 2.0;
+                double trStS = 2.0 * trS - ENP;
+                double sigmaHat = RSS / EDF;
+
+                // 对每个点和每个变量计算标准误
+                for (uword i = 0; i < nDp && !checkCanceled(); i++)
+                {
+                    for (uword j = 0; j < nVar && !checkCanceled(); j++)
+                    {
+                        try
+                        {
+                            // 获取该变量的空间权重
+                            vec w = mSpatialWeights[j].weightVector(i);
+
+                            // 单变量回归矩阵
+                            vec x_j = mX.col(j);
+                            mat xtw = trans(x_j % w);
+                            mat xtwx = xtw * x_j;
+
+                            // 计算方差
+                            mat xtwx_inv = inv_sympd(xtwx);
+                            double var_beta = as_scalar(sigmaHat * xtwx_inv);
+
+                            mBetasSE(i, j) = sqrt(var_beta);
+                        }
+                        catch (...)
+                        {
+                            mBetasSE(i, j) = std::numeric_limits<double>::quiet_NaN();
+                        }
+                    }
+                }
+
+                // 计算 t 值
+                mBetasTV = mBetas / mBetasSE;
+            }
+
+            // 12. 计算拟合值和残差
+            vec yhat = sum(mBetas % mX, 1);
+            vec residual = mY - yhat;
+
+            // 13. OLS计算（如果需要）
+            if(mOLS && !checkCanceled())
+            {
+                mOLSVar = CalOLS(mX, mY);
+            }
+
+            // 14. 创建结果图层
+            if (mHasHatMatrix && !checkCanceled())
+            {
+                createResultLayer({
+                    qMakePair(QString("%1"), mBetas),
+                    qMakePair(QString("yhat"), yhat),
+                    qMakePair(QString("residual"), residual),
+                    qMakePair(QString("%1_SE"), mBetasSE),
+                    qMakePair(QString("%1_TV"), mBetasTV)
+                });
+            }
+            else
+            {
+                createResultLayer({
+                    qMakePair(QString("%1"), mBetas)
+                });
+            }
+
+            if(!checkCanceled())
+            {
+                emit success();
+                emit tick(100, 100);
             }
         }
-    }
-
-    if(mOLS&&!checkCanceled()){
-        mOLSVar = CalOLS(mX,mY);
-    }
-
-    // *****************************************************
-    // Calculate the initial beta0 from the above bandwidths
-    // *****************************************************
-    emit message(tr("Calculating the initial beta0 from the above bandwidths ..."));
-    GwmBandwidthWeight* bw0 = bandwidth(0);
-    bool adaptive = bw0->adaptive();
-    mBandwidthSizeCriterion = bandwidthSizeCriterionAll(mBandwidthSelectionApproach[0]);
-    GwmBandwidthSizeSelector initBwSelector;
-    initBwSelector.setBandwidth(bw0);
-    initBwSelector.setLower(adaptive ? mAdaptiveLower : 0.0);
-    initBwSelector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[0].distance()->maxDistance());
-    GwmBandwidthWeight* initBw = initBwSelector.optimize(this);
-    if (!initBw)
-    {
-        emit error(tr("Cannot select initial bandwidth."));
-        return;
-    }
-    mInitSpatialWeight.setWeight(initBw);
-
-    // 初始化诊断信息矩阵
-    if (mHasHatMatrix && !checkCanceled())
-    {
-        mS0 = mat(nDp, nDp, fill::zeros);
-        mSArray = cube(nDp, nDp, nVar, fill::zeros);
-        mC = cube(nVar, nDp, nDp, fill::zeros);
-    }
-
-    mBetas = regression(mX, mY);
-
-    if (mHasHatMatrix && !checkCanceled())
-    {
-        mDiagnostic = CalcDiagnostic(mX, mY, mS0, mRSS0);
-        vec yhat = Fitted(mX, mBetas);
-        vec residual = mY - yhat;
-        mBetasTV = mBetas / mBetasSE;
-        createResultLayer({
-            qMakePair(QString("%1"), mBetas),
-            qMakePair(QString("yhat"), yhat),
-            qMakePair(QString("residual"), residual),
-            qMakePair(QString("%1_SE"),mBetasSE),
-            qMakePair(QString("%1_TV"),mBetasTV)
-        });
+        catch(const std::exception& e)
+        {
+            emit error(tr("MGWR calculation failed: %1").arg(e.what()));
+            return;
+        }
     }
     else
     {
-        createResultLayer({
-            qMakePair(QString("%1"), mBetas)
-        });
+        return;
     }
 
-    if(!checkCanceled())
-    {
-        emit success();
-        emit tick(100,100);
-    }
-    else return;
+    // *********************
+    // below are old codes
+    // *********************
+    // uword nDp = mX.n_rows, nVar = mX.n_cols;
+    // // ********************************
+    // // Centering and scaling predictors
+    // // ********************************
+    // mX0 = mX;
+    // mY0 = mY;
+    // for (uword i = 1; i < nVar && !checkCanceled(); i++)
+    // {
+    //     if (mPreditorCentered[i])
+    //     {
+    //         mX.col(i) = mX.col(i) - mean(mX.col(i));
+    //     }
+    // }
+    // // ***********************
+    // // Intialize the bandwidth
+    // // ***********************
+    // mYi = mY;
+    // for (uword i = 0; i < nVar && !checkCanceled(); i++)
+    // {
+    //     if (mBandwidthInitilize[i] == BandwidthInitilizeType::Null)
+    //     {
+    //         emit message(tr("Calculating the initial bandwidth for %1 ...").arg(i == 0 ? "Intercept" : mIndepVars[i-1].name));
+    //         mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
+    //         mBandwidthSelectionCurrentIndex = i;
+    //         mXi = mX.col(i);
+    //         GwmBandwidthWeight* bw0 = bandwidth(i);
+    //         bool adaptive = bw0->adaptive();
+    //         selector.setBandwidth(bw0);
+    //         selector.setLower(adaptive ? mAdaptiveLower : 0.0);
+    //         selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
+    //         GwmBandwidthWeight* bw = selector.optimize(this);
+    //         if (bw)
+    //         {
+    //             mSpatialWeights[i].setWeight(bw);
+    //         }
+    //     }
+    // }
+    // if(mOLS&&!checkCanceled()){
+    //     mOLSVar = CalOLS(mX,mY);
+    // }
+    // // *****************************************************
+    // // Calculate the initial beta0 from the above bandwidths
+    // // *****************************************************
+    // emit message(tr("Calculating the initial beta0 from the above bandwidths ..."));
+    // GwmBandwidthWeight* bw0 = bandwidth(0);
+    // bool adaptive = bw0->adaptive();
+    // mBandwidthSizeCriterion = bandwidthSizeCriterionAll(mBandwidthSelectionApproach[0]);
+    // GwmBandwidthSizeSelector initBwSelector;
+    // initBwSelector.setBandwidth(bw0);
+    // initBwSelector.setLower(adaptive ? mAdaptiveLower : 0.0);
+    // initBwSelector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[0].distance()->maxDistance());
+    // GwmBandwidthWeight* initBw = initBwSelector.optimize(this);
+    // if (!initBw)
+    // {
+    //     emit error(tr("Cannot select initial bandwidth."));
+    //     return;
+    // }
+    // mInitSpatialWeight.setWeight(initBw);
+    // // 初始化诊断信息矩阵
+    // if (mHasHatMatrix && !checkCanceled())
+    // {
+    //     mS0 = mat(nDp, nDp, fill::zeros);
+    //     mSArray = cube(nDp, nDp, nVar, fill::zeros);
+    //     mC = cube(nVar, nDp, nDp, fill::zeros);
+    // }
+    // mBetas = regression(mX, mY);
+    // if (mHasHatMatrix && !checkCanceled())
+    // {
+    //     mDiagnostic = CalcDiagnostic(mX, mY, mS0, mRSS0);
+    //     vec yhat = Fitted(mX, mBetas);
+    //     vec residual = mY - yhat;
+    //     mBetasTV = mBetas / mBetasSE;
+    //     createResultLayer({
+    //         qMakePair(QString("%1"), mBetas),
+    //         qMakePair(QString("yhat"), yhat),
+    //         qMakePair(QString("residual"), residual),
+    //         qMakePair(QString("%1_SE"),mBetasSE),
+    //         qMakePair(QString("%1_TV"),mBetasTV)
+    //     });
+    // }
+    // else
+    // {
+    //     createResultLayer({
+    //         qMakePair(QString("%1"), mBetas)
+    //     });
+    // }
+    // if(!checkCanceled())
+    // {
+    //     emit success();
+    //     emit tick(100,100);
+    // }
+    // else return;
 }
 
 mat GwmMultiscaleGWRAlgorithm::regression(const mat &x, const vec &y)
@@ -1068,6 +1335,20 @@ void GwmMultiscaleGWRAlgorithm::setParallelType(const IParallelalbe::ParallelTyp
     if (parallelAbility() & type)
     {
         mParallelType = type;
+
+        // 转换并行类型
+        gwm::ParallelType gwmType = gwm::ParallelType::SerialOnly;
+        if (type == IParallelalbe::OpenMP)
+        {
+            gwmType = gwm::ParallelType::OpenMP;
+        }
+
+        // 设置到内核库
+        if (mMGWRCore)
+        {
+            mMGWRCore->setParallelType(gwmType);
+        }
+
         switch (type) {
         case IParallelalbe::ParallelType::SerialOnly:
             mRegressionAll = &GwmMultiscaleGWRAlgorithm::regressionAllSerial;
@@ -1097,3 +1378,106 @@ void GwmMultiscaleGWRAlgorithm::setSpatialWeights(const QList<GwmSpatialWeight> 
         mInitSpatialWeight = spatialWeights[0];
     }
 }
+
+// below are new functions for library function
+
+// 在 gwmmultiscalegwralgorithm.cpp 中添加转换函数
+
+// 转换带宽初始化类型
+gwm::GWRMultiscale::BandwidthInitilizeType GwmMultiscaleGWRAlgorithm::convertBandwidthInitType(
+    GwmMultiscaleGWRAlgorithm::BandwidthInitilizeType type)
+{
+    switch(type)
+    {
+    case GwmMultiscaleGWRAlgorithm::Null:
+        return gwm::GWRMultiscale::BandwidthInitilizeType::Null;
+    case GwmMultiscaleGWRAlgorithm::Initial:
+        return gwm::GWRMultiscale::BandwidthInitilizeType::Initial;
+    case GwmMultiscaleGWRAlgorithm::Specified:
+        return gwm::GWRMultiscale::BandwidthInitilizeType::Specified;
+    }
+    return gwm::GWRMultiscale::BandwidthInitilizeType::Null;
+}
+
+// 转换带宽选择准则类型
+gwm::GWRMultiscale::BandwidthSelectionCriterionType GwmMultiscaleGWRAlgorithm::convertCriterionType(
+    GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType type)
+{
+    switch(type)
+    {
+    case GwmMultiscaleGWRAlgorithm::CV:
+        return gwm::GWRMultiscale::BandwidthSelectionCriterionType::CV;
+    case GwmMultiscaleGWRAlgorithm::AIC:
+        return gwm::GWRMultiscale::BandwidthSelectionCriterionType::AIC;
+    }
+    return gwm::GWRMultiscale::BandwidthSelectionCriterionType::CV;
+}
+
+// 转换后向拟合准则类型
+gwm::GWRMultiscale::BackFittingCriterionType GwmMultiscaleGWRAlgorithm::convertBackFittingType(
+    GwmMultiscaleGWRAlgorithm::BackFittingCriterionType type)
+{
+    switch(type)
+    {
+    case GwmMultiscaleGWRAlgorithm::CVR:
+        return gwm::GWRMultiscale::BackFittingCriterionType::CVR;
+    case GwmMultiscaleGWRAlgorithm::dCVR:
+        return gwm::GWRMultiscale::BackFittingCriterionType::dCVR;
+    }
+    return gwm::GWRMultiscale::BackFittingCriterionType::dCVR;
+}
+
+// 转换诊断信息
+GwmDiagnostic GwmMultiscaleGWRAlgorithm::convertDiagnostic(const gwm::RegressionDiagnostic& diag)
+{
+    GwmDiagnostic gwmDiag;
+    gwmDiag.RSS = diag.RSS;
+    gwmDiag.AICc = diag.AICc;
+    gwmDiag.ENP = diag.ENP;
+    gwmDiag.EDF = diag.EDF;
+    gwmDiag.RSquareAdjust = diag.RSquareAdjust;
+    gwmDiag.RSquare = diag.RSquare;
+    return gwmDiag;
+}
+
+gwm::BandwidthWeight::KernelFunctionType GwmMultiscaleGWRAlgorithm::convertKernelType(
+    GwmBandwidthWeight::KernelFunctionType type)
+{
+    // 根据实际的枚举值进行转换
+    // 需要查看两个库中的枚举定义来匹配
+    switch(type)
+    {
+    case GwmBandwidthWeight::Gaussian:
+        return gwm::BandwidthWeight::KernelFunctionType::Gaussian;
+    case GwmBandwidthWeight::Exponential:
+        return gwm::BandwidthWeight::KernelFunctionType::Exponential;
+    case GwmBandwidthWeight::Bisquare:
+        return gwm::BandwidthWeight::KernelFunctionType::Bisquare;
+    // ... 其他类型
+    default:
+        return gwm::BandwidthWeight::KernelFunctionType::Gaussian;
+    }
+}
+
+// 在 convertKernelType 函数之后添加
+GwmBandwidthWeight::KernelFunctionType GwmMultiscaleGWRAlgorithm::convertKernelTypeBack(
+    gwm::BandwidthWeight::KernelFunctionType type)
+{
+    // 根据实际的枚举值进行反向转换
+    switch(type)
+    {
+    case gwm::BandwidthWeight::KernelFunctionType::Gaussian:
+        return GwmBandwidthWeight::KernelFunctionType::Gaussian;
+    case gwm::BandwidthWeight::KernelFunctionType::Exponential:
+        return GwmBandwidthWeight::KernelFunctionType::Exponential;
+    case gwm::BandwidthWeight::KernelFunctionType::Bisquare:
+        return GwmBandwidthWeight::KernelFunctionType::Bisquare;
+    case gwm::BandwidthWeight::KernelFunctionType::Tricube:
+        return GwmBandwidthWeight::KernelFunctionType::Tricube;
+    case gwm::BandwidthWeight::KernelFunctionType::Boxcar:
+        return GwmBandwidthWeight::KernelFunctionType::Boxcar;
+    default:
+        return GwmBandwidthWeight::KernelFunctionType::Gaussian;
+    }
+}
+

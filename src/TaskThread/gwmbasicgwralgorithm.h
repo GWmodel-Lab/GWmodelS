@@ -95,8 +95,8 @@ public:
     std::size_t groupSize() const;
     void setGroupSize(const std::size_t groupSize) override;
 
-    BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
-    void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
+    gwm::GWRBasic::BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
+    void setBandwidthSelectionCriterionType(const gwm::GWRBasic::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 
     FTestResultPack fTestResult() const
     {
@@ -249,8 +249,9 @@ protected:
     mat mRegressionLayerX;
 
     gwm::BandwidthSelector mBandwidthSizeSelector;
+    gwm::BandwidthCriterionList criterionList;
     bool mIsAutoselectBandwidth = false;
-    BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
+    gwm::GWRBasic::BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = gwm::GWRBasic::BandwidthSelectionCriterionType::AIC;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial;
 
     GwmIndependentVariableSelector mIndepVarSelector;
@@ -320,7 +321,7 @@ inline void GwmBasicGWRAlgorithm::setIndepVarSelectionThreshold(double indepVarS
     mIndepVarSelectionThreshold = indepVarSelectionThreshold;
 }
 
-inline GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType GwmBasicGWRAlgorithm::bandwidthSelectionCriterionType() const
+inline gwm::GWRBasic::BandwidthSelectionCriterionType GwmBasicGWRAlgorithm::bandwidthSelectionCriterionType() const
 {
     return mBandwidthSelectionCriterionType;
 }
@@ -382,7 +383,7 @@ inline void GwmBasicGWRAlgorithm::setGPUId(const int gpuId)
 
 inline gwm::BandwidthCriterionList GwmBasicGWRAlgorithm::bandwidthSelectorCriterions() const
 {
-    return mBandwidthSizeSelector.bandwidthCriterion();
+    return criterionList;
 }
 
 inline bool GwmBasicGWRAlgorithm::hasPredict() const
