@@ -476,6 +476,7 @@ void GwmApp::setupToolbar()
 
     connect(ui->actionGWR, &QAction::triggered,this,&GwmApp::onGWRBtnClicked);
     connect(ui->actionGTDR, &QAction::triggered,this,&GwmApp::onGTDRBtnClicked);
+    connect(ui->actionGTDR_2, &QAction::triggered,this,&GwmApp::onGTDRBtnClicked);
     connect(ui->actionGWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
 
     connect(ui->actionNew_Layout, &QAction::triggered, this, [&]()
@@ -1400,8 +1401,9 @@ void GwmApp::onGTDRBtnClicked()
     }
     if (gtdrOptionDialog->exec() == QDialog::Accepted)
     {
-        GwmGTDRTaskThread* gtdrTaskThread = new GwmGTDRTaskThread(gtdrOptionDialog->meta());
         gtdrOptionDialog->updateFields();
+        GwmGTDRTaskThread* gtdrTaskThread = new GwmGTDRTaskThread(gtdrOptionDialog->meta());
+        //gtdrOptionDialog->updateFields();
         GwmLayerGroupItem* selectedItem = gtdrOptionDialog->selectedLayer();
         const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gtdrTaskThread);

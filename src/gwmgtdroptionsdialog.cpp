@@ -1,4 +1,4 @@
-#include "gwmgtdroptionsdialog.h"
+﻿#include "gwmgtdroptionsdialog.h"
 #include "ui_gwmgtdroptionsdialog.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
@@ -17,7 +17,8 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     QDialog(parent),
     ui(new Ui::GwmGTDROptionsDialog),
     mMapLayerList(originItemList),
-    mDepVarModel(new GwmVariableItemModel)
+    mDepVarModel(new GwmVariableItemModel),
+    mPreviousTimeStampVarName(QString())
 {
     ui->setupUi(this);
 
@@ -35,12 +36,35 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     ui->mDepVarComboBox->setCurrentIndex(-1);
     connect(ui->mDepVarComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::onDepVarChanged);
 
+    //自变量选择部分
+    mParameterSpecifiedOptionsModel = new GwmGTDRParameterSpecifiedOptionsModel(this);
+    mParameterSpecifiedOptionsSelectionModel = new QItemSelectionModel(mParameterSpecifiedOptionsModel, this);
+    ui->lsvParameterSpecifiedParameterList->setModel(mParameterSpecifiedOptionsModel);
+    ui->lsvParameterSpecifiedParameterList->setSelectionModel(mParameterSpecifiedOptionsSelectionModel);
+    // 连接信号
+    connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGTDROptionsDialog::onSelectedIndenpendentVariablesChanged);
+    connect(ui->mIndepVarSelector_2, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGTDROptionsDialog::onSelectedWeightingVariablesChanged);
+    connect(mParameterSpecifiedOptionsSelectionModel, &QItemSelectionModel::currentChanged, this, &GwmGTDROptionsDialog::onSpecifiedParameterCurrentChanged);
+
+    // 初始化时间戳选择器
+    ui->mTimeStampCombo->addItem(QStringLiteral("(None)"));  // 添加"无"选项
+    ui->mTimeStampCombo->setCurrentIndex(0);  // 默认选择"无"
+    // 连接时间戳选择器的信号
+    connect(ui->mTimeStampCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), 
+            this, &GwmGTDROptionsDialog::onTimeStampChanged);
+
     //带宽类型选择部分
     QButtonGroup* bwTypeBtnGroup = new QButtonGroup(this);
     bwTypeBtnGroup->addButton(ui->mBwTypeAdaptiveRadio);
     bwTypeBtnGroup->addButton(ui->mBwTypeFixedRadio);
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onFixedRadioToggled);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onVariableRadioToggled);
+    
+    QButtonGroup* bwSizeTypeBtnGroup = new QButtonGroup(this);
+    bwSizeTypeBtnGroup->addButton(ui->mBwSizeAutomaticRadio);
+    bwSizeTypeBtnGroup->addButton(ui->mBwSizeCustomizeRadio);
+    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onBwSizeAutomaticToggled);
+    connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::onBwSizeCustomizeToggled);
 
 
     //距离计算部分
@@ -76,11 +100,16 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    // connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    // connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    // connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    // connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    // connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGTDROptionsDialog::onBwSizeFixedSizeChanged);
+    connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::onBwSizeFixedSizeChanged);
+    connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::onBwSizeAdaptiveSizeChanged);
+    connect(ui->mBwSizeAdaptiveUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::onBwSizeAdaptiveSizeChanged);
+    connect(ui->mBwKernelFunctionCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGTDROptionsDialog::onBwKernelFunctionChanged);
     connect(ui->mDistTypeCRSRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mDistTypeMinkowskiRadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mThetaValue, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
@@ -93,11 +122,14 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
-    connect(ui->mHatmatrixCheckBox, &QAbstractButton::toggle, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
+    connect(ui->mHatmatrixCheckBox, &QAbstractButton::toggled, this, &GwmGTDROptionsDialog::updateFieldsAndEnable);
 
     ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
     ui->mBwSizeFixedSize->setMaximum(DBL_MAX);
     ui->mDistTypeCRSRadio->setChecked(true);
+    ui->mBwTypeAdaptiveRadio->setChecked(true);
+    ui->mBwSizeAutomaticRadio->setChecked(true);
+    ui->mBwSizeSettingStack->setEnabled(ui->mBwSizeCustomizeRadio->isChecked());
     updateFieldsAndEnable();
 }
 
@@ -134,6 +166,7 @@ void GwmGTDROptionsDialog::setSelectedLayer(GwmLayerGroupItem *selectedLayer)
 void GwmGTDROptionsDialog::layerChanged(int index)
 {
     ui->mIndepVarSelector->layerChanged(mMapLayerList[index]->originChild()->layer());
+    ui->mIndepVarSelector_2->layerChanged(mMapLayerList[index]->originChild()->layer());
     if (mSelectedLayer)
     {
         mSelectedLayer = nullptr;
@@ -142,6 +175,7 @@ void GwmGTDROptionsDialog::layerChanged(int index)
     QgsFields fieldList = mSelectedLayer->originChild()->layer()->fields();
     ui->mDepVarComboBox->clear();
     ui->mIndepVarSelector->onDepVarChanged("");
+    ui->mIndepVarSelector_2->onDepVarChanged("");
     mDepVarModel->clear();
     for (int i = 0; i < fieldList.size(); i++)
     {
@@ -157,11 +191,266 @@ void GwmGTDROptionsDialog::layerChanged(int index)
             ui->mDepVarComboBox->addItem(field.name());
         }
     }
+
+        // 为权重变量选择器添加空间坐标选项
+        GwmVariableItemModel* weightingVarModel = ui->mIndepVarSelector_2->indepVarModel();
+        QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+        if (weightingVarModel && layer->wkbType() != QgsWkbTypes::NoGeometry)
+        {
+            // 检查是否已经添加了坐标选项（避免重复添加）
+            for (int i = weightingVarModel->rowCount() - 1; i >= 0; i--)
+            {
+                GwmVariable var = weightingVarModel->item(i);
+                if (var.name == QStringLiteral("__X_COORD__") || var.name == QStringLiteral("__Y_COORD__"))
+                {
+                    weightingVarModel->remove(i);
+                }
+            }
+
+            // 添加坐标选项（使用特殊命名约定）
+            GwmVariable yCoordVar;
+            yCoordVar.name = QStringLiteral("__Y_COORD__");  // 特殊命名约定
+            yCoordVar.type = QVariant::Double;
+            yCoordVar.index = -2;  // 使用 -2 标识为 Y 坐标
+            yCoordVar.isNumeric = true;
+            weightingVarModel->insert(0, yCoordVar);
+            //weightingVarModel->append(yCoordVar);
+
+            GwmVariable xCoordVar;
+            xCoordVar.name = QStringLiteral("__X_COORD__");  // 特殊命名约定
+            xCoordVar.type = QVariant::Double;
+            xCoordVar.index = -1;  // 使用 -1 标识为 X 坐标
+            xCoordVar.isNumeric = true;
+            weightingVarModel->insert(0, xCoordVar);
+            //weightingVarModel->append(xCoordVar);
+
+
+
+        }
+
+    // GwmVariableItemModel* selectedWeightingVarModel = ui->mIndepVarSelector_2->selectedIndepVarModel();
+    // if (selectedWeightingVarModel && selectedWeightingVarModel->rowCount() > 0)
+    // {
+    //     mParameterSpecifiedOptionsModel->syncWithAttributes(selectedWeightingVarModel);
+    //     if (mParameterSpecifiedOptionsModel->rowCount() > 0)
+    //     {
+    //         QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
+    //         mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
+    //     }
+    // }
+
+    // 更新时间戳选择器
+    ui->mTimeStampCombo->clear();
+    ui->mTimeStampCombo->addItem(QStringLiteral("(None)"));  // 添加"无"选项
+    
+    if (mSelectedLayer)
+    {
+        QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+        QgsFields fieldList = layer->fields();
+        
+        // 添加所有数值型变量到时间戳选择器
+        for (int i = 0; i < fieldList.size(); i++)
+        {
+            QgsField field = fieldList[i];
+            if (isNumeric(field.type()))
+            {
+                ui->mTimeStampCombo->addItem(field.name());
+            }
+        }
+    }
+    
+    ui->mTimeStampCombo->setCurrentIndex(0);  // 默认选择"无"
+    
+    // 同步参数列表（基于权重变量）
+    GwmVariableItemModel* selectedWeightingVarModel = ui->mIndepVarSelector_2->selectedIndepVarModel();
+    if (selectedWeightingVarModel && selectedWeightingVarModel->rowCount() > 0)
+    {
+        mParameterSpecifiedOptionsModel->syncWithAttributes(selectedWeightingVarModel);
+        if (mParameterSpecifiedOptionsModel->rowCount() > 0)
+        {
+            QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
+            mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
+        }
+    }
+
 }
 
 void GwmGTDROptionsDialog::onDepVarChanged(const int index)
 {
     ui->mIndepVarSelector->onDepVarChanged(ui->mDepVarComboBox->itemText(index));
+    ui->mIndepVarSelector_2->onDepVarChanged(ui->mDepVarComboBox->itemText(index));
+
+    // 更新时间戳选择器，排除因变量
+    QString currentDepVarName;
+    if (index >= 0)
+    {
+        currentDepVarName = ui->mDepVarComboBox->itemText(index);
+    }
+    
+    // 保存当前选择的时间戳（如果存在）
+    int currentTimeStampIndex = ui->mTimeStampCombo->currentIndex();
+    QString currentTimeStampName;
+    if (currentTimeStampIndex > 0)
+    {
+        currentTimeStampName = ui->mTimeStampCombo->itemText(currentTimeStampIndex);
+    }
+    
+    // 重新填充时间戳选择器
+    ui->mTimeStampCombo->clear();
+    ui->mTimeStampCombo->addItem(QStringLiteral("(None)"));
+    
+    if (mSelectedLayer)
+    {
+        QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+        QgsFields fieldList = layer->fields();
+        
+        for (int i = 0; i < fieldList.size(); i++)
+        {
+            QgsField field = fieldList[i];
+            if (isNumeric(field.type()) && field.name() != currentDepVarName)
+            {
+                ui->mTimeStampCombo->addItem(field.name());
+            }
+        }
+    }
+    
+    // 恢复之前的选择（如果仍然存在）
+    if (!currentTimeStampName.isEmpty())
+    {
+        int newIndex = ui->mTimeStampCombo->findText(currentTimeStampName);
+        if (newIndex >= 0)
+        {
+            ui->mTimeStampCombo->setCurrentIndex(newIndex);
+        }
+        else
+        {
+            // 如果之前选择的时间戳变成了因变量，重置为"无"
+            ui->mTimeStampCombo->setCurrentIndex(0);
+            mPreviousTimeStampVarName.clear();
+        }
+    }
+    else
+    {
+        ui->mTimeStampCombo->setCurrentIndex(0);
+    }
+
+    // 为权重变量选择器重新添加空间坐标选项（因为 onDepVarChanged 会清空列表）
+    QgsVectorLayer* layer = mSelectedLayer ? mSelectedLayer->originChild()->layer() : nullptr;
+    if (layer && layer->wkbType() != QgsWkbTypes::NoGeometry)
+    {
+        GwmVariableItemModel* weightingVarModel = ui->mIndepVarSelector_2->indepVarModel();
+        if (weightingVarModel)
+        {
+            // 检查是否已经添加了坐标选项（避免重复添加）
+            bool hasXCoord = false;
+            bool hasYCoord = false;
+            for (int i = 0; i < weightingVarModel->rowCount(); i++)
+            {
+                GwmVariable var = weightingVarModel->item(i);
+                if (var.name == QStringLiteral("__X_COORD__"))
+                    hasXCoord = true;
+                if (var.name == QStringLiteral("__Y_COORD__"))
+                    hasYCoord = true;
+            }
+
+            // 添加 X 坐标选项
+            if (!hasXCoord)
+            {
+                GwmVariable xCoordVar;
+                xCoordVar.name = QStringLiteral("__X_COORD__");
+                xCoordVar.type = QVariant::Double;
+                xCoordVar.index = -1;
+                xCoordVar.isNumeric = true;
+                weightingVarModel->append(xCoordVar);
+            }
+
+            // 添加 Y 坐标选项
+            if (!hasYCoord)
+            {
+                GwmVariable yCoordVar;
+                yCoordVar.name = QStringLiteral("__Y_COORD__");
+                yCoordVar.type = QVariant::Double;
+                yCoordVar.index = -2;
+                yCoordVar.isNumeric = true;
+                weightingVarModel->append(yCoordVar);
+            }
+        }
+    }
+
+    // 处理时间戳变量：如果当前选择了时间戳，需要从权重变量列表中移除
+    int timeStampIndex = ui->mTimeStampCombo->currentIndex();
+    QString currentTimeStampVarName;
+    if (timeStampIndex > 0)
+    {
+        currentTimeStampVarName = ui->mTimeStampCombo->itemText(timeStampIndex);
+    }
+    
+    // 如果之前有选择时间戳变量，将其添加回列表（如果需要）
+    if (!mPreviousTimeStampVarName.isEmpty() && mPreviousTimeStampVarName != currentTimeStampVarName)
+    {
+        GwmVariableItemModel* weightingVarModel = ui->mIndepVarSelector_2->indepVarModel();
+        if (weightingVarModel)
+        {
+            // 检查是否已经存在
+            bool alreadyExists = false;
+            for (int i = 0; i < weightingVarModel->rowCount(); i++)
+            {
+                GwmVariable var = weightingVarModel->item(i);
+                if (var.name == QStringLiteral("__X_COORD__") || var.name == QStringLiteral("__Y_COORD__"))
+                    continue;
+                if (var.name == mPreviousTimeStampVarName)
+                {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+            
+            // 如果不存在，添加回去
+            if (!alreadyExists && mSelectedLayer)
+            {
+                QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+                QgsFields fieldList = layer->fields();
+                for (int i = 0; i < fieldList.size(); i++)
+                {
+                    if (fieldList[i].name() == mPreviousTimeStampVarName && isNumeric(fieldList[i].type()))
+                    {
+                        GwmVariable var;
+                        var.name = fieldList[i].name();
+                        var.type = fieldList[i].type();
+                        var.index = i;
+                        var.isNumeric = fieldList[i].isNumeric();
+                        weightingVarModel->append(var);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    // 如果当前选择了时间戳，从权重变量列表中移除
+    if (!currentTimeStampVarName.isEmpty())
+    {
+        GwmVariableItemModel* weightingVarModel = ui->mIndepVarSelector_2->indepVarModel();
+        if (weightingVarModel)
+        {
+            for (int i = weightingVarModel->rowCount() - 1; i >= 0; i--)
+            {
+                GwmVariable var = weightingVarModel->item(i);
+                if (var.name == QStringLiteral("__X_COORD__") || var.name == QStringLiteral("__Y_COORD__"))
+                    continue;
+                if (var.name == currentTimeStampVarName)
+                {
+                    weightingVarModel->remove(i);
+                    break;
+                }
+            }
+        }
+    }
+    
+    mPreviousTimeStampVarName = currentTimeStampVarName;
+
+    // 使用新的同步方法
+    syncParameterListWithTimeStamp();
 }
 
 QString GwmGTDROptionsDialog::crsRotateTheta()
@@ -280,9 +569,289 @@ void GwmGTDROptionsDialog::onFixedRadioToggled(bool checked)
     ui->mBwSizeSettingStack->setCurrentIndex(1);
 }
 
+void GwmGTDROptionsDialog::onBwSizeAutomaticToggled(bool checked)
+{
+    if (checked)
+        ui->mBwSizeSettingStack->setEnabled(false);
+}
+
+void GwmGTDROptionsDialog::onBwSizeCustomizeToggled(bool checked)
+{
+    ui->mBwSizeSettingStack->setEnabled(checked);
+}
+
 void GwmGTDROptionsDialog::onVariableRadioToggled(bool checked)
 {
     ui->mBwSizeSettingStack->setCurrentIndex(0);
+}
+
+void GwmGTDROptionsDialog::onSelectedIndenpendentVariablesChanged()
+{
+    // 同步独立变量到列表（类似 MultiscaleGWR）
+    // mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector->selectedIndepVarModel());
+
+    // 如果有项目，选中第一个
+    if (mParameterSpecifiedOptionsModel->rowCount() > 0)
+    {
+        QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
+        mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
+    }
+}
+
+void GwmGTDROptionsDialog::onSelectedWeightingVariablesChanged()
+{   
+    // 使用新的同步方法，包括时间戳
+    syncParameterListWithTimeStamp();
+}
+
+void GwmGTDROptionsDialog::onSpecifiedParameterCurrentChanged(const QModelIndex& current, const QModelIndex& previous)
+{
+    // 可以在这里更新右侧编辑控件（如果需要）
+    // GTDR 可能不需要，因为可以直接在列表中编辑
+    // Q_UNUSED(current);
+    // Q_UNUSED(previous);
+
+    // 启用/禁用编辑控件（只有当选中有效项时才启用）
+    bool isValid = current.isValid();
+    ui->mBwSizeSettingStack->setEnabled(isValid && ui->mBwSizeCustomizeRadio->isChecked());
+    ui->mBwKernelFunctionCombo->setEnabled(isValid);
+
+    if (!isValid)
+        return;
+
+    // 获取当前选中变量对应的参数选项
+    GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(current);
+    if (!option)
+        return;
+
+    // 更新右侧编辑控件，显示当前选中变量的参数
+    // 注意：带宽值的单位转换
+    if (ui->mBwTypeAdaptiveRadio->isChecked())
+    {
+        // Adaptive 模式：直接显示数值（不需要单位转换，因为 adaptive 是数量）
+        ui->mBwSizeAdaptiveSize->setValue(int(option->initialBandwidthSize));
+    }
+    else if (ui->mBwTypeFixedRadio->isChecked())
+    {
+        // Fixed 模式：需要根据单位转换
+        // 假设默认单位是米，需要根据实际单位转换
+        double value = option->initialBandwidthSize;
+        QList<double> units = { 1.0, 1000.0, 1609.344 };  // 米、千米、英里
+        // 尝试找到合适的单位和值
+        int unitIndex = 0;
+        if (value >= 1000.0 && value < 1000000.0)
+        {
+            unitIndex = 1;  // 千米
+            value = value / 1000.0;
+        }
+        else if (value >= 1609.344)
+        {
+            unitIndex = 2;  // 英里
+            value = value / 1609.344;
+        }
+        ui->mBwSizeFixedSize->setValue(value);
+        ui->mBwSizeFixedUnit->setCurrentIndex(unitIndex);
+    }
+
+    // 更新核函数类型
+    ui->mBwKernelFunctionCombo->setCurrentIndex(static_cast<int>(option->kernel));
+}
+
+void GwmGTDROptionsDialog::onBwSizeAdaptiveSizeChanged(int size)
+{
+    // 获取当前选中的变量
+    QModelIndex currentIndex = mParameterSpecifiedOptionsSelectionModel->currentIndex();
+    if (!currentIndex.isValid())
+        return;
+
+    GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(currentIndex);
+    if (!option)
+        return;
+
+    // 更新该变量的初始带宽值
+    // Adaptive 模式：需要考虑单位
+    QList<double> units = { 1, 10, 100, 1000 };
+    double bandwidthValue = size * units[ui->mBwSizeAdaptiveUnit->currentIndex()];
+    option->initialBandwidthSize = bandwidthValue;
+}
+
+void GwmGTDROptionsDialog::onBwSizeFixedSizeChanged(double size)
+{
+    // 获取当前选中的变量
+    QModelIndex currentIndex = mParameterSpecifiedOptionsSelectionModel->currentIndex();
+    if (!currentIndex.isValid())
+        return;
+
+    GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(currentIndex);
+    if (!option)
+        return;
+
+    // 更新该变量的初始带宽值
+    // Fixed 模式：需要考虑单位
+    QList<double> units = { 1.0, 1000.0, 1609.344 };  // 米、千米、英里
+    double bandwidthValue = size * units[ui->mBwSizeFixedUnit->currentIndex()];
+    option->initialBandwidthSize = bandwidthValue;
+}
+
+void GwmGTDROptionsDialog::onBwKernelFunctionChanged(int index)
+{
+    // 获取当前选中的变量
+    QModelIndex currentIndex = mParameterSpecifiedOptionsSelectionModel->currentIndex();
+    if (!currentIndex.isValid())
+        return;
+
+    GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(currentIndex);
+    if (!option)
+        return;
+
+    // 更新该变量的核函数类型
+    option->kernel = static_cast<gwm::BandwidthWeight::KernelFunctionType>(index);
+}
+
+void GwmGTDROptionsDialog::onTimeStampChanged(int index)
+{
+    // 获取权重变量列表模型（所有可用的变量）
+    GwmVariableItemModel* weightingVarModel = ui->mIndepVarSelector_2->indepVarModel();
+    if (!weightingVarModel)
+        return;
+    
+    // 获取当前选中的时间戳变量名（如果选择了"无"，则为空）
+    QString currentTimeStampVarName;
+    if (index > 0)  // index 0 是 "(None)"
+    {
+        currentTimeStampVarName = ui->mTimeStampCombo->itemText(index);
+    }
+
+    // 如果之前有选择时间戳变量，将其添加回权重变量列表
+    if (!mPreviousTimeStampVarName.isEmpty() && mPreviousTimeStampVarName != currentTimeStampVarName)
+    {
+        // 检查该变量是否已经在列表中（避免重复）
+        bool alreadyExists = false;
+        for (int i = 0; i < weightingVarModel->rowCount(); i++)
+        {
+            GwmVariable var = weightingVarModel->item(i);
+            // 跳过特殊命名的坐标变量
+            if (var.name == QStringLiteral("__X_COORD__") || var.name == QStringLiteral("__Y_COORD__"))
+                continue;
+            if (var.name == mPreviousTimeStampVarName)
+            {
+                alreadyExists = true;
+                break;
+            }
+        }
+        
+        // 如果不存在，从图层字段中查找并添加
+        if (!alreadyExists && mSelectedLayer)
+        {
+            QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+            QgsFields fieldList = layer->fields();
+            for (int i = 0; i < fieldList.size(); i++)
+            {
+                if (fieldList[i].name() == mPreviousTimeStampVarName && isNumeric(fieldList[i].type()))
+                {
+                    GwmVariable var;
+                    var.name = fieldList[i].name();
+                    var.type = fieldList[i].type();
+                    var.index = i;
+                    var.isNumeric = fieldList[i].isNumeric();
+                    weightingVarModel->append(var);
+                    break;
+                }
+            }
+        }
+    }
+
+    // 如果当前选择了某个变量作为时间戳，从权重变量列表中移除
+    if (!currentTimeStampVarName.isEmpty())
+    {
+        // 从后往前遍历，移除时间戳变量
+        for (int i = weightingVarModel->rowCount() - 1; i >= 0; i--)
+        {
+            GwmVariable var = weightingVarModel->item(i);
+            // 跳过特殊命名的坐标变量
+            if (var.name == QStringLiteral("__X_COORD__") || var.name == QStringLiteral("__Y_COORD__"))
+                continue;
+                
+            // 如果当前变量是时间戳变量，从列表中移除
+            if (var.name == currentTimeStampVarName)
+            {
+                weightingVarModel->remove(i);
+                break;  // 找到并移除后退出循环
+            }
+        }
+    }
+
+    // 更新之前的时间戳变量名
+    mPreviousTimeStampVarName = currentTimeStampVarName;
+
+    // 触发权重变量选择器的更新（这会导致参数列表同步）
+    // 但我们需要手动触发参数列表的同步，因为时间戳不在权重变量列表中
+    syncParameterListWithTimeStamp();
+}
+
+// 新增辅助方法：同步参数列表（包括时间戳）
+void GwmGTDROptionsDialog::syncParameterListWithTimeStamp()
+{
+    // 先同步权重变量
+    mParameterSpecifiedOptionsModel->syncWithAttributes(ui->mIndepVarSelector_2->selectedIndepVarModel());
+    
+    // 如果选择了时间戳，添加"TIMESTAMP"项到参数列表
+    int timeStampIndex = ui->mTimeStampCombo->currentIndex();
+    if (timeStampIndex > 0)  // 如果选择了某个变量作为时间戳
+    {
+        // 检查是否已经存在"TIMESTAMP"项
+        bool hasTimeStamp = false;
+        for (int i = 0; i < mParameterSpecifiedOptionsModel->rowCount(); i++)
+        {
+            QModelIndex idx = mParameterSpecifiedOptionsModel->index(i, 0);
+            GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(idx);
+            if (option && option->attributeName == QStringLiteral("TIMESTAMP"))
+            {
+                hasTimeStamp = true;
+                break;
+            }
+        }
+        
+        // 如果不存在，添加"TIMESTAMP"项
+        if (!hasTimeStamp)
+        {
+            // 由于模型没有公开的添加方法，我们需要创建一个临时模型来包含TIMESTAMP
+            // 创建一个临时模型，包含所有权重变量和时间戳
+            GwmVariableItemModel* tempModel = new GwmVariableItemModel(this);
+            GwmVariableItemModel* weightingModel = ui->mIndepVarSelector_2->selectedIndepVarModel();
+            if (weightingModel)
+            {
+                for (int i = 0; i < weightingModel->rowCount(); i++)
+                {
+                    tempModel->append(weightingModel->item(i));
+                }
+            }
+            
+            // 添加TIMESTAMP虚拟变量
+            GwmVariable timeStampVar;
+            timeStampVar.name = QStringLiteral("TIMESTAMP");
+            timeStampVar.type = QVariant::Double;  // 时间戳通常是数值型
+            timeStampVar.index = -999;  // 使用特殊索引标识时间戳
+            timeStampVar.isNumeric = true;
+            tempModel->append(timeStampVar);
+            
+            // 使用临时模型同步参数列表
+            mParameterSpecifiedOptionsModel->syncWithAttributes(tempModel);
+            
+            // 清理临时模型
+            delete tempModel;
+        }
+    }
+    
+    // 如果有项目，选中第一个
+    if (mParameterSpecifiedOptionsModel->rowCount() > 0)
+    {
+        QModelIndex firstIndex = mParameterSpecifiedOptionsModel->index(0, 0);
+        mParameterSpecifiedOptionsSelectionModel->setCurrentIndex(firstIndex, QItemSelectionModel::SelectCurrent);
+    }
+    
+    // 触发更新验证
+    updateFieldsAndEnable();
 }
 
 double GwmGTDROptionsDialog::bandwidthSize(){
@@ -356,6 +925,54 @@ void GwmGTDROptionsDialog::updateFields()
         }
     }
 
+    GwmVariableItemModel* selectedWeightingVarModel = ui->mIndepVarSelector_2->selectedIndepVarModel();
+    if (selectedWeightingVarModel)
+    {
+        if (selectedWeightingVarModel->rowCount() > 0)
+        {
+            mAlgorithmMeta.weightingVariables = selectedWeightingVarModel->attributeItemList();
+        }
+        else
+        {
+            // 如果没有选择权重变量，清空列表
+            mAlgorithmMeta.weightingVariables.clear();
+        }
+    }
+    else
+    {
+        mAlgorithmMeta.weightingVariables.clear();
+    }
+
+    // 设置时间戳变量
+    int timeStampIndex = ui->mTimeStampCombo->currentIndex();
+    if (timeStampIndex > 0)  // 如果选择了某个变量作为时间戳
+    {
+        QString timeStampVarName = ui->mTimeStampCombo->itemText(timeStampIndex);
+        // 从图层字段中查找对应的变量
+        QgsVectorLayer* layer = mSelectedLayer->originChild()->layer();
+        QgsFields fieldList = layer->fields();
+        for (int i = 0; i < fieldList.size(); i++)
+        {
+            if (fieldList[i].name() == timeStampVarName)
+            {
+                GwmVariable timeStampVar;
+                timeStampVar.name = fieldList[i].name();
+                timeStampVar.type = fieldList[i].type();
+                timeStampVar.index = i;
+                timeStampVar.isNumeric = fieldList[i].isNumeric();
+                mAlgorithmMeta.timeStampVariable = timeStampVar;  // 需要在 GwmAlgorithmMetaGTDR 中添加此字段
+                break;
+            }
+        }
+    }
+    else
+    {
+        // 如果没有选择时间戳，设置为空变量
+        mAlgorithmMeta.timeStampVariable = GwmVariable();  // 默认构造的空变量
+        mAlgorithmMeta.timeStampVariable.index = -1;  // 显式设置为 -1
+        mAlgorithmMeta.timeStampVariable.name = QString();  // 显式清空 name
+    }
+
     mAlgorithmMeta.weightType = gwm::Weight::BandwidthWeight;
     mAlgorithmMeta.weightBandwidthSize = bandwidthSize();
     mAlgorithmMeta.weightBandwidthAdaptive = bandwidthType();
@@ -397,6 +1014,50 @@ void GwmGTDROptionsDialog::updateFields()
     else
     {
         mAlgorithmMeta.parallelType = gwm::ParallelType::SerialOnly;
+    }
+
+    // Bandwidth Autoselection Settings
+    mAlgorithmMeta.bandwidthAuto = ui->mBwSizeAutomaticRadio->isChecked();
+    if (mAlgorithmMeta.bandwidthAuto)
+    {
+        mAlgorithmMeta.bandwidthCriterionType =
+            ui->mBwSizeAutomaticApprochCombo->currentIndex() == 0
+                ? gwm::GTDR::BandwidthCriterionType::AIC
+                : gwm::GTDR::BandwidthCriterionType::CV;
+        mAlgorithmMeta.weightBandwidthSize = bandwidthSize(); // 作为初始值使用，可保留
+    }
+    else
+    {
+        mAlgorithmMeta.weightBandwidthSize = bandwidthSize();
+    }
+
+    // 读取每个维度的初始带宽值和核函数类型
+    mAlgorithmMeta.weightBandwidthSizes.clear();
+    mAlgorithmMeta.weightBandwidthKernels.clear();
+
+    for (int i = 0; i < mParameterSpecifiedOptionsModel->rowCount(); ++i)
+    {
+        GwmGTDRParameterSpecifiedOption* option = mParameterSpecifiedOptionsModel->item(i);
+        if (option)
+        {
+            mAlgorithmMeta.weightBandwidthSizes.append(option->initialBandwidthSize);
+            mAlgorithmMeta.weightBandwidthKernels.append(option->kernel);
+        }
+    }
+
+    // 向后兼容：如果列表为空，使用单个默认值
+    if (mAlgorithmMeta.weightBandwidthSizes.isEmpty())
+    {
+        // 使用当前 UI 中的值作为默认值
+        mAlgorithmMeta.weightBandwidthSize = bandwidthSize();
+        mAlgorithmMeta.weightBandwidthKernel = bandwidthKernelFunction();
+    }
+    else
+    {
+        // 如果列表不为空，也更新单个值（用于向后兼容或作为默认值）
+        // 可以选择使用第一个值，或者保持当前 UI 中的值
+        mAlgorithmMeta.weightBandwidthSize = mAlgorithmMeta.weightBandwidthSizes.first();
+        mAlgorithmMeta.weightBandwidthKernel = mAlgorithmMeta.weightBandwidthKernels.first();
     }
 
     mAlgorithmMeta.hatmatrix = ui->mHatmatrixCheckBox->isChecked();

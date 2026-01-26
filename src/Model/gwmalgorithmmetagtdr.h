@@ -1,4 +1,4 @@
-#ifndef GWMALGORITHMMETAGTDR
+﻿#ifndef GWMALGORITHMMETAGTDR
 #define GWMALGORITHMMETAGTDR
 
 #include <string>
@@ -11,6 +11,9 @@ struct GwmAlgorithmMetaGTDR
     QgsVectorLayer* layer = nullptr;
     QList<GwmVariable> independentVariables;
     GwmVariable dependentVariable;
+
+    QList<GwmVariable> weightingVariables;  // 用于计算权重的变量
+    GwmVariable timeStampVariable;
     // Weight
     gwm::Weight::WeightType weightType = gwm::Weight::BandwidthWeight;
     double weightBandwidthSize = DBL_MAX;
@@ -31,6 +34,17 @@ struct GwmAlgorithmMetaGTDR
     bool hatmatrix = false;
 
     bool validate(QString &error) const;
+
+    // Bandwidth Autoselection
+    bool bandwidthAuto = true;
+    gwm::GTDR::BandwidthCriterionType bandwidthCriterionType = gwm::GTDR::BandwidthCriterionType::AIC;
+    double bandwidthOptimizeEps = 1e-6;
+    std::size_t bandwidthOptimizeMaxIter = 500;
+    double bandwidthOptimizeStep = 0.1;
+
+    //Weight(multidimensional)
+    QList<double> weightBandwidthSizes;
+    QList<gwm::BandwidthWeight::KernelFunctionType> weightBandwidthKernels;
 };
 
 

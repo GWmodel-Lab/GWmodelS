@@ -328,6 +328,7 @@ void GwmGWAverageOptionsDialog::updateFields()
     mAlgorithmMeta.weightBandwidthAdaptive = bandwidthType();
     mAlgorithmMeta.weightBandwidthKernel = bandwidthKernelFunction();
 
+
     // 距离设置
     if (ui->mDistTypeDmatRadio->isChecked())
     {
