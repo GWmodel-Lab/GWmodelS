@@ -174,100 +174,19 @@ void GwmGWPCATaskThread::run()
                 mLoadings = mAlgorithm->loadings();
                 mSDev = mAlgorithm->sdev();
                 mVariance = mSDev % mSDev;
-                
-                // Get scores from kernel library for comparison
-                if(scoresCal() && mDataPoints.n_rows <= 4096)
+
+                if (scoresCal())
                 {
+                    // 内核库的 GWPCA::solveSerial 已按照 std_gwmgwpcataskthread 的
+                    // pcaLoadingsSdevScoresSerial 实现，直接给出 (nDp, mK, nDp) 结构的 scores。
                     const cube& kernelScores = mAlgorithm->scores();
-                    mScoresFromKernel = kernelScores;
-                    
-                    qDebug() << "[GWPCA] Got scores from kernel library, dimensions:" << mScoresFromKernel.n_rows << "x" << mScoresFromKernel.n_cols << "x" << mScoresFromKernel.n_slices;
+                    mScores = kernelScores;
+                    qDebug() << "[GWPCA] Scores source: kernel library (GWPCA::scores()), "
+                             << "size =" << mScores.n_rows << "x" << mScores.n_cols << "x" << mScores.n_slices;
                 }
             }
 
-            if(scoresCal() && mDataPoints.n_rows <= 4096)
-            {
-                // Keep original calculateScores() result for comparison
-                calculateScores();
-                
-                // Output comparison information
-                if(!Robust() && mScoresFromKernel.n_elem > 0)
-                {
-                    qDebug() << "[GWPCA] ========== Scores Comparison Info ==========";
-                    qDebug() << "[GWPCA] Original code scores dimensions:" << mScores.n_rows << "x" << mScores.n_cols << "x" << mScores.n_slices;
-                    qDebug() << "[GWPCA] Kernel library scores dimensions:" << mScoresFromKernel.n_rows << "x" << mScoresFromKernel.n_cols << "x" << mScoresFromKernel.n_slices;
-                    qDebug() << "[GWPCA] Note: Original code scores format is (nDp, mK, nDp), kernel library scores format is (nDp, nDp, mK)";
-                    qDebug() << "[GWPCA] Original code: mScores.slice(i) is the score matrix (nDp, mK) for point i";
-                    qDebug() << "[GWPCA] Kernel library: mScoresFromKernel.slice(j) is the score matrix (nDp, nDp) for component j";
-                    
-                    int sampleSize = std::min(5, (int)mDataPoints.n_rows);
-                    int sampleComps = std::min(mK, 3);
-                    qDebug() << "[GWPCA] First" << sampleSize << "points score comparison:";
-                    for(int i = 0; i < sampleSize; i++)
-                    {
-                        qDebug() << "[GWPCA]   Point" << i << "scores:";
-                        qDebug() << "[GWPCA]     Original code (mScores.slice(" << i << ")):";
-                        for(int j = 0; j < sampleComps; j++)
-                        {
-                            vec scoreVec = mScores.slice(i).col(j);
-                            QString scoreStr = "[";
-                            for(uword k = 0; k < std::min((uword)5, scoreVec.n_elem); k++)
-                            {
-                                if(k > 0) scoreStr += ", ";
-                                scoreStr += QString::number(scoreVec(k), 'f', 6);
-                            }
-                            if(scoreVec.n_elem > 5) scoreStr += ", ...";
-                            scoreStr += "]";
-                            qDebug() << "[GWPCA]       Component" << (j+1) << ":" << scoreStr;
-                        }
-                        qDebug() << "[GWPCA]     Kernel library (column" << i << "of each component):";
-                        for(int j = 0; j < sampleComps; j++)
-                        {
-                            vec scoreVec = mScoresFromKernel.slice(j).col(i);
-                            QString scoreStr = "[";
-                            for(uword k = 0; k < std::min((uword)5, scoreVec.n_elem); k++)
-                            {
-                                if(k > 0) scoreStr += ", ";
-                                scoreStr += QString::number(scoreVec(k), 'f', 6);
-                            }
-                            if(scoreVec.n_elem > 5) scoreStr += ", ...";
-                            scoreStr += "]";
-                            qDebug() << "[GWPCA]       Component" << (j+1) << ":" << scoreStr;
-                        }
-                    }
-
-                    qDebug() << "[GWPCA] Format converted comparison:";
-                    uword nDp = mDataPoints.n_rows;
-                    cube kernelScoresConverted(nDp, mK, nDp, fill::zeros);
-                    for(uword i = 0; i < nDp; i++)
-                    {
-                        for(int j = 0; j < mK; j++)
-                        {
-                            kernelScoresConverted.slice(i).col(j) = mScoresFromKernel.slice(j).col(i);
-                        }
-                    }
-                    
-                    for(int j = 0; j < sampleComps; j++)
-                    {
-                        double maxDiff = 0, meanDiff = 0;
-                        uword diffCount = 0;
-                        for(uword i = 0; i < nDp; i++)
-                        {
-                            vec diff = abs(mScores.slice(i).col(j) - kernelScoresConverted.slice(i).col(j));
-                            double localMax = diff.max();
-                            double localMean = mean(diff);
-                            if(localMax > maxDiff) maxDiff = localMax;
-                            meanDiff += localMean;
-                            diffCount++;
-                        }
-                        meanDiff /= diffCount;
-                        qDebug() << "[GWPCA]   Component" << (j+1) << "score difference - Max diff:" << maxDiff << "Mean diff:" << meanDiff;
-                    }
-                    
-                    qDebug() << "[GWPCA] =====================================";
-                }
-            }
-            else
+            if (!scoresCal())
             {
                 mScoresCal = false;
             }
@@ -421,6 +340,8 @@ void GwmGWPCATaskThread::variableZscore(mat& x)
 void GwmGWPCATaskThread::calculateScores()
 {
     uword nDp = mDataPoints.n_rows, nVar = mVariables.size();
+    qDebug() << "[GWPCA] calculateScores() called: computing scores locally with"
+             << (Robust() ? "robust" : "non-robust") << "PCA.";
     mScores = cube(nDp, mK, nDp, fill::zeros);
     
     for(uword i = 0; i < nDp && !checkCanceled(); i++)
@@ -450,6 +371,26 @@ void GwmGWPCATaskThread::calculateScores()
             scorei.col(j) = sum(score, 1);
         }
         mScores.slice(i) = scorei;
+        emit tick(i + 1, nDp);
+    }
+}
+
+void GwmGWPCATaskThread::fillScoresFromKernelLoadings()
+{
+    uword nDp = mDataPoints.n_rows, nVar = mX.n_cols;
+    qDebug() << "[GWPCA] fillScoresFromKernelLoadings() called: computing scores from kernel loadings.";
+    mScores.set_size(nDp, mK, nDp);
+    mScores.zeros();
+    for (uword i = 0; i < nDp && !checkCanceled(); i++)
+    {
+        vec w = mSpatialWeight.weightVector(i);
+        mat xw = mX.each_col() % w;
+        rowvec center = sum(xw) / sum(w);
+        mat centerized = (mX.each_row() - center).each_col() % sqrt(w);
+        mat V(nVar, mK);
+        for (int j = 0; j < mK; j++)
+            V.col(j) = mLoadings.slice(j).row(i).t();
+        mScores.slice(i) = centerized * V;
         emit tick(i + 1, nDp);
     }
 }

@@ -104,6 +104,8 @@ private:
     void initXY(mat& x, const QList<GwmVariable>& indepVars);
     void variableZscore(mat& x);
     void calculateScores();
+    /** 内核未填充 scores 时，用 loadings 在本地计算 mScores（与内核 wpca 公式一致） */
+    void fillScoresFromKernelLoadings();
 
     void createResultLayer(CreateResultLayerData data,QList<QString> winvar);
     void createPlotLayer(CreatePlotLayerData data, QList<QString> varpc);
@@ -153,7 +155,6 @@ private:
     mat mSDev;
     cube mLoadings;
     cube mScores;
-    cube mScoresFromKernel = cube();  // 从内核库获取的scores，用于对比
 
     bool mZscore;
     bool mScoresCal;
