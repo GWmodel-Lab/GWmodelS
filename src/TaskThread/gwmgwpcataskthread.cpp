@@ -177,12 +177,38 @@ void GwmGWPCATaskThread::run()
 
                 if (scoresCal())
                 {
-                    // 内核库的 GWPCA::solveSerial 已按照 std_gwmgwpcataskthread 的
-                    // pcaLoadingsSdevScoresSerial 实现，直接给出 (nDp, mK, nDp) 结构的 scores。
                     const cube& kernelScores = mAlgorithm->scores();
                     mScores = kernelScores;
                     qDebug() << "[GWPCA] Scores source: kernel library (GWPCA::scores()), "
                              << "size =" << mScores.n_rows << "x" << mScores.n_cols << "x" << mScores.n_slices;
+                    if (mScores.n_elem > 0)
+                    {
+                        uword sMax = std::min<uword>(mScores.n_slices, 3);
+                        uword rMax = std::min<uword>(mScores.n_rows, 10);
+                        uword cMax = std::min<uword>(mScores.n_cols, 5);
+                        for (uword s = 0; s < sMax; s++)
+                        {
+                            for (uword r = 0; r < rMax; r++)
+                            {
+                                QString row = "[";
+                                for (uword c = 0; c < cMax; c++)
+                                {
+                                    if (c > 0) row += ", ";
+                                    row += QString::number(mScores.slice(s)(r, c), 'f', 6);
+                                }
+                                row += (mScores.n_cols > cMax ? ", ...]" : "]");
+                                qDebug() << "[GWPCA] scores[ slice" << s << ", row" << r << "] =" << row;
+                            }
+                            if (mScores.n_rows > rMax)
+                            {
+                                qDebug() << "[GWPCA] ... (more rows in slice" << s << ")";
+                            }
+                        }
+                        if (mScores.n_slices > sMax)
+                        {
+                            qDebug() << "[GWPCA] ... (more slices)";
+                        }
+                    }
                 }
             }
 
