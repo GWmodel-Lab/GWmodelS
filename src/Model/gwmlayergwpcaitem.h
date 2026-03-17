@@ -24,7 +24,7 @@ public:
     virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;
 
 public:
-    GwmBandwidthWeight weight() const;
+    gwm::BandwidthWeight weight() const;
 
     // GwmLayerItem interface
 public:
@@ -35,7 +35,7 @@ public:
         return isBandwidthOptimized;
     }
 
-    BandwidthCriterionList bandwidthSelScores() const;
+    gwm::BandwidthCriterionList bandwidthSelScores() const;
 
 public:
     int mK = 0;
@@ -45,7 +45,7 @@ public:
     cube mLoadings;
     cube mScores;
     mat mVariance;
-    GwmBandwidthWeight mWeight;
+    gwm::BandwidthWeight mWeight;
     BandwidthCriterionList mBandwidthSelScores;
 
 };
