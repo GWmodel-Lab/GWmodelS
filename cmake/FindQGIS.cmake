@@ -144,18 +144,20 @@ ELSE(WIN32)
       FIND_PATH(QGIS_GUI_INCLUDE_DIR
         NAMES qgsguiutils.h
         PATHS
-          ${QGIS_BUILD_PATH}/output/lib
-          ${QGIS_MAC_PATH}/Frameworks
-          /Library/Frameworks
-          PATH_SUFFIXES qgis_gui.framework/Headers
+          ${QGIS_BUILD_PATH}/output/lib/qgis_gui.framework/Headers
+          ${QGIS_MAC_PATH}/Frameworks/qgis_gui.framework/Headers
+          ${QGIS_PREFIX_PATH}/include/qgis
+          /Library/Frameworks/qgis_gui.framework/Headers
+          "$ENV{LIB_DIR}/include/qgis" 
       )
       FIND_PATH(QGIS_ANALYSIS_INCLUDE_DIR
         NAMES qgsinterpolator.h
         PATHS
-          ${QGIS_BUILD_PATH}/output/lib
-          ${QGIS_MAC_PATH}/Frameworks
-          /Library/Frameworks
-          PATH_SUFFIXES qgis_analysis.framework/Headers
+          ${QGIS_BUILD_PATH}/output/lib/qgis_analysis.framework/Headers
+          ${QGIS_MAC_PATH}/Frameworks/qgis_analysis.framework/Headers
+          ${QGIS_PREFIX_PATH}/include/qgis
+          /Library/Frameworks/qgis_analysis.framework/Headers
+          "$ENV{LIB_DIR}/include/qgis"
       )
       SET(QGIS_INCLUDE_DIR
         ${QGIS_INCLUDE_DIR}
