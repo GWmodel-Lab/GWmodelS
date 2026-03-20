@@ -36,14 +36,6 @@ int main(int argc, char *argv[])
 #endif
     proj_context_set_search_paths(NULL, 1, proj_data_path);
 
-#if (QT_VERSION >= QT_VERSION_CHECK(5,6,0))
-    QgsApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
-#endif
-    QgsApplication a(argc, argv, true);
-    QgsApplication::initQgis();
-    QString pluginDir = "./plugins";
-    QgsProviderRegistry::instance(pluginDir);
-    // 确保内置的分隔文本 provider 已注册（无需插件）
     QgsProviderRegistry::instance()->registerProvider(new QgsDelimitedTextProviderMetadata());
     QgsProject::instance()->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(4326));
     qRegisterMetaType<PlotFunction>("PlotFunction");
