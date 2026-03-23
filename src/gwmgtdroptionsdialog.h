@@ -1,7 +1,8 @@
-#ifndef GWMGTDROPTIONSDIALOG_H
+﻿#ifndef GWMGTDROPTIONSDIALOG_H
 #define GWMGTDROPTIONSDIALOG_H
 
 #include <QDialog>
+#include <QItemSelectionModel>
 #include "Model/gwmlayergroupitem.h"
 #include "Model/gwmalgorithmmetagtdr.h"
 #include <qgsvectorlayer.h>
@@ -10,6 +11,7 @@
 #include "TaskThread/gwmgtdrtaskthread.h"
 #include "TaskThread/iparallelable.h"
 #include "SpatialWeight/gwmdistance.h"
+#include "Model/gwmgtdrparameterspecifiedoptionsmodel.h"
 
 namespace Ui {
 class GwmGTDROptionsDialog;
@@ -32,12 +34,15 @@ private:
     bool isNumeric(QVariant::Type type);
     GwmBandwidthWeight* mBandwidth;
     GwmAlgorithmMetaGTDR mAlgorithmMeta;
+    QString mPreviousTimeStampVarName;
 
 public slots:
     void layerChanged(const int index);
 
     void onFixedRadioToggled(bool checked);
     void onVariableRadioToggled(bool checked);
+    void onBwSizeAutomaticToggled(bool checked);
+    void onBwSizeCustomizeToggled(bool checked);
     void onNoneRadioToggled(bool checked);
     void onMultithreadingRadioToggled(bool checked);
     void onGPURadioToggled(bool checked);
@@ -65,9 +70,22 @@ public:
     void updateFieldsAndEnable();
     void updateFields();
     void enableAccept();
+    void syncParameterListWithTimeStamp();
 
     GwmLayerGroupItem *selectedLayer() const;
     void setSelectedLayer(GwmLayerGroupItem *selectedLayer);
+private:
+    GwmGTDRParameterSpecifiedOptionsModel* mParameterSpecifiedOptionsModel = nullptr;
+    QItemSelectionModel* mParameterSpecifiedOptionsSelectionModel = nullptr;
+
+public slots:
+    void onSelectedIndenpendentVariablesChanged();
+    void onSelectedWeightingVariablesChanged();
+    void onSpecifiedParameterCurrentChanged(const QModelIndex& current, const QModelIndex& previous);
+    void onBwSizeAdaptiveSizeChanged(int size);
+    void onBwSizeFixedSizeChanged(double size);
+    void onBwKernelFunctionChanged(int index);
+    void onTimeStampChanged(int index);
 };
 
 

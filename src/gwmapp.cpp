@@ -1,4 +1,4 @@
-﻿#include "gwmapp.h"
+#include "gwmapp.h"
 #include "ui_gwmapp.h"
 
 #include <QMenuBar>
@@ -34,6 +34,7 @@
 #include <qgslayoutmanager.h>
 
 #include "gwmopenxyeventlayerdialog.h"
+#include "gwmflowdatadialog.h"
 #include "gwmprogressdialog.h"
 #include "gwmcoordtranssettingdialog.h"
 #include "TaskThread/gwmcoordtransthread.h"
@@ -69,6 +70,10 @@
 
 #include "gwmgwpcaoptionsdialog.h"
 #include "Model/gwmlayergwpcaitem.h"
+
+#include "gwmswimoptionsdialog.h"
+#include "TaskThread/gwmswimtaskthread.h"
+#include "PropertyPanelTabs/gwmpropertyswimtab.h"
 
 #include "gwmcoordtranssettingdialog.h"
 #include "gwmgwroptionsdialog.h"
@@ -203,9 +208,9 @@ void GwmApp::setupMenus()
     connect(ui->actionGW_Correlations, &QAction::triggered, this, &GwmApp::gwmcorrelation);
 //    connect(ui->actionRobust_GWPCA, &QAction::triggered, this, &GwmApp::developingMessageBox);
 //    connect(ui->actionGlyph_Plot, &QAction::triggered, this, &GwmApp::developingMessageBox);
-//    connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionFlow_data, &QAction::triggered, this, &GwmApp::onFlowDataImport);
 //    connect(ui->actionFlow_distance, &QAction::triggered, this, &GwmApp::developingMessageBox);
-//    connect(ui->actionSWIM, &QAction::triggered, this, &GwmApp::developingMessageBox);
+    connect(ui->actionSWIM, &QAction::triggered, this, &GwmApp::onSWIMBtnClicked);
 //    connect(ui->actionFlow_Visualization, &QAction::triggered, this, &GwmApp::developingMessageBox);
     //about信号槽连接
 //    connect(ui->actionInformation, &QAction::triggered, this, [&]()
@@ -383,6 +388,25 @@ void GwmApp::onOpenFileImportCsv()
     dialog->show();
 }
 
+void GwmApp::onFlowDataImport()
+{
+    GwmFlowDataDialog dialog(this);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        QgsVectorLayer* layer = dialog.takeResultLayer();
+        if (layer && layer->isValid())
+        {
+            addLayerToModel(layer);
+            onMapModelChanged();
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Flow data"), tr("Failed to create a valid flow layer."));
+            delete layer;
+        }
+    }
+}
+
 void GwmApp::onCsvToDat()
 {
     GwmCsvToDatDialog* csvtodatDlg = new GwmCsvToDatDialog();
@@ -452,6 +476,7 @@ void GwmApp::setupToolbar()
 
     connect(ui->actionGWR, &QAction::triggered,this,&GwmApp::onGWRBtnClicked);
     connect(ui->actionGTDR, &QAction::triggered,this,&GwmApp::onGTDRBtnClicked);
+    connect(ui->actionGTDR_2, &QAction::triggered,this,&GwmApp::onGTDRBtnClicked);
     connect(ui->actionGWPCA, &QAction::triggered,this,&GwmApp::onGWPCABtnClicked);
 
     connect(ui->actionNew_Layout, &QAction::triggered, this, [&]()
@@ -478,7 +503,13 @@ void GwmApp::setupFeaturePanel()
     mFeaturePanel = ui->featurePanel;
     mFeaturePanel->setMapModel(mMapModel);
     // 连接信号槽
-    connect(mFeaturePanel, &GwmFeaturePanel::showAttributeTableSignal,this, &GwmApp::onShowAttributeTable);
+    qDebug() << "[GwmApp::setupFeaturePanel] connecting showAttributeTableSignal";
+    connect(mFeaturePanel, &GwmFeaturePanel::showAttributeTableSignal,
+            this, [this](const QModelIndex& idx)
+    {
+        qDebug() << "[GwmApp] received showAttributeTableSignal, forwarding to onShowAttributeTable";
+        this->onShowAttributeTable(idx);
+    });
     connect(mFeaturePanel, &GwmFeaturePanel::zoomToLayerSignal, this, &GwmApp::onZoomToLayer);
     connect(mFeaturePanel, &GwmFeaturePanel::showLayerPropertySignal, this, &GwmApp::onShowLayerProperty);
     connect(mFeaturePanel, &GwmFeaturePanel::rowOrderChangedSignal, this, &GwmApp::onFeaturePanelRowOrderChanged);
@@ -1059,7 +1090,6 @@ void GwmApp::onMapSelectionChanged(QgsMapLayer *mapLayer)
 
     QgsVectorLayer* layer = static_cast<QgsVectorLayer*>(mapLayer);
 
-    // 移除旧的橡皮条
     QList<QgsRubberBand*> rubbers0 = mMapLayerRubberDict[layer];
     if (rubbers0.size() > 0)
     {
@@ -1070,7 +1100,6 @@ void GwmApp::onMapSelectionChanged(QgsMapLayer *mapLayer)
     }
     rubbers0.clear();
 
-    //添加新的橡皮条
     QgsFeatureList selectedFeatures = layer->selectedFeatures();
     for (QgsFeature feature : selectedFeatures)
     {
@@ -1163,7 +1192,9 @@ void GwmApp::onMapModelChanged()
 
 void GwmApp::onShowLayerProperty(const QModelIndex &index)
 {
+    qDebug() << "[GwmApp::onShowLayerProperty] Called with index:" << index;
     mPropertyPanel->addPropertyTab(index);
+    qDebug() << "[GwmApp::onShowLayerProperty] addPropertyTab completed";
 }
 
 
@@ -1176,7 +1207,6 @@ void GwmApp::onFeaturePanelRowOrderChanged(int from, int dest)
     mMapCanvas->refresh();
 }
 
-// 属性表
 void GwmApp::onShowAttributeTable(const QModelIndex &index)
 {
     // qDebug() << 123;
@@ -1373,8 +1403,9 @@ void GwmApp::onGTDRBtnClicked()
     }
     if (gtdrOptionDialog->exec() == QDialog::Accepted)
     {
-        GwmGTDRTaskThread* gtdrTaskThread = new GwmGTDRTaskThread(gtdrOptionDialog->meta());
         gtdrOptionDialog->updateFields();
+        GwmGTDRTaskThread* gtdrTaskThread = new GwmGTDRTaskThread(gtdrOptionDialog->meta());
+        //gtdrOptionDialog->updateFields();
         GwmLayerGroupItem* selectedItem = gtdrOptionDialog->selectedLayer();
         const QModelIndex selectedIndex = mMapModel->indexFromItem(selectedItem);
         GwmProgressDialog* progressDlg = new GwmProgressDialog(gtdrTaskThread);
@@ -1711,11 +1742,18 @@ void GwmApp::onGWPCABtnClicked()
         if (progressDlg->exec() == QDialog::Accepted)
         {
             QgsVectorLayer* resultLayer = gwpcaTaskThread->resultLayer();
+            qDebug() << "[GwmApp::onGWPCABtnClicked] Result layer obtained";
             QgsVectorLayer* resultLayer0 = new QgsVectorLayer();
             resultLayer0 = resultLayer->clone();
+            qDebug() << "[GwmApp::onGWPCABtnClicked] Creating GwmLayerGWPCAItem...";
             GwmLayerGWPCAItem * gwrItem = new GwmLayerGWPCAItem(selectedItem, resultLayer0, gwpcaTaskThread);
+            qDebug() << "[GwmApp::onGWPCABtnClicked] GwmLayerGWPCAItem created";
             mMapModel->appentItem(gwrItem, selectedIndex);
-            onShowLayerProperty(mMapModel->indexFromItem(gwrItem));
+            qDebug() << "[GwmApp::onGWPCABtnClicked] Item appended to model";
+            QModelIndex itemIndex = mMapModel->indexFromItem(gwrItem);
+            qDebug() << "[GwmApp::onGWPCABtnClicked] Calling onShowLayerProperty...";
+            onShowLayerProperty(itemIndex);
+            qDebug() << "[GwmApp::onGWPCABtnClicked] onShowLayerProperty completed";
             if(gwpcaTaskThread->plotLayer()){
                 QgsVectorLayer* plotLayer = gwpcaTaskThread->plotLayer();
                 QgsVectorLayer* plotLayer0 = new QgsVectorLayer();
@@ -1846,4 +1884,38 @@ void GwmApp::closeEvent( QCloseEvent * event )
        if(result==QMessageBox::Cancel)
            event->ignore();
     }
+}
+
+void GwmApp::onSWIMBtnClicked()
+{
+    GwmSWIMTaskThread* swimTaskThread = new GwmSWIMTaskThread();
+    GwmSWIMOptionsDialog* swimOptionDialog = new GwmSWIMOptionsDialog(this);
+    
+    if (swimOptionDialog->exec() == QDialog::Accepted)
+    {
+        swimOptionDialog->setTaskThread(swimTaskThread);
+        
+        GwmProgressDialog* progressDlg = new GwmProgressDialog(swimTaskThread);
+        if (progressDlg->exec() == QDialog::Accepted)
+        {
+            GwmPropertySWIMTab* swimPropertyTab = new GwmPropertySWIMTab(mPropertyPanel, swimTaskThread);
+            if (swimPropertyTab)
+            {
+                swimPropertyTab->updateUI();
+                int tabIndex = mPropertyPanel->addTab(swimPropertyTab, tr("SWIM Result"));
+                mPropertyPanel->setCurrentIndex(tabIndex);
+                mPropertyPanel->show();
+            }
+        }
+        else
+        {
+            delete swimTaskThread;
+        }
+    }
+    else
+    {
+        delete swimTaskThread;
+    }
+    
+    delete swimOptionDialog;
 }

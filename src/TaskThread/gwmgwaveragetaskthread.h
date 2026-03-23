@@ -59,6 +59,7 @@ public:
     
 protected:  // QThread interface
     void run() override;
+
 protected:
     mat initPoints(QgsVectorLayer* layer);
     mat initXY(QgsVectorLayer* layer, const QList<GwmVariable>& indepVars);

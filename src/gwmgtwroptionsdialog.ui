@@ -27,8 +27,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>609</width>
-        <height>802</height>
+        <width>682</width>
+        <height>882</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -587,7 +587,7 @@
            <widget class="QComboBox" name="mTimeVarCombo"/>
           </item>
           <item row="1" column="0">
-           <widget class="QLabel" name="label_15">
+           <widget class="QLabel" name="lblLambda">
             <property name="text">
              <string>Lambda</string>
             </property>

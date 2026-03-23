@@ -1,4 +1,4 @@
-﻿#include "gwmbandwidthsizeselector.h"
+#include "gwmbandwidthsizeselector.h"
 
 #include <qwt_plot_curve.h>
 #include <qwt_plot_layout.h>
@@ -16,19 +16,43 @@
 
 void GwmBandwidthSizeSelector::PlotBandwidthResult(QVariant data, QwtPlot *plot)
 {
-    if (!data.canConvert<QVector<QPair<double,double>>>()) {
-        qDebug() << "Data cannot convert to QVector<QPair<double,double>>!";
+    // Differrent BandWdithSizeSelector Data
+    // 1) QVariant::fromValue(BandwidthCriterionList)  (std::vector<std::pair<double,double>>)
+    // 2) QVariant::fromValue(QVector<QPair<double,double>>)
+    BandwidthCriterionList result;
+    if (data.canConvert<BandwidthCriterionList>())
+    {
+        result = data.value<BandwidthCriterionList>();
+    }
+    else if (data.canConvert<QVector<QPair<double, double>>>())
+    {
+        const auto qlist = data.value<QVector<QPair<double, double>>>();
+        result.reserve(static_cast<std::size_t>(qlist.size()));
+        for (const auto& item : qlist)
+            result.push_back(std::make_pair(item.first, item.second));
+    }
+    else
+    {
+        qDebug() << "Data cannot convert to BandwidthCriterionList or QVector<QPair<double,double>>!";
         return;
     }
 
-    QVector<QPair<double,double>> result = data.value<QVector<QPair<double,double>>>();
-    qDebug() << "PlotBandwidthResult received size:" << result.size();
+    qDebug() << "PlotBandwidthResult received size:" << static_cast<int>(result.size());
+
+    std::sort(result.begin(), result.end(),
+              [](const std::pair<double, double>& a, const std::pair<double, double>& b){
+                  if (a.first == b.first)
+                      return a.second < b.second;
+                  return a.first < b.first;
+              });
 
     QVector<double> xData, yData;
-    for (int i = 0; i < result.size(); ++i) {
-        qDebug() << "Bandwidth:" << result[i].first << ", Criterion:" << result[i].second;
-        xData.push_back(result[i].first);
-        yData.push_back(result[i].second);
+    xData.reserve(static_cast<int>(result.size()));
+    yData.reserve(static_cast<int>(result.size()));
+    for (const auto& item : result) {
+        qDebug() << "Bandwidth:" << item.first << ", Criterion:" << item.second;
+        xData.push_back(item.first);
+        yData.push_back(item.second);
     }
 
     if (xData.isEmpty() || yData.isEmpty()) {
@@ -39,11 +63,15 @@ void GwmBandwidthSizeSelector::PlotBandwidthResult(QVariant data, QwtPlot *plot)
     plot->plotLayout()->setAlignCanvasToScales(true);
 
     QwtPlotCurve *curve = new QwtPlotCurve("curve");
-    curve->setPen(Qt::blue, 1.0, Qt::DashLine);
-    curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-    QwtSymbol *symbol = new QwtSymbol(QwtSymbol::Ellipse, QBrush(Qt::yellow), QPen(Qt::red, 0.5), QSize(5, 5));
-    curve->setSymbol(symbol);
-
+    //设置曲线颜色 粗细
+    curve->setPen(Qt::blue,1.0,Qt::DashLine);
+    //线条光滑化
+    curve->setRenderHint(QwtPlotItem::RenderAntialiased,true);
+    //设置样本点的颜色、大小
+    QwtSymbol *symbol = new QwtSymbol( QwtSymbol::Ellipse, QBrush( Qt::yellow ), QPen( Qt::red, 0.5 ), QSize( 5, 5) );
+    //添加样本点形状
+    curve->setSymbol( symbol );
+    //输入数据（已按 x 排序）
     curve->setSamples(xData, yData);
     curve->attach(plot);
 
@@ -59,7 +87,6 @@ void GwmBandwidthSizeSelector::PlotBandwidthResult(QVariant data, QwtPlot *plot)
     curve->setLegendAttribute(QwtPlotCurve::LegendShowLine);
     plot->replot();
     qDebug() << "Plot replot done";
-
 }
 
 

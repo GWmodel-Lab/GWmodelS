@@ -1,4 +1,4 @@
-#include "gwmpropertygwrtab.h"
+﻿#include "gwmpropertygwrtab.h"
 #include "ui_gwmpropertygwrtab.h"
 
 #include <armadillo>

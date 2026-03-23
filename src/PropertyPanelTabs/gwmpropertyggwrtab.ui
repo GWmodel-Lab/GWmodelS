@@ -47,9 +47,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-300</y>
+        <y>-291</y>
         <width>403</width>
-        <height>913</height>
+        <height>904</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -342,7 +342,7 @@
        <item>
         <widget class="QGroupBox" name="grpFTest">
          <property name="title">
-          <string>F-test Results of GWR Calibration</string>
+          <string>F-test Results of GGWR Calibration</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>

@@ -1,0 +1,243 @@
+#ifndef GWMSWIMTASKTHREAD_H
+#define GWMSWIMTASKTHREAD_H
+
+#include "TaskThread/gwmtaskthread.h"
+#include "TaskThread/iparallelable.h"
+#include "SpatialWeight/gwmspatialweight.h"
+#include "TaskThread/gwmbandwidthsizeselector.h"
+#include <armadillo>
+#include <QString>
+#include <QList>
+#include <QVector>
+#include <QMap>
+#include <QStringList>
+#include <QPair>
+#include <limits>
+
+using namespace arma;
+
+struct GwmFlowData
+{
+    int flow_id;
+    int origin_id;
+    int dest_id;
+    double flow_volume;
+    double origin_value;
+    double dest_value;
+    double origin_x;
+    double origin_y;
+    double dest_x;
+    double dest_y;
+    QVector<double> independent_values;
+};
+
+enum class SWIMMode
+{
+    OriginFocused,
+    DestinationFocused,
+    FlowFocusedEuclidean,
+    FlowFocusedSOP
+};
+
+struct GwmSWIMFieldMapping
+{
+    int flowVolume = -1;
+    int originValue = -1;
+    int destValue = -1;
+    int originX = -1;
+    int originY = -1;
+    int destX = -1;
+    int destY = -1;
+    QList<int> independentVars;
+    QStringList independentVarNames;
+    bool requireOriginCoords = true;
+    bool requireDestCoords = true;
+
+    bool isComplete() const;
+    bool isValid(int columnCount) const;
+};
+
+struct GwmSWIMDiagnostics
+{
+    int dataPoints = 0;
+    double effectiveParameters = std::numeric_limits<double>::quiet_NaN();
+    double effectiveDof = std::numeric_limits<double>::quiet_NaN();
+    double aic = std::numeric_limits<double>::quiet_NaN();
+    double aicc = std::numeric_limits<double>::quiet_NaN();
+    double rss = std::numeric_limits<double>::quiet_NaN();
+    double rSquared = std::numeric_limits<double>::quiet_NaN();
+    double adjRSquared = std::numeric_limits<double>::quiet_NaN();
+};
+
+class GwmSWIMTaskThread : public GwmTaskThread, public IOpenmpParallelable
+{
+    Q_OBJECT
+
+public:
+    typedef QList<QPair<QString, mat> > CreateResultLayerData;
+    using DistanceFunction = double (GwmSWIMTaskThread::*)(int, int) const;
+
+    enum class BandwidthSelectionCriterionType
+    {
+        AICc,
+        CV
+    };
+
+public:
+    explicit GwmSWIMTaskThread(QObject *parent = nullptr);
+    ~GwmSWIMTaskThread();
+
+    // Data configuration
+    void setCsvFilePath(const QString& filePath);
+    QString csvFilePath() const { return mCsvFilePath; }
+
+    // Mode configuration
+    void setSWIMMode(SWIMMode mode);
+    SWIMMode swimMode() const { return mSWIMMode; }
+
+    // Spatial weight configuration
+    void setSpatialWeight(const GwmSpatialWeight& spatialWeight);
+    GwmSpatialWeight spatialWeight() const { return mSpatialWeight; }
+
+    void setUseBandwidthAuto(bool enabled);
+    void setBandwidthSelectionCriterion(BandwidthSelectionCriterionType type);
+
+    // Parallel configuration
+    int parallelAbility() const override;
+    ParallelType parallelType() const override;
+    void setParallelType(const ParallelType& type) override;
+    void setOmpThreadNum(const int threadNum) override;
+
+    void setFieldMapping(const GwmSWIMFieldMapping& mapping);
+    GwmSWIMFieldMapping fieldMapping() const { return mFieldMapping; }
+    void setFieldDelimiter(QChar delimiter);
+    QChar fieldDelimiter() const { return mFieldDelimiter; }
+
+    // Result accessors
+    mat weightMatrix() const { return mWeightMatrix; }
+    mat flowMatrix() const { return mFlowMatrix; }
+    QList<GwmFlowData> flowData() const { return mFlowDataList; }
+    CreateResultLayerData resultList() const { return mResultList; }
+    QStringList csvHeaders() const { return mCsvHeaders; }
+    int ompThreadNum() const { return mOmpThreadNum; }
+    GwmSWIMDiagnostics diagnostics() const { return mDiagnostics; }
+    BandwidthCriterionList bandwidthTrace() const { return mBandwidthTrace; }
+
+    QString name() const override { return tr("SWIM"); }
+
+    bool isValid();
+
+protected:
+    void run() override;
+
+private:
+    // CSV helpers
+    bool loadCsvData();
+    bool parseCsvLine(const QString& line, GwmFlowData& flowData, int flowIndex);
+
+    // Distance helpers
+    double calculateOriginDistance(int i, int j) const;
+    double calculateDestDistance(int i, int j) const;
+    double calculateFlowEuclideanDistance(int i, int j) const;
+    double calculateFlowSOPDistance(int i, int j) const;
+
+    // Weight helpers
+    void calculateWeightMatrix();
+
+    // Kernel helper
+    double kernelFunction(double distance, double bandwidth);
+    double applyKernel(double distance, double bandwidth) const;
+    double resolveAdaptiveBandwidth(const QVector<double>& distances) const;
+    DistanceFunction distanceFunctionForMode() const;
+    QVector<double> collectDistances(int focusIndex, DistanceFunction func) const;
+    void fillWeightMatrix(DistanceFunction func);
+
+    // Regression helpers
+    bool prepareRegressionMatrices();
+    void performLocalRegression();
+
+    // Result helper
+    void createResultLayer(CreateResultLayerData data);
+
+    bool selectBandwidthAutomatically();
+    void applyBandwidthFromWeight(const GwmBandwidthWeight* weight);
+    QVector<double> buildAdaptiveBandwidthCandidates(int flowCount) const;
+    QVector<double> buildFixedBandwidthCandidates(const QVector<double>& distances) const;
+    double evaluateBandwidthForValue(double candidate);
+    double evaluateBandwidthCriterion() const;
+    double currentRSS() const;
+    void updateDiagnostics();
+
+private:
+    QString mCsvFilePath;
+    SWIMMode mSWIMMode = SWIMMode::OriginFocused;
+    GwmSpatialWeight mSpatialWeight;
+    QStringList mCsvHeaders;
+
+    QList<GwmFlowData> mFlowDataList;
+    mat mWeightMatrix;
+    mat mFlowMatrix;
+    CreateResultLayerData mResultList;
+    mat mDesignMatrix;
+    vec mResponseVector;
+    mat mLocalBetas;
+    vec mFittedValues;
+    vec mResiduals;
+
+    // Parallel parameters
+    IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
+    int mOmpThreadNum = 8;
+
+    // Bandwidth parameters
+    double mBandwidth = 0.0;
+    bool mBandwidthAdaptive = false;
+    GwmBandwidthWeight::KernelFunctionType mKernelType = GwmBandwidthWeight::KernelFunctionType::Gaussian;
+    GwmBandwidthWeight::KernelFunction mKernelFunction = &GwmBandwidthWeight::GaussianKernelFunction;
+
+    GwmSWIMFieldMapping mFieldMapping;
+    QChar mFieldDelimiter = '\t';
+    QStringList mIndependentVarNames;
+
+    bool mUseBandwidthAuto = false;
+    BandwidthSelectionCriterionType mBandwidthCriterionType = BandwidthSelectionCriterionType::AICc;
+    GwmSWIMDiagnostics mDiagnostics;
+    BandwidthCriterionList mBandwidthTrace;
+    vec mShat;  // Hat matrix trace statistics: [tr(S), tr(S^T * S)]
+};
+
+inline bool GwmSWIMFieldMapping::isComplete() const
+{
+    if (flowVolume < 0) return false;
+    if (requireOriginCoords && (originX < 0 || originY < 0)) return false;
+    if (requireDestCoords && (destX < 0 || destY < 0)) return false;
+    if (independentVars.isEmpty()) return false;
+    return true;
+}
+
+inline bool GwmSWIMFieldMapping::isValid(int columnCount) const
+{
+    if (!isComplete()) return false;
+    if (columnCount < 0) return true;
+    auto checkIndex = [&](int idx) -> bool {
+        return idx >= 0 && idx < columnCount;
+    };
+    if (!checkIndex(flowVolume)) return false;
+    if (requireOriginCoords)
+    {
+        if (!checkIndex(originX) || !checkIndex(originY)) return false;
+    }
+    if (requireDestCoords)
+    {
+        if (!checkIndex(destX) || !checkIndex(destY)) return false;
+    }
+    if (originValue >= 0 && !checkIndex(originValue)) return false;
+    if (destValue >= 0 && !checkIndex(destValue)) return false;
+    for (int idx : independentVars)
+    {
+        if (!checkIndex(idx)) return false;
+    }
+    return true;
+}
+
+#endif // GWMSWIMTASKTHREAD_H
+

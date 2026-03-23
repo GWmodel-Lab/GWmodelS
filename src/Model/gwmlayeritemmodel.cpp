@@ -143,6 +143,7 @@ bool GwmLayerItemModel::insertItem(int row, GwmLayerItem *item, const QModelInde
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
+        case GwmLayerItem::GTDR:
         {
             auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
             QgsProject::instance()->addMapLayer(vectorItem->layer());
@@ -218,6 +219,7 @@ bool GwmLayerItemModel::removeRows(int row, int count, const QModelIndex &parent
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
+        case GwmLayerItem::GTDR:
         {
             auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
             layers.append(vectorItem->layer());
@@ -276,6 +278,7 @@ GwmLayerItem *GwmLayerItemModel::takeItem(int row, const QModelIndex &parent)
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
+        case GwmLayerItem::GTDR:
         {
             auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
             QgsProject::instance()->addMapLayer(vectorItem->layer());
@@ -334,6 +337,7 @@ bool GwmLayerItemModel::appentItem(GwmLayerItem *item, const QModelIndex &parent
         case GwmLayerItem::CollinearityGWR:
         case GwmLayerItem::GTWR:
         case GwmLayerItem::GWPCA:
+        case GwmLayerItem::GTDR:
         {
             auto vectorItem = static_cast<GwmLayerVectorItem*>(item);
             QgsProject::instance()->addMapLayer(vectorItem->layer());
@@ -388,6 +392,7 @@ QList<GwmLayerItem *> GwmLayerItemModel::takeRows(int row, int count, const QMod
             case GwmLayerItem::CollinearityGWR:
             case GwmLayerItem::GTWR:
             case GwmLayerItem::GWPCA:
+            case GwmLayerItem::GTDR:
                 QgsProject::instance()->removeMapLayer(static_cast<GwmLayerVectorItem*>(item)->layer());
             default:
                 break;
@@ -486,6 +491,7 @@ QgsVectorLayer *GwmLayerItemModel::layerFromItem(GwmLayerItem* item) const
     case GwmLayerItem::GwmLayerItemType::CollinearityGWR:
     case GwmLayerItem::GwmLayerItemType::GTWR:
     case GwmLayerItem::GwmLayerItemType::GWPCA:
+    case GwmLayerItem::GwmLayerItemType::GTDR:
         return ((GwmLayerOriginItem*)item)->layer();
     default:
         return nullptr;
@@ -537,6 +543,7 @@ bool GwmLayerItemModel::canMoveUp(const QModelIndex &index)
     case GwmLayerItem::GWCorrelation:
     case GwmLayerItem::GWAverage:
     case GwmLayerItem::GWPCA:
+    case GwmLayerItem::GTDR:
         return row > 1 && row < (item->parentItem()->childCount() - 1);
     default:
         return false;
@@ -560,6 +567,7 @@ bool GwmLayerItemModel::canMoveDown(const QModelIndex &index)
     case GwmLayerItem::CollinearityGWR:
     case GwmLayerItem::GTWR:
     case GwmLayerItem::GWPCA:
+    case GwmLayerItem::GTDR:
         return row >= 1 && row < (item->parentItem()->childCount() - 2);
     default:
         return false;
@@ -581,6 +589,7 @@ bool GwmLayerItemModel::canRemove(const QModelIndex &index)
     case GwmLayerItem::CollinearityGWR:
     case GwmLayerItem::GTWR:
     case GwmLayerItem::GWPCA:
+    case GwmLayerItem::GTDR:
         return true;
     default:
         return false;
@@ -603,6 +612,7 @@ bool GwmLayerItemModel::canSetSymbol(const QModelIndex &index)
     case GwmLayerItem::CollinearityGWR:
     case GwmLayerItem::GTWR:
     case GwmLayerItem::GWPCA:
+    case GwmLayerItem::GTDR:
         return true;
     default:
         return false;

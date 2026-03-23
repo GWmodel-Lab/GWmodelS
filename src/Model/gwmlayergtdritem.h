@@ -1,4 +1,4 @@
-#ifndef GWMLAYERGTDRITEM_H
+﻿#ifndef GWMLAYERGTDRITEM_H
 #define GWMLAYERGTDRITEM_H
 
 #include "gwmlayervectoritem.h"
@@ -24,11 +24,13 @@ public:
 
     GwmDiagnostic diagnostic() const {return mDiagnostic;};
 
-    arma::mat betas() const;
+    arma::mat betas() const {return mBetas;};
 
     bool modelOptimized() const {return isModelOptimized;};
 
     bool bandwidthOptimized() const {return isBandwidthOptimized;};
+
+    bool isBandwidthOptimizationSuccessful() const {return mIsBandwidthOptimizationSuccessful;};
 
     bool hatmatrix() const {return hasHatmatrix;};
 
@@ -64,9 +66,24 @@ public:
         return mIndepVars;
     }
 
+    QList<GwmVariable> weightingVar() const
+    {
+        return mWeightingVars;
+    }
+
+    GwmVariable timeStampVar() const
+    {
+        return mTimeStampVar;
+    }
+
     GwmBandwidthWeight* bandwidth() const
     {
         return mBandwidth;
+    }
+
+    QList<GwmBandwidthWeight*> bandwidths() const
+    {
+        return mBandwidths;
     }
 
 protected:
@@ -74,11 +91,14 @@ protected:
     int mDataPointsSize;
     GwmVariable mDepVar;
     QList<GwmVariable> mIndepVars;
+    QList<GwmVariable> mWeightingVars;
+    GwmVariable mTimeStampVar; 
     GwmBandwidthWeight mWeight;
     GwmDiagnostic mDiagnostic;
     arma::mat mBetas;
 
     GwmBandwidthWeight* mBandwidth;
+    QList<GwmBandwidthWeight*> mBandwidths;//因为gtdr带宽是多维的，理论上只用它而不用mBandwidth
 
     QList<QPair<QList<GwmVariable>, double> > mModelSelModels;
     QList<QPair<double, double> > mBandwidthSelScores;
@@ -88,6 +108,7 @@ protected:
     bool isModelOptimized;
     bool isBandwidthOptimized;
     bool hasHatmatrix;
+    bool mIsBandwidthOptimizationSuccessful;
     // bool hasFTest;
     // bool hasols;
 

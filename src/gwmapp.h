@@ -29,7 +29,7 @@ class GwmApp : public QMainWindow
 {
     Q_OBJECT
 
-public:		// 静态
+public:
 	static GwmApp* Instance();
 
 private:
@@ -117,6 +117,7 @@ public slots:
     void onOpenFileImportJson();
     void onOpenFileImportGPKG();
     void onOpenFileImportCsv();
+    void onFlowDataImport();
     void onShowSymbolSetting(const QModelIndex &index);
     void onCsvToDat();
     void onRobustGWR();
@@ -155,6 +156,7 @@ public slots:
     void onLcrGWRBtnClicked();
     void onGTWRBtnClicked();
     void onGWPCABtnClicked();
+    void onSWIMBtnClicked();
     void populateLayoutsMenu(QMenu *menu);
     void setProjCrsFromLayer(const QModelIndex &index);
     void onRobustGWPCABtnClicked();

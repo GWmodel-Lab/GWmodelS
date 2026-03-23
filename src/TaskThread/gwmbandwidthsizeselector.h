@@ -1,12 +1,16 @@
-﻿#ifndef GWMBANDWIDTHSIZESELECTOR_H
+#ifndef GWMBANDWIDTHSIZESELECTOR_H
 #define GWMBANDWIDTHSIZESELECTOR_H
 
 #include <QMetaType>
 #include <qwt_plot.h>
 #include "SpatialWeight/gwmspatialweight.h"
 #include "SpatialWeight/gwmbandwidthweight.h"
+#include <vector>
+#include <utility>
 
-typedef std::vector<std::pair<double, double> >  BandwidthCriterionList;
+// 注意：工程中很多算法/图层使用的是 gwm::BandwidthCriterionList（std::vector<std::pair<double,double>>）。
+// 这里保持同型，避免破坏既有模块（GWR/GTWR/GWPCA 等）。
+typedef std::vector<std::pair<double, double>> BandwidthCriterionList;
 Q_DECLARE_METATYPE(BandwidthCriterionList)
 
 struct IBandwidthSizeSelectable
