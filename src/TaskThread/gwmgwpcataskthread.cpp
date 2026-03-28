@@ -129,6 +129,14 @@ void GwmGWPCATaskThread::run()
             if(Robust())
             {
                 emit message(QString(tr("Running Robust GWPCA ...")));
+
+                // Robust scores 需要与 loadings 使用同一份 rwpca(V) 结果，
+                // 否则可能因为特征向量符号不确定性导致 scores 与旧版不一致。
+                if (scoresCal())
+                {
+                    mScores = cube(mDataPoints.n_rows, mK, mDataPoints.n_rows, fill::zeros);
+                }
+
                 mLocalPV = robustSolveSerial(mX, mLoadings, mSDev);
                 
                 if(checkCanceled())
@@ -137,6 +145,8 @@ void GwmGWPCATaskThread::run()
                 }
                 
                 mVariance = mSDev % mSDev;
+
+                // Robust 分支在 robustSolveSerial() 内已按需要同步填充 mScores。
             }
             else
             {
@@ -318,6 +328,7 @@ void GwmGWPCATaskThread::initPoints()
         mDataPoints(i, 0) = centroPoint.x();
         mDataPoints(i, 1) = centroPoint.y();
     }
+
 }
 
 void GwmGWPCATaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
@@ -452,6 +463,12 @@ mat GwmGWPCATaskThread::robustSolveSerial(const mat& x, cube& loadings, mat& sde
     mat d_all(nVar, nDp, fill::zeros);
 
     loadings = cube(nDp, nVar, mK, fill::zeros);
+    // 若外层希望输出 scores，则同时计算，确保与 loadings 使用同一份 V。
+    const bool needScores = scoresCal();
+    if (needScores && mScores.n_elem == 0)
+    {
+        mScores = cube(nDp, mK, nDp, fill::zeros);
+    }
     
     for(int i=0;i<nDp && !checkCanceled();i++)
     {
@@ -463,6 +480,8 @@ mat GwmGWPCATaskThread::robustSolveSerial(const mat& x, cube& loadings, mat& sde
         mat newX = x.rows(positive);
         if(newWt.n_rows<=5)
         {
+            // Keep behavior aligned with old std_gwmgwpcataskthread.cpp:
+            // in pcaLoadingsSdevScoresSerial(), insufficient neighbors stops the loop.
             break;
         }
 
@@ -472,6 +491,18 @@ mat GwmGWPCATaskThread::robustSolveSerial(const mat& x, cube& loadings, mat& sde
 
         mLatestWt = newWt;
         d_all.col(i) = d;
+
+        if (needScores)
+        {
+            mat scorei(nDp, mK, fill::zeros);
+            for(int j = 0; j < mK && !checkCanceled(); j++)
+            {
+                // scorei 的计算方式与旧版 pcaLoadingsSdevScoresSerial 一致：newX % V 再行求和。
+                mat score = newX.each_row() % trans(V.col(j));
+                scorei.col(j) = sum(score, 1);
+            }
+            mScores.slice(i) = scorei;
+        }
 
         for(int j = 0; j < mK && !checkCanceled(); j++)
         {
