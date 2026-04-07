@@ -314,98 +314,74 @@ void GwmGeneralizedGWRAlgorithm::run()
         mGLMDiagnostic = convertGLMDiagnostic(kernelGLMDiag);
 
         // 获取Hat矩阵相关数据
-        // mShat = mGGWRCore->sHat();
-        // mBetasSE = mGGWRCore->betasSE();
-        // mQDiag = mGGWRCore->qDiag();
+        mShat = mGGWRCore->sHat();
+        mBetas = mGGWRCore->betas();
+        mBetasSE = mGGWRCore->betasSE();
+        mS = mGGWRCore->s();
 
-        // ========== 计算 mBetasSE ==========
-        // 从 mBetas 反推 mWt2 和 myAdj，然后计算 mBetasSE
+        // ========== 仅保留 QDiag 计算，mBetasSE/mShat/mS 直接使用内核结果 ==========
         uword nDp = mDataPoints.n_rows;
-        uword nVar = mX.n_cols;
-        uword nRp = mGGWRCore->hasRegressionData() ? mRegressionPoints.n_rows : nDp;
-
-        // 初始化 mBetasSE等
-        mBetasSE = mat(nVar, nDp, fill::zeros);
-        mShat = vec(2, fill::zeros);
         mQDiag = vec(nDp, fill::zeros);
-        bool isStoreS = (nDp <= 8192);
-        mS = mat(isStoreS ? nDp : 1, nDp, fill::zeros);  // 添加：初始化 mS
 
-        // 从 mBetas 计算 mu（拟合值）
-        vec nu = sum(mBetas % mX, 1);  // mBetas 格式是 (nDp, nVar)，需要转置
-        vec mu;
-        if (mFamily == Family::Poisson)
+        // 优先使用完整 S 直接重建 QDiag
+        const bool hasFullS = (mS.n_rows == nDp && mS.n_cols == nDp);
+        if (hasFullS)
         {
-            mu = exp(nu);
-            mWt2 = mu;  // Poisson: mWt2 = mu
-            myAdj = nu + (mY - mu) / mu;
+            mQDiag = rebuildQDiagFromS(mS);
         }
-        else // Binomial
+        else
         {
-            mu = exp(nu) / (1 + exp(nu));
-            vec n = vec(mY.n_rows, fill::ones);
-            mWt2 = n % mu % (1 - mu);  // Binomial: mWt2 = n * mu * (1 - mu)
-            myAdj = nu + (mY - mu) / (mu % (1 - mu));
-        }
-
-        // 计算 mBetasSE
-        // 注意：mBetas 格式是 (nDp, nVar)，需要转置为 (nVar, nRp) 用于计算
-        mat betasForCalc = trans(mBetas);  // 转置为 (nVar, nRp)
-
-        // 获取权重矩阵
-        mWtMat1 = mGGWRCore->getWtMat1();
-        mWtMat2 = mGGWRCore->getWtMat2();
-
-        for (uword i = 0; i < nDp && !checkCanceled(); i++)
-        {
-            try
+            // 无完整 S 时，仅为 QDiag 重建所需，回推 IRLS 权重并逐点计算
+            vec eta = sum(mBetas % mX, 1);
+            vec mu;
+            if (mFamily == Family::Poisson)
             {
-                vec wi = mWtMat2.col(i);
-                mat ci, s_ri;
-                vec gwsi = gwRegHatmatrix(mX, myAdj, wi % mWt2, i, ci, s_ri);
+                mu = exp(eta);
+                mWt2 = mu;
+                myAdj = eta + (mY - mu) / mu;
+            }
+            else // Binomial
+            {
+                mu = exp(eta) / (1.0 + exp(eta));
+                mWt2 = mu % (1.0 - mu);
+                myAdj = eta + (mY - mu) / (mu % (1.0 - mu));
+            }
 
-                mat invwt2 = 1.0 / mWt2;
-                mat temp = mat(ci.n_rows, ci.n_cols);
-                for (uword j = 0; j < ci.n_rows; j++)
+            mWtMat2 = mGGWRCore->getWtMat2();
+
+            for (uword i = 0; i < nDp && !checkCanceled(); i++)
+            {
+                try
                 {
-                    temp.row(j) = ci.row(j) % trans(invwt2);
+                    vec wi = mWtMat2.col(i);
+                    mat ci, s_ri;
+                    gwRegHatmatrix(mX, myAdj, wi % mWt2, i, ci, s_ri);
+
+                    vec p = -trans(s_ri);
+                    p(i) += 1.0;
+                    mQDiag += p % p;
                 }
-                mBetasSE.col(i) = diag(temp * trans(ci));
-
-                mShat(0) += s_ri(0, i);
-                mShat(1) += det(s_ri * trans(s_ri));
-
-                // 添加：计算 mQDiag 和存储 mS
-                vec p = -trans(s_ri);
-                p(i) += 1.0;
-                mQDiag += p % p;
-                mS.row(isStoreS ? i : 0) = s_ri;
-
-                mBetasSE.col(i) = sqrt(mBetasSE.col(i));
-            }
-            catch (const std::exception& e)
-            {
-                emit error(e.what());
+                catch (const std::exception& e)
+                {
+                    emit error(e.what());
+                }
             }
         }
-
-        // 转置 mBetasSE 以匹配 mBetas 的格式
-        mBetasSE = trans(mBetasSE);  // 从 (nVar, nDp) 转为 (nDp, nVar)
 
         // 计算拟合值和残差
         vec yhat;
         vec res;
         mat betasTV;
+        vec eta = sum(mBetas % mX, 1);
 
         if (mFamily == Family::Poisson)
         {
-            yhat = exp(sum(mBetas % mX, 1));
+            yhat = exp(eta);
             res = mY - yhat;
         }
         else // Binomial
         {
-            vec nu = sum(mBetas % mX, 1);
-            yhat = exp(nu) / (1 + exp(nu));
+            yhat = exp(eta) / (1.0 + exp(eta));
             res = mY - yhat;
         }
 
@@ -1592,4 +1568,14 @@ vec GwmGeneralizedGWRAlgorithm::calcDiagBSerial(int i)
     
     diagB = 1.0 / nDp * diagB;
     return { sum(diagB), sum(diagB % diagB) };
+}
+
+
+vec GwmGeneralizedGWRAlgorithm::rebuildQDiagFromS(const arma::mat& S)
+{
+    // Q = (I - S)^T (I - S)
+    // qdiag = diag(Q) = colSums( (I - S) % (I - S) )
+    arma::uword n = S.n_rows;
+    arma::mat EmS = arma::eye(n, n) - S;
+    return arma::trans(arma::sum(EmS % EmS, 0));   // n x 1
 }

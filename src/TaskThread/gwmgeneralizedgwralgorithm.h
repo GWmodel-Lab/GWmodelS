@@ -228,6 +228,8 @@ public:
     //子节点命名记录标
     static int treeChildCount;
 
+    vec rebuildQDiagFromS(const arma::mat& S);
+
 
 protected:
     Family mFamily;
