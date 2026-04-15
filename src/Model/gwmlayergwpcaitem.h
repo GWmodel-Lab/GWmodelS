@@ -1,4 +1,4 @@
-#ifndef GWMLAYERGWPCAITEM_H
+﻿#ifndef GWMLAYERGWPCAITEM_H
 #define GWMLAYERGWPCAITEM_H
 
 #include "prefix.h"
@@ -24,7 +24,7 @@ public:
     virtual bool writeXml(QDomNode &node, QDomDocument &doc) override;
 
 public:
-    GwmBandwidthWeight weight() const;
+    gwm::BandwidthWeight weight() const;
 
     // GwmLayerItem interface
 public:
@@ -35,7 +35,7 @@ public:
         return isBandwidthOptimized;
     }
 
-    QList<QPair<double, double> > bandwidthSelScores() const;
+    gwm::BandwidthCriterionList bandwidthSelScores() const;
 
 public:
     int mK = 0;
@@ -45,8 +45,8 @@ public:
     cube mLoadings;
     cube mScores;
     mat mVariance;
-    GwmBandwidthWeight mWeight;
-    QList<QPair<double, double> > mBandwidthSelScores;
+    gwm::BandwidthWeight mWeight;
+    BandwidthCriterionList mBandwidthSelScores;
 
 };
 

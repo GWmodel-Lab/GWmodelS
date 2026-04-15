@@ -1,4 +1,4 @@
-#include "gwmgtwroptionsdialog.h"
+﻿#include "gwmgtwroptionsdialog.h"
 #include "ui_gwmgtwroptionsdialog.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
@@ -61,6 +61,9 @@ GwmGTWROptionsDialog::GwmGTWROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     QButtonGroup* calcParallelTypeBtnGroup = new QButtonGroup(this);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
+
+    double initialLambda = (1.0 * ui->sldTimeLambda->value()) / 100.0;
+    ui->lblLambda->setText(QString("Lambda: %1").arg(initialLambda, 0, 'f', 2));
 #ifdef ENABLE_OpenMP
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
@@ -105,6 +108,7 @@ GwmGTWROptionsDialog::GwmGTWROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     connect(ui->mThreadNum, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTWROptionsDialog::updateFieldsAndEnable);
     connect(ui->mSampleGroupSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGTWROptionsDialog::updateFieldsAndEnable);
     connect(ui->cbxHatmatrix, &QAbstractButton::toggle, this, &GwmGTWROptionsDialog::updateFieldsAndEnable);
+    connect(ui->sldTimeLambda, &QSlider::valueChanged, this, &GwmGTWROptionsDialog::onLambdaChanged);
 
     updateFieldsAndEnable();
 }
@@ -559,4 +563,10 @@ void GwmGTWROptionsDialog::on_cbkRegressionPoints_toggled(bool checked)
     }
     ui->cbxHatmatrix->setEnabled(!checked);
     ui->cbxHatmatrix->setChecked(!checked);
+}
+
+void GwmGTWROptionsDialog::onLambdaChanged(double value)
+{
+    double lambda = (1.0 * value)/100;
+    ui->lblLambda->setText(QString("Lambda: %1").arg(lambda, 0, 'f', 2));
 }

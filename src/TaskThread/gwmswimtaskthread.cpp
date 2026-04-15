@@ -610,7 +610,7 @@ bool GwmSWIMTaskThread::selectBandwidthAutomatically()
     for (double candidate : candidates)
     {
         double metric = evaluateBandwidthForValue(candidate);
-        mBandwidthTrace.append(qMakePair(candidate, metric));
+        mBandwidthTrace.push_back(std::make_pair(candidate, metric));
         if (metric < bestMetric)
         {
             bestMetric = metric;

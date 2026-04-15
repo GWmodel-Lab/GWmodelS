@@ -1,4 +1,4 @@
-#include "gwmgwaverageoptionsdialog.h"
+﻿#include "gwmgwaverageoptionsdialog.h"
 #include "ui_gwmgwaverageoptionsdialog.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
@@ -327,6 +327,7 @@ void GwmGWAverageOptionsDialog::updateFields()
     mAlgorithmMeta.weightBandwidthSize = bandwidthSize();
     mAlgorithmMeta.weightBandwidthAdaptive = bandwidthType();
     mAlgorithmMeta.weightBandwidthKernel = bandwidthKernelFunction();
+
 
     // 距离设置
     if (ui->mDistTypeDmatRadio->isChecked())

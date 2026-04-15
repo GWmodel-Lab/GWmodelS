@@ -1,4 +1,4 @@
-get_filename_component(SRC_SUBFOLDER_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+﻿get_filename_component(SRC_SUBFOLDER_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 set(SOURCES_SUBFOLDER
     gwmlayerattributeitem.cpp
@@ -25,6 +25,7 @@ set(SOURCES_SUBFOLDER
     gwmparameterspecifiedoptionsmodel.cpp
     gwmpropertymultiscaleparameterspecifieditemmodel.cpp
     gwmpropertygwcorrelationsparameterspecifieditemmodel.cpp
+    gwmgtdrparameterspecifiedoptionsmodel.cpp
 )
 
 set(HEADERS_SUBFOLDER
@@ -52,6 +53,7 @@ set(HEADERS_SUBFOLDER
     gwmparameterspecifiedoptionsmodel.h
     gwmpropertymultiscaleparameterspecifieditemmodel.h
     gwmpropertygwcorrelationsparameterspecifieditemmodel.h
+    gwmgtdrparameterspecifiedoptionsmodel.h
 )
 
 list(TRANSFORM SOURCES_SUBFOLDER PREPEND "${SRC_SUBFOLDER_NAME}/")

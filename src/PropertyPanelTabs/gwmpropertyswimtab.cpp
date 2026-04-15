@@ -294,8 +294,8 @@ void GwmPropertySWIMTab::updateBandwidthSelectionView()
     {
         trace = mTaskThread->bandwidthTrace();
     }
-
-    if (trace.isEmpty())
+    
+    if (trace.empty())
     {
         if (mBandwidthPlot)
             mBandwidthPlot->hide();

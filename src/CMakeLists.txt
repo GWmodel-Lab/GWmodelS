@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR)
+﻿cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR)
 
 find_package(GDAL REQUIRED)
 if(NOT GDAL_FOUND)
@@ -231,7 +231,8 @@ add_subdirectory("./Validity")
 qt5_wrap_ui(FORMS_H ${FORMS})
 
 if(WIN32)
-    add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS})
+    add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS}
+    )
 endif(WIN32)
 
 if(UNIX AND NOT CYGWIN)

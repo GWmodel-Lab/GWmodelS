@@ -8,7 +8,7 @@ set(SOURCES_SUBFOLDER
     gwmgeographicalweightedregressionalgorithm.cpp
     gwmgtwralgorithm.cpp
     gwmgwpcataskthread.cpp
-    gwmggwrbandwidthsizeselector.cpp
+    #gwmggwrbandwidthsizeselector.cpp
     gwmgtdrtaskthread.cpp
     gwmindependentvariableselector.cpp
     gwmlocalcollinearitygwralgorithm.cpp
@@ -24,6 +24,7 @@ set(SOURCES_SUBFOLDER
     gwmtaskthread.cpp
     gwmgwaveragetaskthread.cpp
     gwmgwcorrelationtaskthread.cpp
+    gwmggwrtaskthread.cpp
     gwmswimtaskthread.cpp
 )
 
@@ -34,7 +35,7 @@ set(HEADERS_SUBFOLDER
     gwmgeographicalweightedregressionalgorithm.h
     gwmgtwralgorithm.h
     gwmgwpcataskthread.h
-    gwmggwrbandwidthsizeselector.h
+    #gwmggwrbandwidthsizeselector.h
     gwmgtdrtaskthread.h
     gwmindependentvariableselector.h
     gwmlocalcollinearitygwralgorithm.h
@@ -55,6 +56,7 @@ set(HEADERS_SUBFOLDER
     gwmtaskthread.h
     gwmgwaveragetaskthread.h
     gwmgwcorrelationtaskthread.h
+    gwmggwrtaskthread.h
     gwmswimtaskthread.h
 )
 

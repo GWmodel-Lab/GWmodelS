@@ -1,4 +1,4 @@
-#ifndef GWMLAYERGTWRITEM_H
+﻿#ifndef GWMLAYERGTWRITEM_H
 #define GWMLAYERGTWRITEM_H
 
 #include "prefix.h"
@@ -39,7 +39,7 @@ public:
 
     QList<GwmVariable> indepVars() const;
 
-    QList<QPair<double, double> > bandwidthSelScores() const;
+    BandwidthCriterionList bandwidthSelScores() const;
 
     GwmBandwidthWeight weight() const;
 
@@ -50,7 +50,7 @@ protected:
     GwmBandwidthWeight mWeight;
     GwmDiagnostic mDiagnostic;
     arma::mat mBetas;
-    QList<QPair<double, double> > mBandwidthSelScores;
+    BandwidthCriterionList mBandwidthSelScores;
 
     bool isRegressionPointGiven;
     bool isBandwidthOptimized;

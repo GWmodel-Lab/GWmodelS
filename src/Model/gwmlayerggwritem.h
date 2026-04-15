@@ -1,4 +1,4 @@
-#ifndef GWMLAYERGGWRITEM_H
+﻿#ifndef GWMLAYERGGWRITEM_H
 #define GWMLAYERGGWRITEM_H
 
 #include "gwmlayerbasicgwritem.h"
@@ -21,8 +21,11 @@ public:
 
     GwmGeneralizedGWRAlgorithm::Family family() const;
 
+    GwmGeneralizedGWRAlgorithm::FTestResultPack GGWRFTestResult() const;
+
 private:
     GwmGeneralizedGWRAlgorithm::Family mFamily;
+    GwmGeneralizedGWRAlgorithm::FTestResultPack mGGWRFTestResults;
     GwmGGWRDiagnostic mDiagnostic;
     GwmGLMDiagnostic mGLMDiagnostic;
 };

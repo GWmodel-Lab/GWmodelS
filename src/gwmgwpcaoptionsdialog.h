@@ -1,4 +1,4 @@
-#ifndef GWMGWPCAOPTIONSDIALOG_H
+﻿#ifndef GWMGWPCAOPTIONSDIALOG_H
 #define GWMGWPCAOPTIONSDIALOG_H
 
 #include <QDialog>
@@ -56,7 +56,7 @@ public:
     double bandwidthSize();
     //GwmGWPCATaskThread::BandwidthSelectionCriterionType bandwidthSelectionApproach();
     QString bandWidthUnit();
-    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
+    gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     //GwmGWRTaskThread::DistanceSourceType distanceSourceType();
     QVariant distanceSourceParameters();
     //GwmGWRTaskThread::ParallelMethod parallelMethod();

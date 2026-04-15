@@ -1,4 +1,4 @@
-#include "gwmpropertyscalablegwrtab.h"
+﻿#include "gwmpropertyscalablegwrtab.h"
 #include "ui_gwmpropertyscalablegwrtab.h"
 
 #include <armadillo>
@@ -37,8 +37,10 @@ void GwmPropertyScalableGWRTab::updateUI()
     if (!mLayerItem)
         return;
 
-    GwmBandwidthWeight weight = mLayerItem->weight();
-    ui->lblKernelFunction->setText(GwmBandwidthWeight::KernelFunctionTypeNameMapper.name(weight.kernel()));
+    gwm::BandwidthWeight weight = mLayerItem->weight();
+    ui->lblKernelFunction->setText(
+        QString::fromStdString(gwm::BandwidthWeight::KernelFunctionTypeNameMapper.at(weight.kernel()))
+        );
     ui->lblBandwidthType->setText(weight.adaptive() ? tr("Adaptive") : tr("Fixed"));
     if (weight.adaptive())
     {
@@ -53,12 +55,15 @@ void GwmPropertyScalableGWRTab::updateUI()
         ui->lblBandwidthSize->setText(bwSizeString);
     }
     ui->lblRegressionPoints->setText(tr("The same location as observations are used."));
-    ui->lblDistanceMetric->setText(tr("%1 distance metric is used.").arg(GwmDistance::TypeNameMapper[mLayerItem->distanceType()]));
+    ui->lblDistanceMetric->setText(
+        tr("%1 distance metric is used.")
+            .arg(QString::fromStdString(gwm::Distance::TypeNameMapper[mLayerItem->distanceType()]))
+        );
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
 
     if (!mLayerItem->hasRegressionLayer())
     {
-        GwmDiagnostic diagnostic = mLayerItem->diagnostic();
+        gwm::RegressionDiagnostic diagnostic = mLayerItem->diagnostic0();
         ui->lblENP->setText(QString("%1").arg(diagnostic.ENP, 0, 'f', 6));
         ui->lblEDF->setText(QString("%1").arg(diagnostic.EDF, 0, 'f', 6));
         ui->lblAIC->setText(QString("%1").arg(diagnostic.AIC, 0, 'f', 6));
@@ -100,7 +105,7 @@ void GwmPropertyScalableGWRTab::updateUI()
     // LOOCV 结果
     ui->lblBtilde->setText(QString().asprintf("%.6lf", mLayerItem->scale()));
     ui->lblAlpha->setText(QString().asprintf("%.6lf", mLayerItem->penalty()));
-    if (mLayerItem->parameterOptimizeCriterionType() == GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType::AIC)
+    if (mLayerItem->parameterOptimizeCriterionType0() == gwm::GWRScalable::BandwidthSelectionCriterionType::AIC)
         ui->lblCriterionType->setText("AIC");
     ui->lblCV->setText(QString().asprintf("%.6lf", mLayerItem->cv()));
 }
@@ -169,7 +174,7 @@ void GwmPropertyScalableGWRTab::on_btnSaveRes_clicked()
               out << "**********************************************" << Qt::endl;
               out << "" << Qt::endl;
 
-              out << "  Summary of GWR Coefficient Estimates"<< Qt::endl;
+              out << "  Summary of SGWR Coefficient Estimates"<< Qt::endl;
               out << "----------------------------------------------"<< Qt::endl;
               for(int i = 0 ; i < 6 ; i++){
                   out << ui->tbwCoefficient->horizontalHeaderItem(i)->text();

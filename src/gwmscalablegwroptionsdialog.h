@@ -1,4 +1,4 @@
-#ifndef GWMSCALABLEGWROPTIONSDIALOG_H
+﻿#ifndef GWMSCALABLEGWROPTIONSDIALOG_H
 #define GWMSCALABLEGWROPTIONSDIALOG_H
 
 #include <QDialog>
@@ -50,7 +50,7 @@ public:
     bool bandwidthType();
     double bandwidthSize();
     QString bandWidthUnit();
-    GwmBandwidthWeight::KernelFunctionType bandwidthKernelFunction();
+    gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();
     QVariant distanceSourceParameters();
 
     void setTaskThread(GwmScalableGWRAlgorithm* taskThread);

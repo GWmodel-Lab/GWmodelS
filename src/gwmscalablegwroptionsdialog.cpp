@@ -1,4 +1,4 @@
-#include "gwmscalablegwroptionsdialog.h"
+﻿#include "gwmscalablegwroptionsdialog.h"
 #include "ui_gwmscalablegwroptionsdialog.h"
 #include <omp.h>
 #include <QComboBox>
@@ -252,10 +252,10 @@ QString GwmScalableGWROptionsDialog::bandWidthUnit(){
     }
 }
 
-GwmBandwidthWeight::KernelFunctionType GwmScalableGWROptionsDialog::bandwidthKernelFunction()
+gwm::BandwidthWeight::KernelFunctionType GwmScalableGWROptionsDialog::bandwidthKernelFunction()
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
-    return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
+    return gwm::BandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
 QVariant GwmScalableGWROptionsDialog::distanceSourceParameters()
@@ -336,8 +336,8 @@ void GwmScalableGWROptionsDialog::updateFields()
         }
     }
     // 带宽设置
-    GwmSpatialWeight spatialWeight;
-    GwmBandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
+    gwm::SpatialWeight spatialWeight;
+    gwm::BandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
     spatialWeight.setWeight(weight);
     // 距离设置
     int featureCount = dataLayer->featureCount();
@@ -345,28 +345,28 @@ void GwmScalableGWROptionsDialog::updateFields()
     {
         QString filename = ui->mDistMatrixFileNameEdit->text();
         int featureCount = dataLayer->featureCount();
-        GwmDMatDistance distance(featureCount, filename);
+        gwm::DMatDistance distance(filename.toStdString());
         spatialWeight.setDistance(distance);
     }
     else if (ui->mDistTypeMinkowskiRadio->isChecked())
     {
         double theta = ui->mThetaValue->value();
         double p = ui->mPValue->value();
-        GwmMinkwoskiDistance distance(featureCount, p, theta);
+        gwm::MinkwoskiDistance distance(p, theta);
         spatialWeight.setDistance(distance);
     }
     else
     {
-        GwmCRSDistance distance(featureCount, dataLayer->crs().isGeographic());
+        gwm::CRSDistance distance;
         spatialWeight.setDistance(distance);
     }
     mTaskThread->setSpatialWeight(spatialWeight);
     // 参数设置
     mTaskThread->setPolynomial(ui->mPolynomialSpin->value());
     if (ui->cmbOptimizeCriterion->currentText() == "CV")
-        mTaskThread->setParameterOptimizeCriterion(GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType::CV);
+        mTaskThread->setParameterOptimizeCriterion0(gwm::GWRScalable::BandwidthSelectionCriterionType::CV);
     else
-        mTaskThread->setParameterOptimizeCriterion(GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType::AIC);
+        mTaskThread->setParameterOptimizeCriterion0(gwm::GWRScalable::BandwidthSelectionCriterionType::AIC);
 }
 
 void GwmScalableGWROptionsDialog::enableAccept()

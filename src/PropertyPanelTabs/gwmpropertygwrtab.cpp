@@ -1,4 +1,4 @@
-#include "gwmpropertygwrtab.h"
+﻿#include "gwmpropertygwrtab.h"
 #include "ui_gwmpropertygwrtab.h"
 
 #include <armadillo>
@@ -77,8 +77,10 @@ void GwmPropertyGWRTab::updateUI()
     if (!mLayerItem)
         return;
 
-    GwmBandwidthWeight weight = mLayerItem->weight();
-    ui->lblKernelFunction->setText(GwmBandwidthWeight::KernelFunctionTypeNameMapper.name(weight.kernel()));
+    gwm::BandwidthWeight weight = mLayerItem->weight();
+    ui->lblKernelFunction->setText(
+        QString::fromStdString(gwm::BandwidthWeight::KernelFunctionTypeNameMapper.at(weight.kernel()))
+        );
     ui->lblBandwidthType->setText(weight.adaptive() ? tr("Adaptive") : tr("Fixed"));
     if (weight.adaptive())
     {
@@ -111,7 +113,7 @@ void GwmPropertyGWRTab::updateUI()
 
     if (mLayerItem->hatmatrix())
     {
-        GwmDiagnostic diagnostic = mLayerItem->diagnostic();
+        gwm::RegressionDiagnostic diagnostic = mLayerItem->diagnostic0();
         ui->lblENP->setText(QString("%1").arg(diagnostic.ENP, 0, 'f', 6));
         ui->lblEDF->setText(QString("%1").arg(diagnostic.EDF, 0, 'f', 6));
         ui->lblAIC->setText(QString("%1").arg(diagnostic.AIC, 0, 'f', 6));
@@ -189,8 +191,12 @@ void GwmPropertyGWRTab::updateUI()
 
     if(mLayerItem->bandwidthOptimized())
     {
-        BandwidthCriterionList bwScores = mLayerItem->bandwidthSelScores();
-        QVariant data = QVariant::fromValue(bwScores);
+        gwm::BandwidthCriterionList bwScores = mLayerItem->bandwidthSelScores();
+        qDebug() << "bwScores size:" << bwScores.size();
+        QVector<QPair<double,double>> qlist;
+        for (const auto &item : bwScores)
+            qlist.append(qMakePair(item.first, item.second));
+        QVariant data = QVariant::fromValue(qlist);
         GwmBandwidthSizeSelector::PlotBandwidthResult(data, mBandwidthSelPlot);
     }
 
