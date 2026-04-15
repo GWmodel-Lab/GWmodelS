@@ -30,31 +30,90 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QGroupBox" name="groupBox_CSV">
+        <widget class="QGroupBox" name="groupBox_DataInput">
          <property name="title">
-          <string>CSV Data Input</string>
+          <string>Data Input</string>
          </property>
-         <layout class="QFormLayout" name="formLayout_CSV">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_CSV">
-            <property name="text">
-             <string>CSV File Path:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout_CSV">
+         <layout class="QVBoxLayout" name="verticalLayout_DataInput">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_DataSourceType">
             <item>
-             <widget class="QLineEdit" name="mCsvFilePathEdit"/>
-            </item>
-            <item>
-             <widget class="QPushButton" name="mCsvFileOpenBtn">
+             <widget class="QRadioButton" name="mUseImportedLayerRadio">
               <property name="text">
-               <string>Browse...</string>
+               <string>Use Imported Layer</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QRadioButton" name="mUseCsvFileRadio">
+              <property name="text">
+               <string>Import Here (CSV)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_DataSourceType">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QStackedWidget" name="mDataInputStack">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+            <widget class="QWidget" name="pageImportedLayer">
+             <layout class="QFormLayout" name="formLayout_ImportedLayer">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_ImportedLayer">
+                <property name="text">
+                 <string>Layer:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="mLayerComboBox"/>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="pageCsvFile">
+             <layout class="QFormLayout" name="formLayout_CSV">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_CSV">
+                <property name="text">
+                 <string>CSV File Path:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <layout class="QHBoxLayout" name="horizontalLayout_CSV">
+                <item>
+                 <widget class="QLineEdit" name="mCsvFilePathEdit"/>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="mCsvFileOpenBtn">
+                  <property name="text">
+                   <string>Browse...</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </widget>
           </item>
          </layout>
         </widget>

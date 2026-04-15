@@ -16,6 +16,7 @@
 
 class QListWidget;
 class QListWidgetItem;
+class QgsVectorLayer;
 
 namespace Ui {
 class GwmSWIMOptionsDialog;
@@ -47,6 +48,8 @@ public:
 
 public slots:
     void onCsvFileOpenClicked();
+    void onInputDataSourceChanged();
+    void onLayerSelectionChanged(int index);
     void onSwimModeChanged(int index);
     void onFixedRadioToggled(bool checked);
     void onVariableRadioToggled(bool checked);
@@ -70,6 +73,7 @@ private:
     QString crsRotateP() const;
 
     bool loadCsvHeaders(const QString& filePath);
+    bool loadLayerHeaders(QgsVectorLayer* layer);
     void populateFieldMappingCombos(const QStringList& headers);
     void clearFieldMappingControls();
     QList<QPair<QString, QComboBox*>> fieldComboPairs() const;
@@ -89,9 +93,15 @@ private:
     bool modeNeedsOriginCoords() const;
     bool modeNeedsDestCoords() const;
     void updateCoordinateControlState();
+    bool usingImportedLayerData() const;
+    QgsVectorLayer* selectedImportedLayer() const;
+    QString resolveInputCsvPath();
+    bool exportLayerToCsv(QgsVectorLayer* layer, const QString& csvPath);
+    QString csvEscaped(const QString& value) const;
 private:
     QStringList mCsvHeaders;
     QChar mDetectedDelimiter = '\t';
+    QString mGeneratedCsvPath;
 };
 
 #endif // GWMSWIMOPTIONSDIALOG_H

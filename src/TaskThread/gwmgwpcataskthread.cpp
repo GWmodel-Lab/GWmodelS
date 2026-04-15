@@ -77,10 +77,6 @@ void GwmGWPCATaskThread::run()
     }
     mVariance = sdev % sdev;
 
-    //准备resultlayer的数据
-
-    //win_var_PC1 列
-    // 取RW矩阵每一行最大的列的索引
     QList<QString> win_var_PC1;
     uvec iWinVar = index_max(mLoadings.slice(0), 1);
     for(int i = 0; i < mDataPoints.n_rows && !checkCanceled(); i++)
