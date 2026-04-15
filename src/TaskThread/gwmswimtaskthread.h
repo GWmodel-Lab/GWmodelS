@@ -60,10 +60,16 @@ struct GwmSWIMFieldMapping
 struct GwmSWIMDiagnostics
 {
     int dataPoints = 0;
+    // ENP & EDF from hat matrix (trace statistics)
     double effectiveParameters = std::numeric_limits<double>::quiet_NaN();
     double effectiveDof = std::numeric_limits<double>::quiet_NaN();
+    // Poisson diagnostics (Nakaya 2005 style)
+    double deviance = std::numeric_limits<double>::quiet_NaN();
     double aic = std::numeric_limits<double>::quiet_NaN();
     double aicc = std::numeric_limits<double>::quiet_NaN();
+    double pseudoRSquared = std::numeric_limits<double>::quiet_NaN();
+    // Kept for backward compatibility / UI,
+    // but for Poisson SWIM these are based on deviance (McFadden-like)
     double rss = std::numeric_limits<double>::quiet_NaN();
     double rSquared = std::numeric_limits<double>::quiet_NaN();
     double adjRSquared = std::numeric_limits<double>::quiet_NaN();
@@ -155,6 +161,14 @@ private:
     // Regression helpers
     bool prepareRegressionMatrices();
     void performLocalRegression();
+    // Poisson local regression (IRLS) helpers
+    bool fitLocalPoissonIRLS(const mat& X,
+                             const vec& y,
+                             const vec& kernelWeights,
+                             vec& betaOut,
+                             double& devianceOut,
+                             rowvec* hatRowOut);
+    double computePoissonDeviance(const vec& y, const vec& mu) const;
 
     // Result helper
     void createResultLayer(CreateResultLayerData data);

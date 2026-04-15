@@ -185,7 +185,7 @@ void GwmSWIMTaskThread::run()
         mat observed = mat(mResponseVector);
         mat fitted = mat(mFittedValues);
         mat residuals = mat(mResiduals);
-        
+
         mResultList.push_back(qMakePair(QStringLiteral("FlowVolume"), observed));
         mResultList.push_back(qMakePair(QStringLiteral("FittedFlow"), fitted));
         mResultList.push_back(qMakePair(QStringLiteral("Residual"), residuals));
@@ -194,7 +194,7 @@ void GwmSWIMTaskThread::run()
             mResultList.push_back(qMakePair(QStringLiteral("Coefficients"), mLocalBetas));
         }
         mResultList.push_back(qMakePair(QStringLiteral("WeightMatrix"), mWeightMatrix));
-        
+
         createResultLayer(mResultList);
         emit tick(100, 100);
         emit success();
@@ -226,7 +226,7 @@ bool GwmSWIMTaskThread::loadCsvData()
 
     QStringList headers = headerLine.split(mFieldDelimiter, Qt::KeepEmptyParts);
     mCsvHeaders = headers;
-    
+
     if (!mFieldMapping.isValid(headers.size()))
     {
         print_error(tr("Field mapping exceeds available columns."));
@@ -277,7 +277,7 @@ bool GwmSWIMTaskThread::prepareRegressionMatrices()
 
     int n = mFlowDataList.size();
     int indepCount = mFieldMapping.independentVars.size();
-    
+
     mDesignMatrix = mat(n, indepCount + 1, fill::ones);
     mResponseVector = vec(n, fill::zeros);
 
@@ -289,8 +289,8 @@ bool GwmSWIMTaskThread::prepareRegressionMatrices()
         if (flow.independent_values.size() != indepCount)
         {
             print_error(tr("Flow record %1 does not contain %2 independent variables.")
-                        .arg(i)
-                        .arg(indepCount));
+                            .arg(i)
+                            .arg(indepCount));
             return false;
         }
 
@@ -358,21 +358,21 @@ bool GwmSWIMTaskThread::parseCsvLine(const QString& line, GwmFlowData& flowData,
     }
 
     static int debugCount = 0;
-    if (debugCount < 5) { 
+    if (debugCount < 5) {
         QString debugMsg = QString("Parsed flow data #%1: volume=%2, origin=(%3,%4), dest=(%5,%6)")
-                              .arg(flowIndex)
-                              .arg(flowData.flow_volume)
-                              .arg(flowData.origin_x).arg(flowData.origin_y)
-                              .arg(flowData.dest_x).arg(flowData.dest_y);
-        
+        .arg(flowIndex)
+            .arg(flowData.flow_volume)
+            .arg(flowData.origin_x).arg(flowData.origin_y)
+            .arg(flowData.dest_x).arg(flowData.dest_y);
+
         if (mFieldMapping.originValue >= 0) {
             debugMsg += QString(", origin_value=%1").arg(flowData.origin_value);
         }
-        
+
         if (mFieldMapping.destValue >= 0) {
             debugMsg += QString(", dest_value=%1").arg(flowData.dest_value);
         }
-        
+
         if (!flowData.independent_values.isEmpty()) {
             debugMsg += ", indep_vars=[";
             for (int i = 0; i < flowData.independent_values.size(); ++i) {
@@ -381,7 +381,7 @@ bool GwmSWIMTaskThread::parseCsvLine(const QString& line, GwmFlowData& flowData,
             }
             debugMsg += "]";
         }
-        
+
         print_message(debugMsg);
         debugCount++;
     }
@@ -516,7 +516,7 @@ QVector<double> GwmSWIMTaskThread::collectDistances(int focusIndex, DistanceFunc
 void GwmSWIMTaskThread::fillWeightMatrix(DistanceFunction func)
 {
     int n = mFlowDataList.size();
-    
+
     for (int i = 0; i < n; ++i)
     {
         if (checkCanceled())
@@ -549,9 +549,9 @@ void GwmSWIMTaskThread::calculateWeightMatrix()
     qDebug() << "[GwmSWIMTaskThread::calculateWeightMatrix] n=" << n
              << "bandwidth=" << mBandwidth
              << "adaptive=" << mBandwidthAdaptive;
-    
+
     mWeightMatrix = mat(n, n, fill::zeros);
-    
+
     DistanceFunction func = distanceFunctionForMode();
     fillWeightMatrix(func);
 }
@@ -583,8 +583,8 @@ bool GwmSWIMTaskThread::selectBandwidthAutomatically()
     QVector<double> sampleDistances = collectDistances(0, func);
 
     QVector<double> candidates = baseWeight->adaptive()
-            ? buildAdaptiveBandwidthCandidates(flowCount)
-            : buildFixedBandwidthCandidates(sampleDistances);
+                                     ? buildAdaptiveBandwidthCandidates(flowCount)
+                                     : buildFixedBandwidthCandidates(sampleDistances);
 
     auto addCandidate = [&](double value)
     {
@@ -690,8 +690,8 @@ QVector<double> GwmSWIMTaskThread::buildFixedBandwidthCandidates(const QVector<d
     for (double q : quantiles)
     {
         int idx = positive.size() == 1
-                ? 0
-                : static_cast<int>(std::round(q * (positive.size() - 1)));
+                      ? 0
+                      : static_cast<int>(std::round(q * (positive.size() - 1)));
         idx = std::clamp(idx, 0, positive.size() - 1);
         double value = positive[idx];
         if (value <= 0.0)
@@ -721,7 +721,10 @@ double GwmSWIMTaskThread::evaluateBandwidthForValue(double candidate)
         return std::numeric_limits<double>::max();
     }
 
+    // Refit local Poisson SWIM for this candidate
     performLocalRegression();
+    // Update diagnostics (ENP, EDF, deviance, AIC/AICc) before evaluating criterion
+    updateDiagnostics();
     double metric = evaluateBandwidthCriterion();
     mBandwidth = savedBandwidth;
     if (!std::isfinite(metric))
@@ -731,30 +734,28 @@ double GwmSWIMTaskThread::evaluateBandwidthForValue(double candidate)
 
 double GwmSWIMTaskThread::evaluateBandwidthCriterion() const
 {
-    double rss = currentRSS();
-    if (!std::isfinite(rss))
-        return std::numeric_limits<double>::max();
-
     const int n = mFlowDataList.size();
     if (n <= 0)
         return std::numeric_limits<double>::max();
 
-    if (mBandwidthCriterionType == BandwidthSelectionCriterionType::CV)
-    {
-        return rss / n;
-    }
-
-    const int k = mFieldMapping.independentVars.size() + 1;
-    if (n <= k + 1)
+    // For Poisson SWIM, use deviance-based criteria.
+    // - CV: average deviance
+    // - AICc: Nakaya et al. (2005) Poisson AICc(b)
+    //   AICc(b) = Deviance(b) + 2 * k(b) * n / (n - k(b) - 1)
+    if (!std::isfinite(mDiagnostics.deviance))
         return std::numeric_limits<double>::max();
 
-    double sigma2 = rss / n;
-    if (sigma2 <= 0.0)
-        sigma2 = std::numeric_limits<double>::min();
+    if (mBandwidthCriterionType == BandwidthSelectionCriterionType::CV)
+    {
+        return mDiagnostics.deviance / static_cast<double>(n);
+    }
 
-    const double pi = 3.14159265358979323846;
-    double aic = n * std::log(sigma2) + n * (1.0 + std::log(2.0 * pi));
-    double aicc = aic + (2.0 * k * (k + 1.0)) / (n - k - 1.0);
+    const double k = mDiagnostics.effectiveParameters;
+    if (!std::isfinite(k) || n <= k + 1.0)
+        return std::numeric_limits<double>::max();
+
+    double aicc = mDiagnostics.deviance
+                  + 2.0 * k * static_cast<double>(n) / (static_cast<double>(n) - k - 1.0);
     return aicc;
 }
 
@@ -770,55 +771,80 @@ void GwmSWIMTaskThread::updateDiagnostics()
     mDiagnostics = GwmSWIMDiagnostics();
     mDiagnostics.dataPoints = static_cast<int>(mResponseVector.n_elem);
     const int n = mDiagnostics.dataPoints;
-    
-    double rss = currentRSS();
-    mDiagnostics.rss = rss;
 
     // Calculate effective number of parameters and effective degrees of freedom
     // using hat matrix trace statistics (following GWR methodology)
     double trS = mShat(0);  // tr(S) - trace of hat matrix
     double trStS = mShat(1);  // tr(S^T * S) - trace of hat matrix squared (approximated)
-    
+
     // Effective number of parameters: enp = 2 * tr(S) - tr(S^T * S)
     mDiagnostics.effectiveParameters = 2.0 * trS - trStS;
-    
+
     // Effective degrees of freedom: edf = n - 2 * tr(S) + tr(S^T * S)
     mDiagnostics.effectiveDof = static_cast<double>(n) - 2.0 * trS + trStS;
 
-    if (n > 0 && std::isfinite(rss))
+    // Compute global Poisson deviance using fitted values from SWIM
+    if (n > 0 && mFittedValues.n_elem == static_cast<uword>(n))
     {
-        // Use effective degrees of freedom for variance estimation
-        double sigma2 = std::isfinite(mDiagnostics.effectiveDof) && mDiagnostics.effectiveDof > 0.0
-            ? rss / mDiagnostics.effectiveDof
-            : rss / static_cast<double>(n);
-        
-        if (sigma2 > 0.0 && std::isfinite(sigma2))
+        double dev = computePoissonDeviance(mResponseVector, mFittedValues);
+        if (std::isfinite(dev))
         {
-            const double pi = 3.14159265358979323846;
-            // AIC = n * log(sigma^2) + n * (1 + log(2*pi)) + 2 * enp
-            mDiagnostics.aic = n * std::log(sigma2) + n * (1.0 + std::log(2.0 * pi)) + 2.0 * mDiagnostics.effectiveParameters;
-            
-            // AICc = AIC + 2 * enp * (enp + 1) / (n - enp - 1)
-            if (std::isfinite(mDiagnostics.effectiveParameters) && n - mDiagnostics.effectiveParameters - 1 > 0)
-            {
-                mDiagnostics.aicc = mDiagnostics.aic + (2.0 * mDiagnostics.effectiveParameters * (mDiagnostics.effectiveParameters + 1.0)) 
-                    / (n - mDiagnostics.effectiveParameters - 1.0);
-            }
+            mDiagnostics.deviance = dev;
         }
     }
 
-    if (n > 0 && mResponseVector.n_elem == static_cast<uword>(n) && std::isfinite(rss))
+    // For compatibility, derive pseudo-R² style measures from deviance
+    // Using McFadden's pseudo R²:
+    //   R2 = 1 - (Deviance_model / Deviance_null)
+    // and adjusted version:
+    //   R2_adj = 1 - ((Deviance_model - k) / Deviance_null)
+    if (n > 0 && mResponseVector.n_elem == static_cast<uword>(n))
     {
-        vec centeredY = mResponseVector - mean(mResponseVector);
-        double tss = dot(centeredY, centeredY);
-        if (tss > 0.0)
+        // Null model: intercept-only Poisson
+        vec y = mResponseVector;
+        double yMean = mean(y);
+        if (yMean > 0.0 && std::isfinite(yMean) && std::isfinite(mDiagnostics.deviance) &&
+            std::isfinite(mDiagnostics.effectiveParameters))
         {
-            mDiagnostics.rSquared = 1.0 - rss / tss;
-            // Adjusted R-squared using effective degrees of freedom
-            if (std::isfinite(mDiagnostics.effectiveDof) && mDiagnostics.effectiveDof > 1.0)
+            vec mu0(y.n_elem);
+            mu0.fill(yMean);
+            double devNull = computePoissonDeviance(y, mu0);
+            if (std::isfinite(devNull) && devNull > 0.0)
             {
-                mDiagnostics.adjRSquared = 1.0 - (1.0 - mDiagnostics.rSquared) * (n - 1.0) / (mDiagnostics.effectiveDof - 1.0);
+                const double k = mDiagnostics.effectiveParameters;
+                // McFadden pseudo R²
+                double r2 = 1.0 - mDiagnostics.deviance / devNull;
+                // Adjusted McFadden pseudo R²
+                double r2Adj = 1.0 - (mDiagnostics.deviance - k) / devNull;
+
+                // Clamp to [0,1] for numerical stability
+                auto clamp01 = [](double v) -> double {
+                    if (!std::isfinite(v)) return std::numeric_limits<double>::quiet_NaN();
+                    if (v < 0.0) return 0.0;
+                    if (v > 1.0) return 1.0;
+                    return v;
+                };
+
+                mDiagnostics.pseudoRSquared = clamp01(r2);
+                mDiagnostics.rSquared = mDiagnostics.pseudoRSquared;
+                mDiagnostics.adjRSquared = clamp01(r2Adj);
             }
+
+        }
+    }
+
+    // For Poisson diagnostics, AIC and AICc are defined via deviance and ENP
+    if (n > 0 && std::isfinite(mDiagnostics.deviance) &&
+        std::isfinite(mDiagnostics.effectiveParameters))
+    {
+        const double k = mDiagnostics.effectiveParameters;
+        // Standard Poisson AIC: Deviance + 2 * k
+        mDiagnostics.aic = mDiagnostics.deviance + 2.0 * k;
+        if (n > k + 1.0)
+        {
+            // Nakaya et al. (2005) Poisson AICc(b)
+            mDiagnostics.aicc = mDiagnostics.deviance
+                                + 2.0 * k * static_cast<double>(n) / (static_cast<double>(n) - k - 1.0);
         }
     }
 }
@@ -833,7 +859,7 @@ void GwmSWIMTaskThread::performLocalRegression()
 
     int n = static_cast<int>(mDesignMatrix.n_rows);
     int p = static_cast<int>(mDesignMatrix.n_cols);
-    
+
     mLocalBetas = mat(n, p, fill::zeros);
     mFittedValues = vec(n, fill::zeros);
     mResiduals = vec(n, fill::zeros);
@@ -841,7 +867,7 @@ void GwmSWIMTaskThread::performLocalRegression()
 
     int successCount = 0;
     int skipCount = 0;
-    
+
     for (int i = 0; i < n; ++i)
     {
         if (checkCanceled())
@@ -849,66 +875,43 @@ void GwmSWIMTaskThread::performLocalRegression()
             return;
         }
 
-        vec weights = trans(mWeightMatrix.row(i));
-        vec nonNegativeWeights = weights;
-        nonNegativeWeights.transform([](double val) { return val < 0.0 ? 0.0 : val; });
+        // Kernel weights for this calibration point (row i of weight matrix)
+        vec kernelWeights = trans(mWeightMatrix.row(i));
+        kernelWeights.transform([](double val) { return val < 0.0 ? 0.0 : val; });
 
-        if (all(nonNegativeWeights == 0.0))
+        if (all(kernelWeights == 0.0))
         {
             skipCount++;
             continue;
         }
 
-        vec sqrtW = sqrt(nonNegativeWeights);
-        mat Xw = mDesignMatrix.each_col() % sqrtW;
-        vec yw = mResponseVector % sqrtW;
-        mat XtWX = Xw.t() * Xw;
-        vec XtWy = Xw.t() * yw;
+        vec beta(p, fill::zeros);
+        rowvec hatRow;   // optional hat-matrix row for ENP/EDF
 
-        mat XtWXInv;
-        bool solved = solve(XtWXInv, XtWX, eye(p, p), solve_opts::fast + solve_opts::likely_sympd);
-        if (!solved)
-        {
-            XtWXInv = pinv(XtWX);
-        }
-
-        vec beta = XtWXInv * XtWy;
-
-        if (beta.n_elem == static_cast<uword>(p))
+        bool ok = fitLocalPoissonIRLS(mDesignMatrix, mResponseVector, kernelWeights,
+                                      beta, /*devianceOut*/ mDiagnostics.deviance, &hatRow);
+        if (ok && beta.n_elem == static_cast<uword>(p))
         {
             mLocalBetas.row(i) = beta.t();
-            mFittedValues(i) = dot(mDesignMatrix.row(i), beta);
-            mResiduals(i) = mResponseVector(i) - mFittedValues(i);
+
+            // Fitted value at calibration flow i
+            double eta_i = dot(mDesignMatrix.row(i), beta);
+            double mu_i = std::exp(std::min(eta_i, 20.0));   // cap to avoid overflow
+            mFittedValues(i) = mu_i;
+            mResiduals(i) = mResponseVector(i) - mu_i;
+
             successCount++;
 
-            // Calculate hat matrix diagonal element s_ii for this observation
-            // Following GWR implementation:
-            // ci = (X^T * W_i * X)^(-1) * X^T * W_i  (p x n matrix)
-            // si = X_i * ci  (1 x n row vector, hat matrix row i)
-            // s_ii = si(i)  (diagonal element)
-            rowvec X_i = mDesignMatrix.row(i);
-            
-            // ci = XtWXInv * Xw.t(), where Xw.t() = X^T * W_i (for observation i)
-            // Xw is (n x p) where each row j is sqrt(w_ij) * X_j
-            // Xw.t() is (p x n) where each column j is sqrt(w_ij) * X_j^T
-            mat ci = XtWXInv * Xw.t();  // (p x n)
-            
-            // si = X_i * ci, hat matrix row i (1 x n)
-            rowvec si = X_i * ci;
-            
-            // s_ii is the i-th element of si (diagonal element)
-            double s_ii = si(i);
-            
-            // Accumulate hat matrix trace statistics
-            if (std::isfinite(s_ii))
+            // Accumulate hat-matrix trace statistics (ENP/EDF)
+            if (hatRow.n_elem == static_cast<uword>(n))
             {
-                mShat(0) += s_ii;  // tr(S) = sum of diagonal elements
-                // tr(S^T * S) = sum_i sum_j s_ij^2
-                // For row i: sum_j s_ij^2 = dot(si, si) = sum(si % si)
-                double trStS_row = as_scalar(si * si.t());  // dot(si, si) = sum(si % si)
-                if (std::isfinite(trStS_row))
+                double s_ii = hatRow(i);
+                if (std::isfinite(s_ii))
                 {
-                    mShat(1) += trStS_row;
+                    mShat(0) += s_ii;  // tr(S)
+                    double trStS_row = as_scalar(hatRow * hatRow.t());
+                    if (std::isfinite(trStS_row))
+                        mShat(1) += trStS_row;  // tr(S^T S)
                 }
             }
         }
@@ -918,10 +921,173 @@ void GwmSWIMTaskThread::performLocalRegression()
             progress(i, n);
         }
     }
-    
+
     qDebug() << "[GwmSWIMTaskThread::performLocalRegression] Completed. success=" << successCount
              << "skip=" << skipCount
              << "tr(S)=" << mShat(0)
              << "tr(S^T*S)=" << mShat(1);
+}
+
+bool GwmSWIMTaskThread::fitLocalPoissonIRLS(const mat& X,
+                                            const vec& y,
+                                            const vec& kernelWeights,
+                                            vec& betaOut,
+                                            double& devianceOut,
+                                            rowvec* hatRowOut)
+{
+    const int n = static_cast<int>(X.n_rows);
+    const int p = static_cast<int>(X.n_cols);
+    if (n <= 0 || p <= 0 || static_cast<int>(y.n_elem) != n ||
+        static_cast<int>(kernelWeights.n_elem) != n)
+    {
+        return false;
+    }
+
+    // Initialize with canonical log-link Poisson GLM:
+    // log(mu) = X * beta
+    betaOut = vec(p, fill::zeros);
+
+    // Start from log of (y + small) to avoid log(0)
+    vec eta = X * betaOut;
+    for (int i = 0; i < n; ++i)
+    {
+        double yi = y(i);
+        if (yi > 0.0)
+            eta(i) = std::log(yi);
+        else
+            eta(i) = std::log(0.5);   // small baseline
+    }
+    // Recompute beta by weighted least squares on initial eta
+    mat XtX = X.t() * X;
+    vec Xty = X.t() * eta;
+    vec betaInit;
+    if (!solve(betaInit, XtX, Xty, solve_opts::fast + solve_opts::likely_sympd))
+        betaInit = pinv(XtX) * Xty;
+    betaOut = betaInit;
+
+    const int maxIter = 50;
+    const double tol = 1e-6;
+    double prevDev = std::numeric_limits<double>::infinity();
+
+    for (int iter = 0; iter < maxIter; ++iter)
+    {
+        eta = X * betaOut;
+        vec mu = exp(eta);
+        // Guard against extreme values
+        for (int i = 0; i < n; ++i)
+        {
+            if (!std::isfinite(mu(i)) || mu(i) <= 0.0)
+                mu(i) = std::numeric_limits<double>::min();
+        }
+
+        // IRLS weights (for Poisson: v_i = mu_i)
+        vec varMu = mu;
+        // Combined weights: spatial kernel * IRLS weights
+        vec w = kernelWeights % varMu;
+
+        // Avoid all-zero weights
+        if (all(w == 0.0))
+            return false;
+
+        vec sqrtW = sqrt(w);
+        mat Xw = X.each_col() % sqrtW;
+        vec z = eta + (y - mu) / mu;          // working response
+        vec zw = z % sqrtW;
+
+        mat XtWX = Xw.t() * Xw;
+        vec XtWz = Xw.t() * zw;
+
+        mat XtWXInv;
+        bool solved = solve(XtWXInv, XtWX, eye(p, p), solve_opts::fast + solve_opts::likely_sympd);
+        if (!solved)
+        {
+            XtWXInv = pinv(XtWX);
+        }
+
+        vec betaNew = XtWXInv * XtWz;
+
+        // Check convergence
+        vec diff = betaNew - betaOut;
+        if (norm(diff, 2) < tol)
+        {
+            betaOut = betaNew;
+            break;
+        }
+
+        betaOut = betaNew;
+
+        // Optional early stop based on deviance change
+        vec muIter = exp(X * betaOut);
+        for (int i = 0; i < n; ++i)
+        {
+            if (!std::isfinite(muIter(i)) || muIter(i) <= 0.0)
+                muIter(i) = std::numeric_limits<double>::min();
+        }
+        double devNow = computePoissonDeviance(y, muIter);
+        if (std::isfinite(devNow) && std::abs(devNow - prevDev) < 1e-6)
+        {
+            prevDev = devNow;
+            break;
+        }
+        prevDev = devNow;
+    }
+
+    // Final deviance for this local fit (using kernel weights as frequency-like multipliers)
+    vec muFinal = exp(X * betaOut);
+    for (int i = 0; i < n; ++i)
+    {
+        if (!std::isfinite(muFinal(i)) || muFinal(i) <= 0.0)
+            muFinal(i) = std::numeric_limits<double>::min();
+    }
+    // Unweighted deviance at this calibration point
+    double dev = computePoissonDeviance(y, muFinal);
+    devianceOut = dev;
+
+    // Optional hat-matrix row (approximate, using final IRLS weights)
+    if (hatRowOut)
+    {
+        vec sqrtW = sqrt(kernelWeights % muFinal);
+        mat Xw = X.each_col() % sqrtW;
+        mat XtWX = Xw.t() * Xw;
+        mat XtWXInv;
+        bool solved = solve(XtWXInv, XtWX, eye(p, p), solve_opts::fast + solve_opts::likely_sympd);
+        if (!solved)
+        {
+            XtWXInv = pinv(XtWX);
+        }
+        mat ci = XtWXInv * Xw.t();   // (p x n)
+        // For this IRLS fit, take the row corresponding to the calibration point
+        // WLS-style: choose the calibration flow as the one with maximum kernel weight
+        uword centerIdx = index_max(kernelWeights);
+        rowvec X_center = X.row(centerIdx);
+        *hatRowOut = X_center * ci;  // (1 x n)
+    }
+
+    return true;
+}
+
+double GwmSWIMTaskThread::computePoissonDeviance(const vec& y, const vec& mu) const
+{
+    if (y.n_elem != mu.n_elem || y.n_elem == 0)
+        return std::numeric_limits<double>::quiet_NaN();
+
+    double dev = 0.0;
+    for (uword i = 0; i < y.n_elem; ++i)
+    {
+        const double yi = y(i);
+        double mui = mu(i);
+        if (!std::isfinite(mui) || mui <= 0.0)
+            mui = std::numeric_limits<double>::min();
+
+        if (yi > 0.0)
+        {
+            dev += 2.0 * (yi * std::log(yi / mui) - (yi - mui));
+        }
+        else
+        {
+            dev += 2.0 * (0.0 - (0.0 - mui));  // 2 * mui
+        }
+    }
+    return dev;
 }
 

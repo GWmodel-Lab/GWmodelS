@@ -220,7 +220,7 @@ void GwmPropertySWIMTab::populateSwimCoefficients()
     {
         // Extract column vector
         vec coeffCol = coefficients.col(col);
-        
+
         // Remove NaN and Inf values
         QVector<double> validValues;
         for (uword i = 0; i < coeffCol.n_elem; ++i)
@@ -277,7 +277,10 @@ void GwmPropertySWIMTab::displaySwimDiagnostics()
     setLabelText(ui->lblSwimEffectiveDof, formatNumber(diag.effectiveDof));
     setLabelText(ui->lblSwimAIC, formatNumber(diag.aic));
     setLabelText(ui->lblSwimAICc, formatNumber(diag.aicc));
-    setLabelText(ui->lblSwimRSS, formatNumber(diag.rss));
+    // For Poisson SWIM, RSS is less meaningful; expose deviance instead,
+    // but keep the label for backward compatibility.
+    setLabelText(ui->lblSwimRSS, formatNumber(diag.deviance));
+    // Interpret rSquared field as McFadden-style pseudo R², adjRSquared as adjusted McFadden pseudo R²
     setLabelText(ui->lblSwimRSquared, formatNumber(diag.rSquared));
     setLabelText(ui->lblSwimAdjRSquared, formatNumber(diag.adjRSquared));
 }
@@ -390,8 +393,8 @@ QString GwmPropertySWIMTab::distanceDescription() const
         if (const auto* crs = spatialWeight.distance<GwmCRSDistance>())
         {
             return crs->geographic()
-                    ? tr("Geographic CRS distance metric is used.")
-                    : tr("Planar CRS distance metric is used.");
+            ? tr("Geographic CRS distance metric is used.")
+            : tr("Planar CRS distance metric is used.");
         }
         break;
     case GwmDistance::DistanceType::MinkwoskiDistance:
@@ -771,11 +774,11 @@ void GwmPropertySWIMTab::on_btnSaveRes_clicked()
     writeLine("Number of data points:", diag.dataPoints > 0 ? QString::number(diag.dataPoints) : tr("-"));
     writeLine("Effective number of parameters:", formatNumber(diag.effectiveParameters));
     writeLine("Effective degrees of freedom:", formatNumber(diag.effectiveDof));
-    writeLine("AIC:", formatNumber(diag.aic));
-    writeLine("AICc:", formatNumber(diag.aicc));
-    writeLine("Residual sum of squares:", formatNumber(diag.rss));
-    writeLine("R-square value:", formatNumber(diag.rSquared));
-    writeLine("Adjusted R-square value:", formatNumber(diag.adjRSquared));
+    writeLine("AIC (Poisson SWIM):", formatNumber(diag.aic));
+    writeLine("AICc (Nakaya 2005 Poisson):", formatNumber(diag.aicc));
+    writeLine("Deviance:", formatNumber(diag.deviance));
+    writeLine("Pseudo R-square (McFadden):", formatNumber(diag.rSquared));
+    writeLine("Adjusted pseudo R-square (McFadden):", formatNumber(diag.adjRSquared));
     out << Qt::endl;
 
     writeSeparator();

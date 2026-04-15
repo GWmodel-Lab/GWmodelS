@@ -11,6 +11,12 @@
 #include <QListWidget>
 #include <QPushButton>
 #include <QSettings>
+#include <QStandardPaths>
+#include <QDir>
+#include <QUuid>
+#include <qgsproject.h>
+#include <qgsmaplayer.h>
+#include <qgsfeature.h>
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
@@ -35,6 +41,26 @@ GwmSWIMOptionsDialog::GwmSWIMOptionsDialog(QWidget *parent) :
     ui->mSwimModeComboBox->setCurrentIndex(0);
     connect(ui->mSwimModeComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             this, &GwmSWIMOptionsDialog::onSwimModeChanged);
+
+    QButtonGroup* dataSourceBtnGroup = new QButtonGroup(this);
+    dataSourceBtnGroup->addButton(ui->mUseImportedLayerRadio);
+    dataSourceBtnGroup->addButton(ui->mUseCsvFileRadio);
+    connect(ui->mUseImportedLayerRadio, &QAbstractButton::toggled, this, &GwmSWIMOptionsDialog::onInputDataSourceChanged);
+    connect(ui->mUseCsvFileRadio, &QAbstractButton::toggled, this, &GwmSWIMOptionsDialog::onInputDataSourceChanged);
+    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            this, &GwmSWIMOptionsDialog::onLayerSelectionChanged);
+
+    ui->mLayerComboBox->clear();
+    ui->mLayerComboBox->addItem(tr("-- Select layer --"), QVariant());
+    const auto projectLayers = QgsProject::instance()->mapLayers();
+    for (QgsMapLayer* mapLayer : projectLayers)
+    {
+        QgsVectorLayer* vectorLayer = qobject_cast<QgsVectorLayer*>(mapLayer);
+        if (!vectorLayer) continue;
+        if (!vectorLayer->isValid()) continue;
+        ui->mLayerComboBox->addItem(vectorLayer->name(), QVariant::fromValue<qulonglong>(reinterpret_cast<qulonglong>(vectorLayer)));
+    }
+    ui->mLayerComboBox->setCurrentIndex(0);
 
     connect(ui->mCsvFileOpenBtn, &QAbstractButton::clicked, this, &GwmSWIMOptionsDialog::onCsvFileOpenClicked);
 
@@ -76,6 +102,8 @@ GwmSWIMOptionsDialog::GwmSWIMOptionsDialog(QWidget *parent) :
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmSWIMOptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmSWIMOptionsDialog::onGPURadioToggled);
     connect(ui->mCsvFilePathEdit, &QLineEdit::textChanged, this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mLayerComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmSWIMOptionsDialog::updateFieldsAndEnable);
@@ -114,6 +142,7 @@ GwmSWIMOptionsDialog::GwmSWIMOptionsDialog(QWidget *parent) :
     connect(ui->btnAddIndependentVar, &QPushButton::clicked, this, &GwmSWIMOptionsDialog::onAddIndependentVariableClicked);
     connect(ui->btnRemoveIndependentVar, &QPushButton::clicked, this, &GwmSWIMOptionsDialog::onRemoveIndependentVariableClicked);
 
+    onInputDataSourceChanged();
     updateFieldsAndEnable();
 }
 
@@ -135,6 +164,41 @@ void GwmSWIMOptionsDialog::onCsvFileOpenClicked()
         }
         updateFieldsAndEnable();
     }
+}
+
+void GwmSWIMOptionsDialog::onInputDataSourceChanged()
+{
+    const bool useImported = usingImportedLayerData();
+    ui->mDataInputStack->setCurrentIndex(useImported ? 0 : 1);
+    if (useImported)
+    {
+        onLayerSelectionChanged(ui->mLayerComboBox->currentIndex());
+    }
+    else
+    {
+        const QString csvPath = ui->mCsvFilePathEdit->text().trimmed();
+        if (!csvPath.isEmpty())
+        {
+            loadCsvHeaders(csvPath);
+        }
+        else
+        {
+            clearFieldMappingControls();
+        }
+    }
+    updateFieldsAndEnable();
+}
+
+void GwmSWIMOptionsDialog::onLayerSelectionChanged(int index)
+{
+    Q_UNUSED(index);
+    if (!usingImportedLayerData()) return;
+    QgsVectorLayer* layer = selectedImportedLayer();
+    if (!layer || !loadLayerHeaders(layer))
+    {
+        clearFieldMappingControls();
+    }
+    updateFieldsAndEnable();
 }
 
 void GwmSWIMOptionsDialog::onSwimModeChanged(int index)
@@ -289,7 +353,11 @@ void GwmSWIMOptionsDialog::onDmatFileOpenClicked()
 
 QString GwmSWIMOptionsDialog::csvFilePath() const
 {
-    return ui->mCsvFilePathEdit->text();
+    if (usingImportedLayerData())
+    {
+        return mGeneratedCsvPath;
+    }
+    return ui->mCsvFilePathEdit->text().trimmed();
 }
 
 SWIMMode GwmSWIMOptionsDialog::swimMode() const
@@ -396,8 +464,14 @@ void GwmSWIMOptionsDialog::setTaskThread(GwmSWIMTaskThread* taskThread)
     mTaskThread = taskThread;
     if (taskThread)
     {
+        const QString inputCsvPath = resolveInputCsvPath();
+        if (inputCsvPath.isEmpty())
+        {
+            return;
+        }
+
         // Configure task thread immediately
-        taskThread->setCsvFilePath(csvFilePath());
+        taskThread->setCsvFilePath(inputCsvPath);
         taskThread->setSWIMMode(swimMode());
 
         auto bandwidth = new GwmBandwidthWeight(
@@ -475,7 +549,14 @@ void GwmSWIMOptionsDialog::enableAccept()
         enabled = false;
     }
 
-    if (ui->mCsvFilePathEdit->text().isEmpty())
+    if (usingImportedLayerData())
+    {
+        if (!selectedImportedLayer())
+        {
+            enabled = false;
+        }
+    }
+    else if (ui->mCsvFilePathEdit->text().trimmed().isEmpty())
     {
         enabled = false;
     }
@@ -552,6 +633,29 @@ bool GwmSWIMOptionsDialog::loadCsvHeaders(const QString& filePath)
     {
         return false;
     }
+    mCsvHeaders = headers;
+    populateFieldMappingCombos(headers);
+    return true;
+}
+
+bool GwmSWIMOptionsDialog::loadLayerHeaders(QgsVectorLayer* layer)
+{
+    if (!layer || !layer->isValid())
+    {
+        return false;
+    }
+    const QgsFields fields = layer->fields();
+    QStringList headers;
+    headers.reserve(fields.size());
+    for (int i = 0; i < fields.size(); ++i)
+    {
+        headers.append(fields.at(i).name());
+    }
+    if (headers.isEmpty())
+    {
+        return false;
+    }
+    mDetectedDelimiter = '\t';
     mCsvHeaders = headers;
     populateFieldMappingCombos(headers);
     return true;
@@ -866,6 +970,97 @@ void GwmSWIMOptionsDialog::updateCoordinateControlState()
     enableCombo(ui->cbOriginYField);
     enableCombo(ui->cbDestXField);
     enableCombo(ui->cbDestYField);
+}
+
+bool GwmSWIMOptionsDialog::usingImportedLayerData() const
+{
+    return ui->mUseImportedLayerRadio->isChecked();
+}
+
+QgsVectorLayer* GwmSWIMOptionsDialog::selectedImportedLayer() const
+{
+    const int index = ui->mLayerComboBox->currentIndex();
+    if (index <= 0)
+    {
+        return nullptr;
+    }
+    const qulonglong ptr = ui->mLayerComboBox->currentData().toULongLong();
+    if (ptr == 0)
+    {
+        return nullptr;
+    }
+    return reinterpret_cast<QgsVectorLayer*>(ptr);
+}
+
+QString GwmSWIMOptionsDialog::resolveInputCsvPath()
+{
+    if (!usingImportedLayerData())
+    {
+        return ui->mCsvFilePathEdit->text().trimmed();
+    }
+
+    QgsVectorLayer* layer = selectedImportedLayer();
+    if (!layer)
+    {
+        return QString();
+    }
+
+    const QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    if (tempDir.isEmpty())
+    {
+        return QString();
+    }
+    const QString generatedFile = QStringLiteral("gwmodels_swim_%1.csv").arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+    const QString csvPath = QDir(tempDir).filePath(generatedFile);
+    if (!exportLayerToCsv(layer, csvPath))
+    {
+        return QString();
+    }
+    mGeneratedCsvPath = csvPath;
+    mDetectedDelimiter = '\t';
+    return mGeneratedCsvPath;
+}
+
+bool GwmSWIMOptionsDialog::exportLayerToCsv(QgsVectorLayer* layer, const QString& csvPath)
+{
+    if (!layer || !layer->isValid()) return false;
+    QFile csvFile(csvPath);
+    if (!csvFile.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        return false;
+    }
+    QTextStream out(&csvFile);
+    const QgsFields fields = layer->fields();
+    QStringList headerNames;
+    for (int i = 0; i < fields.size(); ++i)
+    {
+        headerNames.append(csvEscaped(fields.at(i).name()));
+    }
+    out << headerNames.join('\t') << '\n';
+
+    QgsFeature feature;
+    QgsFeatureIterator iterator = layer->getFeatures();
+    while (iterator.nextFeature(feature))
+    {
+        QStringList rowValues;
+        const QgsAttributes attrs = feature.attributes();
+        rowValues.reserve(attrs.size());
+        for (const QVariant& attr : attrs)
+        {
+            rowValues.append(csvEscaped(attr.toString()));
+        }
+        out << rowValues.join('\t') << '\n';
+    }
+    return true;
+}
+
+QString GwmSWIMOptionsDialog::csvEscaped(const QString& value) const
+{
+    QString escaped = value;
+    escaped.replace('\t', ' ');
+    escaped.replace('\n', ' ');
+    escaped.replace('\r', ' ');
+    return escaped.trimmed();
 }
 
 
