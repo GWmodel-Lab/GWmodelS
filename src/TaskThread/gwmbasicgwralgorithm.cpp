@@ -1,4 +1,4 @@
-﻿#include "gwmbasicgwralgorithm.h"
+#include "gwmbasicgwralgorithm.h"
 #include <SpatialWeight/gwmcrsdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 #include <gsl/gsl_cdf.h>
@@ -826,6 +826,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICSerial(GwmBandwidthWeight*
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
+    const int selectorStep = static_cast<int>(mBandwidthSizeSelector.bandwidthCriterion().size());
     mat betas(nVar, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -854,8 +855,10 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionAICOmp(GwmBandwidthWeight *ba
             {
                 flag = false;
             }
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current * 10 / nDp, 100);
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current * 10 / nDp, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current * 10 / nDp, 100);
             current++;
         }
     }
@@ -976,6 +979,7 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *
 double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows;
+    const int selectorStep = static_cast<int>(mBandwidthSizeSelector.bandwidthCriterion().size());
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -1006,8 +1010,10 @@ double GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *ban
             {
                 flag = false;
             }
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current * 10 / nDp, 100);
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current * 10 / nDp, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current * 10 / nDp, 100);
             current++;
         }
     }

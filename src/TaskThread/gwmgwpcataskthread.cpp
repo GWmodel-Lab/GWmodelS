@@ -860,6 +860,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
     bool flag = true;
     vec score_all(mOmpThreadNum, fill::zeros);
     int current = 0;
+    const int selectorStep = static_cast<int>(mSelector.bandwidthCriterion().size());
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -886,8 +887,10 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
                 V = V * trans(V);
                 score_all(thread) += pow(sum(mX.row(i) - mX.row(i) * V),2);
             }
-            if(mSelector.counter<10)
-                emit tick(mSelector.counter * 10 + current * 10 / n, 100);
+            // if(mSelector.counter<10)
+            //     emit tick(mSelector.counter * 10 + current * 10 / n, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current * 10 / n, 100);
             current++;
         }
     }

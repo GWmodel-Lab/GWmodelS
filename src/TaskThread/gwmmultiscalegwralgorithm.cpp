@@ -5,6 +5,7 @@
 #include <exception>
 #include "GWmodel/GWmodel.h"
 #include <SpatialWeight/gwmcrsdistance.h>
+#include <chrono>
 
 using namespace std;
 
@@ -235,6 +236,16 @@ void GwmMultiscaleGWRAlgorithm::run()
         }
         mMGWRCore->setParallelType(parallelType);
 
+        // DEBUG: 输出当前并行配置（用于确认是否真的使用 OpenMP）
+        QString uiParallelTypeStr =
+            (mParallelType == IParallelalbe::OpenMP) ? tr("OpenMP") :
+            (mParallelType == IParallelalbe::CUDA) ? tr("CUDA") :
+            tr("SerialOnly");
+        emit message(tr("DEBUG(MGWR) uiParallelType=%1, mOmpThreadNum=%2, coreParallelType=%3")
+                         .arg(uiParallelTypeStr)
+                         .arg(mOmpThreadNum)
+                         .arg(parallelType == gwm::ParallelType::OpenMP ? tr("OpenMP") : tr("SerialOnly")));
+
         // 8. 设置初始空间权重(不需要)
         // 9. 设置消息传递（如果需要）
         mMGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
@@ -243,10 +254,16 @@ void GwmMultiscaleGWRAlgorithm::run()
     // 10. 执行计算
     if (!checkCanceled())
     {
-        emit message(tr("Running MGWR using core library..."));
+        emit message(tr("Fitting..."));
         try
         {
+            // auto fitStart = std::chrono::steady_clock::now();
+
             mBetas = mMGWRCore->fit();
+
+            // auto fitEnd = std::chrono::steady_clock::now();
+            // auto fitElapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(fitEnd - fitStart).count();
+            // emit message(tr("DEBUG(MGWR) fit() elapsed_ms=%1").arg(fitElapsedMs));
 
             std::vector<gwm::SpatialWeight> ws = mMGWRCore->spatialWeights();
             // 确保数量匹配
@@ -1351,11 +1368,13 @@ void GwmMultiscaleGWRAlgorithm::setParallelType(const IParallelalbe::ParallelTyp
 
         switch (type) {
         case IParallelalbe::ParallelType::SerialOnly:
+            emit message("Serial Only...");
             mRegressionAll = &GwmMultiscaleGWRAlgorithm::regressionAllSerial;
             mRegressionVar = &GwmMultiscaleGWRAlgorithm::regressionVarSerial;
             break;
 #ifdef ENABLE_OpenMP
         case IParallelalbe::ParallelType::OpenMP:
+            emit message("OpenMP...");
             mRegressionAll = &GwmMultiscaleGWRAlgorithm::regressionAllOmp;
             mRegressionVar = &GwmMultiscaleGWRAlgorithm::regressionVarOmp;
             break;

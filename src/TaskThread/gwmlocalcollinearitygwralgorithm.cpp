@@ -1,4 +1,4 @@
-﻿#include "gwmlocalcollinearitygwralgorithm.h"
+#include "gwmlocalcollinearitygwralgorithm.h"
 
 #include <armadillo>
 
@@ -326,6 +326,7 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidt
     mat mXnot1 = mX.cols(1, mX.n_cols - 1);
     //主循环
     int current = 0;
+    const int selectorStep = static_cast<int>(selector.bandwidthCriterion().size());
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -359,8 +360,10 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidt
                 }
             }
             betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
-            if(selector.counter<10)
-                emit tick(selector.counter*10 + current * 10 / n, 100);
+            // if(selector.counter<10)
+            //     emit tick(selector.counter*10 + current * 10 / n, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current * 10 / n, 100);
             current++;
         }
     }
