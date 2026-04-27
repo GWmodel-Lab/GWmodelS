@@ -1,4 +1,4 @@
-#include "gwmgwpcataskthread.h"
+﻿#include "gwmgwpcataskthread.h"
 #include <SpatialWeight/gwmcrsdistance.h>
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "gwmtaskthread.h"
@@ -130,8 +130,6 @@ void GwmGWPCATaskThread::run()
             {
                 emit message(QString(tr("Running Robust GWPCA ...")));
 
-                // Robust scores 需要与 loadings 使用同一份 rwpca(V) 结果，
-                // 否则可能因为特征向量符号不确定性导致 scores 与旧版不一致。
                 if (scoresCal())
                 {
                     mScores = cube(mDataPoints.n_rows, mK, mDataPoints.n_rows, fill::zeros);
@@ -145,8 +143,6 @@ void GwmGWPCATaskThread::run()
                 }
                 
                 mVariance = mSDev % mSDev;
-
-                // Robust 分支在 robustSolveSerial() 内已按需要同步填充 mScores。
             }
             else
             {
@@ -463,7 +459,8 @@ mat GwmGWPCATaskThread::robustSolveSerial(const mat& x, cube& loadings, mat& sde
     mat d_all(nVar, nDp, fill::zeros);
 
     loadings = cube(nDp, nVar, mK, fill::zeros);
-    // 若外层希望输出 scores，则同时计算，确保与 loadings 使用同一份 V。
+    // If the external layer wants to output scores,
+    // calculate simultaneously so that the same V will be shared with loadings.
     const bool needScores = scoresCal();
     if (needScores && mScores.n_elem == 0)
     {

@@ -257,13 +257,13 @@ void GwmMultiscaleGWRAlgorithm::run()
         emit message(tr("Fitting..."));
         try
         {
-            // auto fitStart = std::chrono::steady_clock::now();
+            auto fitStart = std::chrono::steady_clock::now();
 
             mBetas = mMGWRCore->fit();
 
-            // auto fitEnd = std::chrono::steady_clock::now();
-            // auto fitElapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(fitEnd - fitStart).count();
-            // emit message(tr("DEBUG(MGWR) fit() elapsed_ms=%1").arg(fitElapsedMs));
+            auto fitEnd = std::chrono::steady_clock::now();
+            auto fitElapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(fitEnd - fitStart).count();
+            emit message(tr("DEBUG(MGWR) fit() elapsed_ms=%1").arg(fitElapsedMs));
 
             std::vector<gwm::SpatialWeight> ws = mMGWRCore->spatialWeights();
             // 确保数量匹配

@@ -1,4 +1,4 @@
-#include "gwmgeneralizedgwralgorithm.h"
+﻿#include "gwmgeneralizedgwralgorithm.h"
 
 //#include "GWmodel/GWmodel.h"
 //#include "gwmggwrbandwidthselectionthread.h"
@@ -1189,7 +1189,7 @@ void GwmGeneralizedGWRAlgorithm::createResultLayer(CreateResultLayerData data,QS
     mResultLayer->dataProvider()->addAttributes(fields.toList());
     mResultLayer->updateFields();
 
-    // 设置要素几何
+    // Setting feature geometry
     mResultLayer->startEditing();
     QgsFeatureIterator iterator = srcLayer->getFeatures();
     QgsFeature f;
@@ -1198,7 +1198,7 @@ void GwmGeneralizedGWRAlgorithm::createResultLayer(CreateResultLayerData data,QS
         QgsFeature feature(fields);
         feature.setGeometry(f.geometry());
 
-        // 设置属性
+        // Setting property
         int k = 0;
         for (QPair<QString, const mat&> item : data)
         {
@@ -1453,13 +1453,14 @@ void GwmGeneralizedGWRAlgorithm::fTest(FTestParameters params)
             vk2(i) = (1.0 / nDp) * det(trans(betasi - betasJndp) * betasi);
         }
 
-        // 参考 BasicGWR 的实现，简化错误处理
+        // referring to realisation of BasicGWR, simplify procedure for wrongs
         for (int i = 0; i < nVar && !checkCanceled(); i++)
         {
             vec diagB = calcDiagBSerial(i);
             if (!checkCanceled())
             {
-                // 如果返回 DBL_MAX，说明计算失败，跳过该变量
+                // if DBL_MAX is returned, the calculation failed
+                // skipped the variable
                 if (diagB(0) == DBL_MAX || diagB(1) == DBL_MAX)
                 {
                     GwmFTestResult f3i;
@@ -1475,7 +1476,7 @@ void GwmGeneralizedGWRAlgorithm::fTest(FTestParameters params)
                 double g2 = diagB(1);
                 double numdf = g1 * g1 / g2;
                 
-                // 检查计算结果的有效性
+                // Inspect validation of results
                 if (g1 <= 0 || g2 <= 0 || numdf <= 0 || !isfinite(numdf))
                 {
                     GwmFTestResult f3i;

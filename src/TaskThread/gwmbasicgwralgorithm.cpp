@@ -1,4 +1,4 @@
-#include "gwmbasicgwralgorithm.h"
+﻿#include "gwmbasicgwralgorithm.h"
 #include <SpatialWeight/gwmcrsdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 #include <gsl/gsl_cdf.h>
@@ -49,7 +49,7 @@ void GwmBasicGWRAlgorithm::setCanceled(bool canceled)
     return GwmTaskThread::setCanceled(canceled);
 }
 
-//OLS计算代码
+//OLS Calculation Code
 GwmBasicGWRAlgorithm::OLSVar GwmBasicGWRAlgorithm::CalOLS(const mat &x, const vec &y){
     QMap<QString,QList<int> > Coefficients;
     double nVar = mX.n_cols;
@@ -74,7 +74,7 @@ GwmBasicGWRAlgorithm::OLSVar GwmBasicGWRAlgorithm::CalOLS(const mat &x, const ve
     double ll = -(np/2)*log(2*datum::pi)-(np/2)*log(varRes)-np/2;
     double AIC = -2*ll + 2*(nVar+1);
     double AICC = AIC+2*nVar*(nVar+1)/(np-nVar-1);
-    //结果赋予结构体
+    // Result to structure
     QMap<QString,QList<double> > coeffs;
     for(int i = 0 ; i < nVar ; i++){
         QString variableName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i - 1].name;
@@ -759,7 +759,7 @@ void GwmBasicGWRAlgorithm::createResultLayer(CreateResultLayerData data,QString 
         QgsFeature feature(fields);
         feature.setGeometry(f.geometry());
 
-        // 设置属性
+        // setting property
         int k = 0;
         for (QPair<QString, const mat&> item : data)
         {

@@ -1,4 +1,4 @@
-#include "gwmlocalcollinearitygwralgorithm.h"
+﻿#include "gwmlocalcollinearitygwralgorithm.h"
 
 #include <armadillo>
 
@@ -140,8 +140,8 @@ vec GwmLocalCollinearityGWRAlgorithm::ridgelm(const vec &w, double lambda)
     mat wspan(1, mX.n_cols, fill::ones);
     mat Xw = mX % (sqrt(w) * wspan);
     mat yw = mY % (sqrt(w));
-    //求标准差
-    //取mX不含第一列的部分
+    // std. err.
+    // mX except for its 1st column
     mat mXnot1 = mX.cols(1, mX.n_cols - 1);
     //标准差结果矩阵
     mat Xsd(1, mX.n_cols, fill::ones);
