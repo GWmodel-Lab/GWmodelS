@@ -259,6 +259,8 @@ void GwmMultiscaleGWRAlgorithm::run()
         {
             auto fitStart = std::chrono::steady_clock::now();
 
+            emit message(tr("parallelType = %1, parallelAbility = %2").arg(mMGWRCore->parallelType()).arg(mMGWRCore->parallelAbility()));
+
             mBetas = mMGWRCore->fit();
 
             auto fitEnd = std::chrono::steady_clock::now();
