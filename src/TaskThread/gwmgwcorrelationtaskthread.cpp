@@ -1,4 +1,4 @@
-﻿#include "gwmgwcorrelationtaskthread.h"
+#include "gwmgwcorrelationtaskthread.h"
 #include "SpatialWeight/gwmcrsdistance.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
@@ -168,13 +168,13 @@ void GwmGWCorrelationTaskThread::run()
             gwm::SpatialWeight sw(bw, dist);
 
             // 设置距离参数（坐标数据已经在 initPoints 中准备好了）
-            if (dist->type() == gwm::Distance::CRSDistance) {
+            if (dist->type() == gwm::Distance::DistanceType::CRSDistance) {
                 auto *d = sw.distance<gwm::CRSDistance>();
                 if (d) {
                     d->makeParameter({ mDataPoints, mDataPoints });
                 }
             }
-            else if (dist->type() == gwm::Distance::MinkwoskiDistance) {
+            else if (dist->type() == gwm::Distance::DistanceType::MinkwoskiDistance) {
                 auto *d2 = sw.distance<gwm::MinkwoskiDistance>();
                 if (d2) {
                     d2->makeParameter({ mDataPoints, mDataPoints });

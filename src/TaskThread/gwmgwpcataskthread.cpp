@@ -49,8 +49,8 @@ void GwmGWPCATaskThread::run()
         emit message(QString(tr("Automatically selecting bandwidth ...")));
         emit tick(0, 0);
         
-        if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || 
-             mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+        if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || 
+             mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
         {
             gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
             if(d)
@@ -782,8 +782,8 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
     int m = mX.n_cols;
     double score = 0;
 
-    if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || 
-        mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || 
+        mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance)
     {
         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
         if(d)

@@ -1,4 +1,4 @@
-﻿#include "gwmscalablegwralgorithm.h"
+#include "gwmscalablegwralgorithm.h"
 
 #include <QPair>
 #include "gsl/gsl_multimin.h"
@@ -694,9 +694,9 @@ arma::mat GwmScalableGWRAlgorithm::regressionHatmatrixSerial(const arma::mat &x,
 void GwmScalableGWRAlgorithm::initPoints()
 {
     GwmGeographicalWeightedRegressionAlgorithm::initPoints();
-    if (mDpSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mDpSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
+    if (mDpSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || mDpSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance)
     {
-        if (mDpSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
+        if (mDpSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance)
         {
             auto* d = mDpSpatialWeight.distance<gwm::CRSDistance>();
             if (d)
@@ -704,7 +704,7 @@ void GwmScalableGWRAlgorithm::initPoints()
                 d->makeParameter({ mDataPoints, mDataPoints });
             }
         }
-        else if (mDpSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
+        else if (mDpSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance)
         {
             auto* d2 = mDpSpatialWeight.distance<gwm::MinkwoskiDistance>();
             if (d2)

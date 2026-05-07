@@ -1,4 +1,4 @@
-﻿#include "gwmgeneralizedgwralgorithm.h"
+#include "gwmgeneralizedgwralgorithm.h"
 
 //#include "GWmodel/GWmodel.h"
 //#include "gwmggwrbandwidthselectionthread.h"
@@ -139,7 +139,7 @@ void GwmGeneralizedGWRAlgorithm::run()
     // {
     //     emit message(QString(tr("Automatically selecting bandwidth ...")));
     //     //emit tick(0, 0);
-    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
     //     {
     //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
     //         d->makeParameter({ mDataPoints, mDataPoints });
@@ -162,7 +162,7 @@ void GwmGeneralizedGWRAlgorithm::run()
     //         QVariant data = QVariant::fromValue(mBandwidthSizeSelector.bandwidthCriterion());
     //         emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
     //     }
-    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
     //     {
     //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
     //         d->makeParameter({ mDataPoints, mDataPoints });
@@ -194,7 +194,7 @@ void GwmGeneralizedGWRAlgorithm::run()
     //         mWtMat2.col(i) = weight;
     //         emit tick(i, nRp);
     //     }
-    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
     //     {
     //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
     //         d->makeParameter({ mDataPoints, mDataPoints });

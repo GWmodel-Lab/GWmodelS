@@ -1,4 +1,4 @@
-﻿#include "gwmmultiscalegwralgorithm.h"
+#include "gwmmultiscalegwralgorithm.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
@@ -174,13 +174,13 @@ void GwmMultiscaleGWRAlgorithm::run()
             gwm::SpatialWeight sw(bw, dist);
 
             // 设置距离参数（坐标数据已经在 initPoints 中准备好了）
-            if (dist->type() == gwm::Distance::CRSDistance) {
+            if (dist->type() == gwm::Distance::DistanceType::CRSDistance) {
                 auto *d = sw.distance<gwm::CRSDistance>();
                 if (d) {
                     d->makeParameter({ mRegressionPoints, mDataPoints });
                 }
             }
-            else if (dist->type() == gwm::Distance::MinkwoskiDistance) {
+            else if (dist->type() == gwm::Distance::DistanceType::MinkwoskiDistance) {
                 auto *d2 = sw.distance<gwm::MinkwoskiDistance>();
                 if (d2) {
                     d2->makeParameter({ mRegressionPoints, mDataPoints });

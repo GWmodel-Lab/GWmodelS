@@ -1,4 +1,4 @@
-﻿#ifndef GWMBASICGWRALGORITHM_H
+#ifndef GWMBASICGWRALGORITHM_H
 #define GWMBASICGWRALGORITHM_H
 
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
@@ -165,7 +165,7 @@ protected:
 
     rowvec distanceParam1(int i)
     {
-        return (mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
+        return (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
     }
 protected:
     void OLS();
