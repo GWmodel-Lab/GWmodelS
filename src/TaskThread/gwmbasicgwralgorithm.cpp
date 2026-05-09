@@ -1,4 +1,4 @@
-#include "gwmbasicgwralgorithm.h"
+﻿#include "gwmbasicgwralgorithm.h"
 #include <SpatialWeight/gwmcrsdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 #include <gsl/gsl_cdf.h>
@@ -138,10 +138,21 @@ void GwmBasicGWRAlgorithm::run()
         if (mIsAutoselectBandwidth)
         {
             emit message(QString(tr("Automatically selecting bandwidth ...")));
+            qDebug() << "ParallelType in run before =" << mParallelType;
+            qDebug() << "OmpThreadNum in run before =" << mOmpThreadNum;
             mGWRCore->setParallelType(mParallelType);
+            mGWRCore->setOmpThreadNum(mOmpThreadNum);
+            qDebug() << "core parallelType =" << mGWRCore->parallelType();
+            qDebug() << "core parallelAbility =" << mGWRCore->parallelAbility();
 
             mGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+            QElapsedTimer timer;
+            timer.start();
+
             mBetas = mGWRCore->fit();
+
+            qint64 elapsed = timer.elapsed();
+            qDebug() << "fit() time =" << elapsed << "ms";
 
             gwm::BandwidthWeight* bw = mGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
             if (bw && !checkCanceled())
@@ -155,7 +166,7 @@ void GwmBasicGWRAlgorithm::run()
                 QVariant data = QVariant::fromValue(qlist);
                 emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
             }
-            std::cout << "mBetas = \n" << mBetas << std::endl;
+            // std::cout << "mBetas = \n" << mBetas << std::endl;
         }
         else
         {

@@ -853,6 +853,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
     vec cv = vec(n);
     mat wt = mat(n,n);
     int current1 = 0, current2 = 0;
+    const int selectorStep = static_cast<int>(mBandwidthSizeSelector.bandwidthCriterion().size());
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -862,9 +863,11 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
             vec w = bandwidthWeight->weight(d);
             w.row(i) = 0;
             wt.col(i) = w;
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
-            current1++;
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current2 * 5 / n + 5, 100);
+            current2++;
         }
     }
     if (!checkCanceled()) (this->*mCalWtFunction)(mX,mY,wt);
@@ -881,8 +884,10 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
             else{
                 cv.row(i) = mY.row(i) - exp(yhatnoi)/(1+exp(yhatnoi));
             }
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current2 * 5 / n + 5, 100);
             current2++;
         }
     }
@@ -959,6 +964,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
     mat S = mat(n,n);
     mat wt = mat(n,n);
     int current1 = 0, current2 = 0;
+    const int selectorStep = static_cast<int>(mBandwidthSizeSelector.bandwidthCriterion().size());
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -967,8 +973,10 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
             vec d = mSpatialWeight.distance()->distance(i);
             vec w = bandwidthWeight->weight(d);
             wt.col(i) = w;
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current1 * 5 / n, 100);
             current1++;
         }
     }
@@ -983,8 +991,10 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
             mat Ci = CiMat(mX,wi);
             S.row(i) = mX.row(i) * Ci;
             trS(thread) += S(i,i);
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current2 * 5 / n + 5, 100);
             current2++;
         }
     }

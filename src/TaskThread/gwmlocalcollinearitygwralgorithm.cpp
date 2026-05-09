@@ -1,4 +1,4 @@
-#include "gwmlocalcollinearitygwralgorithm.h"
+﻿#include "gwmlocalcollinearitygwralgorithm.h"
 
 #include <armadillo>
 
@@ -75,8 +75,20 @@ void GwmLocalCollinearityGWRAlgorithm::run()
 
 
         mLCGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+        mLCGWRCore->setParallelType(mParallelType);
+        mLCGWRCore->setOmpThreadNum(mOmpThreadNum);
+        qDebug() << "core parallelType =" << mLCGWRCore->parallelType();
+        qDebug() << "core parallelAbility =" << mLCGWRCore->parallelAbility();
+
+        QElapsedTimer timer;
+        timer.start();
+
         mBetas = mLCGWRCore->fit();
-        std::cout << "mBetas = \n" << mBetas << std::endl;
+
+        qint64 elapsed = timer.elapsed();
+        qDebug() << "fit() time =" << elapsed << "ms";
+
+        // std::cout << "mBetas = \n" << mBetas << std::endl;
 
         gwm::BandwidthWeight* bw = mLCGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
         mSpatialWeight.setWeight(bw);
@@ -117,18 +129,18 @@ bool GwmLocalCollinearityGWRAlgorithm::isAutoselectBandwidth() const
     return mIsAutoselectBandwidth;
 }
 
-void GwmLocalCollinearityGWRAlgorithm::setBandwidthSelectionCriterionType(const GwmLocalCollinearityGWRAlgorithm::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
+void GwmLocalCollinearityGWRAlgorithm::setBandwidthSelectionCriterionType(const gwm::GWRBasic::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
 {
      mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
-     QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
-         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial),
+     QMap<QPair<gwm::GWRBasic::BandwidthSelectionCriterionType, gwm::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
+         std::make_pair(qMakePair(gwm::GWRBasic::CV, gwm::ParallelType::SerialOnly), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial),
     #ifdef ENABLE_OpenMP
-         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp),
+         std::make_pair(qMakePair(gwm::GWRBasic::CV, gwm::ParallelType::OpenMP), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp),
     #endif
-         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVCuda),
-         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICSerial),
-         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICOmp),
-         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICCuda)
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVCuda),
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::SerialOnly), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICSerial),
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::OpenMP), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICOmp),
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICCuda)
      };
      mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
 }
@@ -501,29 +513,10 @@ mat GwmLocalCollinearityGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
     return betas;
 }
 #endif
-void GwmLocalCollinearityGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &type)
+void GwmLocalCollinearityGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    if(type & parallelAbility())
-    {
-        mParallelType = type;
-        switch(type)
-        {
-        case IParallelalbe::ParallelType::SerialOnly:
-            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
-            break;
-#ifdef ENABLE_OpenMP
-        case IParallelalbe::ParallelType::OpenMP:
-            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionOmp;
-            break;
-#endif
-        default:
-            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
-            break;
-        }
-    }
+    mParallelType = type;
+    mLCGWRCore->setParallelType(type);
 }
 
 bool GwmLocalCollinearityGWRAlgorithm::lambdaAdjust() const
