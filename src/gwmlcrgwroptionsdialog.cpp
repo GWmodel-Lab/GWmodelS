@@ -498,11 +498,11 @@ void GwmLcrGWROptionsDialog::updateFields()
     // 并行设置
     if (ui->mCalcParallelNoneRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+        mTaskThread->setParallelType(gwm::SerialOnly);
     }
     else if (ui->mCalcParallelMultithreadRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setParallelType(gwm::OpenMP);
         mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
     }
     // 其他设置

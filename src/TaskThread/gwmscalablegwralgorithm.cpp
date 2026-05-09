@@ -255,8 +255,12 @@ void GwmScalableGWRAlgorithm::run()
                 mBetas = betas;
                 // mDiagnostic = CalcDiagnostic(mY, mX, mBetas, mShat);
                 mDiagnostic0 = mSGWRCore->diagnostic();
-                // arma::uword nDp = mX.n_rows;
-                // double sigmaHat = mDiagnostic0.RSS / (nDp - 2 * trS + trStS);
+                mShat = mSGWRCore->sHat();
+                mBetasSE = mSGWRCore->betasSE();
+                mat betasTV = mBetas / mBetasSE;
+                double trS = mShat(0), trStS = mShat(1);
+                arma::uword nDp = mX.n_rows;
+                double sigmaHat = mDiagnostic0.RSS / (nDp - 2 * trS + trStS);
                 vec yhat = sum(mX % mBetas, 1);
                 vec residual = mY - yhat;
 
@@ -264,9 +268,9 @@ void GwmScalableGWRAlgorithm::run()
                     qMakePair(QString("%1"), mBetas),
                     qMakePair(QString("y"), mY),
                     qMakePair(QString("yhat"), yhat),
-                    qMakePair(QString("residual"), residual)
-                    // qMakePair(QString("%1_SE"), mBetasSE),
-                    // qMakePair(QString("%1_TV"), betasTV)
+                    qMakePair(QString("residual"), residual),
+                    qMakePair(QString("%1_SE"), mBetasSE),
+                    qMakePair(QString("%1_TV"), betasTV)
                 });
             }
             else

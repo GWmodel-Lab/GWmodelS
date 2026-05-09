@@ -55,9 +55,20 @@ void GwmRobustGWRAlgorithm::run()
     {
         emit message("Regression ...");
         mRGWRCore->setParallelType(mParallelType);
+        mRGWRCore->setOmpThreadNum(mOmpThreadNum);
+        qDebug() << "core parallelType =" << mRGWRCore->parallelType();
+        qDebug() << "core parallelAbility =" << mRGWRCore->parallelAbility();
         mRGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+
+        QElapsedTimer timer;
+        timer.start();
+
         mBetas = mRGWRCore->fit();
-        qDebug() << "mBetas:"; mBetas.print();
+
+        qint64 elapsed = timer.elapsed();
+        qDebug() << "fit() time =" << elapsed << "ms";
+
+        // qDebug() << "mBetas:"; mBetas.print();
     }
 
     if(mOLS&&!checkCanceled()){
@@ -259,28 +270,6 @@ void GwmRobustGWRAlgorithm::createResultLayer(CreateResultLayerData data)
 void GwmRobustGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
     GwmBasicGWRAlgorithm::setParallelType(type);
-    if (type & parallelAbility())
-    {
-        mParallelType = type;
-        switch (type) {
-        case gwm::ParallelType::SerialOnly:
-            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
-            break;
-#ifdef ENABLE_OpenMP
-        case gwm::ParallelType::OpenMP:
-            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixOmp;
-            break;
-#endif
-#ifdef ENABLE_CUDA
-        case gwm::ParallelType::CUDA:
-            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixCuda;
-            break;
-#endif
-        default:
-            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
-            break;
-        }
-    }
 }
 
 mat GwmRobustGWRAlgorithm::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)

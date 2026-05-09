@@ -11,7 +11,7 @@
 
 using namespace arma;
 
-class GwmLocalCollinearityGWRAlgorithm:public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable,public IOpenmpParallelable
+class GwmLocalCollinearityGWRAlgorithm:public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public IIndependentVariableSelectable, public gwm::IParallelizable, public gwm::IParallelOpenmpEnabled, public gwm::IParallelCudaEnabled
 {
 public:
 
@@ -71,8 +71,8 @@ public:
         return criterionList;
     }
 
-    BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
-    void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
+    gwm::GWRBasic::BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
+    void setBandwidthSelectionCriterionType(const gwm::GWRBasic::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 public:
     bool isValid() override;
 
@@ -92,9 +92,9 @@ protected:
     void createResultLayer(CreateResultLayerData data);
 public:
     int parallelAbility() const override;
-    ParallelType parallelType() const override;
+    gwm::ParallelType parallelType() const override;
 
-    void setParallelType(const ParallelType &type) override;
+    void setParallelType(const gwm::ParallelType &type) override;
 
     // IOpenmpParallelable interface
 public:
@@ -127,7 +127,7 @@ public:
 #ifdef ENABLE_OpenMP
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
 #endif
-    BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::CV;
+    gwm::GWRBasic::BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = gwm::GWRBasic::BandwidthSelectionCriterionType::CV;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial;
 
     mat regressionSerial(const mat& x, const vec& y);
@@ -136,7 +136,7 @@ public:
 #endif
     Regression mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
 
-    IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
+    gwm::ParallelType mParallelType = gwm::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
     int mGpuId = 0;
     int mGroupSize = 64;
@@ -146,10 +146,10 @@ public:
 
 inline int GwmLocalCollinearityGWRAlgorithm::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
+    return gwm::SerialOnly | gwm::OpenMP;
 }
 
-inline IParallelalbe::ParallelType GwmLocalCollinearityGWRAlgorithm::parallelType() const
+inline gwm::ParallelType GwmLocalCollinearityGWRAlgorithm::parallelType() const
 {
     return mParallelType;
 }

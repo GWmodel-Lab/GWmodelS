@@ -589,7 +589,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
     mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
     int current = 0;
     if(mHasHatMatrix && !checkCanceled()){
-        mat shat = mat(2,mOmpThreadNum,fill::zeros);       
+        mat shat = mat(2,mOmpThreadNum,fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for(int i = 0; i < nDp; i++){
             mat ci,s_ri;
@@ -818,7 +818,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial(GwmBandwid
                 .arg(res);
         emit message(msg);
         return res;
-    }   
+    }
     else return DBL_MAX;
 
 }
@@ -829,6 +829,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
     vec cv = vec(n);
     mat wt = mat(n,n);
     int current1 = 0, current2 = 0;
+    const int selectorStep = static_cast<int>(mBandwidthSizeSelector.bandwidthCriterion().size());
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -838,9 +839,11 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
             vec w = bandwidthWeight->weight(d);
             w.row(i) = 0;
             wt.col(i) = w;
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
-            current1++;
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current2 * 5 / n + 5, 100);
+            current2++;
         }
     }
     if (!checkCanceled()) (this->*mCalWtFunction)(mX,mY,wt);
@@ -857,8 +860,10 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
             else{
                 cv.row(i) = mY.row(i) - exp(yhatnoi)/(1+exp(yhatnoi));
             }
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current2 * 5 / n + 5, 100);
             current2++;
         }
     }
@@ -883,7 +888,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwi
     int n = mDataPoints.n_rows;
     vec cv = vec(n);
     mat S = mat(n,n);
-    mat wt = mat(n,n);    
+    mat wt = mat(n,n);
     for (int i = 0; i < n && !checkCanceled(); i++)
     {
         vec d = mSpatialWeight.distance()->distance(i);
@@ -935,6 +940,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
     mat S = mat(n,n);
     mat wt = mat(n,n);
     int current1 = 0, current2 = 0;
+    const int selectorStep = static_cast<int>(mBandwidthSizeSelector.bandwidthCriterion().size());
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -943,8 +949,10 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
             vec d = mSpatialWeight.distance()->distance(i);
             vec w = bandwidthWeight->weight(d);
             wt.col(i) = w;
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current1 * 5 / n, 100);
             current1++;
         }
     }
@@ -959,8 +967,10 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
             mat Ci = CiMat(mX,wi);
             S.row(i) = mX.row(i) * Ci;
             trS(thread) += S(i,i);
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            if (selectorStep < 10)
+                emit tick(selectorStep * 10 + current2 * 5 / n + 5, 100);
             current2++;
         }
     }
@@ -1460,11 +1470,11 @@ void GwmGeneralizedGWRAlgorithm::fTest(FTestParameters params)
                     f3.append(f3i);
                     continue;
                 }
-                
+
                 double g1 = diagB(0);
                 double g2 = diagB(1);
                 double numdf = g1 * g1 / g2;
-                
+
                 // 检查计算结果的有效性
                 if (g1 <= 0 || g2 <= 0 || numdf <= 0 || !isfinite(numdf))
                 {
@@ -1476,7 +1486,7 @@ void GwmGeneralizedGWRAlgorithm::fTest(FTestParameters params)
                     f3.append(f3i);
                     continue;
                 }
-                
+
                 GwmFTestResult f3i;
                 f3i.s = (vk2(i) / g1) / sigma2delta1;
                 f3i.df1 = numdf;
@@ -1516,20 +1526,20 @@ vec GwmGeneralizedGWRAlgorithm::calcDiagBSerial(int i)
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
     mat wspan(1, nVar, fill::ones);
-    
+
     // 第一遍循环：计算 c（所有数据点的系数矩阵第 i 列的平均值）
     for (arma::uword j = 0; j < nDp && !checkCanceled(); j++)
     {
         vec wj = mWtMat2.col(j);
         vec weights = wj % mWt2;
-        
+
         // 检查权重有效性
         if (sum(weights) < 1e-10 || any(weights < 0) || !weights.is_finite())
         {
             emit error("Invalid weights in calcDiagB (first loop).");
             return { DBL_MAX, DBL_MAX };
         }
-        
+
         mat xtw = trans(mX % (weights * wspan));
         try {
             // 使用 inv_sympd 替代 pinv，与 BasicGWR 保持一致
@@ -1540,20 +1550,20 @@ vec GwmGeneralizedGWRAlgorithm::calcDiagBSerial(int i)
             return { DBL_MAX, DBL_MAX };
         }
     }
-    
+
     // 第二遍循环：计算 diagB
     for (arma::uword k = 0; k < nDp && !checkCanceled(); k++)
     {
         vec wk = mWtMat2.col(k);
         vec weights = wk % mWt2;
-        
+
         // 检查权重有效性
         if (sum(weights) < 1e-10 || any(weights < 0) || !weights.is_finite())
         {
             emit error("Invalid weights in calcDiagB (second loop).");
             return { DBL_MAX, DBL_MAX };
         }
-        
+
         mat xtw = trans(mX % (weights * wspan));
         try {
             // 使用 inv_sympd 替代 pinv，与 BasicGWR 保持一致
@@ -1565,7 +1575,7 @@ vec GwmGeneralizedGWRAlgorithm::calcDiagBSerial(int i)
             return { DBL_MAX, DBL_MAX };
         }
     }
-    
+
     diagB = 1.0 / nDp * diagB;
     return { sum(diagB), sum(diagB % diagB) };
 }
