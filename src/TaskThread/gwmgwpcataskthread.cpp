@@ -1,4 +1,4 @@
-#include "gwmgwpcataskthread.h"
+﻿#include "gwmgwpcataskthread.h"
 #include <SpatialWeight/gwmcrsdistance.h>
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "gwmtaskthread.h"
@@ -52,67 +52,81 @@ void GwmGWPCATaskThread::run()
         if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || 
              mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
         {
-            gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
-            if(d)
+            // gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+            // if(d)
+            // {
+            //     d->makeParameter({ mDataPoints, mDataPoints });
+            // }
+            if (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance)
             {
-                d->makeParameter({ mDataPoints, mDataPoints });
+                auto &d = mSpatialWeight.distance<gwm::CRSDistance>();
+                d.makeParameter({ mDataPoints, mDataPoints });
+            }
+            else if (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance)
+            {
+                auto &d2 = mSpatialWeight.distance<gwm::MinkwoskiDistance>();
+                d2.makeParameter({ mDataPoints, mDataPoints });
             }
         }
         
-        gwm::BandwidthWeight* bandwidthWeight0 = mSpatialWeight.weight<gwm::BandwidthWeight>();
-        if(!bandwidthWeight0)
+        const auto &bwHolder = mSpatialWeight.weight();
+        if(!bwHolder)
         {
+
             qDebug() << "[GWPCA] ERROR: Cannot get bandwidth weight!";
             emit error(tr("Cannot get bandwidth weight for bandwidth selection."));
             return;
         }
+
+        gwm::BandwidthWeight& bandwidthWeight0 = mSpatialWeight.weight<gwm::BandwidthWeight>();
         
         double tmpMaxD = mSpatialWeight.distance()->maxDistance();
-        double lower = bandwidthWeight0->adaptive() ? 2 : tmpMaxD / 5000;
-        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : tmpMaxD;
+        double lower = bandwidthWeight0.adaptive() ? 2 : tmpMaxD / 5000;
+        double upper = bandwidthWeight0.adaptive() ? mDataPoints.n_rows : tmpMaxD;
         
-        if(bandwidthWeight0->bandwidth() <= 0 || 
-           (bandwidthWeight0->adaptive() && bandwidthWeight0->bandwidth() < lower) ||
-           (!bandwidthWeight0->adaptive() && bandwidthWeight0->bandwidth() < lower))
+        if(bandwidthWeight0.bandwidth() <= 0 ||
+           (bandwidthWeight0.adaptive() && bandwidthWeight0.bandwidth() < lower) ||
+           (!bandwidthWeight0.adaptive() && bandwidthWeight0.bandwidth() < lower))
         {
-            double initialBandwidth = bandwidthWeight0->adaptive() ? 
+            double initialBandwidth = bandwidthWeight0.adaptive() ?
                 std::max(2.0, std::min(20.0, (double)mDataPoints.n_rows * 0.1)) : 
                 std::max(lower, tmpMaxD * 0.1);
-            bandwidthWeight0->setBandwidth(initialBandwidth);
+            bandwidthWeight0.setBandwidth(initialBandwidth);
         }
-        
-        mSelector.setBandwidth(bandwidthWeight0);
-        mSelector.setLower(lower);
-        mSelector.setUpper(upper);
-        
+
         try
         {
-            gwm::BandwidthWeight* bandwidthWeight = mSelector.optimize(this);
-            if(bandwidthWeight && !checkCanceled())
+            gwm::BandwidthSelector selector(bandwidthWeight0, lower, upper);
+            gwm::Status optStatus = selector.optimize(this);
+            if (optStatus == gwm::Status::Terminated || checkCanceled())
             {
-                mSpatialWeight.setWeight(bandwidthWeight);
-                mSelector.setBandwidth(bandwidthWeight);
+                return;
+            }
+            const gwm::BandwidthWeight& rw = selector.result();
+            // auto* applied = new GwmBandwidthWeight(
+            //     rw.bandwidth(),
+            //     rw.adaptive(),
+            //     static_cast<GwmBandwidthWeight::KernelFunctionType>(rw.kernel()));
+            mSpatialWeight.setWeight(rw);
+            mBandwidthCriterionCache = selector.bandwidthCriterion();
 
-                gwm::BandwidthWeight* verifyBw = mSpatialWeight.weight<gwm::BandwidthWeight>();
-                if(verifyBw && verifyBw->bandwidth() == 0)
+            const auto &verifyHolder = mSpatialWeight.weight();
+            if (verifyHolder)
+            {
+                gwm::BandwidthWeight &verifyBw = mSpatialWeight.weight<gwm::BandwidthWeight>();
+                if (verifyBw.bandwidth() == 0)
                 {
                     qDebug() << "[GWPCA] ERROR: Bandwidth is 0 after setWeight! This may cause display issues.";
                 }
             }
-            else if(!bandwidthWeight)
-            {
-                qDebug() << "[GWPCA] WARNING: Bandwidth optimization returned NULL";
-                emit error(tr("Bandwidth optimization failed: no optimal bandwidth found."));
-                return;
-            }
         }
-        catch(const std::exception& e)
+        catch (const std::exception& e)
         {
             qDebug() << "[GWPCA] EXCEPTION during bandwidth optimization:" << e.what();
             emit error(QString(tr("Bandwidth optimization error: %1")).arg(e.what()));
             return;
         }
-        catch(...)
+        catch (...)
         {
             qDebug() << "[GWPCA] UNKNOWN EXCEPTION during bandwidth optimization";
             emit error(tr("Unknown error occurred during bandwidth optimization."));
@@ -287,12 +301,14 @@ void GwmGWPCATaskThread::run()
 
 bool GwmGWPCATaskThread::isValid()
 {
-    gwm::BandwidthWeight* bandwidth = static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight());
-    if(bandwidth){
+    const auto &wh = mSpatialWeight.weight();
+    if(wh){
+        gwm::BandwidthWeight &bandwidth = mSpatialWeight.weight<gwm::BandwidthWeight>();
+
         if(!mIsAutoselectBandwidth)
         {
-            if(bandwidth->adaptive()){
-                if(bandwidth->bandwidth() <= mVariables.size()){
+            if(bandwidth.adaptive()){
+                if(bandwidth.bandwidth() <= mVariables.size()){
                     return false;
                 }
             }
@@ -520,30 +536,30 @@ mat GwmGWPCATaskThread::robustSolveSerial(const mat& x, cube& loadings, mat& sde
     return pv;
 }
 
-gwm::Status GwmGWPCATaskThread::getCriterion(gwm::BandwidthWeight* weight, double& criterion)
+gwm::Status GwmGWPCATaskThread::getCriterion(const std::unique_ptr<gwm::BandwidthWeight>& weight, double& criterion)
 {
-    if(checkCanceled())
+    if (!weight || checkCanceled())
     {
         criterion = DBL_MAX;
-        return gwm::Status::Terminated;
+        return checkCanceled() ? gwm::Status::Terminated : gwm::Status::Success;
     }
-    
-    // 将内核库的BandwidthWeight转换为本地的GwmBandwidthWeight
-    GwmBandwidthWeight::KernelFunctionType kernelType = static_cast<GwmBandwidthWeight::KernelFunctionType>(weight->kernel());
+
+    GwmBandwidthWeight::KernelFunctionType kernelType =
+        static_cast<GwmBandwidthWeight::KernelFunctionType>(weight->kernel());
     GwmBandwidthWeight localWeight(weight->bandwidth(), weight->adaptive(), kernelType);
-    
+
     try
     {
         criterion = (this->*mBandwidthSelectCriterionFunction)(&localWeight);
         return gwm::Status::Success;
     }
-    catch(const std::exception& e)
+    catch (const std::exception& e)
     {
         qDebug() << "[GWPCA::getCriterion] EXCEPTION:" << e.what();
         criterion = DBL_MAX;
         return gwm::Status::Success;
     }
-    catch(...)
+    catch (...)
     {
         qDebug() << "[GWPCA::getCriterion] UNKNOWN EXCEPTION";
         criterion = DBL_MAX;
@@ -785,11 +801,8 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
     if (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || 
         mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance)
     {
-        gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
-        if(d)
-        {
-            d->makeParameter({ mDataPoints, mDataPoints });
-        }
+        gwm::CRSDistance& d = mSpatialWeight.distance<gwm::CRSDistance>(); // static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+        d.makeParameter({ mDataPoints, mDataPoints });
     }
 
     for (int i = 0; i < n && !checkCanceled(); i++)
@@ -859,7 +872,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
     double score = 0;
     bool flag = true;
     vec score_all(mOmpThreadNum, fill::zeros);
-    int current = 0;
+    // int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -886,9 +899,11 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
                 V = V * trans(V);
                 score_all(thread) += pow(sum(mX.row(i) - mX.row(i) * V),2);
             }
-            if(mSelector.counter<10)
-                emit tick(mSelector.counter * 10 + current * 10 / n, 100);
-            current++;
+            // if(mSelector.counter<10)
+            //     emit tick(mSelector.counter * 10 + current * 10 / n, 100);
+            // current++;
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
         }
     }
     score = sum(score_all);

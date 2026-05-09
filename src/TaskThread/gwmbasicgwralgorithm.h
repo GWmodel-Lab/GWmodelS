@@ -1,4 +1,4 @@
-#ifndef GWMBASICGWRALGORITHM_H
+﻿#ifndef GWMBASICGWRALGORITHM_H
 #define GWMBASICGWRALGORITHM_H
 
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
@@ -248,7 +248,7 @@ protected:
     vec mRegressionLayerY;
     mat mRegressionLayerX;
 
-    gwm::BandwidthSelector mBandwidthSizeSelector;
+    //gwm::BandwidthSelector mBandwidthSizeSelector;
     gwm::BandwidthCriterionList criterionList;
     bool mIsAutoselectBandwidth = false;
     gwm::GWRBasic::BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = gwm::GWRBasic::BandwidthSelectionCriterionType::AIC;

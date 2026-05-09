@@ -79,11 +79,12 @@ void GwmGTWRAlgorithm::run()
             mGTWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
             mBetas = mGTWRCore->fit();
 
-            gwm::BandwidthWeight* bw = mGTWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
-            if (bw && !checkCanceled())
+            const auto &coreW = mGTWRCore->spatialWeight().weight();
+            if (coreW && !checkCanceled())
             {
                 // 更新本地权重
-                updateLocalSpatialWeight(bw);
+                gwm::BandwidthWeight& bw = mGTWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
+                updateLocalSpatialWeight(&bw);
 
                 mCriterionList = mGTWRCore->bandwidthSelectionCriterionList();
                 QVector<QPair<double,double>> qlist;
@@ -808,10 +809,12 @@ gwm::SpatialWeight GwmGTWRAlgorithm::convertSpatialWeight()
     // 创建空间距离 (CRSDistance)
     GwmCRSDistance* gwmDist = mSTWeight.distance<GwmCRSDistance>();
     bool isGeographic = gwmDist ? gwmDist->geographic() : false;
-    gwm::CRSDistance* spatialDist = new gwm::CRSDistance(isGeographic);
+    std::unique_ptr<gwm::Distance> spatialDist =
+        std::make_unique<gwm::CRSDistance>(isGeographic);
 
     // 创建时间距离 (OneDimDistance)
-    gwm::OneDimDistance* temporalDist = new gwm::OneDimDistance();
+    std::unique_ptr<gwm::OneDimDistance> temporalDist =
+        std::make_unique<gwm::OneDimDistance>();
 
     // 创建 CRSSTDistance，传入空间距离、时间距离和 lambda
     gwm::CRSSTDistance* dist = new gwm::CRSSTDistance(

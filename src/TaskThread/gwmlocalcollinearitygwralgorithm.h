@@ -108,7 +108,7 @@ private:
 
     double mCnThresh;
 
-    gwm::BandwidthSelector selector;
+    //gwm::BandwidthSelector selector;
 
     bool mHasHatmatix = false;
 

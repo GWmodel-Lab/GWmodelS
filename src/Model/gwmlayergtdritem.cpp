@@ -42,13 +42,14 @@ GwmLayerGTDRItem::GwmLayerGTDRItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
             // update mBandwidth
             if (!sws.empty())
             {
-                auto* optimizedBw = sws[0].weight<gwm::BandwidthWeight>();
-                if (optimizedBw)
+                const auto& coreW = sws[0].weight();
+                if (coreW)
                 {
+                    auto& optimizedBw = sws[0].weight<gwm::BandwidthWeight>();
                     // 更新为优化后的带宽值
-                    mBandwidth->setBandwidth(optimizedBw->bandwidth());
-                    mBandwidth->setAdaptive(optimizedBw->adaptive());
-                    mBandwidth->setKernel(static_cast<GwmBandwidthWeight::KernelFunctionType>(optimizedBw->kernel()));
+                    mBandwidth->setBandwidth(optimizedBw.bandwidth());
+                    mBandwidth->setAdaptive(optimizedBw.adaptive());
+                    mBandwidth->setKernel(static_cast<GwmBandwidthWeight::KernelFunctionType>(optimizedBw.kernel()));
                     isBandwidthOptimized = true;
                 }
             }
@@ -57,14 +58,15 @@ GwmLayerGTDRItem::GwmLayerGTDRItem(GwmLayerItem* parentItem, QgsVectorLayer* vec
             mBandwidths.reserve(sws.size());
             for(int i = 0; i < sws.size(); ++i){
                 // 从 taskMeta 获取初始值，或从优化后的 spatialWeight 获取
-                auto* libBw = sws[i].weight<gwm::BandwidthWeight>();
-                if (libBw)
+                const auto& coreW = sws[i].weight();
+                if (coreW)
                 {
+                    auto& libBw = sws[i].weight<gwm::BandwidthWeight>();
                     // 创建应用层的带宽权重对象
                     auto* appBw = new GwmBandwidthWeight(
-                        libBw->bandwidth(),
-                        libBw->adaptive(),
-                        static_cast<GwmBandwidthWeight::KernelFunctionType>(libBw->kernel())
+                        libBw.bandwidth(),
+                        libBw.adaptive(),
+                        static_cast<GwmBandwidthWeight::KernelFunctionType>(libBw.kernel())
                         );
                     mBandwidths.append(appBw);
                 }

@@ -1,4 +1,4 @@
-#include "gwmgwcorrelationtaskthread.h"
+﻿#include "gwmgwcorrelationtaskthread.h"
 #include "SpatialWeight/gwmcrsdistance.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
@@ -169,16 +169,12 @@ void GwmGWCorrelationTaskThread::run()
 
             // 设置距离参数（坐标数据已经在 initPoints 中准备好了）
             if (dist->type() == gwm::Distance::DistanceType::CRSDistance) {
-                auto *d = sw.distance<gwm::CRSDistance>();
-                if (d) {
-                    d->makeParameter({ mDataPoints, mDataPoints });
-                }
+                auto &d = sw.distance<gwm::CRSDistance>();
+                d.makeParameter({ mDataPoints, mDataPoints });
             }
             else if (dist->type() == gwm::Distance::DistanceType::MinkwoskiDistance) {
-                auto *d2 = sw.distance<gwm::MinkwoskiDistance>();
-                if (d2) {
-                    d2->makeParameter({ mDataPoints, mDataPoints });
-                }
+                auto &d2 = sw.distance<gwm::MinkwoskiDistance>();
+                d2.makeParameter({ mDataPoints, mDataPoints });
             }
 
             spatialWeights.push_back(sw);
@@ -230,10 +226,10 @@ void GwmGWCorrelationTaskThread::run()
             for(uword i = 0 ; i<nVars && !checkCanceled();i++)
             {
                 gwm::SpatialWeight gwmSw = gwmSws[i];
-                gwm::BandwidthWeight* gwmBw = gwmSws[i].weight<gwm::BandwidthWeight>();
-
-                if (gwmBw)
+                const auto& coreW = gwmSws[i].weight();
+                if (coreW)
                 {
+                    gwm::BandwidthWeight& gwmBw = gwmSws[i].weight<gwm::BandwidthWeight>();
                     // 获取当前 GwmSpatialWeight 中的带宽权重
                     GwmBandwidthWeight* currentBw = mSpatialWeights[i].weight<GwmBandwidthWeight>();
                     if (currentBw)
@@ -241,11 +237,11 @@ void GwmGWCorrelationTaskThread::run()
                         // 创建新的 GwmBandwidthWeight，使用更新后的带宽值
                         // 保持原有的 adaptive 和 kernel 设置
                         GwmBandwidthWeight::KernelFunctionType kernelType =
-                            static_cast<GwmBandwidthWeight::KernelFunctionType>(gwmBw->kernel());
+                            static_cast<GwmBandwidthWeight::KernelFunctionType>(gwmBw.kernel());
 
                         GwmBandwidthWeight* newBw = new GwmBandwidthWeight(
-                            gwmBw->bandwidth(),
-                            gwmBw->adaptive(),
+                            gwmBw.bandwidth(),
+                            gwmBw.adaptive(),
                             kernelType
                             );
 

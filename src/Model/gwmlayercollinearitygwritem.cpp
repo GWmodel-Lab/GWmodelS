@@ -9,7 +9,7 @@ GwmLayerCollinearityGWRItem::GwmLayerCollinearityGWRItem(GwmLayerItem* parent, Q
         mDataPointsSize = taskThread->dataLayer()->featureCount();
         mDepVar = taskThread->dependentVariable();
         mIndepVars = taskThread->independentVariables();
-        mWeight = gwm::BandwidthWeight(*static_cast<gwm::BandwidthWeight*>(taskThread->spatialWeight().weight()));
+        mWeight = gwm::BandwidthWeight(taskThread->spatialWeight().weight<gwm::BandwidthWeight>());
         mDiagnostic = taskThread->dialnostic();
         mDiagnostic0 = taskThread->diagnostic0();
         mBetas = mat(taskThread->betas());

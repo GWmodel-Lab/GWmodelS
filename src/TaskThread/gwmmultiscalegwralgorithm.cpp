@@ -1,4 +1,4 @@
-#include "gwmmultiscalegwralgorithm.h"
+﻿#include "gwmmultiscalegwralgorithm.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
@@ -175,16 +175,12 @@ void GwmMultiscaleGWRAlgorithm::run()
 
             // 设置距离参数（坐标数据已经在 initPoints 中准备好了）
             if (dist->type() == gwm::Distance::DistanceType::CRSDistance) {
-                auto *d = sw.distance<gwm::CRSDistance>();
-                if (d) {
-                    d->makeParameter({ mRegressionPoints, mDataPoints });
-                }
+                auto &d = sw.distance<gwm::CRSDistance>();
+                d.makeParameter({ mRegressionPoints, mDataPoints });
             }
             else if (dist->type() == gwm::Distance::DistanceType::MinkwoskiDistance) {
-                auto *d2 = sw.distance<gwm::MinkwoskiDistance>();
-                if (d2) {
-                    d2->makeParameter({ mRegressionPoints, mDataPoints });
-                }
+                auto &d2 = sw.distance<gwm::MinkwoskiDistance>();
+                d2.makeParameter({ mRegressionPoints, mDataPoints });
             }
 
             spatialWeights.push_back(sw);
@@ -254,13 +250,14 @@ void GwmMultiscaleGWRAlgorithm::run()
             {
                 for (size_t i = 0; i < ws.size(); i++)
                 {
-                    gwm::BandwidthWeight* gwmBw = ws[i].weight<gwm::BandwidthWeight>();
-                    if (gwmBw)
+                    const auto& coreW = ws[i].weight();
+                    if (coreW)
                     {
+                        gwm::BandwidthWeight& gwmBw = ws[i].weight<gwm::BandwidthWeight>();
                         // 从库的带宽权重中提取参数
-                        double bandwidth = gwmBw->bandwidth();
-                        bool adaptive = gwmBw->adaptive();
-                        gwm::BandwidthWeight::KernelFunctionType gwmKernel = gwmBw->kernel();
+                        double bandwidth = gwmBw.bandwidth();
+                        bool adaptive = gwmBw.adaptive();
+                        gwm::BandwidthWeight::KernelFunctionType gwmKernel = gwmBw.kernel();
 
                         // 转换为应用层的类型
                         GwmBandwidthWeight::KernelFunctionType kernel = convertKernelTypeBack(gwmKernel);
