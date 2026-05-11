@@ -5,10 +5,11 @@
 #include "PropertyPanelTabs/gwmpropertyggwrtab.h"
 #include "PropertyPanelTabs/gwmpropertygtwrtab.h"
 #include "PropertyPanelTabs/gwmpropertymultiscalegwrtab.h"
-#include "PropertyPanelTabs/gwmpropertygwsstab.h"
+#include "PropertyPanelTabs/gwmpropertygwaveragetab.h"
 #include "PropertyPanelTabs/gwmpropertycollinearitygwrtab.h"
-#include "PropertyPanelTabs/gwmpropertygwcorrelationstab.h"
+#include "PropertyPanelTabs/gwmpropertygwcorrelationtab.h"
 #include "PropertyPanelTabs/gwmpropertygwpcatab.h"
+#include "PropertyPanelTabs/gwmpropertygtdrtab.h"
 
 GwmPropertyPanel::GwmPropertyPanel(QWidget *parent) :
     QTabWidget(parent),
@@ -118,19 +119,24 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
                     tabWidget = new GwmPropertyGTWRTab(this, static_cast<GwmLayerGTWRItem*>(item));
                     (static_cast<GwmPropertyGTWRTab*>(tabWidget))->updateUI();
                     break;
-                case GwmLayerItem::GWSS:
-                    if(static_cast<GwmLayerGWSSItem*>(item)->getType()==2){
-                        tabWidget = new GwmPropertyGWCorrelationsTab(this, static_cast<GwmLayerGWSSItem*>(item));
-                        (static_cast<GwmPropertyGWCorrelationsTab*>(tabWidget))->updateUI();
-                    }
-                    else{
-                    tabWidget = new GwmPropertyGWSSTab(this, static_cast<GwmLayerGWSSItem*>(item));
-                    (static_cast<GwmPropertyGWSSTab*>(tabWidget))->updateUI();
-                    }
+                case GwmLayerItem::GWCorrelation:
+                    tabWidget = new GwmPropertyGWCorrelationTab(this, static_cast<GwmLayerGWCorrelationItem*>(item));
+                    (static_cast<GwmPropertyGWCorrelationTab*>(tabWidget))->updateUI();
+                    break;
+                case GwmLayerItem::GWAverage:
+                    tabWidget = new GwmPropertyGWAverageTab(this, static_cast<GwmLayerGWAverageItem*>(item));
+                    (static_cast<GwmPropertyGWAverageTab*>(tabWidget))->updateUI();
                     break;
                 case GwmLayerItem::GWPCA:
+                    qDebug() << "[GwmPropertyPanel::addPropertyTab] Creating GWPCA property tab...";
                     tabWidget = new GwmPropertyGWPCATab(this, static_cast<GwmLayerGWPCAItem*>(item));
+                    qDebug() << "[GwmPropertyPanel::addPropertyTab] GWPCA property tab created, calling updateUI...";
                     (static_cast<GwmPropertyGWPCATab*>(tabWidget))->updateUI();
+                    qDebug() << "[GwmPropertyPanel::addPropertyTab] GWPCA property tab updateUI completed";
+                    break;
+                case GwmLayerItem::GTDR:
+                    tabWidget = new GwmPropertyGTDRTab(this, static_cast<GwmLayerGTDRItem*>(item));
+                    (static_cast<GwmPropertyGTDRTab*>(tabWidget))->updateUI();
                     break;
                 default:
                     break;
@@ -165,11 +171,17 @@ void GwmPropertyPanel::addPropertyTab(const QModelIndex& index)
                 case GwmLayerItem::GTWR:
                     (static_cast<GwmPropertyGTWRTab*>(tabWidget))->updateUI();
                     break;
-                case GwmLayerItem::GWSS:
-                    (static_cast<GwmPropertyGWSSTab*>(tabWidget))->updateUI();
+                case GwmLayerItem::GWCorrelation:
+                    (static_cast<GwmPropertyGWCorrelationTab*>(tabWidget))->updateUI();
+                    break;
+                case GwmLayerItem::GWAverage:
+                    (static_cast<GwmPropertyGWAverageTab*>(tabWidget))->updateUI();
                     break;
                 case GwmLayerItem::GWPCA:
                     (static_cast<GwmPropertyGWPCATab*>(tabWidget))->updateUI();
+                    break;
+                case GwmLayerItem::GTDR:
+                    (static_cast<GwmPropertyGTDRTab*>(tabWidget))->updateUI();
                     break;
                 default:
                     break;

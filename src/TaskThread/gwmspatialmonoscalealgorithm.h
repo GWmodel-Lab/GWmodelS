@@ -1,4 +1,4 @@
-#ifndef GWMSPATIALMONOSCALEALGORITHM_H
+﻿#ifndef GWMSPATIALMONOSCALEALGORITHM_H
 #define GWMSPATIALMONOSCALEALGORITHM_H
 
 #include <QObject>
@@ -12,20 +12,20 @@ class GwmSpatialMonoscaleAlgorithm : public GwmSpatialAlgorithm
 public:
     GwmSpatialMonoscaleAlgorithm();
 
-    GwmSpatialWeight spatialWeight() const;
-    void setSpatialWeight(const GwmSpatialWeight &spatialWeight);
+    gwm::SpatialWeight spatialWeight() const;
+    void setSpatialWeight(const gwm::SpatialWeight &spatialWeight);
 
 protected:
-    GwmSpatialWeight mSpatialWeight;
+    gwm::SpatialWeight mSpatialWeight;
 };
 
 
-inline GwmSpatialWeight GwmSpatialMonoscaleAlgorithm::spatialWeight() const
+inline gwm::SpatialWeight GwmSpatialMonoscaleAlgorithm::spatialWeight() const
 {
     return mSpatialWeight;
 }
 
-inline void GwmSpatialMonoscaleAlgorithm::setSpatialWeight(const GwmSpatialWeight &spatialWeight)
+inline void GwmSpatialMonoscaleAlgorithm::setSpatialWeight(const gwm::SpatialWeight &spatialWeight)
 {
     mSpatialWeight = spatialWeight;
 }

@@ -11,6 +11,8 @@
 #include <qgscoordinatereferencesystem.h>
 #include <qgslayoutitemguiregistry.h>
 #include <proj.h>
+#include "DelimitedText/qgsdelimitedtextprovider.h"
+
 #include "TaskThread/gwmtaskthread.h"
 #include <QDebug>
 
@@ -34,9 +36,7 @@ int main(int argc, char *argv[])
 #endif
     proj_context_set_search_paths(NULL, 1, proj_data_path);
 
-#if (QT_VERSION >= QT_VERSION_CHECK(5,6,0))
-    QgsApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
-#endif
+    QgsProviderRegistry::instance()->registerProvider(new QgsDelimitedTextProviderMetadata());
     QgsProject::instance()->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(4326));
     qRegisterMetaType<PlotFunction>("PlotFunction");
 

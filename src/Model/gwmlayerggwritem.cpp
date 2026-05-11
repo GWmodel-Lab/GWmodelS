@@ -1,4 +1,4 @@
-#include "gwmlayerggwritem.h"
+﻿#include "gwmlayerggwritem.h"
 
 GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmGeneralizedGWRAlgorithm* taskThread)
     :GwmLayerBasicGWRItem(parent,vector)
@@ -8,7 +8,7 @@ GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector,
         mDataPointsSize = taskThread->dataLayer()->featureCount();
         mDepVar = taskThread->dependentVariable();
         mIndepVars = taskThread->independentVariables();
-        mWeight = GwmBandwidthWeight(*static_cast<GwmBandwidthWeight*>(taskThread->spatialWeight().weight()));
+        mWeight = gwm::BandwidthWeight(*static_cast<gwm::BandwidthWeight*>(taskThread->spatialWeight().weight()));
         mBetas = mat(taskThread->betas());
         isBandwidthOptimized = taskThread->autoselectBandwidth();
         mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();
@@ -16,6 +16,9 @@ GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector,
         isRegressionPointGiven = !(taskThread->regressionLayer() == nullptr);
         mDiagnostic = taskThread->getDiagnostic();
         mGLMDiagnostic = taskThread->getGLMDiagnostic();
+        hasFTest = taskThread->hasFTest();
+        mGGWRFTestResults = taskThread->fTestResult();
+        mFamily = taskThread->getFamily();
     }
 }
 
@@ -109,4 +112,9 @@ GwmGLMDiagnostic GwmLayerGGWRItem::GLMdiagnostic() const
 GwmGeneralizedGWRAlgorithm::Family GwmLayerGGWRItem::family() const
 {
     return mFamily;
+}
+
+GwmGeneralizedGWRAlgorithm::FTestResultPack GwmLayerGGWRItem::GGWRFTestResult() const
+{
+    return mGGWRFTestResults;
 }

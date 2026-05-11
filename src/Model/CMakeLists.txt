@@ -1,4 +1,4 @@
-get_filename_component(SRC_SUBFOLDER_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+﻿get_filename_component(SRC_SUBFOLDER_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 set(SOURCES_SUBFOLDER
     gwmlayerattributeitem.cpp
@@ -9,7 +9,9 @@ set(SOURCES_SUBFOLDER
     gwmlayergroupitem.cpp
     gwmlayergtwritem.cpp
     gwmlayergwpcaitem.cpp
-    gwmlayergwssitem.cpp
+    gwmlayergwcorrelationitem.cpp
+    gwmlayergwaverageitem.cpp
+    gwmlayergtdritem.cpp
     gwmlayeritem.cpp
     gwmlayeritemmodel.cpp
     gwmlayermultiscalegwritem.cpp
@@ -18,10 +20,12 @@ set(SOURCES_SUBFOLDER
     gwmlayersymbolitem.cpp
     gwmlayervectoritem.cpp
     gwmvariableitemmodel.cpp
-    gwmalgorithmmetagwss.cpp
+    gwmalgorithmmetagtdr.cpp
+    gwmalgorithmmetavariable.cpp
     gwmparameterspecifiedoptionsmodel.cpp
     gwmpropertymultiscaleparameterspecifieditemmodel.cpp
     gwmpropertygwcorrelationsparameterspecifieditemmodel.cpp
+    gwmgtdrparameterspecifiedoptionsmodel.cpp
 )
 
 set(HEADERS_SUBFOLDER
@@ -33,7 +37,9 @@ set(HEADERS_SUBFOLDER
     gwmlayergroupitem.h
     gwmlayergtwritem.h
     gwmlayergwpcaitem.h
-    gwmlayergwssitem.h
+    gwmlayergwcorrelationitem.h
+    gwmlayergwaverageitem.h
+    gwmlayergtdritem.h
     gwmlayeritem.h
     gwmlayeritemmodel.h
     gwmlayermultiscalegwritem.h
@@ -42,10 +48,12 @@ set(HEADERS_SUBFOLDER
     gwmlayersymbolitem.h
     gwmlayervectoritem.h
     gwmvariableitemmodel.h
-    gwmalgorithmmetagwss.h
+    gwmalgorithmmetagtdr.h
+    gwmalgorithmmetavariable.h
     gwmparameterspecifiedoptionsmodel.h
     gwmpropertymultiscaleparameterspecifieditemmodel.h
     gwmpropertygwcorrelationsparameterspecifieditemmodel.h
+    gwmgtdrparameterspecifiedoptionsmodel.h
 )
 
 list(TRANSFORM SOURCES_SUBFOLDER PREPEND "${SRC_SUBFOLDER_NAME}/")

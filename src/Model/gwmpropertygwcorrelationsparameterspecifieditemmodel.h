@@ -3,14 +3,14 @@
 
 #include <QAbstractItemModel>
 #include <Model/gwmparameterspecifiedoptionsmodel.h>
-#include "Model/gwmlayergwssitem.h"
+#include "Model/gwmlayergwcorrelationitem.h"
 
 class GwmPropertyGWCorrelationsParameterSpecifiedItemModel : public QAbstractItemModel
 {
     Q_OBJECT
 
 public:
-    explicit GwmPropertyGWCorrelationsParameterSpecifiedItemModel(GwmLayerGWSSItem* layerItem, QObject *parent = nullptr);
+    explicit GwmPropertyGWCorrelationsParameterSpecifiedItemModel(GwmLayerGWCorrelationItem* layerItem, QObject *parent = nullptr);
     ~GwmPropertyGWCorrelationsParameterSpecifiedItemModel();
     // Header:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;

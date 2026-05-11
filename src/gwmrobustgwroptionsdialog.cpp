@@ -1,4 +1,4 @@
-#include "gwmrobustgwroptionsdialog.h"
+﻿#include "gwmrobustgwroptionsdialog.h"
 #include "ui_gwmrobustgwroptionsdialog.h"
 #include <QComboBox>
 #include <QButtonGroup>
@@ -326,11 +326,13 @@ void GwmRobustGWROptionsDialog::onVariableRadioToggled(bool checked)
 double GwmRobustGWROptionsDialog::bandwidthSize(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
-        return (double)ui->mBwSizeAdaptiveSize->value();
+        QList<double> unit = { 1, 10, 100, 1000 };
+        return (double)ui->mBwSizeAdaptiveSize->value() * unit[ui->mBwSizeAdaptiveUnit->currentIndex()];
     }
     else
     {
-        return ui->mBwSizeFixedSize->value();
+        QList<double> unit = { 1.0, 1000.0, 1609.344 };
+        return ui->mBwSizeFixedSize->value() * unit[ui->mBwSizeAdaptiveUnit->currentIndex()];
     }
 }
 
@@ -345,10 +347,10 @@ QString GwmRobustGWROptionsDialog::bandWidthUnit(){
     }
 }
 
-GwmBandwidthWeight::KernelFunctionType GwmRobustGWROptionsDialog::bandwidthKernelFunction()
+gwm::BandwidthWeight::KernelFunctionType GwmRobustGWROptionsDialog::bandwidthKernelFunction()
 {
     int kernelSelected = ui->mBwKernelFunctionCombo->currentIndex();
-    return GwmBandwidthWeight::KernelFunctionType(kernelSelected);
+    return gwm::BandwidthWeight::KernelFunctionType(kernelSelected);
 }
 
 QVariant GwmRobustGWROptionsDialog::distanceSourceParameters()
@@ -453,49 +455,49 @@ void GwmRobustGWROptionsDialog::updateFields()
 //        }
     }
     // 带宽设置
-    GwmSpatialWeight spatialWeight;
-    GwmBandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
+    gwm::SpatialWeight spatialWeight;
+    gwm::BandwidthWeight weight(bandwidthSize(), bandwidthType(), bandwidthKernelFunction());
     spatialWeight.setWeight(weight);
     // 距离设置
     int featureCount = dataLayer->featureCount();
     if (ui->mDistTypeDmatRadio->isChecked())
     {
         QString filename = ui->mDistMatrixFileNameEdit->text();
-        GwmDMatDistance distance(featureCount, filename);
+        gwm::DMatDistance distance(filename.toStdString());
         spatialWeight.setDistance(distance);
     }
     else if (ui->mDistTypeMinkowskiRadio->isChecked())
     {
         double theta = ui->mThetaValue->value();
         double p = ui->mPValue->value();
-        GwmMinkwoskiDistance distance(featureCount, p, theta);
+        gwm::MinkwoskiDistance distance(p, theta);
         spatialWeight.setDistance(distance);
     }
     else
     {
-        GwmCRSDistance distance(featureCount, dataLayer->crs().isGeographic());
+        gwm::CRSDistance distance;
         spatialWeight.setDistance(distance);
     }
     mTaskThread->setSpatialWeight(spatialWeight);
     // 并行设置
     if (ui->mCalcParallelNoneRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+        mTaskThread->setParallelType(gwm::SerialOnly);
     }
     else if (ui->mCalcParallelMultithreadRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setParallelType(gwm::OpenMP);
         mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
     }
     else if (ui->mCalcParallelGPURadio->isChecked() && !ui->mDistTypeDmatRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::CUDA);
+        mTaskThread->setParallelType(gwm::CUDA);
         mTaskThread->setGroupSize(ui->mSampleGroupSize->value());
         mTaskThread->setGPUId(ui->mGPUSelection->currentIndex());
     }
     else
     {
-        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+        mTaskThread->setParallelType(gwm::SerialOnly);
     }
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());

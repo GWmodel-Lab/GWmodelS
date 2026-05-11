@@ -1,16 +1,16 @@
-#ifndef GWMBASICGWRALGORITHM_H
+﻿#ifndef GWMBASICGWRALGORITHM_H
 #define GWMBASICGWRALGORITHM_H
 
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "TaskThread/gwmbandwidthsizeselector.h"
 #include "TaskThread/gwmindependentvariableselector.h"
-#include "TaskThread/iparallelable.h"
+//#include "TaskThread/iparallelable.h"
 
 #ifdef ENABLE_CUDA
 #include "GWmodelCUDA/IGWmodelCUDA.h"
 #endif
 
-class GwmBasicGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public IIndependentVariableSelectable, public IOpenmpParallelable, public ICudaParallelable
+class GwmBasicGWRAlgorithm : public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public IIndependentVariableSelectable, public gwm::IParallelizable, public gwm::IParallelOpenmpEnabled, public gwm::IParallelCudaEnabled
 {
     Q_OBJECT
 
@@ -67,6 +67,7 @@ public:
 
 private:
     GwmDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+    std::unique_ptr<gwm::GWRBasic> mGWRCore;
 
 public:
     GwmBasicGWRAlgorithm();
@@ -91,18 +92,18 @@ public:
     bool hasFTest() const;
     void setHasFTest(bool value);
 
-    int groupSize() const;
-    void setGroupSize(int groupSize);
+    std::size_t groupSize() const;
+    void setGroupSize(const std::size_t groupSize) override;
 
-    BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
-    void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
+    gwm::GWRBasic::BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
+    void setBandwidthSelectionCriterionType(const gwm::GWRBasic::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 
     FTestResultPack fTestResult() const
     {
         return { mF1TestResult, mF2TestResult, mF3TestResult, mF4TestResult };
     }
 
-    BandwidthCriterionList bandwidthSelectorCriterions() const;
+    gwm::BandwidthCriterionList bandwidthSelectorCriterions() const;
 
     IndepVarsCriterionList indepVarSelectorCriterions() const;
 
@@ -145,9 +146,9 @@ protected:  // IRegressionAnalysis interface
 
 public:     // IParallelalbe interface
     int parallelAbility() const override;
-    ParallelType parallelType() const override;
+    gwm::ParallelType parallelType() const override;
 
-    void setParallelType(const ParallelType &type) override;
+    void setParallelType(const gwm::ParallelType &type) override;
 
 public:     // IOpenmpParallelable interface
     void setOmpThreadNum(const int threadNum) override;
@@ -164,7 +165,7 @@ protected:
 
     rowvec distanceParam1(int i)
     {
-        return (mSpatialWeight.distance()->type() == GwmDistance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
+        return (mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
     }
 protected:
     void OLS();
@@ -247,9 +248,10 @@ protected:
     vec mRegressionLayerY;
     mat mRegressionLayerX;
 
-    GwmBandwidthSizeSelector mBandwidthSizeSelector;
+    gwm::BandwidthSelector mBandwidthSizeSelector;
+    gwm::BandwidthCriterionList criterionList;
     bool mIsAutoselectBandwidth = false;
-    BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
+    gwm::GWRBasic::BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = gwm::GWRBasic::BandwidthSelectionCriterionType::AIC;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmBasicGWRAlgorithm::bandwidthSizeCriterionCVSerial;
 
     GwmIndependentVariableSelector mIndepVarSelector;
@@ -265,7 +267,7 @@ protected:
     CalcTrQtQFunction mCalcTrQtQFunction = &GwmBasicGWRAlgorithm::calcTrQtQSerial;
     CalcDiagBFunction mCalcDiagBFunction = &GwmBasicGWRAlgorithm::calcDiagBSerial;
 
-    IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
+    gwm::ParallelType mParallelType = gwm::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
     int mGpuId = 0;
     int mGroupSize = 64;
@@ -319,7 +321,7 @@ inline void GwmBasicGWRAlgorithm::setIndepVarSelectionThreshold(double indepVarS
     mIndepVarSelectionThreshold = indepVarSelectionThreshold;
 }
 
-inline GwmBasicGWRAlgorithm::BandwidthSelectionCriterionType GwmBasicGWRAlgorithm::bandwidthSelectionCriterionType() const
+inline gwm::GWRBasic::BandwidthSelectionCriterionType GwmBasicGWRAlgorithm::bandwidthSelectionCriterionType() const
 {
     return mBandwidthSelectionCriterionType;
 }
@@ -351,17 +353,20 @@ inline IndepVarsCriterionList GwmBasicGWRAlgorithm::indepVarSelectorCriterions()
 
 inline int GwmBasicGWRAlgorithm::parallelAbility() const
 {
-    return IParallelalbe::SerialOnly
-        #ifdef ENABLE_OpenMP
-            | IParallelalbe::OpenMP
-        #endif
-        #ifdef ENABLE_CUDA
-            | IParallelalbe::CUDA
-        #endif
-            ;
+    int ability = gwm::SerialOnly;
+#ifdef ENABLE_OpenMP
+    ability |= gwm::OpenMP;
+#endif
+#ifdef ENABLE_CUDA
+    ability |= gwm::CUDA;
+#endif
+#ifdef ENABLE_MPI
+    ability |= gwm::MPI;
+#endif
+    return ability;
 }
 
-inline IParallelalbe::ParallelType GwmBasicGWRAlgorithm::parallelType() const
+inline gwm::ParallelType GwmBasicGWRAlgorithm::parallelType() const
 {
     return mParallelType;
 }
@@ -376,9 +381,9 @@ inline void GwmBasicGWRAlgorithm::setGPUId(const int gpuId)
     mGpuId = gpuId;
 }
 
-inline BandwidthCriterionList GwmBasicGWRAlgorithm::bandwidthSelectorCriterions() const
+inline gwm::BandwidthCriterionList GwmBasicGWRAlgorithm::bandwidthSelectorCriterions() const
 {
-    return mBandwidthSizeSelector.bandwidthCriterion();
+    return criterionList;
 }
 
 inline bool GwmBasicGWRAlgorithm::hasPredict() const

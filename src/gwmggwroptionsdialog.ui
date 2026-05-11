@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>741</width>
-    <height>790</height>
+    <width>700</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,8 +27,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>723</width>
-        <height>772</height>
+        <width>682</width>
+        <height>782</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -420,7 +420,7 @@
            <widget class="QComboBox" name="mBwKernelFunctionCombo">
             <item>
              <property name="text">
-              <string>Gaussion</string>
+              <string>Gaussian</string>
              </property>
             </item>
             <item>

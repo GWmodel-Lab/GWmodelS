@@ -12,13 +12,56 @@
 #include <qwt_legend.h>
 #include <qwt_legend_label.h>
 #include <qwt_column_symbol.h>
+#include <QDebug>
 
 void GwmBandwidthSizeSelector::PlotBandwidthResult(QVariant data, QwtPlot *plot)
 {
-    BandwidthCriterionList result = data.value<BandwidthCriterionList>();
-    //设置窗口属性
+    // Differrent BandWdithSizeSelector Data
+    // 1) QVariant::fromValue(BandwidthCriterionList)  (std::vector<std::pair<double,double>>)
+    // 2) QVariant::fromValue(QVector<QPair<double,double>>)
+    BandwidthCriterionList result;
+    if (data.canConvert<BandwidthCriterionList>())
+    {
+        result = data.value<BandwidthCriterionList>();
+    }
+    else if (data.canConvert<QVector<QPair<double, double>>>())
+    {
+        const auto qlist = data.value<QVector<QPair<double, double>>>();
+        result.reserve(static_cast<std::size_t>(qlist.size()));
+        for (const auto& item : qlist)
+            result.push_back(std::make_pair(item.first, item.second));
+    }
+    else
+    {
+        qDebug() << "Data cannot convert to BandwidthCriterionList or QVector<QPair<double,double>>!";
+        return;
+    }
+
+    qDebug() << "PlotBandwidthResult received size:" << static_cast<int>(result.size());
+
+    std::sort(result.begin(), result.end(),
+              [](const std::pair<double, double>& a, const std::pair<double, double>& b){
+                  if (a.first == b.first)
+                      return a.second < b.second;
+                  return a.first < b.first;
+              });
+
+    QVector<double> xData, yData;
+    xData.reserve(static_cast<int>(result.size()));
+    yData.reserve(static_cast<int>(result.size()));
+    for (const auto& item : result) {
+        qDebug() << "Bandwidth:" << item.first << ", Criterion:" << item.second;
+        xData.push_back(item.first);
+        yData.push_back(item.second);
+    }
+
+    if (xData.isEmpty() || yData.isEmpty()) {
+        qDebug() << "xData or yData is empty!";
+        return;
+    }
+
     plot->plotLayout()->setAlignCanvasToScales(true);
-    //新建一个曲线对象
+
     QwtPlotCurve *curve = new QwtPlotCurve("curve");
     //设置曲线颜色 粗细
     curve->setPen(Qt::blue,1.0,Qt::DashLine);
@@ -28,46 +71,42 @@ void GwmBandwidthSizeSelector::PlotBandwidthResult(QVariant data, QwtPlot *plot)
     QwtSymbol *symbol = new QwtSymbol( QwtSymbol::Ellipse, QBrush( Qt::yellow ), QPen( Qt::red, 0.5 ), QSize( 5, 5) );
     //添加样本点形状
     curve->setSymbol( symbol );
-    //输入数据
-    QVector<double> xData;
-    QVector<double> yData;
-    for(auto i = result.constBegin();i!=result.constEnd();++i){
-        xData.push_back(i->first);
-        yData.push_back(i->second);
-    }
-    //设置X与Y坐标范围
-    //返回xData与yData最大最小值
-    //拷贝xData与yData并返回sort
-    QVector<double> xData_2(xData);
-    QVector<double> yData_2(yData);
-    //从小到大排序
-    std::sort(xData_2.begin(),xData_2.end());
-    std::sort(yData_2.begin(),yData_2.end());
-    plot->setAxisScale(QwtPlot::xBottom,xData_2[0],xData_2[xData.length()-1]);
-    plot->setAxisScale(QwtPlot::yLeft, yData_2[0], yData_2[yData.length()-1]);
-    //设置数据
-    curve->setSamples(xData,yData);
+    //输入数据（已按 x 排序）
+    curve->setSamples(xData, yData);
     curve->attach(plot);
-    curve->setLegendAttribute(curve->LegendShowLine);
 
+    // 设置坐标轴范围
+    auto [xMinIt, xMaxIt] = std::minmax_element(xData.begin(), xData.end());
+    auto [yMinIt, yMaxIt] = std::minmax_element(yData.begin(), yData.end());
+    plot->setAxisScale(QwtPlot::xBottom, *xMinIt, *xMaxIt);
+    plot->setAxisScale(QwtPlot::yLeft, *yMinIt, *yMaxIt);
+
+    qDebug() << "x range:" << *xMinIt << "-" << *xMaxIt;
+    qDebug() << "y range:" << *yMinIt << "-" << *yMaxIt;
+
+    curve->setLegendAttribute(QwtPlotCurve::LegendShowLine);
     plot->replot();
+    qDebug() << "Plot replot done";
 }
+
+
 
 GwmBandwidthSizeSelector::GwmBandwidthSizeSelector()
 {
 
 }
 
-QList<QPair<double, double> > GwmBandwidthSizeSelector::bandwidthCriterion() const
+BandwidthCriterionList GwmBandwidthSizeSelector::bandwidthCriterion() const
 {
-    QList<QPair<double, double> > criterions;
-    for (double key : mBandwidthCriterion.keys())
+    BandwidthCriterionList criterions;
+    for (auto it = mBandwidthCriterion.constBegin(); it != mBandwidthCriterion.constEnd(); ++it)
     {
-        criterions.append(qMakePair(key, mBandwidthCriterion[key]));
+        criterions.push_back(std::make_pair(it.key(), it.value()));
     }
-    std::sort(criterions.begin(), criterions.end(), [](const QPair<double, double>& a, const QPair<double, double>& b){
-        return a.first < b.first;
-    });
+    std::sort(criterions.begin(), criterions.end(),
+              [](const std::pair<double, double>& a, const std::pair<double, double>& b){
+                  return a.first < b.first;
+              });
     return criterions;
 }
 

@@ -1,4 +1,4 @@
-#include "gwmlayergtwritem.h"
+﻿#include "gwmlayergtwritem.h"
 #include "gwmlayergroupitem.h"
 
 GwmLayerGTWRItem::GwmLayerGTWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmGTWRAlgorithm *taskThread)
@@ -13,7 +13,9 @@ GwmLayerGTWRItem::GwmLayerGTWRItem(GwmLayerItem* parent, QgsVectorLayer* vector,
         mDiagnostic = taskThread->diagnostic();
         mBetas = mat(taskThread->betas());
         isBandwidthOptimized = taskThread->isAutoselectBandwidth();
-        mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();
+        //mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();
+        gwm::BandwidthCriterionList gwmList = taskThread->bandwidthSelectorCriterions();
+        mBandwidthSelScores = BandwidthCriterionList(gwmList.begin(), gwmList.end());
         hasHatmatrix = taskThread->hasHatMatrix();
         isRegressionPointGiven = !(taskThread->regressionLayer() == nullptr);
     }
@@ -129,7 +131,7 @@ bool GwmLayerGTWRItem::readXml(QDomNode &node)
                     {
                         double size = bandwidthNode.attribute("size").toDouble();
                         double criterion = bandwidthNode.attribute("criterion").toDouble();
-                        mBandwidthSelScores.append(qMakePair(size, criterion));
+                        mBandwidthSelScores.push_back(std::make_pair(size, criterion));
                     }
                     bandwidthNode = bandwidthNode.nextSiblingElement("bandwidth");
                 }
@@ -251,7 +253,7 @@ QList<GwmVariable> GwmLayerGTWRItem::indepVars() const
     return mIndepVars;
 }
 
-QList<QPair<double, double> > GwmLayerGTWRItem::bandwidthSelScores() const
+BandwidthCriterionList GwmLayerGTWRItem::bandwidthSelScores() const
 {
     return mBandwidthSelScores;
 }

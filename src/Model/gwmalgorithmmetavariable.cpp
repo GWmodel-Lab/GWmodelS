@@ -1,10 +1,10 @@
-#include "gwmalgorithmmetagwss.h"
+#include "gwmalgorithmmetavariable.h"
 
 #include <QTranslator>
 
 using namespace gwm;
 
-bool GwmAlgorithmMetaGWSS::validate(QString &error) const
+bool GwmAlgorithmMetaVariable::validate(QString &error) const
 {
     if (layer == nullptr)
     {

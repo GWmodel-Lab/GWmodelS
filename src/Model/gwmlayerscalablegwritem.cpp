@@ -1,4 +1,4 @@
-#include "gwmlayerscalablegwritem.h"
+﻿#include "gwmlayerscalablegwritem.h"
 
 GwmLayerScalableGWRItem::GwmLayerScalableGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector, const GwmScalableGWRAlgorithm* taskThread)
     : GwmLayerVectorItem(parent, vector)
@@ -8,15 +8,17 @@ GwmLayerScalableGWRItem::GwmLayerScalableGWRItem(GwmLayerItem* parent, QgsVector
         mDataPointsSize = taskThread->dataLayer()->featureCount();
         mDepVar = taskThread->dependentVariable();
         mIndepVars = taskThread->independentVariables();
-        mWeight = GwmBandwidthWeight(*static_cast<GwmBandwidthWeight*>(taskThread->spatialWeight().weight()));
+        mWeight = gwm::BandwidthWeight(*static_cast<gwm::BandwidthWeight*>(taskThread->spatialWeight().weight()));
         mDistanceType = taskThread->spatialWeight().distance()->type();
         mDiagnostic = taskThread->diagnostic();
+        mDiagnostic0 = taskThread->diagnostic0();
         mBetas = mat(taskThread->betas());
         mPolynomial = taskThread->polynomial();
         mCV = taskThread->cv();
         mScale = taskThread->scale();
         mPenalty = taskThread->penalty();
         mParameterOptimizeCriterionType = taskThread->parameterOptimizeCriterion();
+        mParameterOptimizeCriterionType0 = taskThread->parameterOptimizeCriterion0();
         mHasRegressionLayer = taskThread->regressionLayer() != nullptr;
         mHasPredict = taskThread->hasPredict();
     }
@@ -80,8 +82,14 @@ bool GwmLayerScalableGWRItem::readXml(QDomNode &node)
         {
             double bandwidth = weightNode.attribute("bandwidth").toDouble();
             bool adaptive = weightNode.attribute("adaptive").toInt();
-            GwmBandwidthWeight::KernelFunctionType kernel = GwmBandwidthWeight::KernelFunctionTypeNameMapper.value(weightNode.attribute("kernel"));
-            mWeight = GwmBandwidthWeight(bandwidth, adaptive, kernel);
+            auto it = std::find_if(
+                gwm::BandwidthWeight::KernelFunctionTypeNameMapper.begin(),
+                gwm::BandwidthWeight::KernelFunctionTypeNameMapper.end(),
+                [&](const auto& kv){ return kv.second == weightNode.attribute("kernel").toStdString(); }
+                );
+            gwm::BandwidthWeight::KernelFunctionType kernel =
+                it != gwm::BandwidthWeight::KernelFunctionTypeNameMapper.end() ? it->first : gwm::BandwidthWeight::Gaussian;
+            mWeight = gwm::BandwidthWeight(bandwidth, adaptive, kernel);
         }
         else return false;
 
@@ -129,7 +137,7 @@ bool GwmLayerScalableGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
         nodeAnalyse.setAttribute("cv", mCV);
         nodeAnalyse.setAttribute("scale", mScale);
         nodeAnalyse.setAttribute("penalty", mPenalty);
-        nodeAnalyse.setAttribute("parameterOptimizeCriterion", mParameterOptimizeCriterionType);
+        nodeAnalyse.setAttribute("parameterOptimizeCriterion", mParameterOptimizeCriterionType0);
         nodeAnalyse.setAttribute("hasRegressionLayer", mHasRegressionLayer);
         nodeAnalyse.setAttribute("hasPredict", mHasPredict);
 
@@ -153,7 +161,10 @@ bool GwmLayerScalableGWRItem::writeXml(QDomNode &node, QDomDocument &doc)
         nodeAnalyse.appendChild(nodeIndepVarList);
 
         QDomElement nodeBandwidth = doc.createElement("weight");
-        nodeBandwidth.setAttribute("kernel", GwmBandwidthWeight::KernelFunctionTypeNameMapper.name(mWeight.kernel()));
+        nodeBandwidth.setAttribute(
+            "kernel",
+            QString::fromStdString(gwm::BandwidthWeight::KernelFunctionTypeNameMapper.at(mWeight.kernel()))
+            );
         nodeBandwidth.setAttribute("bandwidth", mWeight.bandwidth());
         nodeBandwidth.setAttribute("adaptive", mWeight.adaptive());
         nodeAnalyse.appendChild(nodeBandwidth);
@@ -208,7 +219,7 @@ QList<GwmVariable> GwmLayerScalableGWRItem::indepVars() const
     return mIndepVars;
 }
 
-GwmBandwidthWeight GwmLayerScalableGWRItem::weight() const
+gwm::BandwidthWeight GwmLayerScalableGWRItem::weight() const
 {
     return mWeight;
 }
@@ -218,12 +229,17 @@ GwmDiagnostic GwmLayerScalableGWRItem::diagnostic() const
     return mDiagnostic;
 }
 
+gwm::RegressionDiagnostic GwmLayerScalableGWRItem::diagnostic0() const
+{
+    return mDiagnostic0;
+}
+
 arma::mat GwmLayerScalableGWRItem::betas() const
 {
     return mBetas;
 }
 
-GwmDistance::DistanceType GwmLayerScalableGWRItem::distanceType() const
+gwm::Distance::DistanceType GwmLayerScalableGWRItem::distanceType() const
 {
     return mDistanceType;
 }
@@ -231,6 +247,11 @@ GwmDistance::DistanceType GwmLayerScalableGWRItem::distanceType() const
 GwmScalableGWRAlgorithm::ParameterOptimizeCriterionType GwmLayerScalableGWRItem::parameterOptimizeCriterionType() const
 {
     return mParameterOptimizeCriterionType;
+}
+
+gwm::GWRScalable::BandwidthSelectionCriterionType GwmLayerScalableGWRItem::parameterOptimizeCriterionType0() const
+{
+    return mParameterOptimizeCriterionType0;
 }
 
 bool GwmLayerScalableGWRItem::hasRegressionLayer() const

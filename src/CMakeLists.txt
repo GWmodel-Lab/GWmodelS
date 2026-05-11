@@ -118,7 +118,8 @@ set(SOURCES
     gwmgtwroptionsdialog.cpp
     gwmgwpcaoptionsdialog.cpp
     gwmgwroptionsdialog.cpp
-    gwmgwssoptionsdialog.cpp
+    gwmflowdatadialog.cpp
+    gwmgtdroptionsdialog.cpp
     gwmindepvarselectorwidget.cpp
     gwmlcrgwroptionsdialog.cpp
     gwmmaptoolidentifyfeature.cpp
@@ -137,7 +138,8 @@ set(SOURCES
     aboutdevelopers.cpp
     gwmprojcrssettingdialog.cpp
     gwmgwaverageoptionsdialog.cpp
-    gwmcorrelationdialog.cpp
+    gwmgwcorrelationoptionsdialog.cpp
+    gwmswimoptionsdialog.cpp
 )
 
 set(HEADERS
@@ -152,7 +154,8 @@ set(HEADERS
     gwmgtwroptionsdialog.h
     gwmgwpcaoptionsdialog.h
     gwmgwroptionsdialog.h
-    gwmgwssoptionsdialog.h
+    gwmflowdatadialog.h
+    gwmgtdroptionsdialog.h
     gwmindepvarselectorwidget.h
     gwmlcrgwroptionsdialog.h
     gwmmaptoolidentifyfeature.h
@@ -171,19 +174,21 @@ set(HEADERS
     aboutdevelopers.h
     gwmprojcrssettingdialog.h
     gwmgwaverageoptionsdialog.h
-    gwmcorrelationdialog.h
+    gwmgwcorrelationoptionsdialog.h
+    gwmswimoptionsdialog.h
 )
 
 set(FORMS
     gwmapp.ui
     gwmcoordtranssettingdialog.ui
     gwmcsvtodatdialog.ui
+    gwmflowdatadialog.ui
     gwmfeaturepanel.ui
     gwmggwroptionsdialog.ui
     gwmgtwroptionsdialog.ui
     gwmgwpcaoptionsdialog.ui
     gwmgwroptionsdialog.ui
-    gwmgwssoptionsdialog.ui
+    gwmgtdroptionsdialog.ui
     gwmindepvarselectorwidget.ui
     gwmmultiscalegwroptionsdialog.ui
     gwmlcrgwroptionsdialog.ui
@@ -210,7 +215,8 @@ set(FORMS
     aboutdevelopers.ui
     gwmprojcrssettingdialog.ui
     gwmgwaverageoptionsdialog.ui
-    gwmcorrelationdialog.ui
+    gwmgwcorrelationoptionsdialog.ui
+    gwmswimoptionsdialog.ui
 )
 
 add_subdirectory("./AttributeTable")
@@ -227,7 +233,8 @@ add_subdirectory("./Validity")
 qt5_wrap_ui(FORMS_H ${FORMS})
 
 if(WIN32)
-    add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS})
+    add_executable(GWmodelS WIN32 ${SOURCES} ${HEADERS} ${FORMS_H} ${app_WINRC} ${GWMODEL_ICONS}
+    )
 endif(WIN32)
 
 if(UNIX AND NOT CYGWIN)

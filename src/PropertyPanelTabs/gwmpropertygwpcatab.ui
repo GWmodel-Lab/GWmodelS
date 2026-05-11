@@ -47,9 +47,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-63</y>
+        <y>-280</y>
         <width>403</width>
-        <height>676</height>
+        <height>893</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -155,13 +155,6 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Local variance: </string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="0">
            <widget class="QTableWidget" name="tbwLocalvariance">
             <property name="sizePolicy">
@@ -178,6 +171,13 @@
             </property>
            </widget>
           </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Local variance: </string>
+            </property>
+           </widget>
+          </item>
           <item row="3" column="0">
            <widget class="QTableWidget" name="tbwProp">
             <property name="sizePolicy">
@@ -185,6 +185,23 @@
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QTableWidget" name="tbwScores">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Local Scores</string>
             </property>
            </widget>
           </item>

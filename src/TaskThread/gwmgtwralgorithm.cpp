@@ -1,4 +1,4 @@
-#include "gwmgtwralgorithm.h"
+﻿#include "gwmgtwralgorithm.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
@@ -20,15 +20,20 @@ GwmDiagnostic GwmGTWRAlgorithm::CalcDiagnostic(const mat &x, const vec &y, const
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-GwmGTWRAlgorithm::GwmGTWRAlgorithm() : GwmSpatialTemporalMonoscaleAlgorithm()
+GwmGTWRAlgorithm::GwmGTWRAlgorithm() : GwmSpatialTemporalMonoscaleAlgorithm(),
+    mGTWRCore(std::make_unique<gwm::GTWR>())
 {
 
 }
 
 void GwmGTWRAlgorithm::setCanceled(bool canceled)
 {
-    mBandwidthSizeSelector.setCanceled(canceled);
+    // mBandwidthSizeSelector.setCanceled(canceled);
     mSTWeight.distance()->setCanceled(canceled);
+    // if (mGTWRCore)
+    // {
+    //     mGTWRCore->setCanceled(canceled);
+    // }
     return GwmTaskThread::setCanceled(canceled);
 }
 
@@ -44,40 +49,77 @@ void GwmGTWRAlgorithm::run()
     {
         emit message(QString(tr("Setting X and Y...")));
         initXY(mX, mY, mDepVar, mIndepVars);
+
+        // 设置坐标和时间
+        mGTWRCore->setCoords(mDataPoints, mDataTimeStamp);
+        mGTWRCore->setDependentVariable(mY);
+        mGTWRCore->setIndependentVariables(mX);
+
+        // 转换空间权重
+        gwm::SpatialWeight spatialWeight = convertSpatialWeight();
+        mGTWRCore->setSpatialWeight(spatialWeight);
+
+        mGTWRCore->setHasHatMatrix(mHasHatMatrix);
+        mGTWRCore->setBandwidthSelectionCriterion(
+            mBandwidthSelectionCriterionType == AIC ?
+                gwm::GTWR::BandwidthSelectionCriterionType::AIC :
+                gwm::GTWR::BandwidthSelectionCriterionType::CV
+            );
+        mGTWRCore->setIsAutoselectBandwidth(mIsAutoselectBandwidth);
     }
 
     // 优选带宽
-    if (!hasRegressionLayer() && mIsAutoselectBandwidth && !checkCanceled())
+    if (!checkCanceled() && !hasRegressionLayer())
     {
-        emit message(QString(tr("Automatically selecting bandwidth ...")));
-        emit tick(0, 0);
-        GwmBandwidthWeight* bandwidthWeight0 = mSTWeight.weight<GwmBandwidthWeight>();
-        mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
-        double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
-        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSTWeight.distance()->maxDistance();
-        mBandwidthSizeSelector.setLower(lower);
-        mBandwidthSizeSelector.setUpper(upper);
-        GwmBandwidthWeight* bandwidthWeight = mBandwidthSizeSelector.optimize(this);
-        if (bandwidthWeight && !checkCanceled())
+        if (mIsAutoselectBandwidth)
         {
-            mSTWeight.setWeight(bandwidthWeight);
-            // 绘图
-            QVariant data = QVariant::fromValue(mBandwidthSizeSelector.bandwidthCriterion());
-            emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
+            emit message(QString(tr("Automatically selecting bandwidth ...")));
+            emit tick(0, 0);
+            mGTWRCore->setParallelType(static_cast<gwm::ParallelType>(mParallelType));
+            mGTWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+            mBetas = mGTWRCore->fit();
+
+            gwm::BandwidthWeight* bw = mGTWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
+            if (bw && !checkCanceled())
+            {
+                // 更新本地权重
+                updateLocalSpatialWeight(bw);
+
+                mCriterionList = mGTWRCore->bandwidthSelectionCriterionList();
+                QVector<QPair<double,double>> qlist;
+                for (const auto &item : mCriterionList)
+                    qlist.append(qMakePair(item.first, item.second));
+                QVariant data = QVariant::fromValue(qlist);
+                emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
+            }
+        }
+        else
+        {
+            mGTWRCore->setParallelType(static_cast<gwm::ParallelType>(mParallelType));
+            mGTWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+            mBetas = mGTWRCore->fit();
         }
     }
 
+    if (checkCanceled())
+    {
+        return;
+    }
+
+    // 解算模型
     if (mHasHatMatrix && !checkCanceled())
     {
-        emit message(tr("Calibrating..."));
         uword nDp = mDataPoints.n_rows;
-        mBetas = regression(mX, mY);
-        mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
+        // 诊断
+        mDiagnostic0 = mGTWRCore->diagnostic();
+        mSHat = mGTWRCore->sHat();
+        mBetasSE = mGTWRCore->betasSE();
         double trS = mSHat(0), trStS = mSHat(1);
-        double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+        double sigmaHat = mDiagnostic0.RSS / (nDp - 2 * trS + trStS);
         mBetasSE = sqrt(sigmaHat * mBetasSE);
         vec yhat = Fitted(mX, mBetas);
         vec res = mY - yhat;
+        mQDiag = mGTWRCore->qDiag();
         vec stu_res = res / sqrt(sigmaHat * mQDiag);
         mat betasTV = mBetas / mBetasSE;
         vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
@@ -90,7 +132,8 @@ void GwmGTWRAlgorithm::run()
             double rss = sum(dyhat2 % w);
             localR2(i) = (tss - rss) / tss;
         }
-        createResultLayer({
+
+        CreateResultLayerData resultLayerData = {
             qMakePair(QString("%1"), mBetas),
             qMakePair(QString("y"), mY),
             qMakePair(QString("yhat"), yhat),
@@ -99,34 +142,113 @@ void GwmGTWRAlgorithm::run()
             qMakePair(QString("%1_SE"), mBetasSE),
             qMakePair(QString("%1_TV"), betasTV),
             qMakePair(QString("localR2"), localR2)
-        });
+        };
+        createResultLayer(resultLayerData);
     }
     else
     {
-        if(!checkCanceled())
+        CreateResultLayerData resultLayerData;
+        if (mHasRegressionLayerXY && mHasPredict)
         {
-            mBetas = regression(mX, mY);
-            CreateResultLayerData resultLayerData;
-            if (mHasRegressionLayerXY && mHasPredict)
-            {
-                vec yhat = Fitted(mRegressionLayerX, mBetas);
-                vec residual = mRegressionLayerY - yhat;
-                resultLayerData = {
-                    qMakePair(QString(mDepVar.name), mRegressionLayerY),
-                    qMakePair(QString("%1"), mBetas),
-                    qMakePair(QString("yhat"), yhat),
-                    qMakePair(QString("residual"), residual)
-                };
-            }
-            else
-            {
-                resultLayerData = {
-                    qMakePair(QString("%1"), mBetas)
-                };
-            }
-            createResultLayer(resultLayerData);
+            vec yhat = Fitted(mRegressionLayerX, mBetas);
+            vec residual = mRegressionLayerY - yhat;
+            resultLayerData = {
+                qMakePair(QString(mDepVar.name), mRegressionLayerY),
+                qMakePair(QString("%1"), mBetas),
+                qMakePair(QString("yhat"), yhat),
+                qMakePair(QString("residual"), residual)
+            };
         }
+        else
+        {
+            resultLayerData = {
+                qMakePair(QString("%1"), mBetas)
+            };
+        }
+        createResultLayer(resultLayerData);
     }
+    // below are old codes
+    // // 优选带宽
+    // if (!hasRegressionLayer() && mIsAutoselectBandwidth && !checkCanceled())
+    // {
+    //     emit message(QString(tr("Automatically selecting bandwidth ...")));
+    //     emit tick(0, 0);
+    //     GwmBandwidthWeight* bandwidthWeight0 = mSTWeight.weight<GwmBandwidthWeight>();
+    //     mBandwidthSizeSelector.setBandwidth(bandwidthWeight0);
+    //     double lower = bandwidthWeight0->adaptive() ? 20 : 0.0;
+    //     double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : mSTWeight.distance()->maxDistance();
+    //     mBandwidthSizeSelector.setLower(lower);
+    //     mBandwidthSizeSelector.setUpper(upper);
+    //     GwmBandwidthWeight* bandwidthWeight = mBandwidthSizeSelector.optimize(this);
+    //     if (bandwidthWeight && !checkCanceled())
+    //     {
+    //         mSTWeight.setWeight(bandwidthWeight);
+    //         // 绘图
+    //         QVariant data = QVariant::fromValue(mBandwidthSizeSelector.bandwidthCriterion());
+    //         emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
+    //     }
+    // }
+
+    // if (mHasHatMatrix && !checkCanceled())
+    // {
+    //     emit message(tr("Calibrating..."));
+    //     uword nDp = mDataPoints.n_rows;
+    //     mBetas = regression(mX, mY);
+    //     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
+    //     double trS = mSHat(0), trStS = mSHat(1);
+    //     double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+    //     mBetasSE = sqrt(sigmaHat * mBetasSE);
+    //     vec yhat = Fitted(mX, mBetas);
+    //     vec res = mY - yhat;
+    //     vec stu_res = res / sqrt(sigmaHat * mQDiag);
+    //     mat betasTV = mBetas / mBetasSE;
+    //     vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
+    //     vec dyhat2 = (mY - yhat) % (mY - yhat);
+    //     vec localR2 = vec(nDp, fill::zeros);
+    //     for (uword i = 0; i < nDp && !checkCanceled(); i++)
+    //     {
+    //         vec w = mSTWeight.weightVector(i);
+    //         double tss = sum(dybar2 % w);
+    //         double rss = sum(dyhat2 % w);
+    //         localR2(i) = (tss - rss) / tss;
+    //     }
+    //     createResultLayer({
+    //         qMakePair(QString("%1"), mBetas),
+    //         qMakePair(QString("y"), mY),
+    //         qMakePair(QString("yhat"), yhat),
+    //         qMakePair(QString("residual"), res),
+    //         qMakePair(QString("Stud_residual"), stu_res),
+    //         qMakePair(QString("%1_SE"), mBetasSE),
+    //         qMakePair(QString("%1_TV"), betasTV),
+    //         qMakePair(QString("localR2"), localR2)
+    //     });
+    // }
+    // else
+    // {
+    //     if(!checkCanceled())
+    //     {
+    //         mBetas = regression(mX, mY);
+    //         CreateResultLayerData resultLayerData;
+    //         if (mHasRegressionLayerXY && mHasPredict)
+    //         {
+    //             vec yhat = Fitted(mRegressionLayerX, mBetas);
+    //             vec residual = mRegressionLayerY - yhat;
+    //             resultLayerData = {
+    //                 qMakePair(QString(mDepVar.name), mRegressionLayerY),
+    //                 qMakePair(QString("%1"), mBetas),
+    //                 qMakePair(QString("yhat"), yhat),
+    //                 qMakePair(QString("residual"), residual)
+    //             };
+    //         }
+    //         else
+    //         {
+    //             resultLayerData = {
+    //                 qMakePair(QString("%1"), mBetas)
+    //             };
+    //         }
+    //         createResultLayer(resultLayerData);
+    //     }
+    // }
 
     if(!checkCanceled())
     {
@@ -626,6 +748,11 @@ void GwmGTWRAlgorithm::setParallelType(const ParallelType &type)
     if (type & parallelAbility())
     {
         mParallelType = type;
+        if (mGTWRCore)
+        {
+            mGTWRCore->setParallelType(static_cast<gwm::ParallelType>(type));
+        }
+        setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
         switch (type) {
         case IParallelalbe::ParallelType::SerialOnly:
             mRegressionFunction = &GwmGTWRAlgorithm::regressionSerial;
@@ -645,5 +772,65 @@ void GwmGTWRAlgorithm::setParallelType(const ParallelType &type)
             setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
             break;
         }
+    }
+}
+
+gwm::SpatialWeight GwmGTWRAlgorithm::convertSpatialWeight()
+{
+    // 获取带宽权重
+    GwmBandwidthWeight* gwmBw = mSTWeight.weight<GwmBandwidthWeight>();
+    gwm::BandwidthWeight::KernelFunctionType kernelType;
+    switch (gwmBw->kernel())
+    {
+    case GwmBandwidthWeight::Gaussian:
+        kernelType = gwm::BandwidthWeight::KernelFunctionType::Gaussian;
+        break;
+    case GwmBandwidthWeight::Exponential:
+        kernelType = gwm::BandwidthWeight::KernelFunctionType::Exponential;
+        break;
+    case GwmBandwidthWeight::Bisquare:
+        kernelType = gwm::BandwidthWeight::KernelFunctionType::Bisquare;
+        break;
+    case GwmBandwidthWeight::Tricube:
+        kernelType = gwm::BandwidthWeight::KernelFunctionType::Tricube;
+        break;
+    default:
+        kernelType = gwm::BandwidthWeight::KernelFunctionType::Gaussian;
+        break;
+    }
+
+    gwm::BandwidthWeight* bw = new gwm::BandwidthWeight(
+        gwmBw->bandwidth(),
+        gwmBw->adaptive(),
+        kernelType
+        );
+
+    // 创建空间距离 (CRSDistance)
+    GwmCRSDistance* gwmDist = mSTWeight.distance<GwmCRSDistance>();
+    bool isGeographic = gwmDist ? gwmDist->geographic() : false;
+    gwm::CRSDistance* spatialDist = new gwm::CRSDistance(isGeographic);
+
+    // 创建时间距离 (OneDimDistance)
+    gwm::OneDimDistance* temporalDist = new gwm::OneDimDistance();
+
+    // 创建 CRSSTDistance，传入空间距离、时间距离和 lambda
+    gwm::CRSSTDistance* dist = new gwm::CRSSTDistance(
+        spatialDist,
+        temporalDist,
+        mSTWeight.lambda()
+        );
+
+    // 创建 SpatialWeight
+    gwm::SpatialWeight spatialWeight(bw, dist);
+    return spatialWeight;
+}
+
+void GwmGTWRAlgorithm::updateLocalSpatialWeight(gwm::BandwidthWeight* bw)
+{
+    // 更新本地权重对象
+    GwmBandwidthWeight* gwmBw = mSTWeight.weight<GwmBandwidthWeight>();
+    if (gwmBw)
+    {
+        gwmBw->setBandwidth(bw->bandwidth());
     }
 }
