@@ -197,6 +197,8 @@ void GwmGWCorrelationTaskThread::run()
     mGWCorrCore->setBandwidthSelectionApproach(bandwidthSelTypes);
     mGWCorrCore->setParallelType(static_cast<gwm::ParallelType>(mParallelType));
     mGWCorrCore->setOmpThreadNum(mOmpThreadNum);
+    qDebug() << "core parallelType =" << mGWCorrCore->parallelType();
+    qDebug() << "core parallelAbility =" << mGWCorrCore->parallelAbility();
 
     // std::vector<gwm::SpatialWeight> a = mGWCorrCore->spatialWeights();
     // gwm::BandwidthWeight bwa = a[0].weight<gwm::BandwidthWeight>();

@@ -1,4 +1,4 @@
-#include "gwmgwcorrelationoptionsdialog.h"
+﻿#include "gwmgwcorrelationoptionsdialog.h"
 #include "ui_gwmgwcorrelationoptionsdialog.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>

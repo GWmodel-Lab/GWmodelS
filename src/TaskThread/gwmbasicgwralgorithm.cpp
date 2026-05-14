@@ -1547,6 +1547,6 @@ void GwmBasicGWRAlgorithm::setBandwidthSelectionCriterionType(const gwm::GWRBasi
 
 void GwmBasicGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    mParallelType = type;
-    mGWRCore->setParallelType(type);
+    // mParallelType = type;
+    // mGWRCore->setParallelType(type);
 }

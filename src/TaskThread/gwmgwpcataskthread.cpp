@@ -1,4 +1,4 @@
-#include "gwmgwpcataskthread.h"
+﻿#include "gwmgwpcataskthread.h"
 #include <SpatialWeight/gwmcrsdistance.h>
 #include "TaskThread/gwmgeographicalweightedregressionalgorithm.h"
 #include "gwmtaskthread.h"

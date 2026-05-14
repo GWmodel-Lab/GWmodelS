@@ -515,8 +515,8 @@ mat GwmLocalCollinearityGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
 #endif
 void GwmLocalCollinearityGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    mParallelType = type;
-    mLCGWRCore->setParallelType(type);
+    // mParallelType = type;
+    // mLCGWRCore->setParallelType(type);
 }
 
 bool GwmLocalCollinearityGWRAlgorithm::lambdaAdjust() const

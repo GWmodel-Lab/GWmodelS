@@ -1,4 +1,4 @@
-#include "gwmgwaveragetaskthread.h"
+﻿#include "gwmgwaveragetaskthread.h"
 #include <exception>
 #include <gwmodel.h>
 #include "SpatialWeight/gwmcrsdistance.h"
@@ -75,6 +75,8 @@ void GwmGWAverageTaskThread::run()
     try
     {
         mAlgorithm.setTelegram(make_unique<GwmTaskThreadTelegram>(this));
+        qDebug() << "core parallelType =" << mAlgorithm.parallelType();
+        qDebug() << "core parallelAbility =" << mAlgorithm.parallelAbility();
         mAlgorithm.run();
         if(!checkCanceled())
         {

@@ -269,7 +269,7 @@ void GwmRobustGWRAlgorithm::createResultLayer(CreateResultLayerData data)
 
 void GwmRobustGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    GwmBasicGWRAlgorithm::setParallelType(type);
+    // GwmBasicGWRAlgorithm::setParallelType(type);
 }
 
 mat GwmRobustGWRAlgorithm::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
