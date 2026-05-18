@@ -45,6 +45,7 @@ GwmGWAverageTaskThread::GwmGWAverageTaskThread(const GwmAlgorithmMetaVariable& m
     }
     SpatialWeight spatialWeight(&weight, distance);
     mAlgorithm.setSpatialWeight(spatialWeight);
+    mAlgorithm.setAutoselectBandwidth(meta.weightBandwidthAutoselect);
     // Parallel
     mAlgorithm.setParallelType(meta.parallelType);
     switch (meta.parallelType)
@@ -77,7 +78,9 @@ void GwmGWAverageTaskThread::run()
         mAlgorithm.setTelegram(make_unique<GwmTaskThreadTelegram>(this));
         qDebug() << "core parallelType =" << mAlgorithm.parallelType();
         qDebug() << "core parallelAbility =" << mAlgorithm.parallelAbility();
+        qDebug() << "core autoselect bandwidth =" << mAlgorithm.isAutoselectBandwidth();
         mAlgorithm.run();
+        qDebug() << "runfinished";
         if(!checkCanceled())
         {
             mResultList.push_back(qMakePair(QString("LM"), localmean()));
