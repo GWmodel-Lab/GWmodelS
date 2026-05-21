@@ -1,4 +1,4 @@
-#ifndef GWMGWAVERAGETASKTHREAD_H
+﻿#ifndef GWMGWAVERAGETASKTHREAD_H
 #define GWMGWAVERAGETASKTHREAD_H
 
 #include <QObject>
@@ -73,6 +73,9 @@ protected:
     QgsVectorLayer* mLayer = nullptr;
     QList<GwmVariable> mVariables;
     CreateResultLayerData mResultList;
+
+public:
+    gwm::BandwidthWeight finalBandwidth() const;
 
 public:
     static int treeChildCount;
