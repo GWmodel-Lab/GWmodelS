@@ -8,7 +8,7 @@ GwmLayerScalableGWRItem::GwmLayerScalableGWRItem(GwmLayerItem* parent, QgsVector
         mDataPointsSize = taskThread->dataLayer()->featureCount();
         mDepVar = taskThread->dependentVariable();
         mIndepVars = taskThread->independentVariables();
-        mWeight = gwm::BandwidthWeight(*static_cast<gwm::BandwidthWeight*>(taskThread->spatialWeight().weight()));
+        mWeight = gwm::BandwidthWeight(taskThread->spatialWeight().weight<gwm::BandwidthWeight>());
         mDistanceType = taskThread->spatialWeight().distance()->type();
         mDiagnostic = taskThread->diagnostic();
         mDiagnostic0 = taskThread->diagnostic0();

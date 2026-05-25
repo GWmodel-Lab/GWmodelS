@@ -1,4 +1,4 @@
-#ifndef GWMGWPCATASKTHREAD_H
+﻿#ifndef GWMGWPCATASKTHREAD_H
 #define GWMGWPCATASKTHREAD_H
 
 #include <QObject>
@@ -8,6 +8,7 @@
 
 #include "TaskThread/gwmbandwidthsizeselector.h"
 #include <gwmodel.h>
+// #include <memory> // in case that std::unique_ptr cannot be found
 
 class GwmGWPCATaskThread : public GwmSpatialMonoscaleAlgorithm, public IBandwidthSizeSelectable, public IGwmMultivariableAnalysis, public IOpenmpParallelable, public gwm::IBandwidthSelectable
 {
@@ -48,7 +49,8 @@ public:
 
     BandwidthCriterionList bandwidthSelectorCriterions() const
     {
-        return mSelector.bandwidthCriterion();
+        // return mSelector.bandwidthCriterion();
+        return mBandwidthCriterionCache;
     }
 
     double k() const;
@@ -130,7 +132,7 @@ private:
     }
 
 public:  // gwm::IBandwidthSelectable interface
-    gwm::Status getCriterion(gwm::BandwidthWeight* weight, double& criterion) override;
+    gwm::Status getCriterion(const std::unique_ptr<gwm::BandwidthWeight>& weight, double& criterion) override;
 
 private:
     QList<GwmVariable> mVariables;
@@ -141,7 +143,8 @@ private:
     mat mX;
     vec mLatestWt;
 
-    gwm::BandwidthSelector mSelector;
+    // gwm::BandwidthSelector mSelector;
+    BandwidthCriterionList mBandwidthCriterionCache;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::CV;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial;
     bool mIsAutoselectBandwidth = false;

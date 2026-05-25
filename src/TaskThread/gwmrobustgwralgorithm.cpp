@@ -446,22 +446,22 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, m
     bool longlat = false;
     if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
     {
-        GwmMinkwoskiDistance* d = mSpatialWeight.distance<GwmMinkwoskiDistance>();
-        p = d->poly();
-        theta = d->theta();
+        gwm::MinkwoskiDistance& d = mSpatialWeight.distance<gwm::MinkwoskiDistance>();
+        p = d.poly();
+        theta = d.theta();
     }
     else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
     {
-        GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
-        longlat = d->geographic();
+        gwm::CRSDistance& d = mSpatialWeight.distance<gwm::CRSDistance>();
+        longlat = d.geographic();
     }
-    GwmBandwidthWeight* bw = mSpatialWeight.weight<GwmBandwidthWeight>();
-    bool adaptive = bw->adaptive();
+    gwm::BandwidthWeight& bw = mSpatialWeight.weight<gwm::BandwidthWeight>();
+    bool adaptive = bw.adaptive();
     for(int i=0;i<nDp;i++)
     {
         cuda->SetWeightMask(i,mWeightMask(i));
     }
-    bool gwrStatus = cuda->Regression(true, p, theta, longlat, bw->bandwidth(), bw->kernel(), adaptive, mGroupSize, mGpuId);
+    bool gwrStatus = cuda->Regression(true, p, theta, longlat, bw.bandwidth(), bw.kernel(), adaptive, mGroupSize, mGpuId);
     mat betas(nVar, nDp, fill::zeros);
     betasSE = mat(nVar, nDp, fill::zeros);
     shat = vec(2, fill::zeros);

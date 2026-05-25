@@ -78,7 +78,7 @@ void GwmLocalCollinearityGWRAlgorithm::run()
         mBetas = mLCGWRCore->fit();
         std::cout << "mBetas = \n" << mBetas << std::endl;
 
-        gwm::BandwidthWeight* bw = mLCGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
+        gwm::BandwidthWeight& bw = mLCGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
         mSpatialWeight.setWeight(bw);
 
         criterionList = mLCGWRCore->bandwidthSelectionCriterionList();
@@ -325,7 +325,7 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidt
     //取mX不含第一列的部分
     mat mXnot1 = mX.cols(1, mX.n_cols - 1);
     //主循环
-    int current = 0;
+    // int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -359,9 +359,11 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidt
                 }
             }
             betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
-            if(selector.counter<10)
-                emit tick(selector.counter*10 + current * 10 / n, 100);
-            current++;
+            // if(selector.counter<10)
+            //     emit tick(selector.counter*10 + current * 10 / n, 100);
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
+            // current++;
         }
     }
     //yhat赋值
@@ -552,12 +554,12 @@ bool GwmLocalCollinearityGWRAlgorithm::isValid()
 {
     if (GwmGeographicalWeightedRegressionAlgorithm::isValid())
     {
-        gwm::BandwidthWeight* bandwidth = static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight());
+        gwm::BandwidthWeight& bandwidth = mSpatialWeight.weight<gwm::BandwidthWeight>();//static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight());
 
         if(!mIsAutoselectBandwidth)
         {
-            if(bandwidth->adaptive()){
-                if (bandwidth->bandwidth() <= mIndepVars.size()) return false;
+            if(bandwidth.adaptive()){
+                if (bandwidth.bandwidth() <= mIndepVars.size()) return false;
             }else{
 
             }

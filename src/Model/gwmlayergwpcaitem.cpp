@@ -1,4 +1,4 @@
-#include "gwmlayergwpcaitem.h"
+﻿#include "gwmlayergwpcaitem.h"
 #include "gwmlayergroupitem.h"
 
 #include <QDir>
@@ -16,14 +16,15 @@ GwmLayerGWPCAItem::GwmLayerGWPCAItem(GwmLayerItem* parent, QgsVectorLayer* vecto
             mK = taskThread->k();
             
             gwm::SpatialWeight sw = taskThread->spatialWeight();
-            gwm::BandwidthWeight* gwmBw = sw.weight<gwm::BandwidthWeight>();
-            if (gwmBw)
+            const auto& coreW = sw.weight();
+            if (coreW)
             {
-                if(gwmBw->bandwidth() == 0)
+                gwm::BandwidthWeight& gwmBw = sw.weight<gwm::BandwidthWeight>();
+                if(gwmBw.bandwidth() == 0)
                 {
                     qDebug() << "[GwmLayerGWPCAItem] WARNING: Bandwidth is 0! This will cause display issues in property panel.";
                 }
-                mWeight = gwm::BandwidthWeight(*gwmBw);
+                mWeight = gwm::BandwidthWeight(gwmBw);
             }
             else
             {

@@ -120,7 +120,10 @@ public:     // IBandwidthSizeSelectable interface
 public:
     double criterionLib(gwm::BandwidthWeight* bandwidthWeight){
         double criterionValue = 0.0;
-        mGGWRCore->getCriterion(bandwidthWeight, criterionValue);
+        auto cloned = bandwidthWeight->clone();
+        std::unique_ptr<gwm::BandwidthWeight> bw(
+            static_cast<gwm::BandwidthWeight*>(cloned.release()));
+        mGGWRCore->getCriterion(bw, criterionValue);
         return criterionValue;
     }
 
@@ -266,7 +269,7 @@ protected:
     bool mIsAutoselectBandwidth = false;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial;
-    gwm::BandwidthSelector mBandwidthSizeSelector;
+    //gwm::BandwidthSelector mBandwidthSizeSelector;
 
     gwm::ParallelType mParallelType = gwm::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;

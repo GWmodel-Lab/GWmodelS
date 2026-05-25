@@ -165,7 +165,7 @@ protected:
 
     rowvec distanceParam1(int i)
     {
-        return (mSpatialWeight.distance()->type() == gwm::Distance::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
+        return (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::DMatDistance ? vec(1).fill(i) : mDataPoints.row(i));
     }
 protected:
     void OLS();
@@ -248,7 +248,7 @@ protected:
     vec mRegressionLayerY;
     mat mRegressionLayerX;
 
-    gwm::BandwidthSelector mBandwidthSizeSelector;
+    //gwm::BandwidthSelector mBandwidthSizeSelector;
     gwm::BandwidthCriterionList criterionList;
     bool mIsAutoselectBandwidth = false;
     gwm::GWRBasic::BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = gwm::GWRBasic::BandwidthSelectionCriterionType::AIC;

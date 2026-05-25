@@ -8,7 +8,7 @@ GwmLayerGGWRItem::GwmLayerGGWRItem(GwmLayerItem* parent, QgsVectorLayer* vector,
         mDataPointsSize = taskThread->dataLayer()->featureCount();
         mDepVar = taskThread->dependentVariable();
         mIndepVars = taskThread->independentVariables();
-        mWeight = gwm::BandwidthWeight(*static_cast<gwm::BandwidthWeight*>(taskThread->spatialWeight().weight()));
+        mWeight = gwm::BandwidthWeight(taskThread->spatialWeight().weight<gwm::BandwidthWeight>());
         mBetas = mat(taskThread->betas());
         isBandwidthOptimized = taskThread->autoselectBandwidth();
         mBandwidthSelScores = taskThread->bandwidthSelectorCriterions();

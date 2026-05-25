@@ -49,23 +49,17 @@ void GwmGeographicalWeightedRegressionAlgorithm::initPoints()
     }
     else mRegressionPoints = mDataPoints;
     // 设置空间距离中的数据指针
-    if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance)
     {
-        if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance)
+        if (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance)
         {
-            auto *d = mSpatialWeight.distance<gwm::CRSDistance>();
-            if (d)
-            {
-                d->makeParameter({ mRegressionPoints, mDataPoints });
-            }
+            auto &d = mSpatialWeight.distance<gwm::CRSDistance>();
+            d.makeParameter({ mRegressionPoints, mDataPoints });
         }
-        else if (mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
+        else if (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance)
         {
-            auto *d2 = mSpatialWeight.distance<gwm::MinkwoskiDistance>();
-            if (d2)
-            {
-                d2->makeParameter({ mRegressionPoints, mDataPoints });
-            }
+            auto &d2 = mSpatialWeight.distance<gwm::MinkwoskiDistance>();
+            d2.makeParameter({ mRegressionPoints, mDataPoints });
         }
     }
 

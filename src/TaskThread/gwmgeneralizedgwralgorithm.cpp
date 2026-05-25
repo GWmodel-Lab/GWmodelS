@@ -106,13 +106,15 @@ void GwmGeneralizedGWRAlgorithm::run()
             //     mBetas = mGGWRCore->fit();
             // }
 
-            gwm::BandwidthWeight* bw = mGGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
-            emit message(tr("bandwidth selected: %1").arg(bw->bandwidth()));
 
-            if (bw && !checkCanceled())
+            const auto &coreW = mGGWRCore->spatialWeight().weight();
+            if (coreW && !checkCanceled())
             {
+                gwm::BandwidthWeight& bw = mGGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
+                emit message(tr("bandwidth selected: %1").arg(bw.bandwidth()));
+
                 mSpatialWeight.setWeight(bw);
-                criterionList = mGGWRCore->mBandwidthSelectionCriterionList;
+                criterionList = mGGWRCore->bandwidthSelectorCriterions();
 
                 // 绘图数据
                 QVector<QPair<double,double>> qlist;
@@ -139,7 +141,7 @@ void GwmGeneralizedGWRAlgorithm::run()
     // {
     //     emit message(QString(tr("Automatically selecting bandwidth ...")));
     //     //emit tick(0, 0);
-    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
     //     {
     //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
     //         d->makeParameter({ mDataPoints, mDataPoints });
@@ -162,7 +164,7 @@ void GwmGeneralizedGWRAlgorithm::run()
     //         QVariant data = QVariant::fromValue(mBandwidthSizeSelector.bandwidthCriterion());
     //         emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
     //     }
-    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
     //     {
     //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
     //         d->makeParameter({ mDataPoints, mDataPoints });
@@ -194,7 +196,7 @@ void GwmGeneralizedGWRAlgorithm::run()
     //         mWtMat2.col(i) = weight;
     //         emit tick(i, nRp);
     //     }
-    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
     //     {
     //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
     //         d->makeParameter({ mDataPoints, mDataPoints });
@@ -828,7 +830,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
     int n = mDataPoints.n_rows;
     vec cv = vec(n);
     mat wt = mat(n,n);
-    int current1 = 0, current2 = 0;
+    // int current1 = 0, current2 = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -838,9 +840,11 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
             vec w = bandwidthWeight->weight(d);
             w.row(i) = 0;
             wt.col(i) = w;
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
-            current1++;
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
+            // current1++;
         }
     }
     if (!checkCanceled()) (this->*mCalWtFunction)(mX,mY,wt);
@@ -857,9 +861,11 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
             else{
                 cv.row(i) = mY.row(i) - exp(yhatnoi)/(1+exp(yhatnoi));
             }
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
-            current2++;
+            // if(mBandwidthSizeSelector.counter<10)
+            //    emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
+            // current2++;
         }
     }
     vec cvsquare = trans(cv) * cv ;
@@ -934,7 +940,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
     vec cv = vec(n);
     mat S = mat(n,n);
     mat wt = mat(n,n);
-    int current1 = 0, current2 = 0;
+    // int current1 = 0, current2 = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -943,9 +949,11 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
             vec d = mSpatialWeight.distance()->distance(i);
             vec w = bandwidthWeight->weight(d);
             wt.col(i) = w;
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
-            current1++;
+            // if(mBandwidthSizeSelector.counter<10)
+            //    emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
+            // current1++;
         }
     }
     if (!checkCanceled())  (this->*mCalWtFunction)(mX,mY,wt);
@@ -959,9 +967,11 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
             mat Ci = CiMat(mX,wi);
             S.row(i) = mX.row(i) * Ci;
             trS(thread) += S(i,i);
-            if(mBandwidthSizeSelector.counter<10)
-                emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
-            current2++;
+            // if(mBandwidthSizeSelector.counter<10)
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
+            // current2++;
         }
     }
     double AICc;
