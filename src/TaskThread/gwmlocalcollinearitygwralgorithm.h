@@ -11,7 +11,7 @@
 
 using namespace arma;
 
-class GwmLocalCollinearityGWRAlgorithm:public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public IIndependentVariableSelectable, public gwm::IParallelizable, public gwm::IParallelOpenmpEnabled, public gwm::IParallelCudaEnabled
+class GwmLocalCollinearityGWRAlgorithm:public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public gwm::IParallelizable, public gwm::IParallelOpenmpEnabled, public gwm::IParallelCudaEnabled
 {
 public:
 
@@ -100,6 +100,10 @@ public:
 public:
     void setOmpThreadNum(const int threadNum) override;
 
+    // IParallelCudaEnabled interface
+    void setGPUId(const int gpuId) override;
+    void setGroupSize(const std::size_t size) override;
+
     void setCanceled(bool canceled) override;
 private:
     double mLambda;
@@ -146,7 +150,7 @@ public:
 
 inline int GwmLocalCollinearityGWRAlgorithm::parallelAbility() const
 {
-    return gwm::SerialOnly | gwm::OpenMP;
+    return mLCGWRCore ? mLCGWRCore->parallelAbility() : (gwm::SerialOnly | gwm::OpenMP);
 }
 
 inline gwm::ParallelType GwmLocalCollinearityGWRAlgorithm::parallelType() const
@@ -157,6 +161,10 @@ inline gwm::ParallelType GwmLocalCollinearityGWRAlgorithm::parallelType() const
 inline void GwmLocalCollinearityGWRAlgorithm::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
+    if (mLCGWRCore)
+    {
+        mLCGWRCore->setOmpThreadNum(threadNum);
+    }
 }
 
 #endif // GWMLCRGWRTASKTHREAD_H

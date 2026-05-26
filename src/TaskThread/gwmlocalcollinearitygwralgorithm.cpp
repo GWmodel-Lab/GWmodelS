@@ -43,6 +43,16 @@ void GwmLocalCollinearityGWRAlgorithm::setCanceled(bool canceled)
     return GwmTaskThread::setCanceled(canceled);
 }
 
+void GwmLocalCollinearityGWRAlgorithm::setGPUId(const int gpuId)
+{
+    mGpuId = gpuId;
+}
+
+void GwmLocalCollinearityGWRAlgorithm::setGroupSize(const std::size_t size)
+{
+    mGroupSize = static_cast<int>(size);
+}
+
 void GwmLocalCollinearityGWRAlgorithm::run()
 {
     if(!checkCanceled())
@@ -515,8 +525,11 @@ mat GwmLocalCollinearityGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
 #endif
 void GwmLocalCollinearityGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    mParallelType = type;
-    mLCGWRCore->setParallelType(type);
+    if (mLCGWRCore && (type & mLCGWRCore->parallelAbility()))
+    {
+        mParallelType = type;
+        mLCGWRCore->setParallelType(type);
+    }
 }
 
 bool GwmLocalCollinearityGWRAlgorithm::lambdaAdjust() const
