@@ -1,4 +1,4 @@
-#include "gwmmultiscalegwroptionsdialog.h"
+﻿#include "gwmmultiscalegwroptionsdialog.h"
 #include "ui_gwmmultiscalegwroptionsdialog.h"
 #ifdef ENABLE_OpenMP
 #include <omp.h>
@@ -86,7 +86,7 @@ GwmMultiscaleGWROptionsDialog::GwmMultiscaleGWROptionsDialog(QList<GwmLayerGroup
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
 //    calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);
