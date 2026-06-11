@@ -1,4 +1,4 @@
-#include "gwmswimtaskthread.h"
+﻿#include "gwmswimtaskthread.h"
 #include "SpatialWeight/gwmbandwidthweight.h"
 #include "SpatialWeight/gwmcrsdistance.h"
 #include <SpatialWeight/gwmminkwoskidistance.h>

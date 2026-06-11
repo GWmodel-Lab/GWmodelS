@@ -1,6 +1,6 @@
 ﻿#include "gwmgtdroptionsdialog.h"
 #include "ui_gwmgtdroptionsdialog.h"
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
 #include <QComboBox>
@@ -82,7 +82,7 @@ GwmGTDROptionsDialog::GwmGTDROptionsDialog(QList<GwmLayerGroupItem*> originItemL
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelNoneRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
 //    calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);    

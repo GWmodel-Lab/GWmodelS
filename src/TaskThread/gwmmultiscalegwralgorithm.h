@@ -7,6 +7,7 @@
 #include "iparallelable.h"
 #include "gwmbasicgwralgorithm.h"
 
+#include <limits>
 #include <armadillo>
 #include "gwmodel.h"
 
@@ -14,7 +15,7 @@
 //using namespace gwm;
 //using namespace arma;
 
-class GwmMultiscaleGWRAlgorithm : public GwmSpatialMultiscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable, public IOpenmpParallelable
+class GwmMultiscaleGWRAlgorithm : public GwmSpatialMultiscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable,  public gwm::IParallelizable, public gwm::IParallelOpenmpEnabled, public gwm::IParallelCudaEnabled
 {
     Q_OBJECT
 
@@ -156,12 +157,16 @@ public:     // IRegressionAnalysis interface
 
 public:     // IParallelalbe interface
     int parallelAbility() const override;
-    ParallelType parallelType() const override;
-    void setParallelType(const ParallelType &type) override;
+    gwm::ParallelType parallelType() const override;
+    void setParallelType(const gwm::ParallelType &type) override;
 
 
 public:     // IOpenmpParallelable interface
     void setOmpThreadNum(const int threadNum) override;
+
+public:     // ICudaParallelable interface
+    void setGPUId(const int gpuId) override;
+    void setGroupSize(const std::size_t groupSize) override;
 
     void setCanceled(bool canceled) override;
 
@@ -252,8 +257,10 @@ private:
 
     GwmDiagnostic mDiagnostic;
 
-    IParallelalbe::ParallelType mParallelType = IParallelalbe::SerialOnly;
+    gwm::ParallelType mParallelType = gwm::SerialOnly;
     int mOmpThreadNum = 8;
+    int mGPUId = 0;
+    std::size_t mGroupSize = 64;
 
 public:
     static int treeChildCount;
@@ -420,7 +427,7 @@ inline int GwmMultiscaleGWRAlgorithm::parallelAbility() const
             ;
 }
 
-inline IParallelalbe::ParallelType GwmMultiscaleGWRAlgorithm::parallelType() const
+inline gwm::ParallelType GwmMultiscaleGWRAlgorithm::parallelType() const
 {
     return mParallelType;
 }
@@ -428,6 +435,17 @@ inline IParallelalbe::ParallelType GwmMultiscaleGWRAlgorithm::parallelType() con
 inline void GwmMultiscaleGWRAlgorithm::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
+}
+
+inline void GwmMultiscaleGWRAlgorithm::setGPUId(const int gpuId)
+{
+    mGPUId = gpuId;
+}
+
+inline void GwmMultiscaleGWRAlgorithm::setGroupSize(const std::size_t groupSize)
+{
+    Q_ASSERT(groupSize <= static_cast<std::size_t>(std::numeric_limits<int>::max()));
+    mGroupSize = groupSize;
 }
 
 inline bool GwmMultiscaleGWRAlgorithm::OLS() const

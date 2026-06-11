@@ -6,6 +6,8 @@
 #include <omp.h>
 #endif
 
+#include <chrono>
+
 int GwmLocalCollinearityGWRAlgorithm::treeChildCount = 0;
 
 using namespace arma;
@@ -71,12 +73,22 @@ void GwmLocalCollinearityGWRAlgorithm::run()
         vec hatrow(mDataPoints.n_rows,fill::zeros);
         //yhat赋值
         emit message("Regressoin...");
-        // mBetas = regression(mX, mY);
 
 
         mLCGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+        emit message("Regression ...");
+        mLCGWRCore->setParallelType(static_cast<gwm::ParallelType>(mParallelType));
+        mLCGWRCore->setOmpThreadNum(mOmpThreadNum);
+        mLCGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+        qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+             << "-> mLCGWRCore parallelType:" << static_cast<int>(mLCGWRCore->parallelType())
+             << "parallelAbility:" << static_cast<int>(mLCGWRCore->parallelAbility());
+        auto __lcr_start = std::chrono::high_resolution_clock::now();
         mBetas = mLCGWRCore->fit();
-        std::cout << "mBetas = \n" << mBetas << std::endl;
+        auto __lcr_end = std::chrono::high_resolution_clock::now();
+        auto __lcr_duration = std::chrono::duration_cast<std::chrono::milliseconds>(__lcr_end - __lcr_start);
+        qDebug() << "fit() execution time:" << __lcr_duration.count() << "ms, Threads:" << mOmpThreadNum;
+        qDebug() << "mBetas:"; mBetas.print();
 
         gwm::BandwidthWeight& bw = mLCGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
         mSpatialWeight.setWeight(bw);

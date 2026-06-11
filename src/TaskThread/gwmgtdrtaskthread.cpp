@@ -6,6 +6,7 @@
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
+#include <chrono>
 
 using namespace std;
 using namespace gwm;
@@ -442,9 +443,20 @@ void GwmGTDRTaskThread::run()
     if (checkCanceled()) return;   
     try
     { 
+        // Ensure algorithm parallel settings reflect UI/meta
+        mAlgorithm.setParallelType(mMeta.parallelType);
+        mAlgorithm.setOmpThreadNum(mMeta.parallelOmpThreads);
+        qDebug() << "mParallelType:" << static_cast<int>(mMeta.parallelType)
+                 << "-> mAlgorithm parallelType:" << static_cast<int>(mAlgorithm.parallelType())
+                 << "parallelAbility:" << static_cast<int>(mAlgorithm.parallelAbility());
+
+        auto start_time = std::chrono::high_resolution_clock::now();
         mAlgorithm.fit();
-        emit message(tr("fit."));
-        
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        qDebug() << "GTDR fit() execution time:" << duration.count() << "ms, Threads:" << mMeta.parallelOmpThreads;
+        emit message(tr("fit completed in %1 ms").arg(QString::number(duration.count())));
+
         mDiagnostic=mAlgorithm.diagnostic();
         mBetas = mAlgorithm.betas();
         mBetasSE = mAlgorithm.betasSE();

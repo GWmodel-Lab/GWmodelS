@@ -5,7 +5,7 @@
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
-
+#include <chrono>
 int GwmRobustGWRAlgorithm::treeChildCount = 0;
 
 GwmRobustGWRAlgorithm::GwmRobustGWRAlgorithm(): GwmBasicGWRAlgorithm(),
@@ -55,8 +55,16 @@ void GwmRobustGWRAlgorithm::run()
     {
         emit message("Regression ...");
         mRGWRCore->setParallelType(mParallelType);
+        mRGWRCore->setOmpThreadNum(mOmpThreadNum);
         mRGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+        qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+             << "-> mRGWRCore parallelType:" << static_cast<int>(mRGWRCore->parallelType())
+             << "parallelAbility:" << static_cast<int>(mRGWRCore->parallelAbility());
+        auto start_time = std::chrono::high_resolution_clock::now();
         mBetas = mRGWRCore->fit();
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        qDebug() << "fit() execution time:" << duration.count() << "ms, Threads:" << mOmpThreadNum;
         qDebug() << "mBetas:"; mBetas.print();
     }
 

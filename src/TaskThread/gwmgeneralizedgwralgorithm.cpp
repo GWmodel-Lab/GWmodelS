@@ -6,6 +6,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <exception>
+#include <chrono>
 
 #ifdef ENABLE_OpenMP
 #include <omp.h>
@@ -95,7 +96,14 @@ void GwmGeneralizedGWRAlgorithm::run()
         if (mIsAutoselectBandwidth)
         {
             emit message(QString(tr("Automatically selecting bandwidth ...")));
+            qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+                     << "-> mGGWRCore parallelType:" << static_cast<int>(mGGWRCore->parallelType())
+                     << "parallelAbility:" << static_cast<int>(mGGWRCore->parallelAbility());
+            auto start_time = std::chrono::high_resolution_clock::now();
             mBetas = mGGWRCore->fit();
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            qDebug() << "fit() execution time (auto-select bandwidth):" << duration.count() << "ms, Threads:" << mOmpThreadNum;
             // if(mHasHatMatrix)
             // {
             //     arma::mat tempS;
@@ -127,13 +135,24 @@ void GwmGeneralizedGWRAlgorithm::run()
         else
         {
             emit message(QString(tr("Fitting GGWR model...")));
+            qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+                     << "-> mGGWRCore parallelType:" << static_cast<int>(mGGWRCore->parallelType())
+                     << "parallelAbility:" << static_cast<int>(mGGWRCore->parallelAbility());
+            auto start_time = std::chrono::high_resolution_clock::now();
             mBetas = mGGWRCore->fit();
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            qDebug() << "fit() execution time (no auto-select):" << duration.count() << "ms, Threads:" << mOmpThreadNum;
         }
     }
     else if (!checkCanceled() && hasRegressionLayer())
     {
         emit message(QString(tr("Fitting GGWR model...")));
+        auto start_time = std::chrono::high_resolution_clock::now();
         mBetas = mGGWRCore->fit();
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        qDebug() << "fit() execution time (regression layer):" << duration.count() << "ms, Threads:" << mOmpThreadNum;
     }
 
     // 优选带宽
@@ -1217,30 +1236,28 @@ void GwmGeneralizedGWRAlgorithm::createResultLayer(CreateResultLayerData data,QS
 
 void GwmGeneralizedGWRAlgorithm::setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
 {
-    mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
-    QMap<QPair<BandwidthSelectionCriterionType, gwm::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
-    #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp),
-    #endif
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial),
-    #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp),
-    #endif
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial)
-    };
-    mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
+    // mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
+    // QMap<QPair<BandwidthSelectionCriterionType, gwm::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
+    // #ifdef ENABLE_OpenMP
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp),
+    // #endif
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial),
+    // #ifdef ENABLE_OpenMP
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp),
+    // #endif
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial)
+    // };
+    // mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
 }
 
 void GwmGeneralizedGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    if (type & parallelAbility())
-    {
-        mParallelType = type;
-        setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-        setFamily(mFamily);
-    }
+    mParallelType = type;
+    mGGWRCore->setParallelType(type);
+    setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+    setFamily(mFamily);
 }
 
 mat GwmGeneralizedGWRAlgorithm::diag(mat a){

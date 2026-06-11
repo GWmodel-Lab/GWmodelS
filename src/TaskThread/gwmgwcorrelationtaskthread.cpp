@@ -4,6 +4,8 @@
 #include <omp.h>
 #endif
 
+#include <chrono>
+
 using namespace gwm;
 using namespace std;
 
@@ -219,7 +221,14 @@ void GwmGWCorrelationTaskThread::run()
             emit message(tr("BandwidthInit size = %1").arg(bandwidthInitTypes.size()));
             emit message(tr("BandwidthSel size = %1").arg(bandwidthSelTypes.size()));
 
+            qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+                     << "-> mGWCorrCore parallelType:" << static_cast<int>(mGWCorrCore->parallelType())
+                     << "parallelAbility:" << static_cast<int>(mGWCorrCore->parallelAbility());
+            auto __gwc_start = std::chrono::high_resolution_clock::now();
             mGWCorrCore->run();
+            auto __gwc_end = std::chrono::high_resolution_clock::now();
+            auto __gwc_duration = std::chrono::duration_cast<std::chrono::milliseconds>(__gwc_end - __gwc_start);
+            qDebug() << "GWCorrelation run() execution time:" << __gwc_duration.count() << "ms, Threads:" << mOmpThreadNum;
 
             // update property tab
             const std::vector<gwm::SpatialWeight>& gwmSws = mGWCorrCore->spatialWeights();
@@ -570,24 +579,8 @@ void GwmGWCorrelationTaskThread::createResultLayer(CreateResultLayerData data)
 //设置多线程字段
 void GwmGWCorrelationTaskThread::setParallelType(const IParallelalbe::ParallelType &type)
 {
-    if (type & parallelAbility())
-    {
-        mParallelType = type;
-        switch (type) {
-        case IParallelalbe::ParallelType::SerialOnly:
-//            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
-            mCalFunciton = &GwmGWCorrelationTaskThread::CalculateSerial;
-            break;
-#ifdef ENABLE_OpenMP
-        case IParallelalbe::ParallelType::OpenMP:
-            mCalFunciton = &GwmGWCorrelationTaskThread::CalculateOmp;
-            break;
-#endif
-        default:
-            mCalFunciton = &GwmGWCorrelationTaskThread::CalculateSerial;
-            break;
-        }
-    }
+    mParallelType = type;
+    mGWCorrCore->setParallelType(static_cast<gwm::ParallelType>(type));
 }
 //CV值计算
 double GwmGWCorrelationTaskThread::bandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight *bandwidthWeight)
