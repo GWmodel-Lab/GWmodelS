@@ -5,6 +5,7 @@
 #include <omp.h>
 #include <qgsmemoryproviderutils.h>
 #include "gwmapp.h"
+#include <chrono>
 
 #include <armadillo>
 using namespace arma;
@@ -139,9 +140,17 @@ void GwmBasicGWRAlgorithm::run()
         {
             emit message(QString(tr("Automatically selecting bandwidth ...")));
             mGWRCore->setParallelType(mParallelType);
+            mGWRCore->setOmpThreadNum(mOmpThreadNum);
+            qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+                     << "-> mMGWRCore parallelType:" << static_cast<int>(mGWRCore->parallelType())
+                     << "parallelAbility:" << static_cast<int>(mGWRCore->parallelAbility());
 
             mGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+            auto start_time = std::chrono::high_resolution_clock::now();
             mBetas = mGWRCore->fit();
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            qDebug() << "fit() execution time (auto-select bandwidth):" << duration.count() << "ms, Threads:" << mOmpThreadNum;
 
             const auto& bw = mGWRCore->spatialWeight().weight();
             if (bw && !checkCanceled())
@@ -160,7 +169,12 @@ void GwmBasicGWRAlgorithm::run()
         else
         {
             mGWRCore->setParallelType(mParallelType);
+            mGWRCore->setOmpThreadNum(mOmpThreadNum);
+            auto start_time = std::chrono::high_resolution_clock::now();
             mBetas = mGWRCore->fit();
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            qDebug() << "fit() execution time (no auto-select):" << duration.count() << "ms, Threads:" << mOmpThreadNum;
         }
 
         qDebug() << "regression end";

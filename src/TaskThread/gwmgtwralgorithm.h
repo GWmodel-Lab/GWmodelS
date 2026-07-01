@@ -6,11 +6,10 @@
 #include "TaskThread/gwmspatialtemporalmonoscale.h"
 #include "TaskThread/iregressionanalysis.h"
 #include "TaskThread/gwmbandwidthsizeselector.h"
-#include "TaskThread/iparallelable.h"
 
 #include <gwmodel.h>
 
-class GwmGTWRAlgorithm : public GwmSpatialTemporalMonoscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable, public IOpenmpParallelable
+class GwmGTWRAlgorithm : public GwmSpatialTemporalMonoscaleAlgorithm, public IRegressionAnalysis, public IBandwidthSizeSelectable, public gwm::IParallelizable, public gwm::IParallelOpenmpEnabled
 {
     Q_OBJECT
 
@@ -91,13 +90,13 @@ public:
 public:
     double criterion(GwmBandwidthWeight *weight) override;
 
-    // IParallelalbe interface
+    // gwm::IParallelizable interface
 public:
     int parallelAbility() const override;
-    ParallelType parallelType() const override;
-    void setParallelType(const ParallelType &type) override;
+    gwm::ParallelType parallelType() const override;
+    void setParallelType(const gwm::ParallelType &type) override;
 
-    // IOpenmpParallelable interface
+    // gwm::IParallelOpenmpEnabled interface
 public:
     void setOmpThreadNum(const int threadNum) override;
 
@@ -171,8 +170,8 @@ protected:
     vec mRegressionLayerY;
     mat mRegressionLayerX;
 
-    ParallelType mParallelType = ParallelType::SerialOnly;
-    int mOmpThreadNum;
+    gwm::ParallelType mParallelType = gwm::ParallelType::SerialOnly;
+    int mOmpThreadNum = 8;
 
     bool mHasHatMatrix = true;
 
@@ -229,18 +228,18 @@ inline GwmGTWRAlgorithm::BandwidthSelectionCriterionType GwmGTWRAlgorithm::bandw
 
 inline void GwmGTWRAlgorithm::setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
 {
-    mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
-    QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmGTWRAlgorithm::bandwidthSizeCriterionCVSerial),
-    #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmGTWRAlgorithm::bandwidthSizeCriterionCVOmp),
-    #endif
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmGTWRAlgorithm::bandwidthSizeCriterionAICSerial),
-    #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmGTWRAlgorithm::bandwidthSizeCriterionAICOmp),
-    #endif
-    };
-    mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
+    // mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
+    // QMap<QPair<BandwidthSelectionCriterionType, gwm::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::SerialOnly), &GwmGTWRAlgorithm::bandwidthSizeCriterionCVSerial),
+    // #ifdef ENABLE_OpenMP
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::OpenMP), &GwmGTWRAlgorithm::bandwidthSizeCriterionCVOmp),
+    // #endif
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::SerialOnly), &GwmGTWRAlgorithm::bandwidthSizeCriterionAICSerial),
+    // #ifdef ENABLE_OpenMP
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::OpenMP), &GwmGTWRAlgorithm::bandwidthSizeCriterionAICOmp),
+    // #endif
+    // };
+    // mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
 }
 
 inline bool GwmGTWRAlgorithm::hasPredict() const
@@ -295,7 +294,7 @@ inline void GwmGTWRAlgorithm::setHasHatMatrix(bool hasHatMatrix)
 
 inline double GwmGTWRAlgorithm::criterion(GwmBandwidthWeight *weight)
 {
-    return bandwidthSizeCriterionCVSerial(weight);
+    return (this->*mBandwidthSelectCriterionFunction)(weight);
 }
 
 inline mat GwmGTWRAlgorithm::betas() const
@@ -311,14 +310,14 @@ inline BandwidthCriterionList GwmGTWRAlgorithm::bandwidthSelectorCriterions() co
 
 inline int GwmGTWRAlgorithm::parallelAbility() const
 {
-    return ParallelType::SerialOnly
-        #ifdef ENABLE_OpenMP
-            | ParallelType::OpenMP
-        #endif
+    return gwm::ParallelType::SerialOnly
+    #ifdef ENABLE_OpenMP
+            | gwm::ParallelType::OpenMP
+    #endif
             ;
 }
 
-inline IParallelalbe::ParallelType GwmGTWRAlgorithm::parallelType() const
+inline gwm::ParallelType GwmGTWRAlgorithm::parallelType() const
 {
     return mParallelType;
 }

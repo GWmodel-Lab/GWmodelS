@@ -719,6 +719,9 @@
             </item>
             <item>
              <widget class="QRadioButton" name="mCalcParallelGPURadio">
+              <property name="visible">
+               <bool>false</bool>
+              </property>
               <property name="text">
                <string>GPU</string>
               </property>

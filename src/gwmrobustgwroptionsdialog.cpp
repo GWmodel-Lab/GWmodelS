@@ -8,7 +8,7 @@
 #include <SpatialWeight/gwmdmatdistance.h>
 #include <SpatialWeight/gwmminkwoskidistance.h>
 
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
 
@@ -64,7 +64,7 @@ GwmRobustGWROptionsDialog::GwmRobustGWROptionsDialog(QList<GwmLayerGroupItem*> o
     connect(ui->mCalcParallelNoneRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onNoneRadioToggled);
     connect(ui->mCalcParallelMultithreadRadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onMultithreadingRadioToggled);
     connect(ui->mCalcParallelGPURadio, &QAbstractButton::toggled, this, &GwmRobustGWROptionsDialog::onGPURadioToggled);
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);
