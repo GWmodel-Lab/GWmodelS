@@ -1,6 +1,6 @@
 ﻿#include "gwmgtwroptionsdialog.h"
 #include "ui_gwmgtwroptionsdialog.h"
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
 #include <QComboBox>
@@ -64,7 +64,7 @@ GwmGTWROptionsDialog::GwmGTWROptionsDialog(QList<GwmLayerGroupItem*> originItemL
 
     double initialLambda = (1.0 * ui->sldTimeLambda->value()) / 100.0;
     ui->lblLambda->setText(QString("Lambda: %1").arg(initialLambda, 0, 'f', 2));
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);
@@ -516,16 +516,16 @@ void GwmGTWROptionsDialog::updateFields()
     // 并行设置
     if (ui->mCalcParallelNoneRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+        mTaskThread->setParallelType(gwm::SerialOnly);
     }
     else if (ui->mCalcParallelMultithreadRadio->isChecked())
     {
-        mTaskThread->setParallelType(IParallelalbe::OpenMP);
+        mTaskThread->setParallelType(gwm::OpenMP);
         mTaskThread->setOmpThreadNum(ui->mThreadNum->value());
     }
     else
     {
-        mTaskThread->setParallelType(IParallelalbe::SerialOnly);
+        mTaskThread->setParallelType(gwm::SerialOnly);
     }
     // 其他设置
     mTaskThread->setHasHatMatrix(ui->cbxHatmatrix->isChecked());

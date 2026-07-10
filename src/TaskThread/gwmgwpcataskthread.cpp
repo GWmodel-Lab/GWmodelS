@@ -34,7 +34,7 @@ void GwmGWPCATaskThread::run()
     {
         emit message(QString(tr("Setting data points ...")));
         initPoints();
-        
+
         emit message(QString(tr("Setting X and Y.")));
         initXY(mX,mVariables);
 
@@ -42,84 +42,98 @@ void GwmGWPCATaskThread::run()
             emit message(QString(tr("Zscore normalizaiton...")));
             variableZscore(mX);
         }
-    }   
-    
+    }
+
     if(mIsAutoselectBandwidth && !checkCanceled())
     {
         emit message(QString(tr("Automatically selecting bandwidth ...")));
         emit tick(0, 0);
-        
-        if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || 
-             mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+
+        if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance ||
+             mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
         {
-            gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
-            if(d)
+            // gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+            // if(d)
+            // {
+            //     d->makeParameter({ mDataPoints, mDataPoints });
+            // }
+            if (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance)
             {
-                d->makeParameter({ mDataPoints, mDataPoints });
+                auto &d = mSpatialWeight.distance<gwm::CRSDistance>();
+                d.makeParameter({ mDataPoints, mDataPoints });
+            }
+            else if (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance)
+            {
+                auto &d2 = mSpatialWeight.distance<gwm::MinkwoskiDistance>();
+                d2.makeParameter({ mDataPoints, mDataPoints });
             }
         }
-        
-        gwm::BandwidthWeight* bandwidthWeight0 = mSpatialWeight.weight<gwm::BandwidthWeight>();
-        if(!bandwidthWeight0)
+
+        const auto &bwHolder = mSpatialWeight.weight();
+        if(!bwHolder)
         {
+
             qDebug() << "[GWPCA] ERROR: Cannot get bandwidth weight!";
             emit error(tr("Cannot get bandwidth weight for bandwidth selection."));
             return;
         }
-        
+
+        gwm::BandwidthWeight& bandwidthWeight0 = mSpatialWeight.weight<gwm::BandwidthWeight>();
+
         double tmpMaxD = mSpatialWeight.distance()->maxDistance();
-        double lower = bandwidthWeight0->adaptive() ? 2 : tmpMaxD / 5000;
-        double upper = bandwidthWeight0->adaptive() ? mDataPoints.n_rows : tmpMaxD;
-        
-        if(bandwidthWeight0->bandwidth() <= 0 || 
-           (bandwidthWeight0->adaptive() && bandwidthWeight0->bandwidth() < lower) ||
-           (!bandwidthWeight0->adaptive() && bandwidthWeight0->bandwidth() < lower))
+        double lower = bandwidthWeight0.adaptive() ? 2 : tmpMaxD / 5000;
+        double upper = bandwidthWeight0.adaptive() ? mDataPoints.n_rows : tmpMaxD;
+
+        if(bandwidthWeight0.bandwidth() <= 0 ||
+           (bandwidthWeight0.adaptive() && bandwidthWeight0.bandwidth() < lower) ||
+           (!bandwidthWeight0.adaptive() && bandwidthWeight0.bandwidth() < lower))
         {
-            double initialBandwidth = bandwidthWeight0->adaptive() ? 
-                std::max(2.0, std::min(20.0, (double)mDataPoints.n_rows * 0.1)) : 
+            double initialBandwidth = bandwidthWeight0.adaptive() ?
+                std::max(2.0, std::min(20.0, (double)mDataPoints.n_rows * 0.1)) :
                 std::max(lower, tmpMaxD * 0.1);
-            bandwidthWeight0->setBandwidth(initialBandwidth);
+            bandwidthWeight0.setBandwidth(initialBandwidth);
         }
-        
-        mSelector.setBandwidth(bandwidthWeight0);
-        mSelector.setLower(lower);
-        mSelector.setUpper(upper);
-        
+
         try
         {
-            gwm::BandwidthWeight* bandwidthWeight = mSelector.optimize(this);
-            if(bandwidthWeight && !checkCanceled())
+            gwm::BandwidthSelector selector(bandwidthWeight0, lower, upper);
+            gwm::Status optStatus = selector.optimize(this);
+            if (optStatus == gwm::Status::Terminated || checkCanceled())
             {
-                mSpatialWeight.setWeight(bandwidthWeight);
-                mSelector.setBandwidth(bandwidthWeight);
+                return;
+            }
+            const gwm::BandwidthWeight& rw = selector.result();
+            // auto* applied = new GwmBandwidthWeight(
+            //     rw.bandwidth(),
+            //     rw.adaptive(),
+            //     static_cast<GwmBandwidthWeight::KernelFunctionType>(rw.kernel()));
+            mSpatialWeight.setWeight(rw);
+            mBandwidthCriterionCache = selector.bandwidthCriterion();
 
-                gwm::BandwidthWeight* verifyBw = mSpatialWeight.weight<gwm::BandwidthWeight>();
-                if(verifyBw && verifyBw->bandwidth() == 0)
+            const auto &verifyHolder = mSpatialWeight.weight();
+            if (verifyHolder)
+            {
+                gwm::BandwidthWeight &verifyBw = mSpatialWeight.weight<gwm::BandwidthWeight>();
+                if (verifyBw.bandwidth() == 0)
                 {
                     qDebug() << "[GWPCA] ERROR: Bandwidth is 0 after setWeight! This may cause display issues.";
                 }
             }
-            else if(!bandwidthWeight)
-            {
-                qDebug() << "[GWPCA] WARNING: Bandwidth optimization returned NULL";
-                emit error(tr("Bandwidth optimization failed: no optimal bandwidth found."));
-                return;
-            }
         }
-        catch(const std::exception& e)
+        catch (const std::exception& e)
         {
             qDebug() << "[GWPCA] EXCEPTION during bandwidth optimization:" << e.what();
             emit error(QString(tr("Bandwidth optimization error: %1")).arg(e.what()));
             return;
         }
-        catch(...)
+        catch (...)
         {
             qDebug() << "[GWPCA] UNKNOWN EXCEPTION during bandwidth optimization";
             emit error(tr("Unknown error occurred during bandwidth optimization."));
             return;
         }
     }
-    
+
     if(!checkCanceled())
     {
         emit message(QString(tr("Principle components analyzing ...")));
@@ -138,12 +152,12 @@ void GwmGWPCATaskThread::run()
                 }
 
                 mLocalPV = robustSolveSerial(mX, mLoadings, mSDev);
-                
+
                 if(checkCanceled())
                 {
                     return;
                 }
-                
+
                 mVariance = mSDev % mSDev;
 
                 // Robust 分支在 robustSolveSerial() 内已按需要同步填充 mScores。
@@ -156,22 +170,22 @@ void GwmGWPCATaskThread::run()
                     emit error(tr("GWPCA algorithm object is not initialized."));
                     return;
                 }
-                
+
                 mAlgorithm->setCoords(mDataPoints);
                 mAlgorithm->setVariables(mX);
                 mAlgorithm->setSpatialWeight(mSpatialWeight);
                 mAlgorithm->setKeepComponents(mK);
-                
+
                 if(!mAlgorithm->isValid())
                 {
                     qDebug() << "[GWPCA] ERROR: Algorithm configuration is invalid!";
                     emit error(tr("GWPCA algorithm configuration is invalid."));
                     return;
                 }
-                
+
                 mAlgorithm->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
                 mAlgorithm->run();
-                
+
                 auto status = mAlgorithm->status();
                 if(status != gwm::Status::Success)
                 {
@@ -179,7 +193,7 @@ void GwmGWPCATaskThread::run()
                     emit error(tr("GWPCA algorithm execution failed."));
                     return;
                 }
-                
+
                 mLocalPV = mAlgorithm->localPV();
                 mLoadings = mAlgorithm->loadings();
                 mSDev = mAlgorithm->sdev();
@@ -247,7 +261,7 @@ void GwmGWPCATaskThread::run()
     {
         win_var_PC1.append(mVariables.at(iWinVar(i)).name);
     }
-    
+
     if(!checkCanceled())
     {
         CreateResultLayerData resultLayerData = {
@@ -260,7 +274,7 @@ void GwmGWPCATaskThread::run()
             }
         };
         createResultLayer(resultLayerData,win_var_PC1);
-        
+
         if(getPlot()){
             CreatePlotLayerData plotLayerData = {};
             vec vecLoadings(mDataPoints.n_rows * mVariables.size());
@@ -287,12 +301,14 @@ void GwmGWPCATaskThread::run()
 
 bool GwmGWPCATaskThread::isValid()
 {
-    gwm::BandwidthWeight* bandwidth = static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight());
-    if(bandwidth){
+    const auto &wh = mSpatialWeight.weight();
+    if(wh){
+        gwm::BandwidthWeight &bandwidth = mSpatialWeight.weight<gwm::BandwidthWeight>();
+
         if(!mIsAutoselectBandwidth)
         {
-            if(bandwidth->adaptive()){
-                if(bandwidth->bandwidth() <= mVariables.size()){
+            if(bandwidth.adaptive()){
+                if(bandwidth.bandwidth() <= mVariables.size()){
                     return false;
                 }
             }
@@ -316,10 +332,10 @@ void GwmGWPCATaskThread::initPoints()
         qDebug() << "[GWPCA::initPoints] ERROR: Data layer is NULL!";
         return;
     }
-    
+
     int nDp = mDataLayer->featureCount();
     mDataPoints = mat(nDp, 2, fill::zeros);
-    
+
     QgsFeatureIterator iterator = mDataLayer->getFeatures();
     QgsFeature f;
     for (int i = 0; iterator.nextFeature(f); i++)
@@ -334,9 +350,9 @@ void GwmGWPCATaskThread::initPoints()
 void GwmGWPCATaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
 {
     int nDp = mDataLayer->featureCount(), nVar = indepVars.size();
-    
+
     x = mat(nDp, nVar, fill::zeros);
-    
+
     QgsFeatureIterator iterator = mDataLayer->getFeatures();
     QgsFeature f;
     bool ok = false;
@@ -346,11 +362,11 @@ void GwmGWPCATaskThread::initXY(mat &x, const QList<GwmVariable> &indepVars)
         for (int k = 0; k < indepVars.size(); k++)
         {
             double vX = f.attribute(indepVars[k].name).toDouble(&ok);
-            if (ok) 
+            if (ok)
             {
                 x(i, k) = vX;
             }
-            else 
+            else
             {
                 errorCount++;
                 if(errorCount <= 5)
@@ -380,19 +396,19 @@ void GwmGWPCATaskThread::calculateScores()
     qDebug() << "[GWPCA] calculateScores() called: computing scores locally with"
              << (Robust() ? "robust" : "non-robust") << "PCA.";
     mScores = cube(nDp, mK, nDp, fill::zeros);
-    
+
     for(uword i = 0; i < nDp && !checkCanceled(); i++)
     {
         vec wt = mSpatialWeight.weightVector(i);
         uvec positive = find(wt > 0);
         vec newWt = wt.elem(positive);
         mat newX = mX.rows(positive);
-        
+
         if(newWt.n_rows <= 5)
         {
             break;
         }
-        
+
         mat V;
         vec d;
         if(!Robust()){
@@ -400,7 +416,7 @@ void GwmGWPCATaskThread::calculateScores()
         }else{
             rwpca(newX, newWt, V, d);
         }
-        
+
         mat scorei(nDp, mK, fill::zeros);
         for(int j = 0; j < mK && !checkCanceled(); j++)
         {
@@ -449,7 +465,7 @@ void GwmGWPCATaskThread::rwpca(const mat &x, const vec &wt, mat &V, vec &S)
 
     mat mids = x;
     mids = mids.each_row() - x.row((abs(wt - 0.5)).index_min());
-    
+
     mat score;
     vec tsquared;
     princomp(V, score, S, tsquared, mids.each_col() % wt);
@@ -469,7 +485,7 @@ mat GwmGWPCATaskThread::robustSolveSerial(const mat& x, cube& loadings, mat& sde
     {
         mScores = cube(nDp, mK, nDp, fill::zeros);
     }
-    
+
     for(int i=0;i<nDp && !checkCanceled();i++)
     {
         //vec distvi = mSpatialWeight.distance()->distance(i);
@@ -520,30 +536,30 @@ mat GwmGWPCATaskThread::robustSolveSerial(const mat& x, cube& loadings, mat& sde
     return pv;
 }
 
-gwm::Status GwmGWPCATaskThread::getCriterion(gwm::BandwidthWeight* weight, double& criterion)
+gwm::Status GwmGWPCATaskThread::getCriterion(const std::unique_ptr<gwm::BandwidthWeight>& weight, double& criterion)
 {
-    if(checkCanceled())
+    if (!weight || checkCanceled())
     {
         criterion = DBL_MAX;
-        return gwm::Status::Terminated;
+        return checkCanceled() ? gwm::Status::Terminated : gwm::Status::Success;
     }
-    
-    // 将内核库的BandwidthWeight转换为本地的GwmBandwidthWeight
-    GwmBandwidthWeight::KernelFunctionType kernelType = static_cast<GwmBandwidthWeight::KernelFunctionType>(weight->kernel());
+
+    GwmBandwidthWeight::KernelFunctionType kernelType =
+        static_cast<GwmBandwidthWeight::KernelFunctionType>(weight->kernel());
     GwmBandwidthWeight localWeight(weight->bandwidth(), weight->adaptive(), kernelType);
-    
+
     try
     {
         criterion = (this->*mBandwidthSelectCriterionFunction)(&localWeight);
         return gwm::Status::Success;
     }
-    catch(const std::exception& e)
+    catch (const std::exception& e)
     {
         qDebug() << "[GWPCA::getCriterion] EXCEPTION:" << e.what();
         criterion = DBL_MAX;
         return gwm::Status::Success;
     }
-    catch(...)
+    catch (...)
     {
         qDebug() << "[GWPCA::getCriterion] UNKNOWN EXCEPTION";
         criterion = DBL_MAX;
@@ -782,14 +798,11 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
     int m = mX.n_cols;
     double score = 0;
 
-    if (mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || 
-        mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance ||
+        mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance)
     {
-        gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
-        if(d)
-        {
-            d->makeParameter({ mDataPoints, mDataPoints });
-        }
+        gwm::CRSDistance& d = mSpatialWeight.distance<gwm::CRSDistance>(); // static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
+        d.makeParameter({ mDataPoints, mDataPoints });
     }
 
     for (int i = 0; i < n && !checkCanceled(); i++)
@@ -801,7 +814,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
             score = DBL_MAX;
             break;
         }
-        
+
         vec wt = weight->weight(distvi);
         wt(i) = 0;
 
@@ -812,7 +825,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
             score = DBL_MAX;
             break;
         }
-        
+
         vec newWt = wt.elem(positive);
         mat newX = mX.rows(positive);
         //判断length(newWt)
@@ -822,7 +835,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
             score = DBL_MAX;
             break;
         }
-        
+
         mat V;
         vec S;
         try
@@ -844,7 +857,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVSerial(GwmBandwidthWeight *we
             score = DBL_MAX;
             break;
         }
-        
+
         mBandwidthCounter++;
         if (mBandwidthCounter < 10)
             emit tick(mBandwidthCounter * 10 + i * 5 / n, 100);
@@ -859,8 +872,7 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
     double score = 0;
     bool flag = true;
     vec score_all(mOmpThreadNum, fill::zeros);
-    int current = 0;
-    const int selectorStep = static_cast<int>(mSelector.bandwidthCriterion().size());
+    // int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -889,9 +901,9 @@ double GwmGWPCATaskThread::bandwidthSizeCriterionCVOmp(GwmBandwidthWeight *weigh
             }
             // if(mSelector.counter<10)
             //     emit tick(mSelector.counter * 10 + current * 10 / n, 100);
-            if (selectorStep < 10)
-                emit tick(selectorStep * 10 + current * 10 / n, 100);
-            current++;
+            // current++;
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
         }
     }
     score = sum(score_all);

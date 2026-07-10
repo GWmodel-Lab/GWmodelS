@@ -6,6 +6,8 @@
 #include <omp.h>
 #endif
 
+#include <chrono>
+
 int GwmLocalCollinearityGWRAlgorithm::treeChildCount = 0;
 
 using namespace arma;
@@ -43,16 +45,6 @@ void GwmLocalCollinearityGWRAlgorithm::setCanceled(bool canceled)
     return GwmTaskThread::setCanceled(canceled);
 }
 
-void GwmLocalCollinearityGWRAlgorithm::setGPUId(const int gpuId)
-{
-    mGpuId = gpuId;
-}
-
-void GwmLocalCollinearityGWRAlgorithm::setGroupSize(const std::size_t size)
-{
-    mGroupSize = static_cast<int>(size);
-}
-
 void GwmLocalCollinearityGWRAlgorithm::run()
 {
     if(!checkCanceled())
@@ -81,26 +73,24 @@ void GwmLocalCollinearityGWRAlgorithm::run()
         vec hatrow(mDataPoints.n_rows,fill::zeros);
         //yhat赋值
         emit message("Regressoin...");
-        // mBetas = regression(mX, mY);
 
 
         mLCGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
-        mLCGWRCore->setParallelType(mParallelType);
+        emit message("Regression ...");
+        mLCGWRCore->setParallelType(static_cast<gwm::ParallelType>(mParallelType));
         mLCGWRCore->setOmpThreadNum(mOmpThreadNum);
-        qDebug() << "core parallelType =" << mLCGWRCore->parallelType();
-        qDebug() << "core parallelAbility =" << mLCGWRCore->parallelAbility();
-
-        QElapsedTimer timer;
-        timer.start();
-
+        mLCGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+        qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+             << "-> mLCGWRCore parallelType:" << static_cast<int>(mLCGWRCore->parallelType())
+             << "parallelAbility:" << static_cast<int>(mLCGWRCore->parallelAbility());
+        auto __lcr_start = std::chrono::high_resolution_clock::now();
         mBetas = mLCGWRCore->fit();
+        auto __lcr_end = std::chrono::high_resolution_clock::now();
+        auto __lcr_duration = std::chrono::duration_cast<std::chrono::milliseconds>(__lcr_end - __lcr_start);
+        qDebug() << "fit() execution time:" << __lcr_duration.count() << "ms, Threads:" << mOmpThreadNum;
+        qDebug() << "mBetas:"; mBetas.print();
 
-        qint64 elapsed = timer.elapsed();
-        qDebug() << "fit() time =" << elapsed << "ms";
-
-        // std::cout << "mBetas = \n" << mBetas << std::endl;
-
-        gwm::BandwidthWeight* bw = mLCGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
+        gwm::BandwidthWeight& bw = mLCGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
         mSpatialWeight.setWeight(bw);
 
         criterionList = mLCGWRCore->bandwidthSelectionCriterionList();
@@ -139,18 +129,18 @@ bool GwmLocalCollinearityGWRAlgorithm::isAutoselectBandwidth() const
     return mIsAutoselectBandwidth;
 }
 
-void GwmLocalCollinearityGWRAlgorithm::setBandwidthSelectionCriterionType(const gwm::GWRBasic::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
+void GwmLocalCollinearityGWRAlgorithm::setBandwidthSelectionCriterionType(const GwmLocalCollinearityGWRAlgorithm::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
 {
      mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
-     QMap<QPair<gwm::GWRBasic::BandwidthSelectionCriterionType, gwm::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
-         std::make_pair(qMakePair(gwm::GWRBasic::CV, gwm::ParallelType::SerialOnly), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial),
+     QMap<QPair<BandwidthSelectionCriterionType, IParallelalbe::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
+         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::SerialOnly), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial),
     #ifdef ENABLE_OpenMP
-         std::make_pair(qMakePair(gwm::GWRBasic::CV, gwm::ParallelType::OpenMP), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp),
+         std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::OpenMP), &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp),
     #endif
-         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVCuda),
-         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::SerialOnly), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICSerial),
-         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::OpenMP), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICOmp),
-         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICCuda)
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, IParallelalbe::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionCVCuda),
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::SerialOnly), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICSerial),
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::OpenMP), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICOmp),
+         //std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, IParallelalbe::ParallelType::CUDA), &GwmLcrGWRTaskThread::bandwidthSizeCriterionAICCuda)
      };
      mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
 }
@@ -347,8 +337,7 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidt
     //取mX不含第一列的部分
     mat mXnot1 = mX.cols(1, mX.n_cols - 1);
     //主循环
-    int current = 0;
-    const int selectorStep = static_cast<int>(selector.bandwidthCriterion().size());
+    // int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -384,9 +373,9 @@ double GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVOmp(GwmBandwidt
             betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
             // if(selector.counter<10)
             //     emit tick(selector.counter*10 + current * 10 / n, 100);
-            if (selectorStep < 10)
-                emit tick(selectorStep * 10 + current * 10 / n, 100);
-            current++;
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
+            // current++;
         }
     }
     //yhat赋值
@@ -523,12 +512,28 @@ mat GwmLocalCollinearityGWRAlgorithm::regressionOmp(const mat &x, const vec &y)
     return betas;
 }
 #endif
-void GwmLocalCollinearityGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
+void GwmLocalCollinearityGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &type)
 {
-    if (mLCGWRCore && (type & mLCGWRCore->parallelAbility()))
+    if(type & parallelAbility())
     {
         mParallelType = type;
-        mLCGWRCore->setParallelType(type);
+        switch(type)
+        {
+        case IParallelalbe::ParallelType::SerialOnly:
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
+            break;
+#ifdef ENABLE_OpenMP
+        case IParallelalbe::ParallelType::OpenMP:
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionOmp;
+            break;
+#endif
+        default:
+            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+            mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
+            break;
+        }
     }
 }
 
@@ -561,12 +566,12 @@ bool GwmLocalCollinearityGWRAlgorithm::isValid()
 {
     if (GwmGeographicalWeightedRegressionAlgorithm::isValid())
     {
-        gwm::BandwidthWeight* bandwidth = static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight());
+        gwm::BandwidthWeight& bandwidth = mSpatialWeight.weight<gwm::BandwidthWeight>();//static_cast<gwm::BandwidthWeight*>(mSpatialWeight.weight());
 
         if(!mIsAutoselectBandwidth)
         {
-            if(bandwidth->adaptive()){
-                if (bandwidth->bandwidth() <= mIndepVars.size()) return false;
+            if(bandwidth.adaptive()){
+                if (bandwidth.bandwidth() <= mIndepVars.size()) return false;
             }else{
 
             }

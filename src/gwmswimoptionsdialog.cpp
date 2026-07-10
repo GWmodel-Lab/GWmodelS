@@ -1,4 +1,4 @@
-#include "gwmswimoptionsdialog.h"
+﻿#include "gwmswimoptionsdialog.h"
 #include "ui_gwmswimoptionsdialog.h"
 #include <QFileDialog>
 #include <QButtonGroup>
@@ -17,7 +17,7 @@
 #include <qgsproject.h>
 #include <qgsmaplayer.h>
 #include <qgsfeature.h>
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
 
@@ -90,7 +90,7 @@ GwmSWIMOptionsDialog::GwmSWIMOptionsDialog(QWidget *parent) :
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelMultithreadRadio);
     calcParallelTypeBtnGroup->addButton(ui->mCalcParallelGPURadio);
     ui->mCalcParallelNoneRadio->setChecked(true);
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
     int cores = omp_get_num_procs();
     ui->mThreadNum->setValue(cores);
     ui->mThreadNum->setMaximum(cores);

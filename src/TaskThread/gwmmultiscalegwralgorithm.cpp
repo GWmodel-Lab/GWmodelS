@@ -3,6 +3,7 @@
 #include <omp.h>
 #endif
 #include <exception>
+#include <chrono>
 #include "GWmodel/GWmodel.h"
 #include <SpatialWeight/gwmcrsdistance.h>
 
@@ -174,17 +175,13 @@ void GwmMultiscaleGWRAlgorithm::run()
             gwm::SpatialWeight sw(bw, dist);
 
             // 设置距离参数（坐标数据已经在 initPoints 中准备好了）
-            if (dist->type() == gwm::Distance::CRSDistance) {
-                auto *d = sw.distance<gwm::CRSDistance>();
-                if (d) {
-                    d->makeParameter({ mRegressionPoints, mDataPoints });
-                }
+            if (dist->type() == gwm::Distance::DistanceType::CRSDistance) {
+                auto &d = sw.distance<gwm::CRSDistance>();
+                d.makeParameter({ mRegressionPoints, mDataPoints });
             }
-            else if (dist->type() == gwm::Distance::MinkwoskiDistance) {
-                auto *d2 = sw.distance<gwm::MinkwoskiDistance>();
-                if (d2) {
-                    d2->makeParameter({ mRegressionPoints, mDataPoints });
-                }
+            else if (dist->type() == gwm::Distance::DistanceType::MinkwoskiDistance) {
+                auto &d2 = sw.distance<gwm::MinkwoskiDistance>();
+                d2.makeParameter({ mRegressionPoints, mDataPoints });
             }
 
             spatialWeights.push_back(sw);
@@ -227,13 +224,11 @@ void GwmMultiscaleGWRAlgorithm::run()
         mMGWRCore->setAdaptiveLower(mAdaptiveLower);
 
         // 7. 设置并行类型
-        gwm::ParallelType parallelType = gwm::ParallelType::SerialOnly;
-        if (mParallelType == IParallelalbe::OpenMP)
-        {
-            parallelType = gwm::ParallelType::OpenMP;
-            mMGWRCore->setOmpThreadNum(mOmpThreadNum);
-        }
-        mMGWRCore->setParallelType(parallelType);
+        mMGWRCore->setParallelType(mParallelType);
+        mMGWRCore->setOmpThreadNum(mOmpThreadNum);
+        qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+                 << "-> mMGWRCore parallelType:" << static_cast<int>(mMGWRCore->parallelType())
+                 << "parallelAbility:" << static_cast<int>(mMGWRCore->parallelAbility());
 
         // 8. 设置初始空间权重(不需要)
         // 9. 设置消息传递（如果需要）
@@ -246,7 +241,11 @@ void GwmMultiscaleGWRAlgorithm::run()
         emit message(tr("Running MGWR using core library..."));
         try
         {
+            auto start_time = std::chrono::high_resolution_clock::now();
             mBetas = mMGWRCore->fit();
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            qDebug() << "fit() execution time:" << duration.count() << "ms, Threads:" << mOmpThreadNum;
 
             std::vector<gwm::SpatialWeight> ws = mMGWRCore->spatialWeights();
             // 确保数量匹配
@@ -254,13 +253,14 @@ void GwmMultiscaleGWRAlgorithm::run()
             {
                 for (size_t i = 0; i < ws.size(); i++)
                 {
-                    gwm::BandwidthWeight* gwmBw = ws[i].weight<gwm::BandwidthWeight>();
-                    if (gwmBw)
+                    const auto& coreW = ws[i].weight();
+                    if (coreW)
                     {
+                        gwm::BandwidthWeight& gwmBw = ws[i].weight<gwm::BandwidthWeight>();
                         // 从库的带宽权重中提取参数
-                        double bandwidth = gwmBw->bandwidth();
-                        bool adaptive = gwmBw->adaptive();
-                        gwm::BandwidthWeight::KernelFunctionType gwmKernel = gwmBw->kernel();
+                        double bandwidth = gwmBw.bandwidth();
+                        bool adaptive = gwmBw.adaptive();
+                        gwm::BandwidthWeight::KernelFunctionType gwmKernel = gwmBw.kernel();
 
                         // 转换为应用层的类型
                         GwmBandwidthWeight::KernelFunctionType kernel = convertKernelTypeBack(gwmKernel);
@@ -1290,20 +1290,20 @@ double GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICOmp(GwmBandwidthW
 #endif
 GwmMultiscaleGWRAlgorithm::BandwidthSizeCriterionFunction GwmMultiscaleGWRAlgorithm::bandwidthSizeCriterionAll(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType type)
 {
-    QMap<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> > mapper = {
-        std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(IParallelalbe::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial),
+    QMap<BandwidthSelectionCriterionType, QMap<gwm::ParallelType, BandwidthSizeCriterionFunction> > mapper = {
+        std::make_pair<BandwidthSelectionCriterionType, QMap<gwm::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
+            std::make_pair(gwm::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial),
         #ifdef ENABLE_OpenMP
             std::make_pair(IParallelalbe::ParallelType::OpenMP, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVOmp),
         #endif
-            std::make_pair(IParallelalbe::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial)
+            std::make_pair(gwm::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllCVSerial)
         }),
-        std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(IParallelalbe::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial),
+        std::make_pair<BandwidthSelectionCriterionType, QMap<gwm::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
+            std::make_pair(gwm::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial),
         #ifdef ENABLE_OpenMP
             std::make_pair(IParallelalbe::ParallelType::OpenMP, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICOmp),
         #endif
-            std::make_pair(IParallelalbe::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial)
+            std::make_pair(gwm::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionAllAICSerial)
         })
     };
     return mapper[type][mParallelType];
@@ -1311,63 +1311,29 @@ GwmMultiscaleGWRAlgorithm::BandwidthSizeCriterionFunction GwmMultiscaleGWRAlgori
 
 GwmMultiscaleGWRAlgorithm::BandwidthSizeCriterionFunction GwmMultiscaleGWRAlgorithm::bandwidthSizeCriterionVar(GwmMultiscaleGWRAlgorithm::BandwidthSelectionCriterionType type)
 {
-    QMap<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> > mapper = {
-        std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(IParallelalbe::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial),
+    QMap<BandwidthSelectionCriterionType, QMap<gwm::ParallelType, BandwidthSizeCriterionFunction> > mapper = {
+        std::make_pair<BandwidthSelectionCriterionType, QMap<gwm::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
+            std::make_pair(gwm::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial),
         #ifdef ENABLE_OpenMP
             std::make_pair(IParallelalbe::ParallelType::OpenMP, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVOmp),
         #endif
-            std::make_pair(IParallelalbe::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial)
+            std::make_pair(gwm::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarCVSerial)
         }),
-        std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(IParallelalbe::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial),
+        std::make_pair<BandwidthSelectionCriterionType, QMap<gwm::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
+            std::make_pair(gwm::ParallelType::SerialOnly, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial),
         #ifdef ENABLE_OpenMP
             std::make_pair(IParallelalbe::ParallelType::OpenMP, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICOmp),
         #endif
-            std::make_pair(IParallelalbe::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial)
+            std::make_pair(gwm::ParallelType::CUDA, &GwmMultiscaleGWRAlgorithm::mBandwidthSizeCriterionVarAICSerial)
         })
     };
     return mapper[type][mParallelType];
 }
 
-void GwmMultiscaleGWRAlgorithm::setParallelType(const IParallelalbe::ParallelType &type)
+void GwmMultiscaleGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    if (parallelAbility() & type)
-    {
-        mParallelType = type;
-
-        // 转换并行类型
-        gwm::ParallelType gwmType = gwm::ParallelType::SerialOnly;
-        if (type == IParallelalbe::OpenMP)
-        {
-            gwmType = gwm::ParallelType::OpenMP;
-        }
-
-        // 设置到内核库
-        if (mMGWRCore)
-        {
-            mMGWRCore->setParallelType(gwmType);
-        }
-
-        switch (type) {
-        case IParallelalbe::ParallelType::SerialOnly:
-            mRegressionAll = &GwmMultiscaleGWRAlgorithm::regressionAllSerial;
-            mRegressionVar = &GwmMultiscaleGWRAlgorithm::regressionVarSerial;
-            break;
-#ifdef ENABLE_OpenMP
-        case IParallelalbe::ParallelType::OpenMP:
-            mRegressionAll = &GwmMultiscaleGWRAlgorithm::regressionAllOmp;
-            mRegressionVar = &GwmMultiscaleGWRAlgorithm::regressionVarOmp;
-            break;
-#endif
-//        case IParallelalbe::ParallelType::CUDA:
-//            mRegressionAll = &GwmMultiscaleGWRAlgorithm::regressionAllOmp;
-//            mRegressionVar = &GwmMultiscaleGWRAlgorithm::regressionVarOmp;
-//            break;
-        default:
-            break;
-        }
-    }
+    mParallelType = type;
+    mMGWRCore->setParallelType(type);
 }
 
 void GwmMultiscaleGWRAlgorithm::setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights)

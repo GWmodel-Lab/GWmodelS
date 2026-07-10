@@ -6,6 +6,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <exception>
+#include <chrono>
 
 #ifdef ENABLE_OpenMP
 #include <omp.h>
@@ -95,7 +96,14 @@ void GwmGeneralizedGWRAlgorithm::run()
         if (mIsAutoselectBandwidth)
         {
             emit message(QString(tr("Automatically selecting bandwidth ...")));
+            qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+                     << "-> mGGWRCore parallelType:" << static_cast<int>(mGGWRCore->parallelType())
+                     << "parallelAbility:" << static_cast<int>(mGGWRCore->parallelAbility());
+            auto start_time = std::chrono::high_resolution_clock::now();
             mBetas = mGGWRCore->fit();
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            qDebug() << "fit() execution time (auto-select bandwidth):" << duration.count() << "ms, Threads:" << mOmpThreadNum;
             // if(mHasHatMatrix)
             // {
             //     arma::mat tempS;
@@ -106,13 +114,15 @@ void GwmGeneralizedGWRAlgorithm::run()
             //     mBetas = mGGWRCore->fit();
             // }
 
-            gwm::BandwidthWeight* bw = mGGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
-            emit message(tr("bandwidth selected: %1").arg(bw->bandwidth()));
 
-            if (bw && !checkCanceled())
+            const auto &coreW = mGGWRCore->spatialWeight().weight();
+            if (coreW && !checkCanceled())
             {
+                gwm::BandwidthWeight& bw = mGGWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
+                emit message(tr("bandwidth selected: %1").arg(bw.bandwidth()));
+
                 mSpatialWeight.setWeight(bw);
-                criterionList = mGGWRCore->mBandwidthSelectionCriterionList;
+                criterionList = mGGWRCore->bandwidthSelectorCriterions();
 
                 // 绘图数据
                 QVector<QPair<double,double>> qlist;
@@ -125,13 +135,24 @@ void GwmGeneralizedGWRAlgorithm::run()
         else
         {
             emit message(QString(tr("Fitting GGWR model...")));
+            qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+                     << "-> mGGWRCore parallelType:" << static_cast<int>(mGGWRCore->parallelType())
+                     << "parallelAbility:" << static_cast<int>(mGGWRCore->parallelAbility());
+            auto start_time = std::chrono::high_resolution_clock::now();
             mBetas = mGGWRCore->fit();
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            qDebug() << "fit() execution time (no auto-select):" << duration.count() << "ms, Threads:" << mOmpThreadNum;
         }
     }
     else if (!checkCanceled() && hasRegressionLayer())
     {
         emit message(QString(tr("Fitting GGWR model...")));
+        auto start_time = std::chrono::high_resolution_clock::now();
         mBetas = mGGWRCore->fit();
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        qDebug() << "fit() execution time (regression layer):" << duration.count() << "ms, Threads:" << mOmpThreadNum;
     }
 
     // 优选带宽
@@ -139,7 +160,7 @@ void GwmGeneralizedGWRAlgorithm::run()
     // {
     //     emit message(QString(tr("Automatically selecting bandwidth ...")));
     //     //emit tick(0, 0);
-    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
     //     {
     //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
     //         d->makeParameter({ mDataPoints, mDataPoints });
@@ -162,7 +183,7 @@ void GwmGeneralizedGWRAlgorithm::run()
     //         QVariant data = QVariant::fromValue(mBandwidthSizeSelector.bandwidthCriterion());
     //         emit plot(data, &GwmBandwidthSizeSelector::PlotBandwidthResult);
     //     }
-    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
     //     {
     //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
     //         d->makeParameter({ mDataPoints, mDataPoints });
@@ -194,7 +215,7 @@ void GwmGeneralizedGWRAlgorithm::run()
     //         mWtMat2.col(i) = weight;
     //         emit tick(i, nRp);
     //     }
-    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::MinkwoskiDistance) && !checkCanceled())
+    //     if ((mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::CRSDistance || mSpatialWeight.distance()->type() == gwm::Distance::DistanceType::MinkwoskiDistance) && !checkCanceled())
     //     {
     //         gwm::CRSDistance* d = static_cast<gwm::CRSDistance*>(mSpatialWeight.distance());
     //         d->makeParameter({ mDataPoints, mDataPoints });
@@ -589,7 +610,7 @@ mat GwmGeneralizedGWRAlgorithm::regressionPoissonOmp(const mat &x, const vec &y)
     mat S(isStoreS ? nDp : 1, nDp, fill::zeros);
     int current = 0;
     if(mHasHatMatrix && !checkCanceled()){
-        mat shat = mat(2,mOmpThreadNum,fill::zeros);
+        mat shat = mat(2,mOmpThreadNum,fill::zeros);       
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for(int i = 0; i < nDp; i++){
             mat ci,s_ri;
@@ -818,7 +839,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial(GwmBandwid
                 .arg(res);
         emit message(msg);
         return res;
-    }
+    }   
     else return DBL_MAX;
 
 }
@@ -828,8 +849,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
     int n = mDataPoints.n_rows;
     vec cv = vec(n);
     mat wt = mat(n,n);
-    int current1 = 0, current2 = 0;
-    const int selectorStep = static_cast<int>(mBandwidthSizeSelector.bandwidthCriterion().size());
+    // int current1 = 0, current2 = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -840,10 +860,10 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
             w.row(i) = 0;
             wt.col(i) = w;
             // if(mBandwidthSizeSelector.counter<10)
-            //     emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
-            if (selectorStep < 10)
-                emit tick(selectorStep * 10 + current2 * 5 / n + 5, 100);
-            current2++;
+            //     emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
+            // current1++;
         }
     }
     if (!checkCanceled()) (this->*mCalWtFunction)(mX,mY,wt);
@@ -861,10 +881,10 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp(GwmBandwidthW
                 cv.row(i) = mY.row(i) - exp(yhatnoi)/(1+exp(yhatnoi));
             }
             // if(mBandwidthSizeSelector.counter<10)
-            //     emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
-            if (selectorStep < 10)
-                emit tick(selectorStep * 10 + current2 * 5 / n + 5, 100);
-            current2++;
+            //    emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
+            // current2++;
         }
     }
     vec cvsquare = trans(cv) * cv ;
@@ -888,7 +908,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial(GwmBandwi
     int n = mDataPoints.n_rows;
     vec cv = vec(n);
     mat S = mat(n,n);
-    mat wt = mat(n,n);
+    mat wt = mat(n,n);    
     for (int i = 0; i < n && !checkCanceled(); i++)
     {
         vec d = mSpatialWeight.distance()->distance(i);
@@ -939,8 +959,7 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
     vec cv = vec(n);
     mat S = mat(n,n);
     mat wt = mat(n,n);
-    int current1 = 0, current2 = 0;
-    const int selectorStep = static_cast<int>(mBandwidthSizeSelector.bandwidthCriterion().size());
+    // int current1 = 0, current2 = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < n; i++)
     {
@@ -950,10 +969,10 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
             vec w = bandwidthWeight->weight(d);
             wt.col(i) = w;
             // if(mBandwidthSizeSelector.counter<10)
-            //     emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
-            if (selectorStep < 10)
-                emit tick(selectorStep * 10 + current1 * 5 / n, 100);
-            current1++;
+            //    emit tick(mBandwidthSizeSelector.counter*10 + current1 * 5 / n, 100);
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
+            // current1++;
         }
     }
     if (!checkCanceled())  (this->*mCalWtFunction)(mX,mY,wt);
@@ -969,9 +988,9 @@ double GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp(GwmBandwidth
             trS(thread) += S(i,i);
             // if(mBandwidthSizeSelector.counter<10)
             //     emit tick(mBandwidthSizeSelector.counter*10 + current2 * 5 / n + 5, 100);
-            if (selectorStep < 10)
-                emit tick(selectorStep * 10 + current2 * 5 / n + 5, 100);
-            current2++;
+            if (i % std::max(1, n / 10) == 0)
+                emit tick(i * 100 / n, 100);
+            // current2++;
         }
     }
     double AICc;
@@ -1217,30 +1236,28 @@ void GwmGeneralizedGWRAlgorithm::createResultLayer(CreateResultLayerData data,QS
 
 void GwmGeneralizedGWRAlgorithm::setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
 {
-    mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
-    QMap<QPair<BandwidthSelectionCriterionType, gwm::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
-    #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp),
-    #endif
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial),
-    #ifdef ENABLE_OpenMP
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp),
-    #endif
-        std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial)
-    };
-    mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
+    // mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
+    // QMap<QPair<BandwidthSelectionCriterionType, gwm::ParallelType>, BandwidthSelectCriterionFunction> mapper = {
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
+    // #ifdef ENABLE_OpenMP
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVOmp),
+    // #endif
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::CV, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionCVSerial),
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::SerialOnly), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial),
+    // #ifdef ENABLE_OpenMP
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::OpenMP), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICOmp),
+    // #endif
+    //     std::make_pair(qMakePair(BandwidthSelectionCriterionType::AIC, gwm::ParallelType::CUDA), &GwmGeneralizedGWRAlgorithm::bandwidthSizeGGWRCriterionAICSerial)
+    // };
+    // mBandwidthSelectCriterionFunction = mapper[qMakePair(bandwidthSelectionCriterionType, mParallelType)];
 }
 
 void GwmGeneralizedGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    if (type & parallelAbility())
-    {
-        mParallelType = type;
-        setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-        setFamily(mFamily);
-    }
+    mParallelType = type;
+    mGGWRCore->setParallelType(type);
+    setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
+    setFamily(mFamily);
 }
 
 mat GwmGeneralizedGWRAlgorithm::diag(mat a){
@@ -1470,11 +1487,11 @@ void GwmGeneralizedGWRAlgorithm::fTest(FTestParameters params)
                     f3.append(f3i);
                     continue;
                 }
-
+                
                 double g1 = diagB(0);
                 double g2 = diagB(1);
                 double numdf = g1 * g1 / g2;
-
+                
                 // 检查计算结果的有效性
                 if (g1 <= 0 || g2 <= 0 || numdf <= 0 || !isfinite(numdf))
                 {
@@ -1486,7 +1503,7 @@ void GwmGeneralizedGWRAlgorithm::fTest(FTestParameters params)
                     f3.append(f3i);
                     continue;
                 }
-
+                
                 GwmFTestResult f3i;
                 f3i.s = (vk2(i) / g1) / sigma2delta1;
                 f3i.df1 = numdf;
@@ -1526,20 +1543,20 @@ vec GwmGeneralizedGWRAlgorithm::calcDiagBSerial(int i)
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
     mat wspan(1, nVar, fill::ones);
-
+    
     // 第一遍循环：计算 c（所有数据点的系数矩阵第 i 列的平均值）
     for (arma::uword j = 0; j < nDp && !checkCanceled(); j++)
     {
         vec wj = mWtMat2.col(j);
         vec weights = wj % mWt2;
-
+        
         // 检查权重有效性
         if (sum(weights) < 1e-10 || any(weights < 0) || !weights.is_finite())
         {
             emit error("Invalid weights in calcDiagB (first loop).");
             return { DBL_MAX, DBL_MAX };
         }
-
+        
         mat xtw = trans(mX % (weights * wspan));
         try {
             // 使用 inv_sympd 替代 pinv，与 BasicGWR 保持一致
@@ -1550,20 +1567,20 @@ vec GwmGeneralizedGWRAlgorithm::calcDiagBSerial(int i)
             return { DBL_MAX, DBL_MAX };
         }
     }
-
+    
     // 第二遍循环：计算 diagB
     for (arma::uword k = 0; k < nDp && !checkCanceled(); k++)
     {
         vec wk = mWtMat2.col(k);
         vec weights = wk % mWt2;
-
+        
         // 检查权重有效性
         if (sum(weights) < 1e-10 || any(weights < 0) || !weights.is_finite())
         {
             emit error("Invalid weights in calcDiagB (second loop).");
             return { DBL_MAX, DBL_MAX };
         }
-
+        
         mat xtw = trans(mX % (weights * wspan));
         try {
             // 使用 inv_sympd 替代 pinv，与 BasicGWR 保持一致
@@ -1575,7 +1592,7 @@ vec GwmGeneralizedGWRAlgorithm::calcDiagBSerial(int i)
             return { DBL_MAX, DBL_MAX };
         }
     }
-
+    
     diagB = 1.0 / nDp * diagB;
     return { sum(diagB), sum(diagB % diagB) };
 }

@@ -3,6 +3,7 @@
 #include <omp.h>
 #endif
 #include <qgsmemoryproviderutils.h>
+#include <chrono>
 int GwmGTWRAlgorithm::treeChildCount = 0;
 
 GwmDiagnostic GwmGTWRAlgorithm::CalcDiagnostic(const mat &x, const vec &y, const mat &betas, const vec &shat)
@@ -75,15 +76,24 @@ void GwmGTWRAlgorithm::run()
         {
             emit message(QString(tr("Automatically selecting bandwidth ...")));
             emit tick(0, 0);
-            mGTWRCore->setParallelType(static_cast<gwm::ParallelType>(mParallelType));
+            mGTWRCore->setParallelType(mParallelType);
+            mGTWRCore->setOmpThreadNum(mOmpThreadNum);
             mGTWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+            qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+                     << "-> mGTWRCore parallelType:" << static_cast<int>(mGTWRCore->parallelType())
+                     << "parallelAbility:" << static_cast<int>(mGTWRCore->parallelAbility());
+            auto start_time = std::chrono::high_resolution_clock::now();
             mBetas = mGTWRCore->fit();
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            qDebug() << "fit() execution time (auto-select bandwidth):" << duration.count() << "ms, Threads:" << mOmpThreadNum;
 
-            gwm::BandwidthWeight* bw = mGTWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
-            if (bw && !checkCanceled())
+            const auto &coreW = mGTWRCore->spatialWeight().weight();
+            if (coreW && !checkCanceled())
             {
                 // 更新本地权重
-                updateLocalSpatialWeight(bw);
+                gwm::BandwidthWeight& bw = mGTWRCore->spatialWeight().weight<gwm::BandwidthWeight>();
+                updateLocalSpatialWeight(&bw);
 
                 mCriterionList = mGTWRCore->bandwidthSelectionCriterionList();
                 QVector<QPair<double,double>> qlist;
@@ -95,9 +105,17 @@ void GwmGTWRAlgorithm::run()
         }
         else
         {
-            mGTWRCore->setParallelType(static_cast<gwm::ParallelType>(mParallelType));
+            mGTWRCore->setParallelType(mParallelType);
+            mGTWRCore->setOmpThreadNum(mOmpThreadNum);
             mGTWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
+            qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+                     << "-> mGTWRCore parallelType:" << static_cast<int>(mGTWRCore->parallelType())
+                     << "parallelAbility:" << static_cast<int>(mGTWRCore->parallelAbility());
+            auto start_time = std::chrono::high_resolution_clock::now();
             mBetas = mGTWRCore->fit();
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            qDebug() << "fit() execution time (no auto-select):" << duration.count() << "ms, Threads:" << mOmpThreadNum;
         }
     }
 
@@ -743,36 +761,10 @@ void GwmGTWRAlgorithm::createResultLayer(GwmGTWRAlgorithm::CreateResultLayerData
     mResultLayer->commitChanges();
 }
 
-void GwmGTWRAlgorithm::setParallelType(const ParallelType &type)
+void GwmGTWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    if (type & parallelAbility())
-    {
-        mParallelType = type;
-        if (mGTWRCore)
-        {
-            mGTWRCore->setParallelType(static_cast<gwm::ParallelType>(type));
-        }
-        setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-        switch (type) {
-        case IParallelalbe::ParallelType::SerialOnly:
-            mRegressionFunction = &GwmGTWRAlgorithm::regressionSerial;
-            mRegressionHatmatrixFunction = &GwmGTWRAlgorithm::regressionHatmatrixSerial;
-            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            break;
-#ifdef ENABLE_OpenMP
-        case IParallelalbe::ParallelType::OpenMP:
-            mRegressionFunction = &GwmGTWRAlgorithm::regressionOmp;
-            mRegressionHatmatrixFunction = &GwmGTWRAlgorithm::regressionHatmatrixOmp;
-            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            break;
-#endif
-        default:
-            mRegressionFunction = &GwmGTWRAlgorithm::regressionSerial;
-            mRegressionHatmatrixFunction = &GwmGTWRAlgorithm::regressionHatmatrixSerial;
-            setBandwidthSelectionCriterionType(mBandwidthSelectionCriterionType);
-            break;
-        }
-    }
+    mParallelType = type;
+    mGTWRCore->setParallelType(type);
 }
 
 gwm::SpatialWeight GwmGTWRAlgorithm::convertSpatialWeight()
@@ -808,10 +800,12 @@ gwm::SpatialWeight GwmGTWRAlgorithm::convertSpatialWeight()
     // 创建空间距离 (CRSDistance)
     GwmCRSDistance* gwmDist = mSTWeight.distance<GwmCRSDistance>();
     bool isGeographic = gwmDist ? gwmDist->geographic() : false;
-    gwm::CRSDistance* spatialDist = new gwm::CRSDistance(isGeographic);
+    std::unique_ptr<gwm::Distance> spatialDist =
+        std::make_unique<gwm::CRSDistance>(isGeographic);
 
     // 创建时间距离 (OneDimDistance)
-    gwm::OneDimDistance* temporalDist = new gwm::OneDimDistance();
+    std::unique_ptr<gwm::OneDimDistance> temporalDist =
+        std::make_unique<gwm::OneDimDistance>();
 
     // 创建 CRSSTDistance，传入空间距离、时间距离和 lambda
     gwm::CRSSTDistance* dist = new gwm::CRSSTDistance(

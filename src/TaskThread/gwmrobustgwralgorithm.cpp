@@ -5,7 +5,7 @@
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
-
+#include <chrono>
 int GwmRobustGWRAlgorithm::treeChildCount = 0;
 
 GwmRobustGWRAlgorithm::GwmRobustGWRAlgorithm(): GwmBasicGWRAlgorithm(),
@@ -56,19 +56,16 @@ void GwmRobustGWRAlgorithm::run()
         emit message("Regression ...");
         mRGWRCore->setParallelType(mParallelType);
         mRGWRCore->setOmpThreadNum(mOmpThreadNum);
-        qDebug() << "core parallelType =" << mRGWRCore->parallelType();
-        qDebug() << "core parallelAbility =" << mRGWRCore->parallelAbility();
         mRGWRCore->setTelegram(std::make_unique<GwmTaskThreadTelegram>(this));
-
-        QElapsedTimer timer;
-        timer.start();
-
+        qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+             << "-> mRGWRCore parallelType:" << static_cast<int>(mRGWRCore->parallelType())
+             << "parallelAbility:" << static_cast<int>(mRGWRCore->parallelAbility());
+        auto start_time = std::chrono::high_resolution_clock::now();
         mBetas = mRGWRCore->fit();
-
-        qint64 elapsed = timer.elapsed();
-        qDebug() << "fit() time =" << elapsed << "ms";
-
-        // qDebug() << "mBetas:"; mBetas.print();
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        qDebug() << "fit() execution time:" << duration.count() << "ms, Threads:" << mOmpThreadNum;
+        qDebug() << "mBetas:"; mBetas.print();
     }
 
     if(mOLS&&!checkCanceled()){
@@ -269,7 +266,29 @@ void GwmRobustGWRAlgorithm::createResultLayer(CreateResultLayerData data)
 
 void GwmRobustGWRAlgorithm::setParallelType(const gwm::ParallelType &type)
 {
-    // GwmBasicGWRAlgorithm::setParallelType(type);
+    GwmBasicGWRAlgorithm::setParallelType(type);
+    if (type & parallelAbility())
+    {
+        mParallelType = type;
+        switch (type) {
+        case gwm::ParallelType::SerialOnly:
+            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
+            break;
+#ifdef ENABLE_OpenMP
+        case gwm::ParallelType::OpenMP:
+            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixOmp;
+            break;
+#endif
+#ifdef ENABLE_CUDA
+        case gwm::ParallelType::CUDA:
+            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixCuda;
+            break;
+#endif
+        default:
+            mRegressionHatmatrixFunction = &GwmRobustGWRAlgorithm::regressionHatmatrixSerial;
+            break;
+        }
+    }
 }
 
 mat GwmRobustGWRAlgorithm::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
@@ -435,22 +454,22 @@ mat GwmRobustGWRAlgorithm::regressionHatmatrixCuda(const mat &x, const vec &y, m
     bool longlat = false;
     if (mSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
     {
-        GwmMinkwoskiDistance* d = mSpatialWeight.distance<GwmMinkwoskiDistance>();
-        p = d->poly();
-        theta = d->theta();
+        gwm::MinkwoskiDistance& d = mSpatialWeight.distance<gwm::MinkwoskiDistance>();
+        p = d.poly();
+        theta = d.theta();
     }
     else if (mSpatialWeight.distance()->type() == GwmDistance::CRSDistance)
     {
-        GwmCRSDistance* d = mSpatialWeight.distance<GwmCRSDistance>();
-        longlat = d->geographic();
+        gwm::CRSDistance& d = mSpatialWeight.distance<gwm::CRSDistance>();
+        longlat = d.geographic();
     }
-    GwmBandwidthWeight* bw = mSpatialWeight.weight<GwmBandwidthWeight>();
-    bool adaptive = bw->adaptive();
+    gwm::BandwidthWeight& bw = mSpatialWeight.weight<gwm::BandwidthWeight>();
+    bool adaptive = bw.adaptive();
     for(int i=0;i<nDp;i++)
     {
         cuda->SetWeightMask(i,mWeightMask(i));
     }
-    bool gwrStatus = cuda->Regression(true, p, theta, longlat, bw->bandwidth(), bw->kernel(), adaptive, mGroupSize, mGpuId);
+    bool gwrStatus = cuda->Regression(true, p, theta, longlat, bw.bandwidth(), bw.kernel(), adaptive, mGroupSize, mGpuId);
     mat betas(nVar, nDp, fill::zeros);
     betasSE = mat(nVar, nDp, fill::zeros);
     shat = vec(2, fill::zeros);

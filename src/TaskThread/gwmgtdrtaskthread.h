@@ -107,7 +107,7 @@ private:
     std::vector<std::unique_ptr<gwm::BandwidthWeight>> mBandwidthHolders;
     std::vector<std::unique_ptr<gwm::OneDimDistance>> mDistanceHolders;
 
-    gwm::BandwidthSelector mBandwidthSizeSelector;
+    //gwm::BandwidthSelector mBandwidthSizeSelector;
     //gwm::GTDRBandwidthOptimizer mGTDRBandwidthOptimizer;
     int mCurrentOptimizingDim = -1;
 

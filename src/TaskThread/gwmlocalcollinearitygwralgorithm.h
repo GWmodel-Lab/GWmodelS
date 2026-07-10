@@ -11,7 +11,7 @@
 
 using namespace arma;
 
-class GwmLocalCollinearityGWRAlgorithm:public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable, public gwm::IParallelizable, public gwm::IParallelOpenmpEnabled, public gwm::IParallelCudaEnabled
+class GwmLocalCollinearityGWRAlgorithm:public GwmGeographicalWeightedRegressionAlgorithm, public IBandwidthSizeSelectable,public IOpenmpParallelable
 {
 public:
 
@@ -71,8 +71,8 @@ public:
         return criterionList;
     }
 
-    gwm::GWRBasic::BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
-    void setBandwidthSelectionCriterionType(const gwm::GWRBasic::BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
+    BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
+    void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
 public:
     bool isValid() override;
 
@@ -92,17 +92,13 @@ protected:
     void createResultLayer(CreateResultLayerData data);
 public:
     int parallelAbility() const override;
-    gwm::ParallelType parallelType() const override;
+    ParallelType parallelType() const override;
 
-    void setParallelType(const gwm::ParallelType &type) override;
+    void setParallelType(const ParallelType &type) override;
 
     // IOpenmpParallelable interface
 public:
     void setOmpThreadNum(const int threadNum) override;
-
-    // IParallelCudaEnabled interface
-    void setGPUId(const int gpuId) override;
-    void setGroupSize(const std::size_t size) override;
 
     void setCanceled(bool canceled) override;
 private:
@@ -112,7 +108,7 @@ private:
 
     double mCnThresh;
 
-    gwm::BandwidthSelector selector;
+    //gwm::BandwidthSelector selector;
 
     bool mHasHatmatix = false;
 
@@ -131,7 +127,7 @@ public:
 #ifdef ENABLE_OpenMP
     double bandwidthSizeCriterionCVOmp(GwmBandwidthWeight* weight);
 #endif
-    gwm::GWRBasic::BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = gwm::GWRBasic::BandwidthSelectionCriterionType::CV;
+    BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::CV;
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GwmLocalCollinearityGWRAlgorithm::bandwidthSizeCriterionCVSerial;
 
     mat regressionSerial(const mat& x, const vec& y);
@@ -140,7 +136,7 @@ public:
 #endif
     Regression mRegressionFunction = &GwmLocalCollinearityGWRAlgorithm::regressionSerial;
 
-    gwm::ParallelType mParallelType = gwm::ParallelType::SerialOnly;
+    IParallelalbe::ParallelType mParallelType = IParallelalbe::ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
     int mGpuId = 0;
     int mGroupSize = 64;
@@ -150,10 +146,10 @@ public:
 
 inline int GwmLocalCollinearityGWRAlgorithm::parallelAbility() const
 {
-    return mLCGWRCore ? mLCGWRCore->parallelAbility() : (gwm::SerialOnly | gwm::OpenMP);
+    return IParallelalbe::SerialOnly | IParallelalbe::OpenMP;
 }
 
-inline gwm::ParallelType GwmLocalCollinearityGWRAlgorithm::parallelType() const
+inline IParallelalbe::ParallelType GwmLocalCollinearityGWRAlgorithm::parallelType() const
 {
     return mParallelType;
 }
@@ -161,10 +157,6 @@ inline gwm::ParallelType GwmLocalCollinearityGWRAlgorithm::parallelType() const
 inline void GwmLocalCollinearityGWRAlgorithm::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
-    if (mLCGWRCore)
-    {
-        mLCGWRCore->setOmpThreadNum(threadNum);
-    }
 }
 
 #endif // GWMLCRGWRTASKTHREAD_H

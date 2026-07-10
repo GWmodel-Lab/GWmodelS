@@ -2,9 +2,11 @@
 #include <exception>
 #include <gwmodel.h>
 #include "SpatialWeight/gwmcrsdistance.h"
+#include <functional>
 #ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
+#include <chrono>
 
 using namespace std;
 using namespace gwm;
@@ -262,14 +264,16 @@ void GwmGTDRTaskThread::run()
         int nWeightingVars = mMeta.weightingVariables.size();
         for (arma::uword k = 0; k < nWeightingVars && k < mWeightingData.n_cols; ++k)
         {
-            auto* od = sws[k].distance<gwm::OneDimDistance>();
-            if (!od) {
-                emit error(tr("GTDR invalid: spatialWeights[%1] is not OneDimDistance.").arg(int(k)));
+            const auto &distH = sws[k].distance();
+            if (!distH)
+            {
+                emit error(tr("GTDR invalid: spatialWeights[%1] has null distance.").arg(int(k)));
                 return;
             }
+            auto &od = sws[k].distance<gwm::OneDimDistance>();
             // 使用权重变量的第k列来设置距离参数
             arma::vec col = mWeightingData.col(k);
-            od->makeParameter({ col, col });
+            od.makeParameter({ col, col });
             emit message(tr("Distance parameter set for weighting variable: %1")
                         .arg(mMeta.weightingVariables[k].name));
         }
@@ -278,13 +282,15 @@ void GwmGTDRTaskThread::run()
         if (hasTimeStamp && sws.size() > nWeightingVars && mWeightingData.n_cols > nWeightingVars)
         {
             arma::uword timeStampIndex = nWeightingVars;
-            auto* od = sws[timeStampIndex].distance<gwm::OneDimDistance>();
-            if (!od) {
-                emit error(tr("GTDR invalid: spatialWeights[%1] (timestamp) is not OneDimDistance.").arg(int(timeStampIndex)));
+            const auto &distH = sws[timeStampIndex].distance();
+            if (!distH)
+            {
+                emit error(tr("GTDR invalid: spatialWeights[%1] (timestamp) has null distance.").arg(int(timeStampIndex)));
                 return;
             }
+            auto &od = sws[timeStampIndex].distance<gwm::OneDimDistance>();
             arma::vec col = mWeightingData.col(timeStampIndex);
-            od->makeParameter({ col, col });
+            od.makeParameter({ col, col });
             emit message(tr("Distance parameter set for timestamp variable: %1")
                         .arg(mMeta.timeStampVariable.name));
         }
@@ -295,28 +301,30 @@ void GwmGTDRTaskThread::run()
     {
         // Bandwidth size selection
         emit message(tr("Automatically selecting bandwidth..."));
-        vector<gwm::BandwidthWeight*> vecBandwidthWeight0 ;
+        // vector<gwm::BandwidthWeight*> vecBandwidthWeight0 ;
         mAlgorithm.setBandwidthCriterionType(mMeta.bandwidthCriterionType);
 
         // 4. 收集所有维度的带宽权重指针
-        std::vector<gwm::BandwidthWeight*> bandwidths;
+        // std::vector<gwm::BandwidthWeight*> bandwidths;
+        std::vector<std::reference_wrapper<gwm::BandwidthWeight>> bandwidths;
         const auto& sws = mAlgorithm.spatialWeights();
         for (const auto& sw : sws)
         {
-            auto* bw = sw.weight<gwm::BandwidthWeight>();
-            if (bw)
+            const auto &wH = sw.weight();
+            if (wH)
             {
+                gwm::BandwidthWeight &bw = sw.weight<gwm::BandwidthWeight>();
                 bandwidths.push_back(bw);
                 
                 // 设置初始带宽值（如果当前值不合理）
-                double lower = bw->adaptive() ? (mIndepVars.size() + 1) : 0.0;
-                double upper = bw->adaptive() ? mX.n_rows : sw.distance()->maxDistance();
-                if (bw->bandwidth() <= lower || bw->bandwidth() >= upper || !isfinite(bw->bandwidth()))
+                double lower = bw.adaptive() ? (mIndepVars.size() + 1) : 0.0;
+                double upper = bw.adaptive() ? mX.n_rows : sw.distance()->maxDistance();
+                if (bw.bandwidth() <= lower || bw.bandwidth() >= upper || !isfinite(bw.bandwidth()))
                 {
-                    double initBw = bw->adaptive() 
+                    double initBw = bw.adaptive()
                         ? std::max(20.0, upper * 0.618) 
                         : upper * 0.618;
-                    bw->setBandwidth(initBw);
+                    bw.setBandwidth(initBw);
                 }
             }
         }
@@ -362,15 +370,16 @@ void GwmGTDRTaskThread::run()
                 const auto& sws = mAlgorithm.spatialWeights();
                 for (size_t i = 0; i < sws.size(); ++i)
                 {
-                    auto* bw = sws[i].weight<gwm::BandwidthWeight>();
-                    if (bw)
+                    const auto &wHi = sws[i].weight();
+                    if (wHi)
                     {
+                        auto& bw = sws[i].weight<gwm::BandwidthWeight>();
                         QString varName = i < mMeta.weightingVariables.size()
                         ? mMeta.weightingVariables[i].name
                         : QString("Dimension_%1").arg(i);
 
                         emit message(tr("Dimension %1 (%2): optimized bandwidth = %3")
-                                         .arg(i).arg(varName).arg(bw->bandwidth()));
+                                         .arg(i).arg(varName).arg(bw.bandwidth()));
                     }
                 }
             }
@@ -381,25 +390,26 @@ void GwmGTDRTaskThread::run()
                 const auto& sws = mAlgorithm.spatialWeights();
                 for (size_t i = 0; i < sws.size(); ++i)
                 {
-                    auto* bw = sws[i].weight<gwm::BandwidthWeight>();
-                    if (bw)
+                    const auto &wHi = sws[i].weight();
+                    if (wHi)
                     {
+                        auto& bw = sws[i].weight<gwm::BandwidthWeight>();
                         //bw->setBandwidth(100);// 继续使用初始带宽值(这里需要实时更新)
 
                         // 直接使用 bandwidths 中的当前值（优化器最后一次尝试的值）
-                        double currentBw = bandwidths[i]->bandwidth();
+                        double currentBw = bandwidths[i].get().bandwidth();
 
                         // 验证值的有效性
-                        double lower = bw->adaptive() ? (mMeta.weightingVariables.size() + 1) : 0.0;
-                        double upper = bw->adaptive() ? mX.n_rows : sws[i].distance()->maxDistance();
+                        double lower = bw.adaptive() ? (mMeta.weightingVariables.size() + 1) : 0.0;
+                        double upper = bw.adaptive() ? mX.n_rows : sws[i].distance()->maxDistance();
 
                         if (currentBw <= lower || currentBw >= upper || !isfinite(currentBw))
                         {
                             // 如果值无效，使用合理的默认值
-                            currentBw = bw->adaptive()
+                            currentBw = bw.adaptive()
                                             ? std::round(std::max(20.0, upper * 0.618))
                                             : upper * 0.618;
-                            bw->setBandwidth(currentBw);
+                            bw.setBandwidth(currentBw);
                         }
                         // 如果值有效，不需要设置（已经是当前值）
 
@@ -408,7 +418,7 @@ void GwmGTDRTaskThread::run()
                                               : QString("Dimension_%1").arg(i);
 
                         emit message(tr("Dimension %1 (%2): using initial bandwidth: %3 (optimization failed)")
-                                         .arg(i).arg(varName).arg(bw->bandwidth()));
+                                         .arg(i).arg(varName).arg(bw.bandwidth()));
                     }
                 }
             }
@@ -433,9 +443,20 @@ void GwmGTDRTaskThread::run()
     if (checkCanceled()) return;   
     try
     { 
+        // Ensure algorithm parallel settings reflect UI/meta
+        mAlgorithm.setParallelType(mMeta.parallelType);
+        mAlgorithm.setOmpThreadNum(mMeta.parallelOmpThreads);
+        qDebug() << "mParallelType:" << static_cast<int>(mMeta.parallelType)
+                 << "-> mAlgorithm parallelType:" << static_cast<int>(mAlgorithm.parallelType())
+                 << "parallelAbility:" << static_cast<int>(mAlgorithm.parallelAbility());
+
+        auto start_time = std::chrono::high_resolution_clock::now();
         mAlgorithm.fit();
-        emit message(tr("fit."));
-        
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        qDebug() << "GTDR fit() execution time:" << duration.count() << "ms, Threads:" << mMeta.parallelOmpThreads;
+        emit message(tr("fit completed in %1 ms").arg(QString::number(duration.count())));
+
         mDiagnostic=mAlgorithm.diagnostic();
         mBetas = mAlgorithm.betas();
         mBetasSE = mAlgorithm.betasSE();

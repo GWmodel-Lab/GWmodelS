@@ -4,6 +4,8 @@
 #include <omp.h>
 #endif
 
+#include <chrono>
+
 using namespace gwm;
 using namespace std;
 
@@ -168,17 +170,13 @@ void GwmGWCorrelationTaskThread::run()
             gwm::SpatialWeight sw(bw, dist);
 
             // 设置距离参数（坐标数据已经在 initPoints 中准备好了）
-            if (dist->type() == gwm::Distance::CRSDistance) {
-                auto *d = sw.distance<gwm::CRSDistance>();
-                if (d) {
-                    d->makeParameter({ mDataPoints, mDataPoints });
-                }
+            if (dist->type() == gwm::Distance::DistanceType::CRSDistance) {
+                auto &d = sw.distance<gwm::CRSDistance>();
+                d.makeParameter({ mDataPoints, mDataPoints });
             }
-            else if (dist->type() == gwm::Distance::MinkwoskiDistance) {
-                auto *d2 = sw.distance<gwm::MinkwoskiDistance>();
-                if (d2) {
-                    d2->makeParameter({ mDataPoints, mDataPoints });
-                }
+            else if (dist->type() == gwm::Distance::DistanceType::MinkwoskiDistance) {
+                auto &d2 = sw.distance<gwm::MinkwoskiDistance>();
+                d2.makeParameter({ mDataPoints, mDataPoints });
             }
 
             spatialWeights.push_back(sw);
@@ -197,8 +195,6 @@ void GwmGWCorrelationTaskThread::run()
     mGWCorrCore->setBandwidthSelectionApproach(bandwidthSelTypes);
     mGWCorrCore->setParallelType(static_cast<gwm::ParallelType>(mParallelType));
     mGWCorrCore->setOmpThreadNum(mOmpThreadNum);
-    qDebug() << "core parallelType =" << mGWCorrCore->parallelType();
-    qDebug() << "core parallelAbility =" << mGWCorrCore->parallelAbility();
 
     // std::vector<gwm::SpatialWeight> a = mGWCorrCore->spatialWeights();
     // gwm::BandwidthWeight bwa = a[0].weight<gwm::BandwidthWeight>();
@@ -225,17 +221,24 @@ void GwmGWCorrelationTaskThread::run()
             emit message(tr("BandwidthInit size = %1").arg(bandwidthInitTypes.size()));
             emit message(tr("BandwidthSel size = %1").arg(bandwidthSelTypes.size()));
 
+            qDebug() << "mParallelType:" << static_cast<int>(mParallelType)
+                     << "-> mGWCorrCore parallelType:" << static_cast<int>(mGWCorrCore->parallelType())
+                     << "parallelAbility:" << static_cast<int>(mGWCorrCore->parallelAbility());
+            auto __gwc_start = std::chrono::high_resolution_clock::now();
             mGWCorrCore->run();
+            auto __gwc_end = std::chrono::high_resolution_clock::now();
+            auto __gwc_duration = std::chrono::duration_cast<std::chrono::milliseconds>(__gwc_end - __gwc_start);
+            qDebug() << "GWCorrelation run() execution time:" << __gwc_duration.count() << "ms, Threads:" << mOmpThreadNum;
 
             // update property tab
             const std::vector<gwm::SpatialWeight>& gwmSws = mGWCorrCore->spatialWeights();
             for(uword i = 0 ; i<nVars && !checkCanceled();i++)
             {
                 gwm::SpatialWeight gwmSw = gwmSws[i];
-                gwm::BandwidthWeight* gwmBw = gwmSws[i].weight<gwm::BandwidthWeight>();
-
-                if (gwmBw)
+                const auto& coreW = gwmSws[i].weight();
+                if (coreW)
                 {
+                    gwm::BandwidthWeight& gwmBw = gwmSws[i].weight<gwm::BandwidthWeight>();
                     // 获取当前 GwmSpatialWeight 中的带宽权重
                     GwmBandwidthWeight* currentBw = mSpatialWeights[i].weight<GwmBandwidthWeight>();
                     if (currentBw)
@@ -243,11 +246,11 @@ void GwmGWCorrelationTaskThread::run()
                         // 创建新的 GwmBandwidthWeight，使用更新后的带宽值
                         // 保持原有的 adaptive 和 kernel 设置
                         GwmBandwidthWeight::KernelFunctionType kernelType =
-                            static_cast<GwmBandwidthWeight::KernelFunctionType>(gwmBw->kernel());
+                            static_cast<GwmBandwidthWeight::KernelFunctionType>(gwmBw.kernel());
 
                         GwmBandwidthWeight* newBw = new GwmBandwidthWeight(
-                            gwmBw->bandwidth(),
-                            gwmBw->adaptive(),
+                            gwmBw.bandwidth(),
+                            gwmBw.adaptive(),
                             kernelType
                             );
 
@@ -576,24 +579,8 @@ void GwmGWCorrelationTaskThread::createResultLayer(CreateResultLayerData data)
 //设置多线程字段
 void GwmGWCorrelationTaskThread::setParallelType(const IParallelalbe::ParallelType &type)
 {
-    if (type & parallelAbility())
-    {
-        mParallelType = type;
-        switch (type) {
-        case IParallelalbe::ParallelType::SerialOnly:
-//            mRegressionFunction = &GwmBasicGWRAlgorithm::regressionSerial;
-            mCalFunciton = &GwmGWCorrelationTaskThread::CalculateSerial;
-            break;
-#ifdef ENABLE_OpenMP
-        case IParallelalbe::ParallelType::OpenMP:
-            mCalFunciton = &GwmGWCorrelationTaskThread::CalculateOmp;
-            break;
-#endif
-        default:
-            mCalFunciton = &GwmGWCorrelationTaskThread::CalculateSerial;
-            break;
-        }
-    }
+    mParallelType = type;
+    mGWCorrCore->setParallelType(static_cast<gwm::ParallelType>(type));
 }
 //CV值计算
 double GwmGWCorrelationTaskThread::bandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight *bandwidthWeight)
