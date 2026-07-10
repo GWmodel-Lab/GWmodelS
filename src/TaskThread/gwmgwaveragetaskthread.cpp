@@ -1,4 +1,4 @@
-#include "gwmgwaveragetaskthread.h"
+﻿#include "gwmgwaveragetaskthread.h"
 #include <exception>
 #include <gwmodel.h>
 #include "SpatialWeight/gwmcrsdistance.h"
@@ -45,6 +45,11 @@ GwmGWAverageTaskThread::GwmGWAverageTaskThread(const GwmAlgorithmMetaVariable& m
     }
     SpatialWeight spatialWeight(&weight, distance);
     mAlgorithm.setSpatialWeight(spatialWeight);
+    mAlgorithm.setAutoselectBandwidth(meta.weightBandwidthAutoselect);
+    qDebug() << "GWAverageTaskThread configured: autoselectBandwidth=" << mAlgorithm.isAutoselectBandwidth()
+             << ", initial bandwidth=" << weight.bandwidth()
+             << ", adaptive=" << weight.adaptive()
+             << ", kernel=" << (int)weight.kernel();
     // Parallel
     mAlgorithm.setParallelType(meta.parallelType);
     switch (meta.parallelType)
@@ -58,6 +63,14 @@ GwmGWAverageTaskThread::GwmGWAverageTaskThread(const GwmAlgorithmMetaVariable& m
     // Others
     mAlgorithm.setQuantile(meta.quantile);
     delete distance;
+}
+
+gwm::BandwidthWeight GwmGWAverageTaskThread::finalBandwidth() const
+{
+    auto bw = mAlgorithm.spatialWeight().weight<gwm::BandwidthWeight>();
+    if (bw)
+        return *bw;
+    return gwm::BandwidthWeight();
 }
 
 void GwmGWAverageTaskThread::run()
@@ -75,7 +88,31 @@ void GwmGWAverageTaskThread::run()
     try
     {
         mAlgorithm.setTelegram(make_unique<GwmTaskThreadTelegram>(this));
+        qDebug() << "core parallelType =" << mAlgorithm.parallelType();
+        qDebug() << "core parallelAbility =" << mAlgorithm.parallelAbility();
+        qDebug() << "core autoselect bandwidth =" << mAlgorithm.isAutoselectBandwidth();
+        if (mAlgorithm.isAutoselectBandwidth())
+        {
+            auto bw = mAlgorithm.spatialWeight().weight<gwm::BandwidthWeight>();
+            if (bw)
+            {
+                qDebug() << "core bandwidth before run =" << bw->bandwidth()
+                         << ", adaptive =" << bw->adaptive()
+                         << ", kernel =" << (int)bw->kernel();
+            }
+        }
         mAlgorithm.run();
+        qDebug() << "runfinished";
+        if (mAlgorithm.isAutoselectBandwidth())
+        {
+            auto bw = mAlgorithm.spatialWeight().weight<gwm::BandwidthWeight>();
+            if (bw)
+            {
+                qDebug() << "core bandwidth after run =" << bw->bandwidth()
+                         << ", adaptive =" << bw->adaptive()
+                         << ", kernel =" << (int)bw->kernel();
+            }
+        }
         if(!checkCanceled())
         {
             mResultList.push_back(qMakePair(QString("LM"), localmean()));

@@ -14,6 +14,7 @@ struct GwmAlgorithmMetaVariable
     gwm::Weight::WeightType weightType = gwm::Weight::BandwidthWeight;
     double weightBandwidthSize = DBL_MAX;
     bool weightBandwidthAdaptive = true;
+    bool weightBandwidthAutoselect = false;
     gwm::BandwidthWeight::KernelFunctionType weightBandwidthKernel = gwm::BandwidthWeight::KernelFunctionType::Gaussian;
     // Distance
     gwm::Distance::DistanceType distanceType = gwm::Distance::DistanceType::CRSDistance;

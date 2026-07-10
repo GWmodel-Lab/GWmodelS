@@ -53,6 +53,12 @@ void GwmPropertyGWAverageTab::updateUI()
         QString bwSizeString = QString("%1 (number of nearest neighbours)").arg(int(weight.bandwidth()));
         ui->lblBandwidthSize->setText(bwSizeString);
     }
+    else
+    {
+        // for fixed bandwidth show distance value
+        QString bwSizeString = QString("%1 (distance)").arg(weight.bandwidth(), 0, 'f', 3);
+        ui->lblBandwidthSize->setText(bwSizeString);
+    }
     ui->lblNumberDataPoints->setText(QString("%1").arg(mLayerItem->dataPointsSize()));
     if (true)
     {

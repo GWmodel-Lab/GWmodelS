@@ -38,6 +38,8 @@ public slots:
 
     void onFixedRadioToggled(bool checked);
     void onVariableRadioToggled(bool checked);
+    void onAutomaticRadioToggled(bool checked);
+    void onCustomizeRadioToggled(bool checked);
     void onNoneRadioToggled(bool checked);
     void onMultithreadingRadioToggled(bool checked);
     void onGPURadioToggled(bool checked);
@@ -52,6 +54,7 @@ public:
     QString crsRotateTheta();
     QString crsRotateP();
     bool bandwidthType();
+    bool bandwidthAutoSelect();
     IParallelalbe::ParallelType approachType();
     double bandwidthSize();
     gwm::BandwidthWeight::KernelFunctionType bandwidthKernelFunction();

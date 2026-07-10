@@ -37,6 +37,11 @@ GwmGWAverageOptionsDialog::GwmGWAverageOptionsDialog(QList<GwmLayerGroupItem*> o
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWAverageOptionsDialog::onFixedRadioToggled);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWAverageOptionsDialog::onVariableRadioToggled);
 
+    QButtonGroup* bwSelectionBtnGroup = new QButtonGroup(this);
+    bwSelectionBtnGroup->addButton(ui->mBwSizeAutomaticRadio);
+    bwSelectionBtnGroup->addButton(ui->mBwSizeCustomizeRadio);
+    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGWAverageOptionsDialog::onAutomaticRadioToggled);
+    connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmGWAverageOptionsDialog::onCustomizeRadioToggled);
 
     //距离计算部分
     QButtonGroup* distanceSettingBtnGroup = new QButtonGroup(this);
@@ -70,6 +75,8 @@ GwmGWAverageOptionsDialog::GwmGWAverageOptionsDialog(QList<GwmLayerGroupItem*> o
     connect(ui->mIndepVarSelector, &GwmIndepVarSelectorWidget::selectedIndepVarChangedSignal, this, &GwmGWAverageOptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeFixedRadio, &QAbstractButton::toggled, this, &GwmGWAverageOptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwTypeAdaptiveRadio, &QAbstractButton::toggled, this, &GwmGWAverageOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeAutomaticRadio, &QAbstractButton::toggled, this, &GwmGWAverageOptionsDialog::updateFieldsAndEnable);
+    connect(ui->mBwSizeCustomizeRadio, &QAbstractButton::toggled, this, &GwmGWAverageOptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeFixedSize, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &GwmGWAverageOptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeFixedUnit, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GwmGWAverageOptionsDialog::updateFieldsAndEnable);
     connect(ui->mBwSizeAdaptiveSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &GwmGWAverageOptionsDialog::updateFieldsAndEnable);
@@ -91,6 +98,9 @@ GwmGWAverageOptionsDialog::GwmGWAverageOptionsDialog(QList<GwmLayerGroupItem*> o
 
     ui->mBwSizeAdaptiveSize->setMaximum(INT_MAX);
     ui->mBwSizeFixedSize->setMaximum(DBL_MAX);
+    ui->mBwTypeAdaptiveRadio->setChecked(true);
+    ui->mBwSizeAutomaticRadio->setChecked(true);
+    onAutomaticRadioToggled(ui->mBwSizeAutomaticRadio->isChecked());
     ui->mDistTypeCRSRadio->setChecked(true);
     updateFieldsAndEnable();
 }
@@ -257,6 +267,33 @@ void GwmGWAverageOptionsDialog::onVariableRadioToggled(bool checked)
     ui->mBwSizeSettingStack->setCurrentIndex(0);
 }
 
+void GwmGWAverageOptionsDialog::onAutomaticRadioToggled(bool checked)
+{
+    if (checked)
+    {
+        ui->mBwSizeAdaptiveSize->setEnabled(false);
+        ui->mBwSizeAdaptiveUnit->setEnabled(false);
+        ui->mBwSizeFixedSize->setEnabled(false);
+        ui->mBwSizeFixedUnit->setEnabled(false);
+    }
+}
+
+void GwmGWAverageOptionsDialog::onCustomizeRadioToggled(bool checked)
+{
+    if (checked)
+    {
+        ui->mBwSizeAdaptiveSize->setEnabled(true);
+        ui->mBwSizeAdaptiveUnit->setEnabled(true);
+        ui->mBwSizeFixedSize->setEnabled(true);
+        ui->mBwSizeFixedUnit->setEnabled(true);
+    }
+}
+
+bool GwmGWAverageOptionsDialog::bandwidthAutoSelect()
+{
+    return ui->mBwSizeAutomaticRadio->isChecked();
+}
+
 double GwmGWAverageOptionsDialog::bandwidthSize(){
     if (ui->mBwTypeAdaptiveRadio->isChecked())
     {
@@ -324,8 +361,9 @@ void GwmGWAverageOptionsDialog::updateFields()
     }
 
     mAlgorithmMeta.weightType = gwm::Weight::BandwidthWeight;
-    mAlgorithmMeta.weightBandwidthSize = bandwidthSize();
+    mAlgorithmMeta.weightBandwidthSize = bandwidthAutoSelect() ? 1.0 : bandwidthSize();
     mAlgorithmMeta.weightBandwidthAdaptive = bandwidthType();
+    mAlgorithmMeta.weightBandwidthAutoselect = bandwidthAutoSelect();
     mAlgorithmMeta.weightBandwidthKernel = bandwidthKernelFunction();
 
 
