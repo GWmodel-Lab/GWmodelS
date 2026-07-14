@@ -1,4 +1,4 @@
-#include "gwmlayergwaverageitem.h"
+﻿#include "gwmlayergwaverageitem.h"
 #include "gwmlayergroupitem.h"
 
 GwmLayerGWAverageItem::GwmLayerGWAverageItem(GwmLayerItem* parentItem, QgsVectorLayer* vector, const GwmGWAverageTaskThread* taskThread)
@@ -9,7 +9,16 @@ GwmLayerGWAverageItem::GwmLayerGWAverageItem(GwmLayerItem* parentItem, QgsVector
         auto taskMeta = taskThread->meta();
         mDataPointsSize = taskMeta.layer->featureCount();
         mVariables = taskMeta.variables;
-        mBandwidth = new gwm::BandwidthWeight(taskMeta.weightBandwidthSize, taskMeta.weightBandwidthAdaptive, gwm::BandwidthWeight::KernelFunctionType(taskMeta.weightBandwidthKernel));
+        // Use final bandwidth from taskThread (may be updated by autoselect), fallback to meta
+        gwm::BandwidthWeight finalBw = taskThread->finalBandwidth();
+        if (finalBw.bandwidth() != 0.0 || finalBw.adaptive())
+        {
+            mBandwidth = new gwm::BandwidthWeight(finalBw);
+        }
+        else
+        {
+            mBandwidth = new gwm::BandwidthWeight(taskMeta.weightBandwidthSize, taskMeta.weightBandwidthAdaptive, gwm::BandwidthWeight::KernelFunctionType(taskMeta.weightBandwidthKernel));
+        }
         mQuantile = taskThread->quantile();
         mResultList = taskThread->resultlist();
 
