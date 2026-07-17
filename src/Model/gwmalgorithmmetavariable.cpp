@@ -1,4 +1,4 @@
-#include "gwmalgorithmmetavariable.h"
+﻿#include "gwmalgorithmmetavariable.h"
 
 #include <QTranslator>
 
@@ -20,7 +20,7 @@ bool GwmAlgorithmMetaVariable::validate(QString &error) const
 
     if (weightType == Weight::WeightType::BandwidthWeight)
     {
-        if (weightBandwidthSize == 0)
+        if (!weightBandwidthAutoselect && weightBandwidthSize == 0)
         {
             error = QTranslator::tr("Bandwidth size is too small.");
             return false;

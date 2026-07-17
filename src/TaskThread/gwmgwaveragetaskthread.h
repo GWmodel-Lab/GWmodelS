@@ -1,4 +1,4 @@
-#ifndef GWMGWAVERAGETASKTHREAD_H
+﻿#ifndef GWMGWAVERAGETASKTHREAD_H
 #define GWMGWAVERAGETASKTHREAD_H
 
 #include <QObject>
@@ -76,6 +76,7 @@ protected:
 
 public:
     static int treeChildCount;
+    gwm::BandwidthWeight finalBandwidth() const;
 
 };
 
