@@ -1,0 +1,249 @@
+# GitHub Actions CI for GWmodelS (QGIS 3.28 LTR secondary development)
+#
+# Targets:
+#   - Windows (x64)
+#   - macOS (Intel, x86_64)
+#   - macOS (Apple Silicon, arm64)
+#
+# Pipeline:
+#   1. Install the libgwmodel kernel (https://github.com/GWmodel-Lab/libgwmodel.git)
+#   2. Create a conda environment: qgis==3.28, armadillo, catch2, openblas, nomkl
+#   3. Patch the missing qgswebframe.h header from the QGIS source tree
+#   4. Configure + build GWmodelS
+#   5. Package with CPack (packaging scripts are provided on pack/* branches)
+#      - macOS: sign the .app with a self-signed certificate before packaging
+#
+# NOTE: draft only, not yet pushed/validated.
+
+name: CI
+
+on:
+  push:
+    branches: [master, 'feat/**', 'enhance/**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      pack_branch:
+        description: 'CPack packaging scripts branch (pack/*)'
+        required: false
+        default: 'pack/20260511'
+
+env:
+  CONDA_ENV: gwmodels
+  QGIS_VER: '3.28'
+  # CPack packaging scripts live on a branch starting with "pack/"
+  PACK_BRANCH: ${{ github.event.inputs.pack_branch || 'pack/20260511' }}
+  # qgswebframe.h is fetched from the QGIS 3.28 LTR source tree
+  QGIS_HEADER_REF: final-3_28_16
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Windows
+  # ---------------------------------------------------------------------------
+  build-windows:
+    name: Windows (x64)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: '3.10'
+          channels: conda-forge, defaults
+          channel-priority: flexible
+          activate-environment: ${{ env.CONDA_ENV }}
+
+      # qgis/armadillo/catch2/openblas come from conda-forge; nomkl (no MKL)
+      # is only available in the 'defaults' channel.
+      - name: Install conda dependencies
+        shell: bash -l {0}
+        run: |
+          conda install -n "$CONDA_ENV" -y \
+            -c conda-forge qgis==$QGIS_VER armadillo catch2 openblas \
+            -c defaults nomkl
+          conda list -n "$CONDA_ENV"
+
+      # libgwmodel is the spatial-statistics kernel required by GWmodelS.
+      # Build first (the conda deps above are already in place).
+      - name: Install libgwmodel kernel
+        shell: bash -l {0}
+        run: |
+          git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
+          cmake -S libgwmodel -B libgwmodel/build \
+            -G "Visual Studio 17 2022" -A x64 \
+            -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX/Library" \
+            -DCMAKE_PREFIX_PATH="$CONDA_PREFIX/Library" \
+            -DBUILD_TESTING=OFF
+          cmake --build libgwmodel/build --config Release --parallel
+          cmake --install libgwmodel/build
+
+      # The conda QGIS package is missing qgswebframe.h; download it from the
+      # QGIS 3.28 LTR source tree and drop it into the include directory.
+      - name: Patch missing qgswebframe.h
+        shell: bash -l {0}
+        run: |
+          QGIS_INC="$CONDA_PREFIX/Library/include/qgis"
+          curl -fsSL -o "$QGIS_INC/qgswebframe.h" \
+            "https://raw.githubusercontent.com/qgis/QGIS/$QGIS_HEADER_REF/src/gui/qgswebframe.h"
+
+      - name: Enable MSVC toolchain
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure (cmake)
+        shell: pwsh
+        run: |
+          $env:LIB_DIR = "$env:CONDA_PREFIX\Library"
+          $env:INCLUDE = "$env:CONDA_PREFIX\Library\include;$env:INCLUDE"
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBLAS_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib" `
+            -DLAPACK_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib"
+
+      - name: Build GWmodelS
+        shell: pwsh
+        run: |
+          cmake --build build --config Release --target GWmodelS --parallel
+
+      # Pull the CPack configuration from the pack/* branch, reconfigure to
+      # regenerate CPackConfig.cmake, then produce the installer/package.
+      - name: Package with CPack
+        shell: pwsh
+        run: |
+          git fetch origin "$env:PACK_BRANCH"
+          git checkout "origin/$env:PACK_BRANCH" -- CMakeLists.txt src/CMakeLists.txt cmake
+          $env:LIB_DIR = "$env:CONDA_PREFIX\Library"
+          $env:INCLUDE = "$env:CONDA_PREFIX\Library\include;$env:INCLUDE"
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBLAS_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib" `
+            -DLAPACK_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib"
+          cmake --build build --config Release --target GWmodelS --parallel
+          cpack --config build/CPackConfig.cmake -G ZIP
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: GWmodelS-Windows-x64
+          path: build/*.zip
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # macOS (Intel + Apple Silicon)
+  # ---------------------------------------------------------------------------
+  build-macos:
+    name: macOS (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-13 # Intel
+            arch: x86_64
+          - os: macos-14 # Apple Silicon
+            arch: arm64
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: '3.10'
+          channels: conda-forge, defaults
+          channel-priority: flexible
+          activate-environment: ${{ env.CONDA_ENV }}
+
+      - name: Install conda dependencies
+        shell: bash -l {0}
+        run: |
+          conda install -n "$CONDA_ENV" -y \
+            -c conda-forge qgis==$QGIS_VER armadillo catch2 openblas llvm-openmp \
+            -c defaults nomkl
+          conda list -n "$CONDA_ENV"
+
+      - name: Install libgwmodel kernel
+        shell: bash -l {0}
+        run: |
+          git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
+          cmake -S libgwmodel -B libgwmodel/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX" \
+            -DCMAKE_PREFIX_PATH="$CONDA_PREFIX" \
+            -DBUILD_TESTING=OFF
+          cmake --build libgwmodel/build --config Release --parallel
+          cmake --install libgwmodel/build
+
+      # qgswebframe.h is missing from the conda QGIS package; fetch it from the
+      # QGIS 3.28 LTR source tree into the conda include directory.
+      - name: Patch missing qgswebframe.h
+        shell: bash -l {0}
+        run: |
+          QGIS_INC="$CONDA_PREFIX/include/qgis"
+          curl -fsSL -o "$QGIS_INC/qgswebframe.h" \
+            "https://raw.githubusercontent.com/qgis/QGIS/$QGIS_HEADER_REF/src/gui/qgswebframe.h"
+
+      - name: Configure (cmake)
+        shell: bash -l {0}
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$CONDA_PREFIX" \
+            -DQGIS_PREFIX_PATH="$CONDA_PREFIX"
+
+      - name: Build GWmodelS
+        shell: bash -l {0}
+        run: |
+          cmake --build build --config Release --target GWmodelS --parallel
+
+      # Create a self-signed code-signing identity and sign the .app bundle so
+      # CPack (DMG) produces a package that macOS accepts.
+      - name: Sign GWmodelS.app (self-signed certificate)
+        shell: bash
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/build.keychain"
+          security create-keychain -p build "$KEYCHAIN"
+          security default-keychain -s "$KEYCHAIN"
+          security unlock-keychain -p build "$KEYCHAIN"
+          security set-keychain-settings -t 3600 -u "$KEYCHAIN"
+
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/dev.key -out /tmp/dev.crt \
+            -days 365 -nodes -subj "/CN=GWmodelS CI"
+          openssl pkcs12 -export -out /tmp/dev.p12 \
+            -inkey /tmp/dev.key -in /tmp/dev.crt -passout pass:build
+          security import /tmp/dev.p12 -k "$KEYCHAIN" -P build -T /usr/bin/codesign
+
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" \
+            | awk -F'[()]' '/GWmodelS/{print $2; exit}')
+          codesign --force --deep --sign "$IDENTITY" --keychain "$KEYCHAIN" build/GWmodelS.app
+
+      # Pull the CPack configuration from the pack/* branch, reconfigure to
+      # regenerate CPackConfig.cmake, then produce the DMG.
+      - name: Package with CPack
+        shell: bash -l {0}
+        run: |
+          git fetch origin "$PACK_BRANCH"
+          git checkout "origin/$PACK_BRANCH" -- CMakeLists.txt src/CMakeLists.txt cmake macOS
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$CONDA_PREFIX" \
+            -DQGIS_PREFIX_PATH="$CONDA_PREFIX"
+          cmake --build build --config Release --target GWmodelS --parallel
+          cpack --config build/CPackConfig.cmake -G DragNDrop
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: GWmodelS-macOS-${{ matrix.arch }}
+          path: build/*.dmg
+          if-no-files-found: error
