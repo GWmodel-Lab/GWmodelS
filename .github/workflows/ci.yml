@@ -10,7 +10,7 @@
 #   2. Create a conda environment: qgis==3.28, armadillo, catch2, openblas, nomkl
 #   3. Patch the missing qgswebframe.h header from the QGIS source tree
 #   4. Configure + build GWmodelS
-#   5. Package with CPack (packaging scripts are provided on pack/* branches)
+#   5. Package with CPack (INSTALL/CPack rules live in src/CMakeLists.txt)
 #      - macOS: sign the .app with a self-signed certificate before packaging
 #
 # NOTE: draft only, not yet pushed/validated.
@@ -23,17 +23,10 @@ on:
     tags: ['v*']
   pull_request:
   workflow_dispatch:
-    inputs:
-      pack_branch:
-        description: 'CPack packaging scripts branch (pack/*)'
-        required: false
-        default: 'pack/20260511'
 
 env:
   CONDA_ENV: gwmodels
   QGIS_VER: '3.28'
-  # CPack packaging scripts live on a branch starting with "pack/"
-  PACK_BRANCH: ${{ github.event.inputs.pack_branch || 'pack/20260511' }}
   # qgswebframe.h is fetched from the QGIS 3.28 LTR source tree
   QGIS_HEADER_REF: final-3_28_16
 
@@ -104,6 +97,8 @@ jobs:
           cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_INSTALL_PREFIX="$env:CONDA_PREFIX\Library" `
+            -DDATADIR="share" `
             -DBLAS_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib" `
             -DLAPACK_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib"
 
@@ -112,21 +107,21 @@ jobs:
         run: |
           cmake --build build --config Release --target GWmodelS --parallel
 
-      # Pull the CPack configuration from the pack/* branch, reconfigure to
-      # regenerate CPackConfig.cmake, then produce the installer/package.
+      # CPack configuration is provided by the INSTALL/CPack section in
+      # src/CMakeLists.txt; reconfigure is a no-op and regenerates the
+      # CPackConfig.cmake before producing the ZIP package.
       - name: Package with CPack
         shell: pwsh
         run: |
-          git fetch origin "$env:PACK_BRANCH"
-          git checkout "origin/$env:PACK_BRANCH" -- CMakeLists.txt src/CMakeLists.txt cmake
           $env:LIB_DIR = "$env:CONDA_PREFIX\Library"
           $env:INCLUDE = "$env:CONDA_PREFIX\Library\include;$env:INCLUDE"
           cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_INSTALL_PREFIX="$env:CONDA_PREFIX\Library" `
+            -DDATADIR="share" `
             -DBLAS_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib" `
             -DLAPACK_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib"
-          cmake --build build --config Release --target GWmodelS --parallel
           cpack --config build/CPackConfig.cmake -G ZIP
 
       - name: Upload package
@@ -208,6 +203,13 @@ jobs:
 
       # Create a self-signed code-signing identity and sign the .app bundle so
       # CPack (DMG) produces a package that macOS accepts.
+      #
+      # NOTE: the INSTALL rule for APPLE in src/CMakeLists.txt runs fixup_bundle
+      # during `cpack`/`cmake --install`, which rewrites dylib install names and
+      # invalidates this signature. A robust approach is to re-sign the .app
+      # inside the CPack staging tree (build/_CPack_Packages/*/DragNDrop/) after
+      # cpack and before DMG creation; for this draft the sign-before-pack keeps
+      # the flow simple and easy to iterate on.
       - name: Sign GWmodelS.app (self-signed certificate)
         shell: bash
         run: |
@@ -227,18 +229,16 @@ jobs:
             | awk -F'[()]' '/GWmodelS/{print $2; exit}')
           codesign --force --deep --sign "$IDENTITY" --keychain "$KEYCHAIN" build/GWmodelS.app
 
-      # Pull the CPack configuration from the pack/* branch, reconfigure to
-      # regenerate CPackConfig.cmake, then produce the DMG.
+      # CPack configuration is provided by the INSTALL/CPack section in
+      # src/CMakeLists.txt; reconfigure is a no-op and regenerates the
+      # CPackConfig.cmake before producing the DMG.
       - name: Package with CPack
         shell: bash -l {0}
         run: |
-          git fetch origin "$PACK_BRANCH"
-          git checkout "origin/$PACK_BRANCH" -- CMakeLists.txt src/CMakeLists.txt cmake macOS
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="$CONDA_PREFIX" \
             -DQGIS_PREFIX_PATH="$CONDA_PREFIX"
-          cmake --build build --config Release --target GWmodelS --parallel
           cpack --config build/CPackConfig.cmake -G DragNDrop
 
       - name: Upload package

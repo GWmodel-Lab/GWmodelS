@@ -285,3 +285,58 @@ target_link_libraries(GWmodelS
     ${GWMODELCUDA_LIBRARIES}
 )
 endif(ENABLE_CUDA)
+
+# INSTALL
+
+if (WIN32)
+get_filename_component(qgis_dir ${QGIS_INCLUDE_DIR} DIRECTORY)
+install(TARGETS GWmodelS
+    COMPONENT Runtime
+    RUNTIME_DEPENDENCIES DIRECTORIES "${qgis_dir}/bin" POST_EXCLUDE_REGEXES ".*system32.*" POST_INCLUDE_REGEXES "libomp140.x86_64.dll"
+    DESTINATION .
+)
+get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
+get_filename_component( _dir ${uic_location} DIRECTORY)
+set(deployqt "${_dir}/windeployqt.exe")
+install(CODE "set(deployqt \"${deployqt}\")" COMPONENT Runtime)
+install(CODE [===[
+execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.exe")
+]===] COMPONENT Runtime)
+install(DIRECTORY "${qgis_dir}/resources" DESTINATION .)
+install(DIRECTORY "${qgis_dir}/share/proj" DESTINATION "./${DATADIR}")
+elseif(APPLE)
+install(TARGETS GWmodelS
+    # RUNTIME_DEPENDENCY_SET _dep_mac
+    DESTINATION .
+    BUNDLE DESTINATION .
+    RESOURCE DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources"
+)
+get_filename_component(qgis_dir ${QGIS_UI_INCLUDE_DIR} DIRECTORY)
+get_filename_component(qgis_dir ${qgis_dir} DIRECTORY)
+install(DIRECTORY "${qgis_dir}/share/proj" DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources")
+install(DIRECTORY "${qgis_dir}/share/qgis/resources" DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources")
+install(CODE "set(APPS ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app)" COMPONENT Runtime)
+install(CODE "set(DIRS ${QGIS_PREFIX_PATH}/lib)" COMPONENT Runtime)
+install(CODE [===[
+    include(BundleUtilities)
+    fixup_bundle("${APPS}" "" "")
+]===] COMPONENT Runtime)
+# install(RUNTIME_DEPENDENCY_SET _dep_mac DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Frameworks" POST_EXCLUDE_REGEXES ".*homebrew.*")
+# get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
+# get_filename_component( _dir ${uic_location} DIRECTORY)
+# set(deployqt "${_dir}/macdeployqt")
+# install(CODE "set(deployqt \"${deployqt}\")" COMPONENT Runtime)
+# install(CODE [===[
+# execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.app")
+# ]===] COMPONENT Runtime)
+endif()
+
+# CPack
+set(CPACK_PACKAGE_NAME ${CMAKE_PROJECT_NAME})
+set(CPACK_PACKAGE_VENDOR "GWmodel Lab")
+set(CPACK_PACKAGE_VERSION ${CMAKE_PROJECT_VERSION})
+set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/icons/GWmodelS.ico")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CMAKE_PROJECT_NAME})
+set(CPACK_PACKAGE_EXECUTABLES "GWmodelS;GWmodelS")
+set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
+include(CPack)
