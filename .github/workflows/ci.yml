@@ -84,6 +84,10 @@ jobs:
           conda install -n "$CONDA_ENV" -q -y \
             -c conda-forge qgis=$QGIS_VER armadillo catch2 openblas gsl cmake nomkl
           conda list -n "$CONDA_ENV" -q
+      
+      - name: Clone libgwmodel
+        run: |
+          git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
 
       # libgwmodel is the spatial-statistics kernel required by GWmodelS.
       # Build first (the conda deps above are already in place).
@@ -91,7 +95,6 @@ jobs:
         shell: bash -l {0}
         run: |
           conda activate "$CONDA_ENV"
-          git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
           cmake -S . -B libgwmodel/build \
             -A x64 \
             -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX/Library" \
@@ -189,11 +192,14 @@ jobs:
         shell: bash
         run: |
           brew install --quiet armadillo openblas catch2 libomp gsl cmake
+      
+      - name: Clone libgwmodel
+        run: |
+          git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
 
       - name: Install libgwmodel kernel
         shell: bash -l {0}
         run: |
-          git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="$(brew --prefix);$CONDA_PREFIX" \
