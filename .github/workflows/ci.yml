@@ -95,7 +95,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda activate "$CONDA_ENV"
-          cmake -S . -B libgwmodel/build \
+          cmake -S . -B build \
             -A x64 \
             -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX/Library" \
             -DCMAKE_PREFIX_PATH="$CONDA_PREFIX/Library" \
