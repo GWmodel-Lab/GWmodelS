@@ -83,7 +83,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX="$env:CONDA_PREFIX\Library" `
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DWITH_TESTS=OFF
-          cmake --build build --config Release --parallel
+          cmake --build build --config Release
           cmake --install build --config Release
         working-directory: ${{ github.workspace }}/libgwmodel
 
@@ -107,7 +107,7 @@ jobs:
           $env:PATH = "$env:CONDA_PREFIX\Library\bin;$env:PATH"
           $env:LIB_DIR = "$env:CONDA_PREFIX\Library"
           $env:INCLUDE = "$env:CONDA_PREFIX\Library\include;$env:INCLUDE"
-          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
+          cmake -S . -B build `
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_INSTALL_PREFIX="build\staged" `
@@ -117,7 +117,7 @@ jobs:
         shell: pwsh
         run: |
           $env:PATH = "$env:CONDA_PREFIX\Library\bin;$env:PATH"
-          cmake --build build --config Release --target GWmodelS --parallel
+          cmake --build build --config Release --target GWmodelS
 
       # CPack configuration is provided by the INSTALL/CPack section in
       # src/CMakeLists.txt; reconfigure is a no-op and regenerates the
@@ -199,7 +199,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX" \
             -DENABLE_OpenMP=OFF \
             -DWITH_TESTS=OFF
-          cmake --build build --config Release --parallel
+          cmake --build build --config Release
           cmake --install build
         working-directory: ${{ github.workspace }}/libgwmodel
 
@@ -254,7 +254,7 @@ jobs:
       - name: Build GWmodelS
         shell: bash -l {0}
         run: |
-          cmake --build build --config Release --target GWmodelS --parallel
+          cmake --build build --config Release --target GWmodelS
           cmake --install build --config Release
 
       # Fix libpdalcpp's dependency on libpdal_util: rewrite its install name
