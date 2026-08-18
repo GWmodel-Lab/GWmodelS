@@ -245,6 +245,7 @@ jobs:
           conda activate "$CONDA_ENV"
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$CONDA_PREFIX" \
             -DQGIS_PREFIX_PATH="$CONDA_PREFIX"
 
       - name: Build GWmodelS
