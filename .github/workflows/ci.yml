@@ -7,7 +7,7 @@
 #
 # Pipeline:
 #   1. Install the libgwmodel kernel (https://github.com/GWmodel-Lab/libgwmodel.git)
-#   2. Create a conda environment: qgis==3.28, armadillo, catch2, openblas, nomkl
+#   2. Create a conda environment: qgis=3.28, armadillo, catch2, openblas, nomkl
 #   3. Patch the missing qgswebframe.h header from the QGIS source tree
 #   4. Configure + build GWmodelS
 #   5. Package with CPack (INSTALL/CPack rules live in src/CMakeLists.txt)
@@ -57,7 +57,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda install -n "$CONDA_ENV" -y \
-            -c conda-forge qgis==$QGIS_VER armadillo catch2 openblas nomkl
+            -c conda-forge qgis=$QGIS_VER armadillo catch2 openblas nomkl
           conda list -n "$CONDA_ENV"
 
       # libgwmodel is the spatial-statistics kernel required by GWmodelS.
@@ -162,7 +162,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda install -n "$CONDA_ENV" -y \
-            -c conda-forge qgis==$QGIS_VER armadillo catch2 openblas llvm-openmp nomkl
+            -c conda-forge qgis=$QGIS_VER armadillo catch2 openblas llvm-openmp nomkl
           conda list -n "$CONDA_ENV"
 
       - name: Install libgwmodel kernel
