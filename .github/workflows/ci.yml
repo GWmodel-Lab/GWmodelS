@@ -193,7 +193,6 @@ jobs:
       - name: Install libgwmodel kernel
         shell: bash -l {0}
         run: |
-          conda activate "$CONDA_ENV"
           git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
