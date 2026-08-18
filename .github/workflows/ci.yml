@@ -245,11 +245,7 @@ jobs:
           conda activate "$CONDA_ENV"
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="$(brew --prefix);$CONDA_PREFIX" \
-            -DQGIS_PREFIX_PATH="$CONDA_PREFIX" \
-            -DGSL_DIR="$(brew --prefix)/opt/gsl/lib/cmake/gsl" \
-            -DBLAS_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
-            -DLAPACK_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib"
+            -DQGIS_PREFIX_PATH="$CONDA_PREFIX"
 
       - name: Build GWmodelS
         shell: bash -l {0}
