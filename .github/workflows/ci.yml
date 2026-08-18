@@ -31,7 +31,7 @@ env:
   CONDA_ENV: gwmodels
   QGIS_VER: '3.28'
   # qgswebframe.h is fetched from the QGIS 3.28 LTR source tree
-  QGIS_HEADER_REF: final-3_28_16
+  QGIS_HEADER_REF: final-3_28_1
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ jobs:
         run: |
           QGIS_INC="$CONDA_PREFIX/Library/include/qgis"
           curl -fsSL -o "$QGIS_INC/qgswebframe.h" \
-            "https://raw.githubusercontent.com/qgis/QGIS/$QGIS_HEADER_REF/src/gui/qgswebframe.h"
+            "https://raw.githubusercontent.com/qgis/QGIS/$QGIS_HEADER_REF/src/core/qgswebframe.h"
 
       - name: Enable MSVC toolchain
         uses: ilammy/msvc-dev-cmd@v1
@@ -237,7 +237,7 @@ jobs:
         run: |
           QGIS_INC="$CONDA_PREFIX/include/qgis"
           curl -fsSL -o "$QGIS_INC/qgswebframe.h" \
-            "https://raw.githubusercontent.com/qgis/QGIS/$QGIS_HEADER_REF/src/gui/qgswebframe.h"
+            "https://raw.githubusercontent.com/qgis/QGIS/$QGIS_HEADER_REF/src/core/qgswebframe.h"
 
       - name: Configure (cmake)
         shell: bash -l {0}
