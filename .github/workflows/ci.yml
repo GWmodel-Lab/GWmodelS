@@ -45,23 +45,6 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # GitHub-hosted runners may have an old system cmake that cannot detect
-      # the installed VS instance; point CMake at the exact VS install found by
-      # vswhere (the CMAKE_GENERATOR_INSTANCE env var is honored by CMake).
-      - name: Locate Visual Studio instance
-        shell: pwsh
-        run: |
-          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          $vs = & $vswhere -latest -products * `
-            -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
-            -property installationPath
-          if ($vs) {
-            "CMAKE_GENERATOR_INSTANCE=$vs" | Out-File -FilePath $env:GITHUB_ENV -Append
-            Write-Host "Found VS at: $vs"
-          } else {
-            Write-Error "No Visual Studio with C++ tools found by vswhere"
-          }
-
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
@@ -81,7 +64,6 @@ jobs:
       - name: Install conda dependencies
         shell: pwsh
         run: |
-          conda activate $env:CONDA_ENV
           conda install -n $env:CONDA_ENV -q -y `
             -c conda-forge qgis=$env:QGIS_VER armadillo catch2 openblas gsl cmake nomkl
           conda list -n $env:CONDA_ENV -q
@@ -96,14 +78,13 @@ jobs:
       - name: Install libgwmodel kernel
         shell: pwsh
         run: |
-          conda activate $env:CONDA_ENV
           cmake -S . -B build `
             -A x64 `
             -DCMAKE_INSTALL_PREFIX="$env:CONDA_PREFIX\Library" `
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DWITH_TESTS=OFF
           cmake --build build --config Release --parallel
-          cmake --install build
+          cmake --install build --config Release
         working-directory: ${{ github.workspace }}/libgwmodel
 
       # The conda QGIS package is missing qgswebframe.h; download it from the
@@ -111,9 +92,9 @@ jobs:
       - name: Patch missing qgswebframe.h
         shell: pwsh
         run: |
-          $QGIS_INC = "$env:CONDA_PREFIX\Library\include\qgis"
-          curl.exe -fsSL -o "$QGIS_INC\qgswebframe.h" `
-            "https://raw.githubusercontent.com/qgis/QGIS/$env:QGIS_HEADER_REF/src/core/qgswebframe.h"
+          $QGIS_INC = "$env:CONDA_PREFIX\Library\include"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/qgis/QGIS/$env:QGIS_HEADER_REF/src/core/qgswebframe.h" `
+            -OutFile "$QGIS_INC\qgswebframe.h"
 
       - name: Enable MSVC toolchain
         uses: ilammy/msvc-dev-cmd@v1
@@ -123,49 +104,38 @@ jobs:
       - name: Configure (cmake)
         shell: pwsh
         run: |
-          conda activate $env:CONDA_ENV
           $env:PATH = "$env:CONDA_PREFIX\Library\bin;$env:PATH"
           $env:LIB_DIR = "$env:CONDA_PREFIX\Library"
           $env:INCLUDE = "$env:CONDA_PREFIX\Library\include;$env:INCLUDE"
           cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_INSTALL_PREFIX="$env:CONDA_PREFIX\Library" `
-            -DDATADIR="share" `
-            -DBLAS_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib" `
-            -DLAPACK_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib"
+            -DCMAKE_INSTALL_PREFIX="build\staged" `
+            -DDATADIR="share"
 
       - name: Build GWmodelS
         shell: pwsh
         run: |
-          conda activate $env:CONDA_ENV
           $env:PATH = "$env:CONDA_PREFIX\Library\bin;$env:PATH"
           cmake --build build --config Release --target GWmodelS --parallel
 
       # CPack configuration is provided by the INSTALL/CPack section in
       # src/CMakeLists.txt; reconfigure is a no-op and regenerates the
-      # CPackConfig.cmake before producing the ZIP package.
+      # CPackConfig.cmake before producing the NSIS64 installer.
       - name: Package with CPack
         shell: pwsh
         run: |
-          conda activate $env:CONDA_ENV
           $env:PATH = "$env:CONDA_PREFIX\Library\bin;$env:PATH"
           $env:LIB_DIR = "$env:CONDA_PREFIX\Library"
           $env:INCLUDE = "$env:CONDA_PREFIX\Library\include;$env:INCLUDE"
-          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
-            -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_INSTALL_PREFIX="$env:CONDA_PREFIX\Library" `
-            -DDATADIR="share" `
-            -DBLAS_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib" `
-            -DLAPACK_LIBRARIES="$env:CONDA_PREFIX\Library\lib\libopenblas.lib"
-          cpack --config build/CPackConfig.cmake -G ZIP
+          cpack -G NSIS64 -C Release
+        working-directory: ${{ github.workspace }}/build
 
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
           name: GWmodelS-Windows-x64
-          path: build/*.zip
+          path: build/*.exe
           if-no-files-found: error
 
   # ---------------------------------------------------------------------------
@@ -193,7 +163,7 @@ jobs:
       - name: Install brew dependencies
         shell: bash
         run: |
-          brew install --quiet armadillo openblas catch2 libomp gsl cmake
+          brew install --quiet armadillo openblas catch2 libomp gsl cmake create-dmg
 
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
@@ -214,7 +184,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda install -n "$CONDA_ENV" -q -y \
-            -c conda-forge qgis=$QGIS_VER nomkl
+            -c conda-forge qgis=$QGIS_VER qtkeychain=0.14.1 nomkl
           conda list -n "$CONDA_ENV" -q
       
       - name: Clone libgwmodel
@@ -227,6 +197,7 @@ jobs:
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX" \
+            -DENABLE_OpenMP=OFF \
             -DWITH_TESTS=OFF
           cmake --build build --config Release --parallel
           cmake --install build
@@ -241,31 +212,10 @@ jobs:
           curl -fsSL -o "$QGIS_INC/qgswebframe.h" \
             "https://raw.githubusercontent.com/qgis/QGIS/$QGIS_HEADER_REF/src/core/qgswebframe.h"
 
-      - name: Configure (cmake)
-        shell: bash -l {0}
-        run: |
-          conda activate "$CONDA_ENV"
-          cmake -S . -B build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="$CONDA_PREFIX" \
-            -DQGIS_PREFIX_PATH="$CONDA_PREFIX"
-
-      - name: Build GWmodelS
-        shell: bash -l {0}
-        run: |
-          conda activate "$CONDA_ENV"
-          cmake --build build --config Release --target GWmodelS --parallel
-
-      # Create a self-signed code-signing identity and sign the .app bundle so
-      # CPack (DMG) produces a package that macOS accepts.
-      #
-      # NOTE: the INSTALL rule for APPLE in src/CMakeLists.txt runs fixup_bundle
-      # during `cpack`/`cmake --install`, which rewrites dylib install names and
-      # invalidates this signature. A robust approach is to re-sign the .app
-      # inside the CPack staging tree (build/_CPack_Packages/*/DragNDrop/) after
-      # cpack and before DMG creation; for this draft the sign-before-pack keeps
-      # the flow simple and easy to iterate on.
-      - name: Sign GWmodelS.app (self-signed certificate)
+      # Create a self-signed code-signing identity. It is used by the manual
+      # `codesign` step that runs after Qt deployment and install_name_tool
+      # patches (both of which invalidate any prior signature).
+      - name: Create self-signed certificate
         shell: bash
         run: |
           KEYCHAIN="$RUNNER_TEMP/build.keychain"
@@ -281,24 +231,65 @@ jobs:
           security import /tmp/dev.p12 -k "$KEYCHAIN" -P build -T /usr/bin/codesign
 
           IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" \
-            | awk -F'[()]' '/GWmodelS/{print $2; exit}')
-          codesign --force --deep --sign "$IDENTITY" --keychain "$KEYCHAIN" build/GWmodelS.app
+            | awk -F'"' '/GWmodelS/{print $2; exit}')
+          echo "CODESIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "CODESIGN_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
 
-      # CPack configuration is provided by the INSTALL/CPack section in
-      # src/CMakeLists.txt; reconfigure is a no-op and regenerates the
-      # CPackConfig.cmake before producing the DMG.
-      - name: Package with CPack
+      - name: Configure (cmake)
         shell: bash -l {0}
         run: |
-          conda activate "$CONDA_ENV"
+          QGIS_INC="$CONDA_PREFIX/include/qgis"
           cmake -S . -B build \
+            -DENABLE_OpenMP=OFF \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="$(brew --prefix);$CONDA_PREFIX" \
+            -DCMAKE_INSTALL_PREFIX="build/staged" \
             -DQGIS_PREFIX_PATH="$CONDA_PREFIX" \
+            -DQGIS_GUI_INCLUDE_DIR="$QGIS_INC" \
+            -DQGIS_ANALYSIS_INCLUDE_DIR="$QGIS_INC" \
             -DGSL_DIR="$(brew --prefix)/opt/gsl/lib/cmake/gsl" \
             -DBLAS_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
             -DLAPACK_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib"
-          cpack --config build/CPackConfig.cmake -G DragNDrop
+
+      - name: Build GWmodelS
+        shell: bash -l {0}
+        run: |
+          cmake --build build --config Release --target GWmodelS --parallel
+          cmake --install build --config Release
+
+      # Fix libpdalcpp's dependency on libpdal_util: rewrite its install name
+      # and set the id on the patched libpdal_util.15.dylib we copied earlier.
+      - name: Fix libpdalcpp install names
+        shell: bash
+        run: |
+          APP="build/staged/GWmodelS.app"
+          FW="$APP/Contents/Frameworks"
+          install_name_tool -change @rpath/libpdal_util.15.dylib @executable_path/../Frameworks/libpdal_util.15.dylib "$FW/libpdalcpp.15.dylib"
+          install_name_tool -id @executable_path/../libpdal_util.15.dylib "$FW/libpdal_util.15.dylib"
+
+      # Deploy Qt runtime into the bundle (macdeployqt ships with the conda Qt).
+      - name: Deploy Qt
+        shell: bash -l {0}
+        run: |
+          conda activate "$CONDA_ENV"
+          macdeployqt "build/staged/GWmodelS.app"
+
+      # Sign the fully-assembled bundle.
+      - name: Sign GWmodelS.app (self-signed certificate)
+        shell: bash
+        run: |
+          codesign --force --deep --sign "$CODESIGN_IDENTITY" --keychain "$CODESIGN_KEYCHAIN" "build/staged/GWmodelS.app"
+
+      # Package into a DMG with create-dmg (no longer via CPack).
+      - name: Package with create-dmg
+        shell: bash
+        run: |
+          cd build/staged
+          create-dmg --volname "GWmodelS" \
+            --window-pos 200 120 --window-size 800 400 \
+            --icon-size 100 --icon GWmodelS.app 200 190 \
+            --hide-extension GWmodelS.app --app-drop-link 600 185 \
+            GWmodelS.dmg GWmodelS.app
 
       - name: Upload package
         uses: actions/upload-artifact@v4
