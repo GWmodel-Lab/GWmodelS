@@ -45,6 +45,23 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      # GitHub-hosted runners may have an old system cmake that cannot detect
+      # the installed VS instance; point CMake at the exact VS install found by
+      # vswhere (the CMAKE_GENERATOR_INSTANCE env var is honored by CMake).
+      - name: Locate Visual Studio instance
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * `
+            -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+            -property installationPath
+          if ($vs) {
+            "CMAKE_GENERATOR_INSTANCE=$vs" | Out-File -FilePath $env:GITHUB_ENV -Append
+            Write-Host "Found VS at: $vs"
+          } else {
+            Write-Error "No Visual Studio with C++ tools found by vswhere"
+          }
+
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
@@ -68,23 +85,6 @@ jobs:
             -c conda-forge qgis=$QGIS_VER armadillo catch2 openblas gsl cmake nomkl
           conda list -n "$CONDA_ENV" -q
 
-      # GitHub-hosted runners may have an old system cmake that cannot detect
-      # the installed VS instance; point CMake at the exact VS install found by
-      # vswhere (the CMAKE_GENERATOR_INSTANCE env var is honored by CMake).
-      - name: Locate Visual Studio instance
-        shell: pwsh
-        run: |
-          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          $vs = & $vswhere -latest -products * `
-            -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
-            -property installationPath
-          if ($vs) {
-            "CMAKE_GENERATOR_INSTANCE=$vs" | Out-File -FilePath $env:GITHUB_ENV -Append
-            Write-Host "Found VS at: $vs"
-          } else {
-            Write-Error "No Visual Studio with C++ tools found by vswhere"
-          }
-
       # libgwmodel is the spatial-statistics kernel required by GWmodelS.
       # Build first (the conda deps above are already in place).
       - name: Install libgwmodel kernel
@@ -92,13 +92,14 @@ jobs:
         run: |
           conda activate "$CONDA_ENV"
           git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
-          cmake -S libgwmodel -B libgwmodel/build \
-            -G "Visual Studio 17 2022" -A x64 \
+          cmake -S . -B libgwmodel/build \
+            -A x64 \
             -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX/Library" \
             -DCMAKE_PREFIX_PATH="$CONDA_PREFIX/Library" \
             -DBUILD_TESTING=OFF
-          cmake --build libgwmodel/build --config Release --parallel
-          cmake --install libgwmodel/build
+          cmake --build build --config Release --parallel
+          cmake --install build
+        working-directory: ${{ github.workspace }}/libgwmodel
 
       # The conda QGIS package is missing qgswebframe.h; download it from the
       # QGIS 3.28 LTR source tree and drop it into the include directory.
@@ -181,6 +182,30 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      # Non-QGIS build deps via Homebrew. Note: the brew formula for
+      # llvm-openmp is called 'libomp'. Homebrew's gsl formula ships
+      # GSLConfig.cmake, which satisfies libgwmodel's `find_package(GSL)`.
+      - name: Install brew dependencies
+        shell: bash
+        run: |
+          brew install --quiet armadillo openblas catch2 libomp gsl cmake
+
+      - name: Install libgwmodel kernel
+        shell: bash -l {0}
+        run: |
+          conda activate "$CONDA_ENV"
+          git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix);$CONDA_PREFIX" \
+            -DGSL_DIR="$(brew --prefix)/opt/gsl/lib/cmake/gsl" \
+            -DBLAS_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
+            -DLAPACK_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
+            -DBUILD_TESTING=OFF
+          cmake --build build --config Release --parallel
+          cmake --install build
+        working-directory: ${{ github.workspace }}/libgwmodel
+
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
@@ -202,30 +227,6 @@ jobs:
           conda install -n "$CONDA_ENV" -q -y \
             -c conda-forge qgis=$QGIS_VER nomkl
           conda list -n "$CONDA_ENV" -q
-
-      # Non-QGIS build deps via Homebrew. Note: the brew formula for
-      # llvm-openmp is called 'libomp'. Homebrew's gsl formula ships
-      # GSLConfig.cmake, which satisfies libgwmodel's `find_package(GSL)`.
-      - name: Install brew dependencies
-        shell: bash
-        run: |
-          brew install --quiet armadillo openblas catch2 libomp gsl cmake
-
-      - name: Install libgwmodel kernel
-        shell: bash -l {0}
-        run: |
-          conda activate "$CONDA_ENV"
-          git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
-          cmake -S libgwmodel -B libgwmodel/build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX" \
-            -DCMAKE_PREFIX_PATH="$(brew --prefix);$CONDA_PREFIX" \
-            -DGSL_DIR="$(brew --prefix)/opt/gsl/lib/cmake/gsl" \
-            -DBLAS_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
-            -DLAPACK_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
-            -DBUILD_TESTING=OFF
-          cmake --build libgwmodel/build --config Release --parallel
-          cmake --install libgwmodel/build
 
       # qgswebframe.h is missing from the conda QGIS package; fetch it from the
       # QGIS 3.28 LTR source tree into the conda include directory.
