@@ -57,7 +57,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda install -n "$CONDA_ENV" -y \
-            -c conda-forge qgis=$QGIS_VER armadillo catch2 openblas nomkl
+            -c conda-forge qgis=$QGIS_VER armadillo catch2 openblas gsl nomkl
           conda list -n "$CONDA_ENV"
 
       # libgwmodel is the spatial-statistics kernel required by GWmodelS.
@@ -162,7 +162,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda install -n "$CONDA_ENV" -y \
-            -c conda-forge qgis=$QGIS_VER armadillo catch2 openblas llvm-openmp nomkl
+            -c conda-forge qgis=$QGIS_VER armadillo catch2 openblas gsl llvm-openmp nomkl
           conda list -n "$CONDA_ENV"
 
       - name: Install libgwmodel kernel
