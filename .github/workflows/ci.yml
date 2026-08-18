@@ -192,20 +192,6 @@ jobs:
         shell: bash
         run: |
           brew install --quiet armadillo openblas catch2 libomp gsl cmake
-      
-      - name: Clone libgwmodel
-        run: |
-          git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
-
-      - name: Install libgwmodel kernel
-        shell: bash -l {0}
-        run: |
-          cmake -S . -B build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DWITH_TESTS=OFF
-          cmake --build build --config Release --parallel
-          cmake --install build
-        working-directory: ${{ github.workspace }}/libgwmodel
 
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
@@ -228,6 +214,21 @@ jobs:
           conda install -n "$CONDA_ENV" -q -y \
             -c conda-forge qgis=$QGIS_VER nomkl
           conda list -n "$CONDA_ENV" -q
+      
+      - name: Clone libgwmodel
+        run: |
+          git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
+
+      - name: Install libgwmodel kernel
+        shell: bash -l {0}
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX" \
+            -DWITH_TESTS=OFF
+          cmake --build build --config Release --parallel
+          cmake --install build
+        working-directory: ${{ github.workspace }}/libgwmodel
 
       # qgswebframe.h is missing from the conda QGIS package; fetch it from the
       # QGIS 3.28 LTR source tree into the conda include directory.
