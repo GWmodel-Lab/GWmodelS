@@ -176,9 +176,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-13 # Intel
-            arch: x86_64
-          - os: macos-14 # Apple Silicon
+          - os: macos-15-intel # Intel
+            arch: x64
+          - os: macos-15 # Apple Silicon
             arch: arm64
 
     steps:
