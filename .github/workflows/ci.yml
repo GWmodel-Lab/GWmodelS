@@ -242,7 +242,7 @@ jobs:
           cmake -S . -B build \
             -DENABLE_OpenMP=OFF \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="$CONDA_PREFIX:$(brew --prefix)" \
+            -DCMAKE_PREFIX_PATH="$CONDA_PREFIX;$(brew --prefix)" \
             -DCMAKE_INSTALL_PREFIX="build/staged" \
             -DQGIS_PREFIX_PATH="$CONDA_PREFIX" \
             -DQGIS_GUI_INCLUDE_DIR="$QGIS_INC" \
