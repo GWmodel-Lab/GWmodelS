@@ -79,26 +79,28 @@ jobs:
       # which only provides the GSL::gsl/GSL::gslcblas targets since CMake 3.27.
       # Install a recent cmake from conda-forge to guarantee that.
       - name: Install conda dependencies
-        shell: bash -l {0}
+        shell: pwsh
         run: |
-          conda install -n "$CONDA_ENV" -q -y \
-            -c conda-forge qgis=$QGIS_VER armadillo catch2 openblas gsl cmake nomkl
-          conda list -n "$CONDA_ENV" -q
+          conda activate $env:CONDA_ENV
+          conda install -n $env:CONDA_ENV -q -y `
+            -c conda-forge qgis=$env:QGIS_VER armadillo catch2 openblas gsl cmake nomkl
+          conda list -n $env:CONDA_ENV -q
       
       - name: Clone libgwmodel
+        shell: pwsh
         run: |
           git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
 
       # libgwmodel is the spatial-statistics kernel required by GWmodelS.
       # Build first (the conda deps above are already in place).
       - name: Install libgwmodel kernel
-        shell: bash -l {0}
+        shell: pwsh
         run: |
-          conda activate "$CONDA_ENV"
-          cmake -S . -B build \
-            -A x64 \
-            -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX/Library" \
-            -DCMAKE_PREFIX_PATH="$CONDA_PREFIX/Library" \
+          conda activate $env:CONDA_ENV
+          cmake -S . -B build `
+            -A x64 `
+            -DCMAKE_INSTALL_PREFIX="$env:CONDA_PREFIX\Library" `
+            -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DWITH_TESTS=OFF
           cmake --build build --config Release --parallel
           cmake --install build
@@ -107,11 +109,11 @@ jobs:
       # The conda QGIS package is missing qgswebframe.h; download it from the
       # QGIS 3.28 LTR source tree and drop it into the include directory.
       - name: Patch missing qgswebframe.h
-        shell: bash -l {0}
+        shell: pwsh
         run: |
-          QGIS_INC="$CONDA_PREFIX/Library/include/qgis"
-          curl -fsSL -o "$QGIS_INC/qgswebframe.h" \
-            "https://raw.githubusercontent.com/qgis/QGIS/$QGIS_HEADER_REF/src/core/qgswebframe.h"
+          $QGIS_INC = "$env:CONDA_PREFIX\Library\include\qgis"
+          curl.exe -fsSL -o "$QGIS_INC\qgswebframe.h" `
+            "https://raw.githubusercontent.com/qgis/QGIS/$env:QGIS_HEADER_REF/src/core/qgswebframe.h"
 
       - name: Enable MSVC toolchain
         uses: ilammy/msvc-dev-cmd@v1
