@@ -194,8 +194,7 @@ jobs:
       # dependencies are provided by Homebrew instead, to keep the QGIS
       # toolchain self-contained inside the conda environment.
       #
-      # gsl is installed via Homebrew because libgwmodel uses
-      # `find_package(GSL)` and requires a GSL CMake package config.
+      # gsl is installed via Homebrew.
       - name: Install conda dependencies (QGIS)
         shell: bash -l {0}
         run: |
@@ -204,23 +203,27 @@ jobs:
           conda list -n "$CONDA_ENV" -q
 
       # Non-QGIS build deps via Homebrew. Note: the brew formula for
-      # llvm-openmp is called 'libomp'. Homebrew's gsl formula ships
-      # GSLConfig.cmake, which satisfies libgwmodel's `find_package(GSL)`.
+      # llvm-openmp is called 'libomp'.
       - name: Install brew dependencies
         shell: bash
         run: |
           brew install --quiet armadillo openblas catch2 libomp gsl cmake
 
+      # libgwmodel sets CMAKE_MODULE_PATH=cmake but does not ship a cmake/
+      # module directory. Copy this repository's FindGSL.cmake into the clone
+      # and force GSL_CONFIG to Homebrew's executable.
       - name: Install libgwmodel kernel
         shell: bash -l {0}
         run: |
           conda activate "$CONDA_ENV"
           git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
+          mkdir -p libgwmodel/cmake
+          cp "$GITHUB_WORKSPACE/cmake/FindGSL.cmake" libgwmodel/cmake/FindGSL.cmake
           cmake -S libgwmodel -B libgwmodel/build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX" \
             -DCMAKE_PREFIX_PATH="$(brew --prefix);$CONDA_PREFIX" \
-            -DGSL_DIR="$(brew --prefix)/opt/gsl/lib/cmake/gsl" \
+            -DGSL_CONFIG="$(brew --prefix)/bin/gsl-config" \
             -DBLAS_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
             -DLAPACK_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
             -DBUILD_TESTING=OFF
@@ -244,7 +247,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="$(brew --prefix);$CONDA_PREFIX" \
             -DQGIS_PREFIX_PATH="$CONDA_PREFIX" \
-            -DGSL_DIR="$(brew --prefix)/opt/gsl/lib/cmake/gsl" \
+            -DGSL_CONFIG="$(brew --prefix)/bin/gsl-config" \
             -DBLAS_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
             -DLAPACK_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib"
 
@@ -293,7 +296,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="$(brew --prefix);$CONDA_PREFIX" \
             -DQGIS_PREFIX_PATH="$CONDA_PREFIX" \
-            -DGSL_DIR="$(brew --prefix)/opt/gsl/lib/cmake/gsl" \
+            -DGSL_CONFIG="$(brew --prefix)/bin/gsl-config" \
             -DBLAS_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
             -DLAPACK_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib"
           cpack --config build/CPackConfig.cmake -G DragNDrop
