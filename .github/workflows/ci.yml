@@ -87,6 +87,7 @@ jobs:
       - name: Install libgwmodel kernel
         shell: bash -l {0}
         run: |
+          conda activate "$CONDA_ENV"
           git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
           cmake -S libgwmodel -B libgwmodel/build \
             -G "Visual Studio 17 2022" -A x64 \
@@ -113,6 +114,7 @@ jobs:
       - name: Configure (cmake)
         shell: pwsh
         run: |
+          conda activate $env:CONDA_ENV
           $env:PATH = "$env:CONDA_PREFIX\Library\bin;$env:PATH"
           $env:LIB_DIR = "$env:CONDA_PREFIX\Library"
           $env:INCLUDE = "$env:CONDA_PREFIX\Library\include;$env:INCLUDE"
@@ -127,6 +129,7 @@ jobs:
       - name: Build GWmodelS
         shell: pwsh
         run: |
+          conda activate $env:CONDA_ENV
           $env:PATH = "$env:CONDA_PREFIX\Library\bin;$env:PATH"
           cmake --build build --config Release --target GWmodelS --parallel
 
@@ -136,6 +139,7 @@ jobs:
       - name: Package with CPack
         shell: pwsh
         run: |
+          conda activate $env:CONDA_ENV
           $env:PATH = "$env:CONDA_PREFIX\Library\bin;$env:PATH"
           $env:LIB_DIR = "$env:CONDA_PREFIX\Library"
           $env:INCLUDE = "$env:CONDA_PREFIX\Library\include;$env:INCLUDE"
@@ -206,6 +210,7 @@ jobs:
       - name: Install libgwmodel kernel
         shell: bash -l {0}
         run: |
+          conda activate "$CONDA_ENV"
           git clone --depth 1 https://github.com/GWmodel-Lab/libgwmodel.git
           cmake -S libgwmodel -B libgwmodel/build \
             -DCMAKE_BUILD_TYPE=Release \
@@ -229,6 +234,7 @@ jobs:
       - name: Configure (cmake)
         shell: bash -l {0}
         run: |
+          conda activate "$CONDA_ENV"
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="$(brew --prefix);$CONDA_PREFIX" \
@@ -239,6 +245,7 @@ jobs:
       - name: Build GWmodelS
         shell: bash -l {0}
         run: |
+          conda activate "$CONDA_ENV"
           cmake --build build --config Release --target GWmodelS --parallel
 
       # Create a self-signed code-signing identity and sign the .app bundle so
@@ -275,6 +282,7 @@ jobs:
       - name: Package with CPack
         shell: bash -l {0}
         run: |
+          conda activate "$CONDA_ENV"
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="$(brew --prefix);$CONDA_PREFIX" \
