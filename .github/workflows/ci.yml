@@ -99,7 +99,7 @@ jobs:
             -A x64 \
             -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX/Library" \
             -DCMAKE_PREFIX_PATH="$CONDA_PREFIX/Library" \
-            -DBUILD_TESTING=OFF
+            -DWITH_TESTS=OFF
           cmake --build build --config Release --parallel
           cmake --install build
         working-directory: ${{ github.workspace }}/libgwmodel
@@ -202,11 +202,7 @@ jobs:
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="$(brew --prefix);$CONDA_PREFIX" \
-            -DGSL_DIR="$(brew --prefix)/opt/gsl/lib/cmake/gsl" \
-            -DBLAS_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
-            -DLAPACK_LIBRARIES="$(brew --prefix)/lib/libopenblas.dylib" \
-            -DBUILD_TESTING=OFF
+            -DWITH_TESTS=OFF
           cmake --build build --config Release --parallel
           cmake --install build
         working-directory: ${{ github.workspace }}/libgwmodel
