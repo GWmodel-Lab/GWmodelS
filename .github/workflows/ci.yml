@@ -266,13 +266,7 @@ jobs:
 
           IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" \
             | awk '/GWmodelS/{print $2; exit}')
-          echo "CODESIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
-          echo "CODESIGN_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
-          echo "CODESIGN_KEYCHAIN_PASSWORD=build" >> "$GITHUB_ENV"
-          
-          security unlock-keychain -p "$CODESIGN_KEYCHAIN_PASSWORD" "$CODESIGN_KEYCHAIN"
-          security set-keychain-settings -t 3600 -u "$CODESIGN_KEYCHAIN"
-          codesign --force --deep --sign "$CODESIGN_IDENTITY" --keychain "$CODESIGN_KEYCHAIN" "build/staged/GWmodelS.app"
+          codesign --force --deep --sign "$IDENTITY" --keychain "$KEYCHAIN" "build/staged/GWmodelS.app"
 
       # Package into a DMG with create-dmg (no longer via CPack).
       - name: Package with create-dmg
