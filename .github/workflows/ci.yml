@@ -231,9 +231,10 @@ jobs:
           security import /tmp/dev.p12 -k "$KEYCHAIN" -P build -T /usr/bin/codesign
 
           IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" \
-            | awk -F'"' '/GWmodelS/{print $2; exit}')
+            | awk '/GWmodelS/{print $2; exit}')
           echo "CODESIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
           echo "CODESIGN_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+          echo "CODESIGN_KEYCHAIN_PASSWORD=build" >> "$GITHUB_ENV"
 
       - name: Configure (cmake)
         shell: bash -l {0}
@@ -275,6 +276,8 @@ jobs:
       - name: Sign GWmodelS.app (self-signed certificate)
         shell: bash
         run: |
+          security unlock-keychain -p "$CODESIGN_KEYCHAIN_PASSWORD" "$CODESIGN_KEYCHAIN"
+          security set-keychain-settings -t 3600 -u "$CODESIGN_KEYCHAIN"
           codesign --force --deep --sign "$CODESIGN_IDENTITY" --keychain "$CODESIGN_KEYCHAIN" "build/staged/GWmodelS.app"
 
       # Package into a DMG with create-dmg (no longer via CPack).
