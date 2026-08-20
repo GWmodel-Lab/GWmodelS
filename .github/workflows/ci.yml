@@ -212,30 +212,6 @@ jobs:
           curl -fsSL -o "$QGIS_INC/qgswebframe.h" \
             "https://raw.githubusercontent.com/qgis/QGIS/$QGIS_HEADER_REF/src/core/qgswebframe.h"
 
-      # Create a self-signed code-signing identity. It is used by the manual
-      # `codesign` step that runs after Qt deployment and install_name_tool
-      # patches (both of which invalidate any prior signature).
-      - name: Create self-signed certificate
-        shell: bash
-        run: |
-          KEYCHAIN="$RUNNER_TEMP/build.keychain"
-          security create-keychain -p build "$KEYCHAIN"
-          security default-keychain -s "$KEYCHAIN"
-          security unlock-keychain -p build "$KEYCHAIN"
-          security set-keychain-settings -t 3600 -u "$KEYCHAIN"
-
-          openssl req -x509 -newkey rsa:2048 -keyout /tmp/dev.key -out /tmp/dev.crt \
-            -days 365 -nodes -subj "/CN=GWmodelS CI"
-          openssl pkcs12 -export -out /tmp/dev.p12 \
-            -inkey /tmp/dev.key -in /tmp/dev.crt -passout pass:build
-          security import /tmp/dev.p12 -k "$KEYCHAIN" -P build -T /usr/bin/codesign
-
-          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" \
-            | awk '/GWmodelS/{print $2; exit}')
-          echo "CODESIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
-          echo "CODESIGN_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
-          echo "CODESIGN_KEYCHAIN_PASSWORD=build" >> "$GITHUB_ENV"
-
       - name: Configure (cmake)
         shell: bash -l {0}
         run: |
@@ -276,6 +252,24 @@ jobs:
       - name: Sign GWmodelS.app (self-signed certificate)
         shell: bash
         run: |
+          KEYCHAIN="$RUNNER_TEMP/build.keychain"
+          security create-keychain -p build "$KEYCHAIN"
+          security default-keychain -s "$KEYCHAIN"
+          security unlock-keychain -p build "$KEYCHAIN"
+          security set-keychain-settings -t 3600 -u "$KEYCHAIN"
+
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/dev.key -out /tmp/dev.crt \
+            -days 365 -nodes -subj "/CN=GWmodelS CI"
+          openssl pkcs12 -export -out /tmp/dev.p12 \
+            -inkey /tmp/dev.key -in /tmp/dev.crt -passout pass:build
+          security import /tmp/dev.p12 -k "$KEYCHAIN" -P build -T /usr/bin/codesign
+
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" \
+            | awk '/GWmodelS/{print $2; exit}')
+          echo "CODESIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "CODESIGN_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+          echo "CODESIGN_KEYCHAIN_PASSWORD=build" >> "$GITHUB_ENV"
+          
           security unlock-keychain -p "$CODESIGN_KEYCHAIN_PASSWORD" "$CODESIGN_KEYCHAIN"
           security set-keychain-settings -t 3600 -u "$CODESIGN_KEYCHAIN"
           codesign --force --deep --sign "$CODESIGN_IDENTITY" --keychain "$CODESIGN_KEYCHAIN" "build/staged/GWmodelS.app"
