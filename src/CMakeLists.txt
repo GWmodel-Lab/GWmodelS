@@ -310,14 +310,19 @@ install(DIRECTORY "${qgis_dir}/resources" DESTINATION .)
 install(DIRECTORY "${qgis_dir}/share/proj" DESTINATION "./${DATADIR}")
 elseif(APPLE)
 install(TARGETS GWmodelS
-    DESTINATION .
-    BUNDLE DESTINATION .
-    RESOURCE DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources"
+    BUNDLE DESTINATION . COMPONENT Runtime
+    RESOURCE DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources" COMPONENT Runtime
 )
 get_filename_component(qgis_dir ${QGIS_UI_INCLUDE_DIR} DIRECTORY)
 get_filename_component(qgis_dir ${qgis_dir} DIRECTORY)
-install(DIRECTORY "${qgis_dir}/share/proj" DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources")
-install(DIRECTORY "${qgis_dir}/share/qgis/resources" DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources")
+install(DIRECTORY "${qgis_dir}/share/proj"
+    DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources"
+    COMPONENT Runtime
+)
+install(DIRECTORY "${qgis_dir}/share/qgis/resources"
+    DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources"
+    COMPONENT Runtime
+)
 
 # Locate the deployment tool from the same Qt installation used to build the
 # application.  The complete bundle is assembled by the install step, so both
