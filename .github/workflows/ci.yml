@@ -245,7 +245,6 @@ jobs:
       - name: Deploy Qt
         shell: bash -l {0}
         run: |
-          conda activate "$CONDA_ENV"
           macdeployqt "build/staged/GWmodelS.app"
 
       # Sign the fully-assembled bundle.
