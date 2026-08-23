@@ -163,7 +163,7 @@ jobs:
       - name: Install brew dependencies
         shell: bash
         run: |
-          brew install --quiet armadillo openblas catch2 libomp gsl cmake create-dmg
+          brew install --quiet armadillo openblas catch2 libomp gsl cmake
 
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
@@ -220,7 +220,6 @@ jobs:
             -DENABLE_OpenMP=OFF \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="$CONDA_PREFIX;$(brew --prefix)" \
-            -DCMAKE_INSTALL_PREFIX="build/staged" \
             -DQGIS_PREFIX_PATH="$CONDA_PREFIX" \
             -DQGIS_GUI_INCLUDE_DIR="$QGIS_INC" \
             -DQGIS_ANALYSIS_INCLUDE_DIR="$QGIS_INC"
@@ -229,45 +228,18 @@ jobs:
         shell: bash -l {0}
         run: |
           cmake --build build --config Release --target GWmodelS
-          cmake --install build --config Release
 
-      # Fix libpdalcpp's dependency on libpdal_util: rewrite its install name
-      # and set the id on the patched libpdal_util.15.dylib we copied earlier.
-      - name: Fix libpdalcpp install names
-        shell: bash
-        run: |
-          APP="build/staged/GWmodelS.app"
-          FW="$APP/Contents/Frameworks"
-          install_name_tool -change @rpath/libpdal_util.15.dylib @executable_path/../Frameworks/libpdal_util.15.dylib "$FW/libpdalcpp.15.dylib"
-          install_name_tool -id @executable_path/../libpdal_util.15.dylib "$FW/libpdal_util.15.dylib"
-
-      # Deploy Qt runtime into the bundle (macdeployqt ships with the conda Qt).
-      - name: Deploy Qt
+      # CPack runs the complete install pipeline: deploy Qt, collect and fix
+      # runtime dependencies, ad-hoc sign the app, then create the DMG.
+      - name: Package with CPack
         shell: bash -l {0}
         run: |
-          macdeployqt "build/staged/GWmodelS.app"
-
-      # Sign the fully-assembled bundle.
-      - name: Sign GWmodelS.app (ad-hoc)
-        shell: bash
-        run: |
-          codesign --force --deep --sign - "build/staged/GWmodelS.app"
-          codesign --verify --deep --strict --verbose=2 "build/staged/GWmodelS.app"
-
-      # Package into a DMG with create-dmg (no longer via CPack).
-      - name: Package with create-dmg
-        shell: bash
-        run: |
-          create-dmg --volname "GWmodelS" \
-            --window-pos 200 120 --window-size 800 400 \
-            --icon-size 100 --icon GWmodelS.app 200 190 \
-            --hide-extension GWmodelS.app --app-drop-link 600 185 \
-            GWmodelS.dmg GWmodelS.app
-        working-directory: ${{ github.workspace }}/build/staged
+          cpack --config CPackConfig.cmake -C Release -G DragNDrop
+        working-directory: ${{ github.workspace }}/build
 
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
           name: GWmodelS-macOS-${{ matrix.arch }}
-          path: build/staged/*.dmg
+          path: build/*.dmg
           if-no-files-found: error

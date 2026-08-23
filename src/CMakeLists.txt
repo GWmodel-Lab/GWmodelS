@@ -310,7 +310,6 @@ install(DIRECTORY "${qgis_dir}/resources" DESTINATION .)
 install(DIRECTORY "${qgis_dir}/share/proj" DESTINATION "./${DATADIR}")
 elseif(APPLE)
 install(TARGETS GWmodelS
-    # RUNTIME_DEPENDENCY_SET _dep_mac
     DESTINATION .
     BUNDLE DESTINATION .
     RESOURCE DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources"
@@ -319,41 +318,62 @@ get_filename_component(qgis_dir ${QGIS_UI_INCLUDE_DIR} DIRECTORY)
 get_filename_component(qgis_dir ${qgis_dir} DIRECTORY)
 install(DIRECTORY "${qgis_dir}/share/proj" DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources")
 install(DIRECTORY "${qgis_dir}/share/qgis/resources" DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Resources")
-install(CODE "set(APPS ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app)" COMPONENT Runtime)
-install(CODE "set(DIRS ${QGIS_PREFIX_PATH}/lib)" COMPONENT Runtime)
+
+# Locate the deployment tool from the same Qt installation used to build the
+# application.  The complete bundle is assembled by the install step, so both
+# `cmake --install` and CPack follow exactly the same deployment path.
+get_target_property(qmake_location Qt5::qmake IMPORTED_LOCATION)
+get_filename_component(qt_bin_dir "${qmake_location}" DIRECTORY)
+find_program(MACDEPLOYQT_EXECUTABLE
+    NAMES macdeployqt
+    HINTS "${qt_bin_dir}" "${QGIS_PREFIX_PATH}/bin"
+    NO_DEFAULT_PATH
+)
+if(NOT MACDEPLOYQT_EXECUTABLE)
+    message(FATAL_ERROR "macdeployqt was not found next to the Qt installation")
+endif()
+
+install(CODE "set(APP_BUNDLE \"\${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app\")" COMPONENT Runtime)
+install(CODE "set(MACDEPLOYQT_EXECUTABLE \"${MACDEPLOYQT_EXECUTABLE}\")" COMPONENT Runtime)
+install(CODE "set(QGIS_LIBRARY_DIR \"${QGIS_PREFIX_PATH}/lib\")" COMPONENT Runtime)
 install(CODE [===[
+    execute_process(
+        COMMAND "${MACDEPLOYQT_EXECUTABLE}" "${APP_BUNDLE}" -always-overwrite
+        RESULT_VARIABLE _macdeployqt_result
+    )
+    if(NOT _macdeployqt_result EQUAL 0)
+        message(FATAL_ERROR "macdeployqt failed with exit code ${_macdeployqt_result}")
+    endif()
+
     include(BundleUtilities)
-    fixup_bundle("${APPS}" "" "")
-    # Patch: conda ships libpdal_util as a symlink/hardlink, so fixup_bundle may
-    # not bundle the real library. Copy the actual libpdal_util.15.*.*.dylib
-    # (a regular, non-hardlinked file) into the bundle as libpdal_util.15.dylib.
+
+    # In particular, this search path lets BundleUtilities resolve conda
+    # libraries referenced through @rpath, including PDAL's libpdal_util.
+    set(_bundle_search_dirs "${QGIS_LIBRARY_DIR}")
     if(DEFINED ENV{CONDA_PREFIX})
-        file(GLOB _pdal_candidates "$ENV{CONDA_PREFIX}/lib/libpdal_util.15.*.*.dylib")
-        set(_pdal_real "")
-        foreach(_c IN LISTS _pdal_candidates)
-            execute_process(COMMAND stat -f %l "${_c}" OUTPUT_VARIABLE _pdal_links OUTPUT_STRIP_TRAILING_WHITESPACE)
-            if(_pdal_links STREQUAL "1")
-                set(_pdal_real "${_c}")
-                break()
-            endif()
-        endforeach()
-        if(NOT _pdal_real AND _pdal_candidates)
-            list(GET _pdal_candidates 0 _pdal_real)
-        endif()
-        if(_pdal_real)
-            file(MAKE_DIRECTORY "${APPS}/Contents/Frameworks")
-            file(COPY_FILE "${_pdal_real}" "${APPS}/Contents/Frameworks/libpdal_util.15.dylib")
-        endif()
+        list(APPEND _bundle_search_dirs "$ENV{CONDA_PREFIX}/lib")
+    endif()
+
+    fixup_bundle("${APP_BUNDLE}" "" "${_bundle_search_dirs}")
+
+    # BundleUtilities and macdeployqt modify Mach-O files, so signing must be
+    # the final operation performed on the assembled application.
+    execute_process(
+        COMMAND codesign --force --deep --sign - "${APP_BUNDLE}"
+        RESULT_VARIABLE _codesign_result
+    )
+    if(NOT _codesign_result EQUAL 0)
+        message(FATAL_ERROR "ad-hoc codesign failed with exit code ${_codesign_result}")
+    endif()
+
+    execute_process(
+        COMMAND codesign --verify --deep --strict --verbose=2 "${APP_BUNDLE}"
+        RESULT_VARIABLE _codesign_verify_result
+    )
+    if(NOT _codesign_verify_result EQUAL 0)
+        message(FATAL_ERROR "codesign verification failed with exit code ${_codesign_verify_result}")
     endif()
 ]===] COMPONENT Runtime)
-# install(RUNTIME_DEPENDENCY_SET _dep_mac DESTINATION "./${CMAKE_PROJECT_NAME}.app/Contents/Frameworks" POST_EXCLUDE_REGEXES ".*homebrew.*")
-# get_target_property(uic_location Qt5::uic IMPORTED_LOCATION)
-# get_filename_component( _dir ${uic_location} DIRECTORY)
-# set(deployqt "${_dir}/macdeployqt")
-# install(CODE "set(deployqt \"${deployqt}\")" COMPONENT Runtime)
-# install(CODE [===[
-# execute_process(COMMAND "${deployqt}" "${CMAKE_INSTALL_PREFIX}/GWmodelS.app")
-# ]===] COMPONENT Runtime)
 endif()
 
 # CPack
@@ -364,4 +384,10 @@ set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/icons/GWmodelS.ico")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CMAKE_PROJECT_NAME})
 set(CPACK_PACKAGE_EXECUTABLES "GWmodelS;GWmodelS")
 set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
+if(APPLE)
+    set(CPACK_GENERATOR "DragNDrop")
+    set(CPACK_DMG_VOLUME_NAME "GWmodelS")
+    set(CPACK_DMG_FORMAT "UDZO")
+    set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-macOS")
+endif()
 include(CPack)
