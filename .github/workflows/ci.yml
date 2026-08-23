@@ -264,8 +264,21 @@ jobs:
             -inkey /tmp/dev.key -in /tmp/dev.crt -passout pass:build
           security import /tmp/dev.p12 -k "$KEYCHAIN" -P build -T /usr/bin/codesign
 
+          # Authorize Apple tooling to access the imported private key; without
+          # this, codesign reports "The specified item could not be found in
+          # the keychain" because the key partition list blocks access.
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k build "$KEYCHAIN"
+          security list-keychains -s "$KEYCHAIN"
+          security default-keychain -s "$KEYCHAIN"
+
           IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" \
             | awk '/GWmodelS/{print $2; exit}')
+          if [ -z "$IDENTITY" ]; then
+            echo "No codesigning identity found; dumping find-identity output:" >&2
+            security find-identity -v -p codesigning "$KEYCHAIN" >&2
+            exit 1
+          fi
+          echo "Signing with identity: $IDENTITY"
           codesign --force --deep --sign "$IDENTITY" --keychain "$KEYCHAIN" "build/staged/GWmodelS.app"
 
       # Package into a DMG with create-dmg (no longer via CPack).
