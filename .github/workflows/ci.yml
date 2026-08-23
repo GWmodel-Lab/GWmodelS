@@ -11,7 +11,7 @@
 #   3. Patch the missing qgswebframe.h header from the QGIS source tree
 #   4. Configure + build GWmodelS
 #   5. Package with CPack (INSTALL/CPack rules live in src/CMakeLists.txt)
-#      - macOS: sign the .app with a self-signed certificate before packaging
+#      - macOS: ad-hoc sign the .app before packaging
 #
 # NOTE: draft only, not yet pushed/validated.
 
@@ -249,42 +249,11 @@ jobs:
           macdeployqt "build/staged/GWmodelS.app"
 
       # Sign the fully-assembled bundle.
-      - name: Sign GWmodelS.app (self-signed certificate)
+      - name: Sign GWmodelS.app (ad-hoc)
         shell: bash
         run: |
-          KEYCHAIN="$RUNNER_TEMP/build.keychain"
-          KEYCHAIN_PW="build"
-
-          security create-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
-          security default-keychain -s "$KEYCHAIN"
-          security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
-          security set-keychain-settings -t 3600 -u "$KEYCHAIN"
-
-          # Generate a self-signed certificate with the code-signing extended
-          # key usage. Without it, `find-identity -p codesigning` reports
-          # "0 valid identities found" and codesign cannot locate the identity.
-          openssl req -x509 -nodes -newkey rsa:2048 \
-            -keyout /tmp/dev.key -out /tmp/dev.crt \
-            -days 365 -subj "/CN=GWmodelS CI" \
-            -addext "keyUsage=digitalSignature" \
-            -addext "extendedKeyUsage=codeSigning"
-          openssl pkcs12 -export -out /tmp/dev.p12 \
-            -inkey /tmp/dev.key -in /tmp/dev.crt -passout pass:"$KEYCHAIN_PW"
-
-          security import /tmp/dev.p12 -k "$KEYCHAIN" -P "$KEYCHAIN_PW" -A
-
-          # Authorize Apple tooling to access the imported private key.
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PW" "$KEYCHAIN"
-
-          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" \
-            | awk '/GWmodelS/{print $2; exit}')
-          if [ -z "$IDENTITY" ]; then
-            echo "No codesigning identity found; dumping find-identity output:" >&2
-            security find-identity -v -p codesigning "$KEYCHAIN" >&2
-            exit 1
-          fi
-          echo "Signing with identity: $IDENTITY"
-          codesign --force --deep --sign "$IDENTITY" --keychain "$KEYCHAIN" "build/staged/GWmodelS.app"
+          codesign --force --deep --sign - "build/staged/GWmodelS.app"
+          codesign --verify --deep --strict --verbose=2 "build/staged/GWmodelS.app"
 
       # Package into a DMG with create-dmg (no longer via CPack).
       - name: Package with create-dmg
