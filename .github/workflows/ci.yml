@@ -258,16 +258,16 @@ jobs:
       - name: Package with create-dmg
         shell: bash
         run: |
-          cd build/staged
           create-dmg --volname "GWmodelS" \
             --window-pos 200 120 --window-size 800 400 \
             --icon-size 100 --icon GWmodelS.app 200 190 \
             --hide-extension GWmodelS.app --app-drop-link 600 185 \
             GWmodelS.dmg GWmodelS.app
+        working-directory: ${{ github.workspace }}/build/staged
 
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
           name: GWmodelS-macOS-${{ matrix.arch }}
-          path: build/*.dmg
+          path: build/staged/*.dmg
           if-no-files-found: error
