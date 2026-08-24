@@ -13,16 +13,18 @@
 #   5. Package with CPack (INSTALL/CPack rules live in src/CMakeLists.txt)
 #      - macOS: ad-hoc sign the .app before packaging
 #
-# NOTE: draft only, not yet pushed/validated.
-
 name: CI
 
 on:
   push:
-    branches: [master, 'feat/**', 'enhance/**']
-    tags: ['v*']
+    branches:
+      - master
+      - 'ci/*'
+    tags:
+      - '**'
   pull_request:
-  workflow_dispatch:
+    branches:
+      - master
 
 permissions:
   contents: read
@@ -237,9 +239,100 @@ jobs:
           cpack --config CPackConfig.cmake -C Release -G DragNDrop
         working-directory: ${{ github.workspace }}/build
 
+      # Both matrix jobs produce the same CPack base name. Add the architecture
+      # so both DMGs can coexist as assets on the same GitHub Release.
+      - name: Add architecture to package filename
+        shell: bash
+        run: |
+          for package in build/*.dmg; do
+            mv "$package" "${package%.dmg}-${{ matrix.arch }}.dmg"
+          done
+
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
           name: GWmodelS-macOS-${{ matrix.arch }}
           path: build/*.dmg
           if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # GitHub Release (tag pushes only)
+  # ---------------------------------------------------------------------------
+  release:
+    name: Publish GitHub Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs:
+      - build-windows
+      - build-macos
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download installation packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: GWmodelS-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Locate installation packages
+        id: packages
+        shell: bash
+        run: |
+          windows_path=$(find release-assets -maxdepth 1 -type f -name '*.exe' -print -quit)
+          macos_x64_path=$(find release-assets -maxdepth 1 -type f -name '*-x64.dmg' -print -quit)
+          macos_arm64_path=$(find release-assets -maxdepth 1 -type f -name '*-arm64.dmg' -print -quit)
+
+          test -n "$windows_path"
+          test -n "$macos_x64_path"
+          test -n "$macos_arm64_path"
+
+          echo "windows_path=$windows_path" >> "$GITHUB_OUTPUT"
+          echo "windows_name=$(basename "$windows_path")" >> "$GITHUB_OUTPUT"
+          echo "macos_x64_path=$macos_x64_path" >> "$GITHUB_OUTPUT"
+          echo "macos_x64_name=$(basename "$macos_x64_path")" >> "$GITHUB_OUTPUT"
+          echo "macos_arm64_path=$macos_arm64_path" >> "$GITHUB_OUTPUT"
+          echo "macos_arm64_name=$(basename "$macos_arm64_path")" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: GWmodelS ${{ github.ref_name }}
+          body: Automated installation packages for GWmodelS ${{ github.ref_name }}.
+          draft: false
+          prerelease: false
+
+      - name: Upload Windows x64 package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.packages.outputs.windows_path }}
+          asset_name: ${{ steps.packages.outputs.windows_name }}
+          asset_content_type: application/vnd.microsoft.portable-executable
+
+      - name: Upload macOS x64 package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.packages.outputs.macos_x64_path }}
+          asset_name: ${{ steps.packages.outputs.macos_x64_name }}
+          asset_content_type: application/x-apple-diskimage
+
+      - name: Upload macOS arm64 package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.packages.outputs.macos_arm64_path }}
+          asset_name: ${{ steps.packages.outputs.macos_arm64_name }}
+          asset_content_type: application/x-apple-diskimage
